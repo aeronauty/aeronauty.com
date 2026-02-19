@@ -286,7 +286,7 @@ export default function SpecificRangeExplorer() {
 
   const [mach, setMach] = useState(0.82);
   const [showCompressibility, setShowCompressibility] = useState(true);
-  const [activeTab, setActiveTab] = useState("chart");
+  const [activeTab, setActiveTab] = useState("story");
   const [hoveredWeight, setHoveredWeight] = useState<number | null>(null);
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayX, setOverlayX] = useState(4.5);
@@ -408,6 +408,7 @@ export default function SpecificRangeExplorer() {
           padding: 3, width: "fit-content",
         }}>
           {[
+            { id: "story", label: "The Story" },
             { id: "chart", label: "Interactive Chart" },
             { id: "physics", label: "Physics & Derivation" },
             { id: "asymmetry", label: "Why the Asymmetry?" },
@@ -424,6 +425,123 @@ export default function SpecificRangeExplorer() {
             </button>
           ))}
         </div>
+
+        {/* ====== STORY TAB ====== */}
+        {activeTab === "story" && (
+          <div style={{ maxWidth: 720, fontSize: 15, lineHeight: 1.9, color: "rgba(255,255,255,0.65)" }}>
+            <h2 style={{ fontSize: 20, fontWeight: 400, color: "#fff", margin: "0 0 24px" }}>
+              A graph from a father&rsquo;s study books
+            </h2>
+
+            <p>
+              In late February 2025, I got a message on LinkedIn from a man named Jeroen Gemke.
+              He&rsquo;d been watching my Aircraft Flight Mechanics lectures on YouTube and had a question
+              he couldn&rsquo;t crack &mdash; one that had consumed months of effort and stacks of handwritten pages.
+            </p>
+
+            <p>
+              The question centred on a single graph. It came from a Lufthansa training manual called
+              {" "}<em>Jet Airplane Performance</em>, and it showed specific range &mdash; nautical air miles
+              per 1000&nbsp;kg of fuel &mdash; plotted against pressure altitude for different aircraft weights.
+              The curves had a distinctive shape: gentle roll-off below the optimum altitude, then a sharp,
+              almost cliff-like drop above it. Jeroen wanted to know: what formulas produce these curves?
+              And why that asymmetry?
+            </p>
+
+            <div style={{
+              margin: "32px 0", padding: "24px 28px",
+              background: "rgba(255,255,255,0.03)", borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: "#e0c068", margin: "0 0 16px" }}>
+                The backstory
+              </h3>
+              <p style={{ margin: "0 0 16px" }}>
+                Jeroen comes from a Dutch aviation family. His father spent his career at KLM &mdash; from
+                roughly 1950 to 1990 &mdash; responsible for flight planning. In those days, preparing a single
+                long-haul flight from Amsterdam to Chicago on a DC-8 was an entire eight-hour shift.
+                Everything was done by hand: weather charts studied, wind triangles drawn, time fronts
+                constructed, optimal altitudes computed. Later, Jeroen rode along on type ratings and
+                proficiency checks aboard A310s, 747-400s, DC-10s.
+              </p>
+              <p style={{ margin: 0 }}>
+                When his mother recently moved to a nursing home, Jeroen was clearing out the family house
+                and found his father&rsquo;s old study books. They explained &mdash; in careful detail &mdash; how all those
+                calculations were done by hand. He also found an E6B flight computer. It struck him that
+                this craft knowledge, this tacit expertise in building flight plans from first principles,
+                is in danger of being lost entirely. Today, flight plans come out of a computer at the push
+                of a button.
+              </p>
+            </div>
+
+            <p>
+              Jeroen set himself a project: bridge the gap between that traditional knowledge and modern
+              methods. He&rsquo;d already worked out how the horizontal flight path was constructed &mdash;
+              the manual process of drawing time fronts by building wind triangles. The last piece was the
+              vertical flight profile: computing the optimal cruise altitude, and understanding the shape of
+              those specific range curves.
+            </p>
+
+            <p>
+              When he reached out, I was happy to help. My first instinct was to recreate the graph
+              computationally and see if the physics would fall out. As I wrote to him:
+            </p>
+
+            <blockquote style={{
+              margin: "24px 0", padding: "16px 24px",
+              borderLeft: "3px solid rgba(74, 158, 255, 0.4)",
+              background: "rgba(74, 158, 255, 0.04)",
+              borderRadius: "0 8px 8px 0",
+              fontStyle: "italic", color: "rgba(255,255,255,0.55)",
+            }}>
+              &ldquo;What I&rsquo;ll probably do is find the way to recreate the figure and then&hellip;
+              er&hellip; figure it out. That might be a nice approach!&rdquo;
+            </blockquote>
+
+            <p>
+              Looking at the shape of the curves, I could see something like a parabola
+              shifted upwards &mdash; hinting at a nonlinear scaling on one of the axes, or perhaps a logarithmic
+              term buried in the physics. I suspected the density-altitude relationship, thrust-specific fuel
+              consumption behaviour, and wave drag near the coffin corner were all playing a role.
+            </p>
+
+            <p>
+              There was a charming exchange about tools. Jeroen, 61, described himself as a &ldquo;boomer&rdquo;
+              who learned SAS and Fortran, and said he only really &ldquo;understood&rdquo; Excel and handwritten
+              calculations &mdash; which was exactly why he loved the YouTube lectures, because I wrote down the
+              formulas and he could follow the reasoning. I offered to build an interactive widget he could
+              run online.
+            </p>
+
+            <p>
+              Over the following months we traded emails and had a Teams call. The problem turned out to
+              be genuinely interesting: the elegant <Tex>{"\\operatorname{sech}"}</Tex> symmetry of the
+              subsonic drag polar gets shattered by three effects conspiring above the optimum altitude.
+              The physics tab and the asymmetry tab lay it all out.
+            </p>
+
+            <div style={{
+              margin: "32px 0", padding: "24px 28px",
+              background: "linear-gradient(135deg, rgba(224,192,104,0.06), rgba(74,158,255,0.06))",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 12px" }}>
+                What this tool is
+              </h3>
+              <p style={{ margin: 0 }}>
+                This interactive explorer is the answer to Jeroen&rsquo;s question, built in the way I know
+                best: code. It reconstructs the Lufthansa figure from first-principles physics &mdash; the
+                International Standard Atmosphere, a parabolic drag polar with Lock-type wave drag, and a
+                temperature-scaled TSFC model. The parameters can be fitted to the published data via
+                Nelder-Mead optimisation. You can toggle wave drag on and off, overlay the original figure,
+                and watch the asymmetry appear and disappear. It&rsquo;s a bridge between the handwritten
+                calculations of Jeroen&rsquo;s father&rsquo;s era and the computational tools of today &mdash; which is
+                exactly the gap Jeroen was trying to close.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ====== CHART TAB ====== */}
         {activeTab === "chart" && (
