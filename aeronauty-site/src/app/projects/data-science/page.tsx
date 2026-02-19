@@ -4,7 +4,7 @@ export default function DataSciencePage() {
   return (
     <article className="prose prose-slate lg:prose-lg">
       <h1>Data Science (the real kind)</h1>
-      <p><em>Actual data science — not just doing a regression analysis and kidding yourself you're a savant.</em></p>
+      <p><em>Actual data science — not just doing a regression analysis and kidding yourself you&rsquo;re a savant.</em></p>
       <p>I build reusable data infrastructure + exploratory tools that make complex systems understandable:</p>
       
       <h2>Parameter Registries</h2>
