@@ -1,0 +1,6 @@
+[submodule "submodules/LiftExplainer"]
+	path = submodules/LiftExplainer
+	url = https://github.com/aeronauty/LiftExplainer.git
+[submodule "submodules/WindTurbineExplainer"]
+	path = submodules/WindTurbineExplainer
+	url = https://github.com/aeronauty/WindTurbineExplainer.git

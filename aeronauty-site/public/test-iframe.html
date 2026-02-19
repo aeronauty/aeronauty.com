@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Iframe</title>
+  <style>
+    body { margin: 0; padding: 0; }
+    iframe { width: 100vw; height: 100vh; border: none; }
+  </style>
+</head>
+<body>
+  <h1 style="padding: 20px;">Testing Lift Explainer Iframe</h1>
+  <iframe 
+    src="/lift-explainer/index.html"
+    title="Lift Explainer Test"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+  ></iframe>
+  <script>
+    // Log any iframe errors
+    window.addEventListener('message', (event) => {
+      console.log('Message from iframe:', event);
+    });
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      console.error('Error: ', msg, url, lineNo, columnNo, error);
+      return false;
+    };
+  </script>
+</body>
+</html>
+
