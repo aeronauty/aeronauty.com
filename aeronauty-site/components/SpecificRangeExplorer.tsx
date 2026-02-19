@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   ScatterChart, Scatter, XAxis, YAxis, ZAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
@@ -43,10 +43,11 @@ function atmosphere(h_m: number) {
 interface Aircraft {
   S: number; CD0: number; k: number;
   TSFC_ref: number; Mdd0: number; kappa_CL: number;
+  k_wave: number;
 }
 
 function computeSpecificRange(h_m: number, M: number, W_kg: number, aircraft: Aircraft) {
-  const { S, CD0, k, TSFC_ref, Mdd0, kappa_CL } = aircraft;
+  const { S, CD0, k, TSFC_ref, Mdd0, kappa_CL, k_wave } = aircraft;
   const W = W_kg * ISA.g;
   const { T, p, rho } = atmosphere(h_m);
   const a = Math.sqrt(ISA.gamma * ISA.R * T);
@@ -58,7 +59,7 @@ function computeSpecificRange(h_m: number, M: number, W_kg: number, aircraft: Ai
   const Mcrit = Mdd0 - kappa_CL * CL;
   if (M > Mcrit) {
     const dM = M - Mcrit;
-    CD += 20 * Math.pow(dM, 4);
+    CD += k_wave * Math.pow(dM, 4);
   }
   const D = q * S * CD;
   const theta = T / ISA.T0;
@@ -72,6 +73,7 @@ function computeSpecificRange(h_m: number, M: number, W_kg: number, aircraft: Ai
 const DEFAULT_AIRCRAFT: Aircraft = {
   S: 139, CD0: 0.0275, k: 0.063,
   TSFC_ref: 1.89e-4, Mdd0: 0.88, kappa_CL: 0.17,
+  k_wave: 20,
 };
 
 // ============================================================
@@ -112,6 +114,9 @@ function parseDigitisedCSV(csv: string): RefCurve[] {
   if (currentMass && points.length) result.push({ mass: currentMass, points });
   return result;
 }
+
+// Reference image dimensions (px)
+const REF_IMG = { width: 737, height: 621 };
 
 // ============================================================
 // Weights & colours
@@ -219,36 +224,44 @@ function nelderMead(objective: (x: number[]) => number, x0: number[], { maxIter 
 // ============================================================
 const PARAM_SLIDERS = [
   { key: "S" as const, label: "S (wing area)", unit: "m\u00b2", min: 100, max: 600, step: 1, fmt: (v: number) => v.toFixed(1) },
-  { key: "CD0" as const, label: "CD0 (zero-lift drag)", unit: "", min: 0.010, max: 0.030, step: 0.0005, fmt: (v: number) => v.toFixed(4) },
-  { key: "k" as const, label: "k (induced drag factor)", unit: "", min: 0.02, max: 0.08, step: 0.001, fmt: (v: number) => v.toFixed(3) },
+  { key: "CD0" as const, label: "CD0 (zero-lift drag)", unit: "", min: 0.005, max: 0.040, step: 0.0005, fmt: (v: number) => v.toFixed(4) },
+  { key: "k" as const, label: "k (induced drag factor)", unit: "", min: 0.01, max: 0.12, step: 0.001, fmt: (v: number) => v.toFixed(3) },
   { key: "TSFC_ref" as const, label: "TSFC_ref", unit: "kg/(N\u00b7s)", min: 1e-5, max: 5e-4, step: 1e-6, fmt: (v: number) => v.toExponential(3) },
   { key: "Mdd0" as const, label: "Mdd0 (drag divergence)", unit: "", min: 0.80, max: 0.92, step: 0.005, fmt: (v: number) => v.toFixed(3) },
   { key: "kappa_CL" as const, label: "\u03ba_CL (Mcrit slope)", unit: "", min: 0.05, max: 0.35, step: 0.005, fmt: (v: number) => v.toFixed(3) },
+  { key: "k_wave" as const, label: "k_wave (wave drag coeff)", unit: "", min: 5, max: 80, step: 0.5, fmt: (v: number) => v.toFixed(1) },
 ];
 
 function fitAircraftParams(mach: number, startParams: Aircraft, refCurves: RefCurve[]) {
-  const paramKeys = ["S", "CD0", "k", "TSFC_ref", "Mdd0", "kappa_CL"] as const;
-  const bounds = PARAM_SLIDERS.map(p => [p.min, p.max]);
-  const x0 = paramKeys.map(k => startParams[k]);
+  const paramKeys = ["S", "CD0", "k", "TSFC_ref", "Mdd0", "kappa_CL", "k_wave"] as const;
+  const machBounds = [0.70, 0.88];
+  const bounds = [...PARAM_SLIDERS.map(p => [p.min, p.max]), machBounds];
+  const x0 = [...paramKeys.map(k => startParams[k]), mach];
+  const n = x0.length;
+
+  const nCurves = refCurves.length || 1;
 
   const objective = (x: number[]) => {
-    for (let i = 0; i < x.length; i++) {
+    for (let i = 0; i < n; i++) {
       if (x[i] < bounds[i][0] || x[i] > bounds[i][1]) return 1e12;
     }
     const ac: Record<string, number> = {};
     paramKeys.forEach((k, i) => ac[k] = x[i]);
+    const fitM = x[n - 1];
 
-    let sse = 0;
+    let totalErr = 0;
     for (const curve of refCurves) {
+      let curveErr = 0;
       for (const pt of curve.points) {
         const h_m = pt.altitude * 1000 * 0.3048;
-        const result = computeSpecificRange(h_m, mach, curve.mass, ac as unknown as Aircraft);
-        if (!result) { sse += 1000; continue; }
-        const diff = result.SR_NAM - pt.sr;
-        sse += diff * diff;
+        const result = computeSpecificRange(h_m, fitM, curve.mass, ac as unknown as Aircraft);
+        if (!result) { curveErr += 1; continue; }
+        const relDiff = (result.SR_NAM - pt.sr) / pt.sr;
+        curveErr += relDiff * relDiff;
       }
+      totalErr += curveErr / (curve.points.length || 1);
     }
-    return sse;
+    return totalErr / nCurves;
   };
 
   const clamp = (x: number[]) => x.map((v, i) => Math.max(bounds[i][0], Math.min(bounds[i][1], v)));
@@ -257,17 +270,35 @@ function fitAircraftParams(mach: number, startParams: Aircraft, refCurves: RefCu
     return v + (Math.random() - 0.5) * range * scale;
   }));
 
-  let best = nelderMead(objective, x0, { maxIter: 3000 });
-  for (let restart = 0; restart < 8; restart++) {
-    const x0r = perturb(best.x, 0.3);
-    const trial = nelderMead(objective, x0r, { maxIter: 3000 });
+  let best = nelderMead(objective, x0, { maxIter: 6000 });
+  for (let restart = 0; restart < 60; restart++) {
+    const x0r = perturb(best.x, 0.4);
+    const trial = nelderMead(objective, x0r, { maxIter: 6000 });
     if (trial.f < best.f) best = trial;
   }
-  best = nelderMead(objective, best.x, { maxIter: 5000, tol: 1e-12 });
+  for (let fine = 0; fine < 30; fine++) {
+    const x0f = perturb(best.x, 0.1);
+    const trial = nelderMead(objective, x0f, { maxIter: 5000 });
+    if (trial.f < best.f) best = trial;
+  }
+  best = nelderMead(objective, best.x, { maxIter: 15000, tol: 1e-15 });
 
   const fitted: Record<string, number> = {};
   paramKeys.forEach((k, i) => fitted[k] = best.x[i]);
-  return { params: fitted as unknown as Aircraft, sse: best.f };
+  const fittedMach = best.x[n - 1];
+
+  let absSse = 0;
+  for (const curve of refCurves) {
+    for (const pt of curve.points) {
+      const h_m = pt.altitude * 1000 * 0.3048;
+      const result = computeSpecificRange(h_m, fittedMach, curve.mass, fitted as unknown as Aircraft);
+      if (!result) continue;
+      const diff = result.SR_NAM - pt.sr;
+      absSse += diff * diff;
+    }
+  }
+
+  return { params: fitted as unknown as Aircraft, sse: absSse, mach: fittedMach };
 }
 
 // ============================================================
@@ -288,11 +319,12 @@ export default function SpecificRangeExplorer() {
   const [showCompressibility, setShowCompressibility] = useState(true);
   const [activeTab, setActiveTab] = useState("story");
   const [hoveredWeight, setHoveredWeight] = useState<number | null>(null);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [overlayX, setOverlayX] = useState(-1.5);
-  const [overlayY, setOverlayY] = useState(0.0);
-  const [overlayW, setOverlayW] = useState(98.0);
-  const [overlayH, setOverlayH] = useState(98.5);
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [refPxAtX60, setRefPxAtX60] = useState(81);
+  const [refPxAtX120, setRefPxAtX120] = useState(676);
+  const [refPxAtY45, setRefPxAtY45] = useState(31);
+  const [refPxAtY24, setRefPxAtY24] = useState(551);
+  const [showCalibration, setShowCalibration] = useState(false);
   const [showParams, setShowParams] = useState(false);
   const [showRefCurves, setShowRefCurves] = useState(false);
   const [fitting, setFitting] = useState(false);
@@ -302,6 +334,15 @@ export default function SpecificRangeExplorer() {
   const [xMax, setXMax] = useState(125);
   const [yMin, setYMin] = useState(24);
   const [yMax, setYMax] = useState(45);
+
+  const [tourStep, setTourStep] = useState<number | null>(null);
+  const tourSeen = useRef(typeof window !== "undefined" && localStorage.getItem("sr-tour-seen") === "1");
+  const refOverlayLabel = useRef<HTMLDivElement>(null);
+  const refPointsLabel = useRef<HTMLDivElement>(null);
+  const refFitButton = useRef<HTMLButtonElement>(null);
+  const refWaveDragLabel = useRef<HTMLDivElement>(null);
+  const chartWrapperRef = useRef<HTMLDivElement>(null);
+  const [plotArea, setPlotArea] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
   const aircraft = useMemo(() => ({
     ...aircraftParams,
@@ -324,11 +365,36 @@ export default function SpecificRangeExplorer() {
     [refCurves]
   );
 
+  const overlayStyle = useMemo(() => {
+    if (!plotArea) return null;
+
+    const refPxPerX = (refPxAtX120 - refPxAtX60) / (120 - 60);
+    const refPxPerY = (refPxAtY24 - refPxAtY45) / (45 - 24);
+
+    const chartPxPerX = plotArea.w / (xMax - xMin);
+    const chartPxPerY = plotArea.h / (yMax - yMin);
+
+    const sx = chartPxPerX / refPxPerX;
+    const sy = chartPxPerY / refPxPerY;
+
+    const imgW = REF_IMG.width * sx;
+    const imgH = REF_IMG.height * sy;
+
+    const chartX60 = plotArea.x + chartPxPerX * (60 - xMin);
+    const chartY45 = plotArea.y + chartPxPerY * (yMax - 45);
+
+    const imgLeft = chartX60 - refPxAtX60 * sx;
+    const imgTop = chartY45 - refPxAtY45 * sy;
+
+    return { left: imgLeft, top: imgTop, width: imgW, height: imgH };
+  }, [plotArea, xMin, xMax, yMin, yMax, refPxAtX60, refPxAtX120, refPxAtY45, refPxAtY24]);
+
   const handleFit = useCallback(() => {
     setFitting(true);
     setTimeout(() => {
       const result = fitAircraftParams(mach, aircraftParams, refCurves);
       setAircraftParams(result.params);
+      setMach(result.mach);
       setFitSSE(result.sse);
       setFitting(false);
     }, 50);
@@ -362,6 +428,63 @@ export default function SpecificRangeExplorer() {
       </div>
     );
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "chart" && !tourSeen.current) {
+      tourSeen.current = true;
+      try { localStorage.setItem("sr-tour-seen", "1"); } catch {}
+      const t = setTimeout(() => setTourStep(0), 600);
+      return () => clearTimeout(t);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "chart") return;
+    const el = chartWrapperRef.current;
+    if (!el) return;
+    const measure = () => {
+      const clipRect = el.querySelector("svg defs clipPath rect");
+      if (!clipRect) return;
+      const x = parseFloat(clipRect.getAttribute("x") || "0");
+      const y = parseFloat(clipRect.getAttribute("y") || "0");
+      const w = parseFloat(clipRect.getAttribute("width") || "0");
+      const h = parseFloat(clipRect.getAttribute("height") || "0");
+      if (w === 0 || h === 0) return;
+      setPlotArea(prev => {
+        if (prev && prev.x === x && prev.y === y && prev.w === w && prev.h === h) return prev;
+        return { x, y, w, h };
+      });
+    };
+    const mo = new MutationObserver(measure);
+    mo.observe(el, { childList: true, subtree: true, attributes: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    measure();
+    return () => { mo.disconnect(); ro.disconnect(); };
+  }, [activeTab]);
+
+  const TOUR_STEPS = useMemo(() => [
+    { ref: refOverlayLabel, title: "See the original", text: "Tick this to show the original Lufthansa figure as a watermark behind the computed curves. You can nudge its position with the sliders that appear." },
+    { ref: refPointsLabel, title: "Compare the data", text: "These are data points I digitised from the original graph. They appear as diamonds so you can see how close the model is." },
+    { ref: refFitButton, title: "Fit the model", text: "Click this to auto-tune the aircraft parameters. It runs a Nelder-Mead optimiser to minimise the gap between model and data. Takes a couple of seconds." },
+    { ref: refWaveDragLabel, title: "The key toggle", text: "Turn wave drag off to see the symmetric sech curve; turn it on to see the asymmetry appear. The Physics and Asymmetry tabs explain why." },
+  ], []);
+
+  const [tourRect, setTourRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    if (tourStep === null) { setTourRect(null); return; }
+    const step = TOUR_STEPS[tourStep];
+    if (!step?.ref.current) return;
+    const sync = () => {
+      const r = step.ref.current!.getBoundingClientRect();
+      setTourRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+    };
+    sync();
+    window.addEventListener("resize", sync);
+    window.addEventListener("scroll", sync, true);
+    return () => { window.removeEventListener("resize", sync); window.removeEventListener("scroll", sync, true); };
+  }, [tourStep, TOUR_STEPS]);
 
   if (loading) {
     return (
@@ -405,7 +528,7 @@ export default function SpecificRangeExplorer() {
         <div style={{
           display: "flex", gap: 2, marginBottom: 24,
           background: "rgba(255,255,255,0.04)", borderRadius: 8,
-          padding: 3, width: "fit-content",
+          padding: 3, flexWrap: "wrap",
         }}>
           {[
             { id: "story", label: "The Story" },
@@ -449,6 +572,34 @@ export default function SpecificRangeExplorer() {
               And <strong>why that asymmetry?</strong>
             </p>
 
+            <figure style={{ margin: "32px 0", textAlign: "center" }}>
+              <img
+                src="/data/specific-range/reference.png"
+                alt="Lufthansa Specific Range chart from Jet Airplane Performance manual"
+                style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}
+              />
+              <figcaption style={{ marginTop: 10, fontSize: 13, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>
+                The original figure from the Lufthansa <em>Jet Airplane Performance</em> manual &mdash;
+                specific range vs. pressure altitude for various aircraft weights.
+              </figcaption>
+            </figure>
+
+            <blockquote style={{
+              margin: "24px 0", padding: "16px 24px",
+              borderLeft: "3px solid rgba(224, 192, 104, 0.5)",
+              background: "rgba(224, 192, 104, 0.04)",
+              borderRadius: "0 8px 8px 0",
+              fontStyle: "italic", color: "rgba(255,255,255,0.55)",
+            }}>
+              &ldquo;The specific question I am looking for an answer is with which calculations/formulas
+              can I construct the curves myself. This particularly concerns the question on the explanation
+              why the curves above the &lsquo;optimal height&rsquo; bend more crooked/sharper than below
+              the line of optimal height?&rdquo;
+              <span style={{ display: "block", marginTop: 8, fontSize: 13, fontStyle: "normal", color: "rgba(224,192,104,0.6)" }}>
+                &mdash; Jeroen Gemke
+              </span>
+            </blockquote>
+
             <div style={{
               margin: "32px 0", padding: "24px 28px",
               background: "rgba(255,255,255,0.03)", borderRadius: 12,
@@ -466,12 +617,11 @@ export default function SpecificRangeExplorer() {
                 proficiency checks aboard A310s, 747-400s, DC-10s.
               </p>
               <p style={{ margin: 0 }}>
-                When his mother recently moved to a nursing home, Jeroen was clearing out the family house
-                and found his father&rsquo;s old study books. They explained &mdash; in careful detail &mdash; how all those
-                calculations were done by hand. He also found an E6B flight computer. It struck him that
-                this craft knowledge, this tacit expertise in building flight plans from first principles,
-                is in danger of being lost entirely. Today, flight plans come out of a computer at the push
-                of a button.
+                Going through his father&rsquo;s old charts and study books, Jeroen found they explained &mdash;
+                in careful detail &mdash; how all those calculations were done by hand. He also found an E6B
+                flight computer. It struck him that this craft knowledge, this tacit expertise in building
+                flight plans from first principles, is in danger of being lost entirely. Today, flight plans
+                come out of a computer at the push of a button.
               </p>
             </div>
 
@@ -547,27 +697,27 @@ export default function SpecificRangeExplorer() {
         {/* ====== CHART TAB ====== */}
         {activeTab === "chart" && (
           <div>
-            <div style={{ display: "flex", gap: 32, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "12px 32px", marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
               <div>
                 <label style={{ display: "block", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", marginBottom: 6, fontWeight: 600 }}>Mach Number</label>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <input type="range" min={0.7} max={0.88} step={0.01} value={mach} onChange={e => setMach(parseFloat(e.target.value))} style={{ width: 180, accentColor: "#4a9eff" }} />
+                  <input type="range" min={0.7} max={0.88} step={0.01} value={mach} onChange={e => setMach(parseFloat(e.target.value))} style={{ width: "100%", maxWidth: 180, minWidth: 100, accentColor: "#4a9eff" }} />
                   <span style={{ fontFamily: "'JetBrains Mono', 'SF Mono', monospace", fontSize: 18, fontWeight: 600, color: "#4a9eff", minWidth: 50 }}>{mach.toFixed(2)}</span>
                 </div>
               </div>
-              <div>
+              <div ref={refWaveDragLabel}>
                 <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
                   <input type="checkbox" checked={showCompressibility} onChange={e => setShowCompressibility(e.target.checked)} style={{ accentColor: "#e74c3c" }} />
                   Include wave drag
                 </label>
               </div>
-              <div>
+              <div ref={refOverlayLabel}>
                 <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
                   <input type="checkbox" checked={showOverlay} onChange={e => setShowOverlay(e.target.checked)} style={{ accentColor: "#f39c12" }} />
                   Reference overlay
                 </label>
               </div>
-              <div>
+              <div ref={refPointsLabel}>
                 <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
                   <input type="checkbox" checked={showRefCurves} onChange={e => setShowRefCurves(e.target.checked)} style={{ accentColor: "#9b59b6" }} />
                   Reference points
@@ -576,7 +726,7 @@ export default function SpecificRangeExplorer() {
             </div>
 
             {/* Axis limits */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 16, padding: "12px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 16, marginBottom: 16, padding: "12px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
               {[
                 { label: "X min (SR)", value: xMin, set: setXMin, min: 0, max: 100, step: 1 },
                 { label: "X max (SR)", value: xMax, set: setXMax, min: 60, max: 200, step: 1 },
@@ -593,29 +743,40 @@ export default function SpecificRangeExplorer() {
               ))}
             </div>
 
-            {/* Overlay controls */}
+            {/* Overlay calibration */}
             {showOverlay && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 16, padding: "12px 16px", background: "rgba(243, 156, 18, 0.06)", borderRadius: 8, border: "1px solid rgba(243, 156, 18, 0.12)" }}>
-                {[
-                  { label: "X offset", value: overlayX, set: setOverlayX, min: -20, max: 30, step: 0.5, unit: "%" },
-                  { label: "Y offset", value: overlayY, set: setOverlayY, min: -20, max: 30, step: 0.5, unit: "%" },
-                  { label: "Width", value: overlayW, set: setOverlayW, min: 50, max: 150, step: 0.5, unit: "%" },
-                  { label: "Height", value: overlayH, set: setOverlayH, min: 50, max: 150, step: 0.5, unit: "%" },
-                ].map(s => (
-                  <div key={s.label}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{s.label}</span>
-                      <span style={{ fontSize: 11, color: "#f39c12", fontFamily: "'JetBrains Mono', monospace" }}>{s.value.toFixed(1)}{s.unit}</span>
-                    </div>
-                    <input type="range" min={s.min} max={s.max} step={s.step} value={s.value} onChange={e => s.set(parseFloat(e.target.value))} style={{ width: "100%", accentColor: "#f39c12" }} />
+              <div style={{ marginBottom: 16 }}>
+                <button onClick={() => setShowCalibration(p => !p)}
+                  style={{ padding: "4px 10px", borderRadius: 5, border: "1px solid rgba(243,156,18,0.2)", background: showCalibration ? "rgba(243,156,18,0.1)" : "transparent", color: "rgba(243,156,18,0.5)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                  {showCalibration ? "Hide calibration" : "Calibrate overlay"}
+                </button>
+                {showCalibration && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginTop: 10, padding: "12px 16px", background: "rgba(243, 156, 18, 0.06)", borderRadius: 8, border: "1px solid rgba(243, 156, 18, 0.12)" }}>
+                    {[
+                      { label: "px at SR = 60", value: refPxAtX60, set: setRefPxAtX60, min: 0, max: 737, step: 1 },
+                      { label: "px at SR = 120", value: refPxAtX120, set: setRefPxAtX120, min: 0, max: 737, step: 1 },
+                      { label: "px at Alt = 45", value: refPxAtY45, set: setRefPxAtY45, min: 0, max: 621, step: 1 },
+                      { label: "px at Alt = 24", value: refPxAtY24, set: setRefPxAtY24, min: 0, max: 621, step: 1 },
+                    ].map(s => (
+                      <div key={s.label}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{s.label}</span>
+                          <input type="number" min={s.min} max={s.max} step={s.step} value={s.value}
+                            onChange={e => { const v = parseInt(e.target.value); if (isFinite(v)) s.set(v); }}
+                            style={{ width: 52, padding: "2px 4px", borderRadius: 4, border: "1px solid rgba(243,156,18,0.3)", background: "rgba(0,0,0,0.3)", color: "#f39c12", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textAlign: "right" }}
+                          />
+                        </div>
+                        <input type="range" min={s.min} max={s.max} step={s.step} value={s.value} onChange={e => s.set(parseInt(e.target.value))} style={{ width: "100%", accentColor: "#f39c12" }} />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
 
             {/* Fit & Params buttons */}
             <div style={{ display: "flex", gap: 12, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
-              <button onClick={handleFit} disabled={fitting} style={{ padding: "8px 20px", borderRadius: 6, border: "1px solid rgba(74, 158, 255, 0.4)", background: fitting ? "rgba(74, 158, 255, 0.1)" : "rgba(74, 158, 255, 0.15)", color: "#4a9eff", fontSize: 13, fontWeight: 600, cursor: fitting ? "wait" : "pointer", fontFamily: "inherit" }}>
+              <button ref={refFitButton} onClick={handleFit} disabled={fitting} style={{ padding: "8px 20px", borderRadius: 6, border: "1px solid rgba(74, 158, 255, 0.4)", background: fitting ? "rgba(74, 158, 255, 0.1)" : "rgba(74, 158, 255, 0.15)", color: "#4a9eff", fontSize: 13, fontWeight: 600, cursor: fitting ? "wait" : "pointer", fontFamily: "inherit" }}>
                 {fitting ? "Fitting..." : "Fit to Reference"}
               </button>
               <button onClick={handleResetParams} style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
@@ -634,7 +795,7 @@ export default function SpecificRangeExplorer() {
             {/* Parameter Sliders */}
             {showParams && (
               <div style={{ marginBottom: 24, padding: "16px 20px", background: "rgba(255,255,255,0.03)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 28px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px 28px" }}>
                   {PARAM_SLIDERS.map(p => (
                     <div key={p.key}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -651,14 +812,22 @@ export default function SpecificRangeExplorer() {
             )}
 
             {/* Chart */}
-            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)", padding: "20px 16px 12px 8px", position: "relative", overflow: "hidden" }}>
-              {showOverlay && (
+            <div ref={chartWrapperRef} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)", padding: "20px 16px 12px 8px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "relative", minHeight: 350, maxHeight: 620, aspectRatio: "1 / 0.9" }}>
+              {showOverlay && plotArea && overlayStyle && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src="/data/specific-range/reference.png" alt=""
-                  style={{ position: "absolute", top: `${overlayY}%`, left: `${overlayX}%`, width: `${overlayW}%`, height: `${overlayH}%`, objectFit: "fill", opacity: 0.18, pointerEvents: "none", zIndex: 0, mixBlendMode: "screen" }}
+                  style={{
+                    position: "absolute",
+                    left: overlayStyle.left,
+                    top: overlayStyle.top,
+                    width: overlayStyle.width,
+                    height: overlayStyle.height,
+                    opacity: 0.18, pointerEvents: "none", zIndex: 0, mixBlendMode: "screen",
+                  }}
                 />
               )}
-              <ResponsiveContainer width="100%" height={580} style={{ position: "relative", zIndex: 1 }}>
+              <ResponsiveContainer width="100%" height="100%" style={{ position: "relative", zIndex: 1 }}>
                 <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
                   <CartesianGrid strokeDasharray="none" stroke="rgba(255,255,255,0.06)" />
                   <XAxis dataKey="sr" type="number" name="Specific Range" domain={[xMin, xMax]} tickCount={7} allowDataOverflow
@@ -693,6 +862,7 @@ export default function SpecificRangeExplorer() {
                   })}
                 </ScatterChart>
               </ResponsiveContainer>
+              </div>
 
               <div style={{ position: "relative", marginTop: -80, marginRight: 60, textAlign: "right", pointerEvents: "none", zIndex: 2 }}>
                 <span style={{ display: "inline-block", padding: "6px 14px", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 4, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.5)", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.04em" }}>M = const</span>
@@ -719,12 +889,20 @@ export default function SpecificRangeExplorer() {
               })}
             </div>
 
-            <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(74, 158, 255, 0.06)", borderRadius: 8, border: "1px solid rgba(74, 158, 255, 0.12)", fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
-              <strong style={{ color: "rgba(255,255,255,0.7)" }}>Reading the chart:</strong>{" "}
-              Toggle &ldquo;Reference overlay&rdquo; to show the Lufthansa Fig. 5/20 as a watermark,
-              and &ldquo;Reference points&rdquo; to show the digitized data. Click &ldquo;Fit to Reference&rdquo;
-              to auto-tune the aircraft parameters via Nelder-Mead optimization.
-              Use &ldquo;Show Params&rdquo; to manually fine-tune individual parameters.
+            <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(74, 158, 255, 0.06)", borderRadius: 8, border: "1px solid rgba(74, 158, 255, 0.12)", fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ flex: 1 }}>
+                <strong style={{ color: "rgba(255,255,255,0.7)" }}>Reading the chart:</strong>{" "}
+                Toggle &ldquo;Reference overlay&rdquo; to show the Lufthansa Fig. 5/20 as a watermark,
+                and &ldquo;Reference points&rdquo; to show the digitized data. Click &ldquo;Fit to Reference&rdquo;
+                to auto-tune the aircraft parameters via Nelder-Mead optimization.
+                Use &ldquo;Show Params&rdquo; to manually fine-tune individual parameters.
+              </div>
+              <button
+                onClick={() => { setTourStep(0); tourSeen.current = true; }}
+                style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(74,158,255,0.3)", background: "rgba(74,158,255,0.1)", color: "#4a9eff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+              >
+                Take the tour
+              </button>
             </div>
           </div>
         )}
@@ -963,6 +1141,72 @@ export default function SpecificRangeExplorer() {
             </div>
           </div>
         )}
+
+        {/* ====== TOUR OVERLAY ====== */}
+        {tourStep !== null && tourRect && (() => {
+          const step = TOUR_STEPS[tourStep];
+          const pad = 8;
+          const cutout = {
+            x: tourRect.left - pad,
+            y: tourRect.top - pad,
+            w: tourRect.width + pad * 2,
+            h: tourRect.height + pad * 2,
+          };
+          const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+          const tipWidth = Math.min(320, vw - 24);
+          const tipLeft = Math.max(12, Math.min(tourRect.left, vw - tipWidth - 12));
+          const tipTop = tourRect.top + tourRect.height + pad + 12;
+          const isLast = tourStep === TOUR_STEPS.length - 1;
+          return (
+            <>
+              <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={() => setTourStep(null)}>
+                <svg width="100%" height="100%" style={{ display: "block" }}>
+                  <defs>
+                    <mask id="tour-cutout">
+                      <rect width="100%" height="100%" fill="white" />
+                      <rect x={cutout.x} y={cutout.y} width={cutout.w} height={cutout.h} rx={8} fill="black" />
+                    </mask>
+                  </defs>
+                  <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#tour-cutout)" />
+                </svg>
+              </div>
+              <div
+                style={{
+                  position: "fixed", top: tipTop, left: tipLeft, width: tipWidth, zIndex: 9999,
+                  background: "rgba(15, 20, 30, 0.97)", borderRadius: 12,
+                  border: "1px solid rgba(74,158,255,0.25)", padding: "16px 20px",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                  fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif",
+                  transition: "top 0.25s ease, left 0.25s ease",
+                }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#4a9eff", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  {tourStep + 1} of {TOUR_STEPS.length}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#fff", marginBottom: 6 }}>
+                  {step.title}
+                </div>
+                <div style={{ fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,0.6)", marginBottom: 16 }}>
+                  {step.text}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <button
+                    onClick={() => setTourStep(null)}
+                    style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    Skip
+                  </button>
+                  <button
+                    onClick={() => isLast ? setTourStep(null) : setTourStep(tourStep + 1)}
+                    style={{ padding: "5px 16px", borderRadius: 6, border: "1px solid rgba(74,158,255,0.4)", background: "rgba(74,158,255,0.15)", color: "#4a9eff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    {isLast ? "Done" : "Next"}
+                  </button>
+                </div>
+              </div>
+            </>
+          );
+        })()}
 
         {/* Footer */}
         <div style={{ marginTop: 48, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
