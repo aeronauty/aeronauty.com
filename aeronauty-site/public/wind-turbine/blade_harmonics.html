@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blade Harmonics Visualizer</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        .left-panel {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .plots-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .controls {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #764ba2;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            font-weight: bold;
+            color: #667eea;
+            text-align: right;
+            font-size: 1em;
+        }
+
+        .plot-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .plot-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .info-box {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .math {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        .harmonics-selector {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .harmonics-selector h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .harmonics-selector p {
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+            
+            .left-panel {
+                position: relative;
+                top: 0;
+                max-height: none;
+            }
+            
+            label {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌀 Blade Harmonics Visualizer</h1>
+        
+        <div class="content-wrapper">
+            <div class="left-panel">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="numBlades">Number of Blades (B):</label>
+                        <input type="range" id="numBlades" min="1" max="8" value="3" step="1">
+                        <span class="value-display" id="numBladesValue">3</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="phaseShift">Phase Shift (Δψ):</label>
+                        <input type="range" id="phaseShift" min="0" max="6.28" value="0" step="0.01">
+                        <span class="value-display" id="phaseShiftValue">0.00</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="resolution">Resolution:</label>
+                        <input type="range" id="resolution" min="100" max="1000" value="360" step="10">
+                        <span class="value-display" id="resolutionValue">360</span>
+                    </div>
+                    
+                    <div class="harmonics-selector">
+                        <h4>Forcing Function: \(F(\psi) = \sum_{n=1}^{6} A_n \sin(n\psi)\)</h4>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">Adjust amplitude coefficients for each harmonic (0 = disabled):</p>
+                        
+                        <div class="control-group">
+                            <label for="A1">A₁ (1P):</label>
+                            <input type="range" id="A1" min="0" max="2" value="1" step="0.05">
+                            <span class="value-display" id="A1Value">1.00</span>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="A2">A₂ (2P):</label>
+                            <input type="range" id="A2" min="0" max="2" value="0" step="0.05">
+                            <span class="value-display" id="A2Value">0.00</span>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="A3">A₃ (3P):</label>
+                            <input type="range" id="A3" min="0" max="2" value="0" step="0.05">
+                            <span class="value-display" id="A3Value">0.00</span>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="A4">A₄ (4P):</label>
+                            <input type="range" id="A4" min="0" max="2" value="0" step="0.05">
+                            <span class="value-display" id="A4Value">0.00</span>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="A5">A₅ (5P):</label>
+                            <input type="range" id="A5" min="0" max="2" value="0" step="0.05">
+                            <span class="value-display" id="A5Value">0.00</span>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="A6">A₆ (6P):</label>
+                            <input type="range" id="A6" min="0" max="2" value="0" step="0.05">
+                            <span class="value-display" id="A6Value">0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="plots-panel">
+                <div class="plot-container">
+                    <div class="plot-title">Forcing Function Applied to Each Blade: \(F(\psi + \Delta\psi + \frac{2\pi b}{B})\)</div>
+                    <div id="forcingPlot"></div>
+                </div>
+
+                <div class="plot-container">
+                    <div class="plot-title">Combined Load in Inertially-Fixed Reference Frame (Tower/Hub Load)</div>
+                    <div id="combinedLoadPlot"></div>
+                </div>
+
+                <div class="plot-container">
+                    <div class="plot-title">Output Spectrum: Rotating vs Fixed Frame Comparison</div>
+                    <div id="outputSpectrumPlot"></div>
+                </div>
+
+                <div class="info-box">
+                    <h3>Theory</h3>
+                    <p><strong>Forcing Function:</strong> This visualizer allows you to create a custom forcing function composed of harmonics from 1P to 6P:</p>
+                    <div class="math">$$F(\psi) = A_1 \sin(\psi) + A_2 \sin(2\psi) + A_3 \sin(3\psi) + A_4 \sin(4\psi) + A_5 \sin(5\psi) + A_6 \sin(6\psi)$$</div>
+                    
+                    <p><strong>Blade Response:</strong> Each blade experiences this forcing function with a spatial phase shift based on its azimuthal position. Note that the phase shift is the same for all harmonics:</p>
+                    <div class="math">$$F_b(\psi) = \sum_{n=1}^{6} A_n \sin\left(n\psi + \Delta\psi + \frac{2\pi b}{B}\right)$$</div>
+                    
+                    <p><strong>Rotating vs Fixed Frame:</strong></p>
+                    <ul style="line-height: 1.8; color: #555;">
+                        <li><strong style="color: #3498db;">Rotating Frame (Blue):</strong> \(B \times\) input amplitudes, where \(B\) is the number of blades. Each blade experiences the same forcing function, so the total harmonic content in the rotating frame is simply \(B\) times the input.</li>
+                        <li><strong style="color: #e74c3c;">Fixed Frame (Red):</strong> Load projected onto a fixed direction in space: 
+                        <div class="math" style="background: transparent; padding: 10px 0;">$$\sum_{b=0}^{B-1} F_b(\psi) \cos\left(\psi + \Delta\psi + \frac{2\pi b}{B}\right)$$</div>
+                        This is what the tower experiences.</li>
+                    </ul>
+                    
+                    <p><strong>Key Insight:</strong> For a \(B\)-bladed turbine, harmonics at integer multiples of \(B\) reinforce in the rotating frame but may transform to different frequencies in the fixed frame. The comparison chart shows which harmonics survive in each reference frame.</p>
+                    
+                    <p><strong>Practical Application:</strong> This helps understand how different frequency components in wind loads (tower shadow, yaw error, wind shear, etc.) affect both rotating (hub) and non-rotating (tower) structure loads.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const numBladesSlider = document.getElementById('numBlades');
+        const phaseShiftSlider = document.getElementById('phaseShift');
+        const resolutionSlider = document.getElementById('resolution');
+        const numBladesValue = document.getElementById('numBladesValue');
+        const phaseShiftValue = document.getElementById('phaseShiftValue');
+        const resolutionValue = document.getElementById('resolutionValue');
+        
+        // Get harmonic amplitude sliders
+        const A1Slider = document.getElementById('A1');
+        const A2Slider = document.getElementById('A2');
+        const A3Slider = document.getElementById('A3');
+        const A4Slider = document.getElementById('A4');
+        const A5Slider = document.getElementById('A5');
+        const A6Slider = document.getElementById('A6');
+        const A1Value = document.getElementById('A1Value');
+        const A2Value = document.getElementById('A2Value');
+        const A3Value = document.getElementById('A3Value');
+        const A4Value = document.getElementById('A4Value');
+        const A5Value = document.getElementById('A5Value');
+        const A6Value = document.getElementById('A6Value');
+
+        // Update displays
+        function updateDisplays() {
+            numBladesValue.textContent = numBladesSlider.value;
+            phaseShiftValue.textContent = parseFloat(phaseShiftSlider.value).toFixed(2);
+            resolutionValue.textContent = resolutionSlider.value;
+            A1Value.textContent = parseFloat(A1Slider.value).toFixed(2);
+            A2Value.textContent = parseFloat(A2Slider.value).toFixed(2);
+            A3Value.textContent = parseFloat(A3Slider.value).toFixed(2);
+            A4Value.textContent = parseFloat(A4Slider.value).toFixed(2);
+            A5Value.textContent = parseFloat(A5Slider.value).toFixed(2);
+            A6Value.textContent = parseFloat(A6Slider.value).toFixed(2);
+        }
+
+        // Helper function to calculate mean of an array
+        function calculateMean(arr) {
+            return arr.reduce((sum, val) => sum + val, 0) / arr.length;
+        }
+        
+        // Calculate DFT for specific harmonics
+        function calculateHarmonicAmplitudes(signal, harmonics) {
+            const N = signal.length;
+            const amplitudes = [];
+            
+            for (let harmonic of harmonics) {
+                let realPart = 0;
+                let imagPart = 0;
+                
+                for (let n = 0; n < N; n++) {
+                    const angle = -2 * Math.PI * harmonic * n / N;
+                    realPart += signal[n] * Math.cos(angle);
+                    imagPart += signal[n] * Math.sin(angle);
+                }
+                
+                // Normalize and calculate magnitude
+                realPart /= N;
+                imagPart /= N;
+                const amplitude = 2 * Math.sqrt(realPart * realPart + imagPart * imagPart);
+                amplitudes.push(amplitude);
+            }
+            
+            return amplitudes;
+        }
+        
+        // Create forcing function with harmonics
+        function forcingFunction(psi, phase, A) {
+            // F(θ) = Σ Aₙ·sin(n·θ + phase)
+            // Note: phase is NOT multiplied by n - each harmonic sees the same blade offset
+            let result = 0;
+            for (let n = 1; n <= 6; n++) {
+                result += A[n-1] * Math.sin(n * psi + phase);
+            }
+            return result;
+        }
+
+        // Generate data for plots
+        function generateData() {
+            const B = parseInt(numBladesSlider.value);
+            const dpsi = parseFloat(phaseShiftSlider.value);
+            const resolution = parseInt(resolutionSlider.value);
+            
+            // Get harmonic amplitudes
+            const A = [
+                parseFloat(A1Slider.value),
+                parseFloat(A2Slider.value),
+                parseFloat(A3Slider.value),
+                parseFloat(A4Slider.value),
+                parseFloat(A5Slider.value),
+                parseFloat(A6Slider.value)
+            ];
+            
+            // Generate psi values
+            const psi = Array.from({length: resolution}, (_, i) => (2 * Math.PI * i) / resolution);
+            
+            // Initialize sum array
+            const forcingSum = new Array(resolution).fill(0);
+            const forcingTraces = [];
+            
+            // Generate data for each blade
+            const bladeData = [];
+            
+            for (let b = 0; b < B; b++) {
+                const phase = dpsi + (2 * Math.PI * b) / B;
+                const forcingValues = psi.map(t => forcingFunction(t, phase, A));
+                
+                // Store blade data
+                bladeData.push(forcingValues);
+                
+                // Add to sum
+                for (let i = 0; i < resolution; i++) {
+                    forcingSum[i] += forcingValues[i];
+                }
+            }
+            
+            // Create traces for each blade
+            for (let b = 0; b < B; b++) {
+                forcingTraces.push({
+                    x: psi,
+                    y: bladeData[b],
+                    mode: 'lines',
+                    name: `Blade ${b + 1}`,
+                    line: {width: 1.5},
+                    opacity: 0.6
+                });
+            }
+            
+            // Add sum trace
+            forcingTraces.push({
+                x: psi,
+                y: forcingSum,
+                mode: 'lines',
+                name: 'Sum',
+                line: {width: 3, color: 'black'},
+                opacity: 1
+            });
+            
+            // Calculate output spectrum (harmonics in the sum signal)
+            // Use the signal before mean subtraction for accurate harmonic analysis
+            const outputHarmonics = calculateHarmonicAmplitudes(forcingSum, [1, 2, 3, 4, 5, 6]);
+            
+            // Calculate load in inertially-fixed frame
+            // Project each blade's load onto a fixed direction (e.g., horizontal)
+            const fixedFrameLoad = new Array(resolution).fill(0);
+            for (let b = 0; b < B; b++) {
+                for (let i = 0; i < resolution; i++) {
+                    const bladeAngle = psi[i] + dpsi + (2 * Math.PI * b) / B;
+                    // Project blade load onto fixed horizontal direction
+                    fixedFrameLoad[i] += bladeData[b][i] * Math.cos(bladeAngle);
+                }
+            }
+            
+            return {forcingTraces, amplitudes: A, outputHarmonics, psi, forcingSum, fixedFrameLoad, bladeData};
+        }
+
+        // Plot configuration
+        const layout = {
+            xaxis: {
+                title: 'θ (radians)',
+                gridcolor: '#e0e0e0',
+                tickmode: 'array',
+                tickvals: [0, Math.PI/2, Math.PI, 3*Math.PI/2, 2*Math.PI],
+                ticktext: ['0', 'π/2', 'π', '3π/2', '2π']
+            },
+            yaxis: {
+                title: 'Value',
+                gridcolor: '#e0e0e0'
+            },
+            plot_bgcolor: '#fafafa',
+            paper_bgcolor: 'white',
+            margin: {l: 60, r: 40, t: 40, b: 60},
+            hovermode: 'closest',
+            showlegend: true,
+            legend: {
+                x: 1.02,
+                y: 1,
+                xanchor: 'left',
+                yanchor: 'top'
+            }
+        };
+
+        const config = {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['lasso2d', 'select2d']
+        };
+
+        // Update plots
+        function updatePlots() {
+            updateDisplays();
+            const {forcingTraces, amplitudes, outputHarmonics, psi, forcingSum, fixedFrameLoad, bladeData} = generateData();
+            const B = parseInt(numBladesSlider.value);
+            
+            const forcingLayout = {...layout, yaxis: {...layout.yaxis, title: 'F(θ + Δψ + 2πb/B)'}};
+            
+            Plotly.newPlot('forcingPlot', forcingTraces, forcingLayout, config);
+            
+            // Create combined load plot showing individual blade contributions in fixed frame
+            const dpsi = parseFloat(phaseShiftSlider.value);
+            
+            // Calculate each blade's contribution to fixed frame
+            const bladeColors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
+            const fixedFrameTraces = [];
+            
+            for (let b = 0; b < B; b++) {
+                const bladeFixedLoad = new Array(psi.length).fill(0);
+                for (let i = 0; i < psi.length; i++) {
+                    const bladeAngle = psi[i] + dpsi + (2 * Math.PI * b) / B;
+                    bladeFixedLoad[i] = bladeData[b][i] * Math.cos(bladeAngle);
+                }
+                
+                fixedFrameTraces.push({
+                    x: psi,
+                    y: bladeFixedLoad,
+                    mode: 'lines',
+                    name: `Blade ${b + 1}`,
+                    line: {
+                        width: 1.5,
+                        color: bladeColors[b % bladeColors.length]
+                    },
+                    opacity: 0.6
+                });
+            }
+            
+            // Add total fixed frame load
+            fixedFrameTraces.push({
+                x: psi,
+                y: fixedFrameLoad,
+                mode: 'lines',
+                name: 'Sum (Tower Load)',
+                line: {width: 3, color: 'black'},
+                opacity: 1
+            });
+            
+            // Calculate output spectrum from the fixed frame load
+            const fixedFrameHarmonics = calculateHarmonicAmplitudes(fixedFrameLoad, [1, 2, 3, 4, 5, 6]);
+            
+            // Calculate y-range for combined load plot
+            // Use the same scale as the rotating frame to prevent numerical noise from dominating
+            const allForcingValues = forcingTraces.flatMap(trace => trace.y);
+            const forcingMin = Math.min(...allForcingValues);
+            const forcingMax = Math.max(...allForcingValues);
+            const forcingRange = Math.max(Math.abs(forcingMax), Math.abs(forcingMin));
+            
+            const allFixedValues = fixedFrameTraces.flatMap(trace => trace.y);
+            const fixedMin = Math.min(...allFixedValues);
+            const fixedMax = Math.max(...allFixedValues);
+            const fixedRange = Math.max(Math.abs(fixedMax), Math.abs(fixedMin));
+            
+            // Use the larger of the two ranges, with a minimum threshold
+            const yRange = Math.max(forcingRange, fixedRange, 0.1);
+            
+            const combinedLoadLayout = {
+                xaxis: {
+                    title: 'θ (radians)',
+                    gridcolor: '#e0e0e0',
+                    tickmode: 'array',
+                    tickvals: [0, Math.PI/2, Math.PI, 3*Math.PI/2, 2*Math.PI],
+                    ticktext: ['0', 'π/2', 'π', '3π/2', '2π']
+                },
+                yaxis: {
+                    title: 'Projected Load (Fixed Frame)',
+                    gridcolor: '#e0e0e0',
+                    range: [-yRange * 1.1, yRange * 1.1]
+                },
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: 'white',
+                margin: {l: 60, r: 40, t: 40, b: 60},
+                hovermode: 'closest',
+                showlegend: true,
+                legend: {
+                    x: 1.02,
+                    y: 1,
+                    xanchor: 'left',
+                    yanchor: 'top'
+                }
+            };
+            
+            Plotly.newPlot('combinedLoadPlot', fixedFrameTraces, combinedLoadLayout, config);
+            
+            // Create combined output spectrum showing both rotating and non-rotating frame harmonics
+            const harmonicLabels = ['1P', '2P', '3P', '4P', '5P', '6P'];
+            
+            // Rotating frame: N × input amplitudes (each blade sees same forcing function)
+            const rotatingFrameHarmonics = amplitudes.map(a => a * B);
+            
+            // Create grouped bar chart with both rotating and fixed frame
+            const rotatingTrace = {
+                x: harmonicLabels,
+                y: rotatingFrameHarmonics,
+                name: 'Rotating Frame',
+                type: 'bar',
+                marker: {
+                    color: '#3498db',  // Blue for rotating
+                    line: {
+                        color: '#2980b9',
+                        width: 1.5
+                    }
+                },
+                text: rotatingFrameHarmonics.map(a => a.toFixed(3)),
+                textposition: 'auto',
+                hovertemplate: '<b>Rotating Frame - %{x}</b><br>Amplitude: %{y:.4f}<extra></extra>'
+            };
+            
+            const fixedTrace = {
+                x: harmonicLabels,
+                y: fixedFrameHarmonics,
+                name: 'Fixed Frame (Tower Load)',
+                type: 'bar',
+                marker: {
+                    color: '#e74c3c',  // Red for fixed
+                    line: {
+                        color: '#c0392b',
+                        width: 1.5
+                    }
+                },
+                text: fixedFrameHarmonics.map(a => a.toFixed(3)),
+                textposition: 'auto',
+                hovertemplate: '<b>Fixed Frame - %{x}</b><br>Amplitude: %{y:.4f}<extra></extra>'
+            };
+            
+            const maxOutput = Math.max(...rotatingFrameHarmonics, ...fixedFrameHarmonics);
+            const outputSpectrumLayout = {
+                xaxis: {
+                    title: 'Harmonic Component',
+                    gridcolor: '#e0e0e0'
+                },
+                yaxis: {
+                    title: 'Amplitude',
+                    gridcolor: '#e0e0e0',
+                    range: [0, maxOutput * 1.15 || 0.1]
+                },
+                barmode: 'group',
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: 'white',
+                margin: {l: 60, r: 40, t: 40, b: 60},
+                hovermode: 'closest',
+                showlegend: true,
+                legend: {
+                    x: 1.02,
+                    y: 1,
+                    xanchor: 'left',
+                    yanchor: 'top'
+                }
+            };
+            
+            Plotly.newPlot('outputSpectrumPlot', [rotatingTrace, fixedTrace], outputSpectrumLayout, config);
+        }
+
+        // Event listeners
+        numBladesSlider.addEventListener('input', updatePlots);
+        phaseShiftSlider.addEventListener('input', updatePlots);
+        resolutionSlider.addEventListener('input', updatePlots);
+        
+        // Add event listeners for amplitude sliders
+        A1Slider.addEventListener('input', updatePlots);
+        A2Slider.addEventListener('input', updatePlots);
+        A3Slider.addEventListener('input', updatePlots);
+        A4Slider.addEventListener('input', updatePlots);
+        A5Slider.addEventListener('input', updatePlots);
+        A6Slider.addEventListener('input', updatePlots);
+
+        // Initial plot
+        updatePlots();
+    </script>
+</body>
+</html>
+
+
