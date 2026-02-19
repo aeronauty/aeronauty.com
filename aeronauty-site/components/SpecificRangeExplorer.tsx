@@ -484,7 +484,7 @@ export default function SpecificRangeExplorer() {
             </p>
 
             <p>
-              When he reached out, I was happy to help. My first instinct was to recreate the graph
+              When he reached out, I was happy to help - though I moved from the USA to Germany and started a new job, so my time has been scattered. My first instinct was to recreate the graph
               computationally and see if the physics would fall out. As I wrote to him:
             </p>
 
@@ -502,16 +502,16 @@ export default function SpecificRangeExplorer() {
             <p>
               Looking at the shape of the curves, I could see something like a parabola
               shifted upwards &mdash; hinting at a nonlinear scaling on one of the axes, or perhaps a logarithmic
-              term buried in the physics. I suspected the density-altitude relationship, thrust-specific fuel
+              term buried in the physics (which I know there is in the Breguet range equation). I suspected the density-altitude relationship, thrust-specific fuel
               consumption behaviour, and wave drag near the coffin corner were all playing a role.
             </p>
 
             <p>
-              There was a charming exchange about tools. Jeroen, 61, described himself as a &ldquo;boomer&rdquo;
+              There was a charming exchange about tools. Jeroen described himself as a &ldquo;boomer&rdquo;
               who learned SAS and Fortran, and said he only really &ldquo;understood&rdquo; Excel and handwritten
               calculations &mdash; which was exactly why he loved the YouTube lectures, because I wrote down the
               formulas and he could follow the reasoning. I offered to build an interactive widget he could
-              run online.
+              run online - and this is that.
             </p>
 
             <p>
@@ -735,9 +735,8 @@ export default function SpecificRangeExplorer() {
             <div style={{ fontSize: 15, lineHeight: 1.9, color: "rgba(255,255,255,0.65)" }}>
 
               <p>
-                Here&rsquo;s the thing about specific range &mdash; it&rsquo;s just distance per unit fuel burned. Nothing exotic.
-                But the way the algebra simplifies at constant Mach is genuinely elegant
-                (and I don&rsquo;t use that word lightly).
+                Specific range is just distance per unit fuel burned. Nothing exotic.
+                But the way the algebra simplifies at constant Mach is genuinely elegant.
               </p>
 
               <h3 style={{ fontSize: 17, fontWeight: 600, color: "#4a9eff", margin: "36px 0 12px" }}>
@@ -750,8 +749,8 @@ export default function SpecificRangeExplorer() {
                 <Tex display>{"\\text{SR} = \\frac{V_{\\text{TAS}}}{\\text{TSFC} \\times D}"}</Tex>
               </div>
               <p>
-                That&rsquo;s true airspeed divided by fuel flow (which is thrust-specific fuel consumption times drag,
-                since in steady cruise thrust equals drag). Simple enough.
+                True airspeed divided by fuel flow (which is thrust-specific fuel consumption times drag,
+                since in steady cruise thrust equals drag). 
               </p>
 
               <h3 style={{ fontSize: 17, fontWeight: 600, color: "#4a9eff", margin: "36px 0 12px" }}>
@@ -764,20 +763,20 @@ export default function SpecificRangeExplorer() {
                 <Tex display>{"V_{\\text{TAS}} = M \\, a = M \\sqrt{\\gamma R T}"}</Tex>
               </div>
               <p>
-                Now here&rsquo;s where it gets interesting. Dynamic pressure can be rewritten purely in
+                Dynamic pressure can be rewritten purely in
                 terms of pressure and Mach:
               </p>
               <div style={{ textAlign: "center", margin: "20px 0" }}>
                 <Tex display>{"q = \\tfrac{1}{2} \\rho V^2 = \\tfrac{1}{2} \\gamma \\, p \\, M^2"}</Tex>
               </div>
               <p>
-                That&rsquo;s a neat result &mdash; density has vanished. This means the lift coefficient at constant Mach and weight is purely a function of pressure:
+                Density has vanished. This means the lift coefficient at constant Mach and weight is purely a function of pressure:
               </p>
               <div style={{ textAlign: "center", margin: "20px 0" }}>
                 <Tex display>{"C_L = \\frac{W}{q S} = \\frac{2 W}{\\gamma \\, p \\, M^2 S}"}</Tex>
               </div>
               <p>
-                As you climb (pressure drops), <Tex>{"C_L"}</Tex> increases to maintain lift. That&rsquo;s the whole game.
+                As you climb (pressure drops), <Tex>{"C_L"}</Tex> increases to maintain lift. 
               </p>
 
               <h3 style={{ fontSize: 17, fontWeight: 600, color: "#4a9eff", margin: "36px 0 12px" }}>
@@ -918,12 +917,23 @@ export default function SpecificRangeExplorer() {
               </div>
               <p style={{ margin: 0 }}>
                 This is the big one. At constant Mach, climbing means lower pressure, which
-                means higher <Tex>{"C_L"}</Tex> to maintain lift. That pushes you past the critical Mach number
-                for drag divergence, and the wave drag term goes as{" "}
-                <Tex>{"20(M - M_{\\text{crit}})^4"}</Tex>. Fourth power &mdash; it&rsquo;s savage.
-                Below the optimum, you&rsquo;re just seeing gentle increases from the{" "}
-                <Tex>{"C_{D_0}"}</Tex> parasitic term. Above it, you&rsquo;ve got a fourth-power penalty
-                piling on top of the induced drag. There&rsquo;s no equivalent mechanism in the other direction.
+                means higher <Tex>{"C_L"}</Tex> to maintain lift. Higher <Tex>{"C_L"}</Tex> means a higher
+                angle of attack, which means stronger suction peaks on the upper surface of the wing.
+                Those suction peaks accelerate the local airflow &mdash; and at some point, the local flow
+                goes supersonic even though the freestream Mach is unchanged. That&rsquo;s what the critical
+                Mach number captures: <Tex>{"M_{\\text{crit}} = M_{dd0} - \\kappa_{C_L} \\cdot C_L"}</Tex>.
+                Every increment in <Tex>{"C_L"}</Tex> pulls <Tex>{"M_{\\text{crit}}"}</Tex> downward, opening
+                a gap between the Mach you&rsquo;re flying at and the Mach the wing can tolerate. The wave drag
+                penalty goes as the fourth power of that gap: <Tex>{"20(M - M_{\\text{crit}})^4"}</Tex>. Even
+                a small gap is brutal. Below the optimum, there&rsquo;s no equivalent mechanism &mdash; you&rsquo;re
+                just seeing gentle increases from parasitic drag.
+              </p>
+              <p style={{ margin: "12px 0 0", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
+                The fourth-power wave drag model originates from Lock (1951), as presented in
+                Hilton, W.F., <em>High Speed Aerodynamics</em>, Longmans, Green &amp; Co., 1952.
+                The linear dependence of <Tex>{"M_{\\text{crit}}"}</Tex> on <Tex>{"C_L"}</Tex> is
+                a standard result in transonic aerodynamics &mdash; see e.g. Torenbeek,{" "}
+                <em>Synthesis of Subsonic Airplane Design</em>, Delft University Press, 1982.
               </p>
             </div>
 
