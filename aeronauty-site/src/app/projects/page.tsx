@@ -5,6 +5,7 @@ export const metadata = { title: "Projects — Aeronauty" };
 const items = [
   { href: "/projects/geospatial", title: "Geospatial", desc: "Interactive maps & algorithms." },
   { href: "/projects/flight", title: "Flight", desc: "Aero, performance, and visualization." },
+  { href: "/projects/specific-range", title: "Specific Range", desc: "Why SR curves bend above the optimum altitude." },
   { href: "/projects/data-science", title: "Data Science (the real kind)", desc: "Registry + visualisation + quick applets." },
   { href: "/projects/deckide", title: "Deckide", desc: "Decision decks for trade-offs.", soon: true },
   { href: "/projects/sayvault", title: "SayVault", desc: "Structured memory & recall.", soon: true },

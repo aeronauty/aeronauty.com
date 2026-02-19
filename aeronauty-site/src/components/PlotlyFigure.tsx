@@ -2,10 +2,12 @@
 import dynamic from 'next/dynamic'
 
 // Dynamically import Plotly to avoid SSR issues
-const Plot = dynamic(() => import('react-plotly.js'), {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const Plot = dynamic(() => import('react-plotly.js').then(m => m.default) as any, {
   ssr: false,
   loading: () => <div className="w-full h-64 bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">Loading chart...</div>
-})
+}) as any;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export default function PlotlyFigure() {
   return (

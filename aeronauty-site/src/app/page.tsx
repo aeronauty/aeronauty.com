@@ -10,7 +10,7 @@ export default function HomePage() {
       <section className="space-y-4">
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">Aeronauty</h1>
         <p className="text-lg text-slate-700 max-w-3xl">
-          Hi, I'm <strong>Harry Smith</strong> — an aerospace engineer who builds{" "}
+          Hi, I&rsquo;m <strong>Harry Smith</strong> — an aerospace engineer who builds{" "}
           <em>decision tools</em>: optimization, geospatial analytics, and visual storytelling.
           I turn messy systems into interactive apps people can actually use.
         </p>
@@ -24,6 +24,7 @@ export default function HomePage() {
         {[
           { href: "/projects/geospatial", title: "Geospatial", desc: "Interactive maps & algorithms." },
           { href: "/projects/flight", title: "Flight", desc: "Aero, performance, and visualization." },
+          { href: "/projects/specific-range", title: "Specific Range", desc: "Why SR curves bend above the optimum altitude." },
           { href: "/projects/data-science", title: "Data Science (the real kind)", desc: "Registry + visualisation + quick applets." },
           { href: "/projects/deckide", title: "Deckide", desc: "Decision decks for trade-offs.", soon: true },
           { href: "/projects/sayvault", title: "SayVault", desc: "Structured memory & recall.", soon: true },
