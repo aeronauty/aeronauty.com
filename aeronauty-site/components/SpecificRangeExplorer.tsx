@@ -434,18 +434,19 @@ export default function SpecificRangeExplorer() {
             </h2>
 
             <p>
-              In late February 2025, I got a message on LinkedIn from a man named Jeroen Gemke.
+              In late February 2025, I got a message on LinkedIn from Jeroen Gemke.
               He&rsquo;d been watching my Aircraft Flight Mechanics lectures on YouTube and had a question
-              he couldn&rsquo;t crack &mdash; one that had consumed months of effort and stacks of handwritten pages.
+              he couldn&rsquo;t crack &mdash; one that had consumed months of effort and stacks of handwritten pages - and one, that to my shame,
+              I've only just gotten around to fully answering.
             </p>
 
             <p>
-              The question centred on a single graph. It came from a Lufthansa training manual called
-              {" "}<em>Jet Airplane Performance</em>, and it showed specific range &mdash; nautical air miles
+              The question centred on a single graph. It comes from a Lufthansa training manual called
+              {" "}<em>Jet Airplane Performance</em>, and it shows specific range &mdash; nautical air miles
               per 1000&nbsp;kg of fuel &mdash; plotted against pressure altitude for different aircraft weights.
-              The curves had a distinctive shape: gentle roll-off below the optimum altitude, then a sharp,
-              almost cliff-like drop above it. Jeroen wanted to know: what formulas produce these curves?
-              And why that asymmetry?
+              The curves have a distinctive shape: gentle roll-off below the optimum altitude, then a sharp,
+              almost cliff-like drop above it. Jeroen wanted to know: <strong>what formulas produce these curves?</strong>
+              And <strong>why that asymmetry?</strong>
             </p>
 
             <div style={{
