@@ -131,20 +131,13 @@ const WEIGHTS = [
 // ============================================================
 // Curve generation
 // ============================================================
-function generateCurves(M: number, aircraft: Aircraft, weights: typeof WEIGHTS, refCurves: RefCurve[]) {
-  const refBounds: Record<number, { min: number; max: number }> = {};
-  for (const c of refCurves) {
-    const alts = c.points.map(p => p.altitude);
-    refBounds[c.mass] = { min: Math.min(...alts), max: Math.max(...alts) };
-  }
-
+function generateCurves(M: number, aircraft: Aircraft, weights: typeof WEIGHTS, _refCurves: RefCurve[], altMin = 24, altMax = 45) {
   const curves: Record<number, RefPoint[]> = {};
   const optima: { mass: number; label: string; altitude: number; sr: number }[] = [];
 
   weights.forEach(w => {
-    const bounds = refBounds[w.mass] || { min: 24, max: 45 };
-    const hMin = Math.floor(bounds.min * 1000);
-    const hMax = Math.ceil(bounds.max * 1000);
+    const hMin = Math.floor(altMin * 1000);
+    const hMax = Math.ceil(altMax * 1000);
     const points: RefPoint[] = [];
     let bestSR = 0, bestAlt = 0;
 
@@ -351,8 +344,8 @@ export default function SpecificRangeExplorer() {
   }), [aircraftParams, showCompressibility]);
 
   const { curves, optima } = useMemo(
-    () => generateCurves(mach, aircraft, WEIGHTS, refCurves),
-    [mach, aircraft, refCurves]
+    () => generateCurves(mach, aircraft, WEIGHTS, refCurves, yMin, yMax),
+    [mach, aircraft, refCurves, yMin, yMax]
   );
 
   const optimaLineData = useMemo(() =>
@@ -728,17 +721,20 @@ export default function SpecificRangeExplorer() {
             {/* Axis limits */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 16, marginBottom: 16, padding: "12px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
               {[
-                { label: "X min (SR)", value: xMin, set: setXMin, min: 0, max: 100, step: 1 },
-                { label: "X max (SR)", value: xMax, set: setXMax, min: 60, max: 200, step: 1 },
-                { label: "Y min (alt)", value: yMin, set: setYMin, min: 0, max: 40, step: 1 },
-                { label: "Y max (alt)", value: yMax, set: setYMax, min: 30, max: 60, step: 1 },
+                { label: "X min (SR)", value: xMin, set: setXMin, min: 0, max: 200, step: 1 },
+                { label: "X max (SR)", value: xMax, set: setXMax, min: 0, max: 200, step: 1 },
+                { label: "Y min (alt)", value: yMin, set: setYMin, min: 0, max: 60, step: 1 },
+                { label: "Y max (alt)", value: yMax, set: setYMax, min: 0, max: 60, step: 1 },
               ].map(s => (
                 <div key={s.label}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
                     <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{s.label}</span>
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: "'JetBrains Mono', monospace" }}>{s.value}</span>
+                    <input type="number" min={s.min} max={s.max} step={s.step} value={s.value}
+                      onChange={e => { const v = parseInt(e.target.value); if (isFinite(v)) s.set(v); }}
+                      style={{ width: 48, padding: "2px 4px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(0,0,0,0.3)", color: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textAlign: "right" }}
+                    />
                   </div>
-                  <input type="range" min={s.min} max={s.max} step={s.step} value={s.value} onChange={e => s.set(parseFloat(e.target.value))} style={{ width: "100%", accentColor: "#4a9eff" }} />
+                  <input type="range" min={s.min} max={s.max} step={s.step} value={s.value} onChange={e => s.set(parseInt(e.target.value))} style={{ width: "100%", accentColor: "#4a9eff" }} />
                 </div>
               ))}
             </div>
