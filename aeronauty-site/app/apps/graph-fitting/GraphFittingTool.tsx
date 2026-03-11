@@ -236,7 +236,7 @@ export default function GraphFittingTool() {
   const chartRef = useRef<HTMLDivElement>(null);
   const [plotlyLoaded, setPlotlyLoaded] = useState(false);
   const [activeDataset, setActiveDataset] = useState<'all' | CurveKey>('all');
-  const [activeFits, setActiveFits] = useState<Set<FitType>>(new Set(['poly5', 'power']));
+  const [activeFits, setActiveFits] = useState<Set<FitType>>(new Set<FitType>(['poly5', 'power']));
   const [showExtrapolation, setShowExtrapolation] = useState(true);
 
   useEffect(() => {
