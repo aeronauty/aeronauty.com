@@ -38,6 +38,14 @@ export default function ProjectsPage() {
       gradient: 'from-orange-500 to-red-500',
     },
     {
+      title: 'Polynomial vs Power Fits',
+      description: 'Why polynomial trendlines fail for aircraft fuel efficiency. UK DfT data with poly 3/4/5 and power fits; compare R² and extrapolation behaviour.',
+      tech: ['Plotly', 'Least-Squares', 'Levenberg–Marquardt', 'Flight Mechanics', 'Data Viz'],
+      link: '/apps/graph-fitting',
+      status: 'Live',
+      gradient: 'from-amber-500 to-rose-500',
+    },
+    {
       title: 'PARADIGM',
       description: 'Systems-of-systems optimization platform for future aircraft. Energy/fuel/logistics modeling with reduced-order models. Boeing Innovation Award winner.',
       tech: ['Python', 'React', 'Reduced-Order Models', 'Geospatial', 'Optimization'],

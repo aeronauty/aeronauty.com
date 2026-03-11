@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polynomial vs Power Fits — Aircraft Fuel Burn</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#c9d1d9;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.6;padding:2rem 1rem}
+.container{max-width:960px;margin:0 auto}
+.header-accent{height:3px;background:linear-gradient(90deg,#29b6f6,#ab47bc,#ef5350);border-radius:2px;margin-bottom:1.5rem}
+h1{font-size:1.4rem;font-weight:700;color:#e6edf3;margin-bottom:0.25rem}
+.subtitle{font-size:0.875rem;color:#8b949e;margin-bottom:1.5rem;max-width:720px}
+#chart{width:100%;height:520px;border-radius:8px;overflow:hidden;margin-bottom:1.25rem}
+.controls-row{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap}
+.controls-label{font-size:0.75rem;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.06em;min-width:55px}
+.btn-group{display:flex;gap:0.35rem}
+.btn{padding:0.35rem 0.85rem;border-radius:6px;border:1px solid #30363d;background:#161b22;color:#8b949e;font-size:0.8rem;font-weight:500;cursor:pointer;transition:all 0.15s ease;font-family:inherit}
+.btn:hover{border-color:#58a6ff;color:#c9d1d9}
+.btn.active{border-color:transparent;color:#fff}
+.btn[data-fit="poly3"].active{background:#c62828}
+.btn[data-fit="poly4"].active{background:#e65100}
+.btn[data-fit="poly5"].active{background:#6a1b9a}
+.btn[data-fit="power"].active{background:#0277bd}
+.btn[data-dataset].active{background:#30363d;border-color:#58a6ff;color:#58a6ff}
+.toggle-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:1.25rem}
+.toggle-row label{font-size:0.85rem;color:#8b949e;cursor:pointer;user-select:none}
+.toggle-row input[type="checkbox"]{accent-color:#58a6ff;width:15px;height:15px}
+.results-panel{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem}
+.results-panel h3{font-size:0.7rem;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem}
+.fit-result{padding:0.4rem 0;border-bottom:1px solid #21262d;display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.fit-result:last-child{border-bottom:none}
+.fit-name{font-weight:600;font-size:0.8rem;white-space:nowrap}
+.fit-equation{font-family:'Courier New',monospace;font-size:0.72rem;color:#b0b8c1;overflow-x:auto;white-space:nowrap;flex:1;text-align:center}
+.fit-r2{font-weight:700;font-size:0.85rem;white-space:nowrap}
+.callout{background:#161b22;border-left:3px solid #58a6ff;border-radius:0 8px 8px 0;padding:1rem 1.25rem;font-size:0.85rem;color:#8b949e;line-height:1.65}
+.callout strong{color:#e6edf3}
+.footer{margin-top:1.5rem;font-size:0.7rem;color:#484f58;text-align:center}
+.no-fits{color:#484f58;font-style:italic;font-size:0.85rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header-accent"></div>
+  <h1>Why Polynomial Trendlines Fail for Aircraft Fuel Efficiency</h1>
+  <p class="subtitle">A UK DfT report used 5th-order polynomials (likely Excel defaults) to model fuel burn vs.&nbsp;range for widebody aircraft. Toggle the fits below to see why that's the wrong functional form.</p>
+
+  <div id="chart"></div>
+
+  <div class="controls-row">
+    <span class="controls-label">Data</span>
+    <div class="btn-group" id="dataset-btns">
+      <button class="btn active" data-dataset="all">All</button>
+      <button class="btn" data-dataset="curve1">UE Widebody</button>
+      <button class="btn" data-dataset="curve2">787-900</button>
+      <button class="btn" data-dataset="curve3">A350-900</button>
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <span class="controls-label">Fit</span>
+    <div class="btn-group" id="fit-btns">
+      <button class="btn" data-fit="poly3">Poly 3</button>
+      <button class="btn" data-fit="poly4">Poly 4</button>
+      <button class="btn active" data-fit="poly5">Poly 5</button>
+      <button class="btn active" data-fit="power">Power</button>
+    </div>
+  </div>
+
+  <div class="toggle-row">
+    <input type="checkbox" id="extrapolate" checked>
+    <label for="extrapolate">Extend x-axis beyond data to expose extrapolation behaviour</label>
+  </div>
+
+  <div class="results-panel" id="results"></div>
+
+  <div class="callout">
+    <strong>Why does this matter?</strong> Polynomials are flexible enough to fit almost anything within the data range, but they have no physical basis. They create spurious undulations that obscure real patterns&mdash;like the fact that aircraft types converge in fuel efficiency near 7,000&nbsp;km. Worse, polynomials <em>always</em> diverge to &pm;&infin; outside the data range.
+    A power function <strong>y&nbsp;=&nbsp;a&thinsp;&middot;&thinsp;x<sup>b</sup>&nbsp;+&nbsp;c</strong> is physically motivated&mdash;fuel burn per km falls as range increases, approaching an asymptote&mdash;and extrapolates sensibly.
+  </div>
+
+  <p class="footer">Data digitised from DfT aviation fuel efficiency report &middot; Fits computed via least-squares &amp; Levenberg&ndash;Marquardt</p>
+</div>
+
+<script>
+// ============================================================
+//  DATA
+// ============================================================
+const datasets = {
+  curve1: {
+    name: 'Ultra Efficient Widebody', color: '#43a047',
+    x: [352,1376.9,2416.1,3436.6,4442.2,5466.4,6490.6,7518.6,8531.6,9544.6,10565.1,11581.9,12602.3,13619.1,14650.7],
+    y: [8.6409,5.4206,4.9553,4.825,4.7083,4.7079,4.7074,4.707,4.7408,4.7677,4.8151,4.8557,4.9031,4.9437,5.0048]
+  },
+  curve2: {
+    name: '787-900', color: '#1e88e5',
+    x: [231.5,452.1,922,1376.5,1849.6,2777.1,3700.8,4635.6,5563,6479.2,7406.6,8337.7,9242.7,10181.3,11112.4,12032.3,12974.6,13898.2,14844.2],
+    y: [15.2244,10.808,8.1553,7.2391,6.7466,6.2609,6.1032,5.9661,5.9315,5.8491,5.8624,5.862,5.9026,5.8544,5.8608,5.8946,5.8395,5.8391,5.8114]
+  },
+  curve3: {
+    name: 'A350-900', color: '#8e24aa',
+    x: [452,921.9,1384,1857,2777.1,3715.7,4646.8,5559.3,6497.9,7410.3,8345.2,9261.4,10196.2],
+    y: [11.5942,8.4835,7.3484,6.9449,6.3976,6.1648,5.9661,5.952,5.8696,5.8077,5.7594,5.8001,5.7313]
+  }
+};
+const curveKeys = ['curve1', 'curve2', 'curve3'];
+
+// ============================================================
+//  LINEAR ALGEBRA
+// ============================================================
+function gaussSolve(A, b) {
+  const n = A.length;
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let col = 0; col < n; col++) {
+    let maxRow = col, maxVal = Math.abs(M[col][col]);
+    for (let row = col + 1; row < n; row++) {
+      if (Math.abs(M[row][col]) > maxVal) { maxVal = Math.abs(M[row][col]); maxRow = row; }
+    }
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    if (Math.abs(M[col][col]) < 1e-15) continue;
+    for (let row = col + 1; row < n; row++) {
+      const f = M[row][col] / M[col][col];
+      for (let j = col; j <= n; j++) M[row][j] -= f * M[col][j];
+    }
+  }
+  const x = Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) {
+    x[i] = M[i][n];
+    for (let j = i + 1; j < n; j++) x[i] -= M[i][j] * x[j];
+    x[i] /= M[i][i];
+  }
+  return x;
+}
+
+// ============================================================
+//  POLYNOMIAL FIT  (least-squares, normalized x)
+// ============================================================
+function polyFit(xs, ys, deg) {
+  const n = xs.length, m = deg + 1;
+  const xMax = Math.max(...xs);
+  const xn = xs.map(x => x / xMax);
+
+  const XtX = Array.from({length: m}, () => Array(m).fill(0));
+  const Xty = Array(m).fill(0);
+
+  for (let i = 0; i < n; i++) {
+    const pw = [1];
+    for (let j = 1; j < m; j++) pw.push(pw[j - 1] * xn[i]);
+    for (let j = 0; j < m; j++) {
+      Xty[j] += pw[j] * ys[i];
+      for (let k = 0; k < m; k++) XtX[j][k] += pw[j] * pw[k];
+    }
+  }
+  const coeffs = gaussSolve(XtX, Xty);
+
+  const evalFn = x => {
+    const u = x / xMax;
+    let v = 0, up = 1;
+    for (let i = 0; i < m; i++) { v += coeffs[i] * up; up *= u; }
+    return v;
+  };
+
+  const yMean = ys.reduce((a, b) => a + b, 0) / n;
+  let ssTot = 0, ssRes = 0;
+  for (let i = 0; i < n; i++) { ssTot += (ys[i] - yMean) ** 2; ssRes += (ys[i] - evalFn(xs[i])) ** 2; }
+
+  const origCoeffs = coeffs.map((c, i) => c / Math.pow(xMax, i));
+  return { eval: evalFn, r2: 1 - ssRes / ssTot, coeffs: origCoeffs, degree: deg };
+}
+
+// ============================================================
+//  POWER FIT  y = a·x^b + c   (Levenberg–Marquardt)
+// ============================================================
+function powerFit(xs, ys) {
+  const n = xs.length;
+
+  // --- initial guess via log-log regression ---
+  let c = Math.min(...ys) * 0.8;
+  let sx = 0, sy = 0, sxy = 0, sx2 = 0, cnt = 0;
+  for (let i = 0; i < n; i++) {
+    const ymc = ys[i] - c;
+    if (ymc > 0.01) {
+      const lx = Math.log(xs[i]), ly = Math.log(ymc);
+      sx += lx; sy += ly; sxy += lx * ly; sx2 += lx * lx; cnt++;
+    }
+  }
+  let b = (cnt * sxy - sx * sy) / (cnt * sx2 - sx * sx);
+  let a = Math.exp((sy - b * sx) / cnt);
+  if (!isFinite(a) || !isFinite(b) || a <= 0) { a = 100; b = -0.3; }
+
+  // --- LM iterations ---
+  let lambda = 1e-3, bestCost = Infinity, best = [a, b, c];
+
+  for (let iter = 0; iter < 500; iter++) {
+    const JtJ = [[0,0,0],[0,0,0],[0,0,0]], Jtr = [0,0,0];
+    let cost = 0;
+    for (let i = 0; i < n; i++) {
+      const xb = Math.pow(xs[i], b);
+      const fi = a * xb + c;
+      const ri = ys[i] - fi;
+      cost += ri * ri;
+      const j0 = xb, j1 = a * xb * Math.log(xs[i]), j2 = 1;
+      JtJ[0][0]+=j0*j0; JtJ[0][1]+=j0*j1; JtJ[0][2]+=j0*j2;
+      JtJ[1][0]+=j1*j0; JtJ[1][1]+=j1*j1; JtJ[1][2]+=j1*j2;
+      JtJ[2][0]+=j2*j0; JtJ[2][1]+=j2*j1; JtJ[2][2]+=j2*j2;
+      Jtr[0]+=j0*ri; Jtr[1]+=j1*ri; Jtr[2]+=j2*ri;
+    }
+    if (cost < bestCost) { bestCost = cost; best = [a, b, c]; }
+
+    const D = JtJ.map(r => [...r]);
+    for (let i = 0; i < 3; i++) D[i][i] *= (1 + lambda);
+    let delta;
+    try { delta = gaussSolve(D, Jtr); } catch { lambda *= 10; continue; }
+
+    const na = a + delta[0], nb = b + delta[1], nc = c + delta[2];
+    if (na <= 0 || !isFinite(na) || !isFinite(nb) || !isFinite(nc)) { lambda *= 10; continue; }
+
+    let newCost = 0, valid = true;
+    for (let i = 0; i < n; i++) {
+      const fi = na * Math.pow(xs[i], nb) + nc;
+      if (!isFinite(fi)) { valid = false; break; }
+      newCost += (ys[i] - fi) ** 2;
+    }
+    if (!valid) { lambda *= 10; continue; }
+
+    if (newCost < cost) { a = na; b = nb; c = nc; lambda *= 0.1; }
+    else { lambda *= 10; }
+    if (Math.abs(cost - newCost) < 1e-14 * Math.max(cost, 1) && iter > 10) break;
+  }
+
+  [a, b, c] = best;
+  const evalFn = x => a * Math.pow(x, b) + c;
+  const yMean = ys.reduce((s, v) => s + v, 0) / n;
+  let ssTot = 0, ssRes = 0;
+  for (let i = 0; i < n; i++) { ssTot += (ys[i] - yMean) ** 2; ssRes += (ys[i] - evalFn(xs[i])) ** 2; }
+  return { eval: evalFn, r2: 1 - ssRes / ssTot, a, b, c };
+}
+
+// ============================================================
+//  PRECOMPUTE ALL FITS
+// ============================================================
+const allFits = {};
+for (const key of curveKeys) {
+  const ds = datasets[key];
+  allFits[key] = {
+    poly3: polyFit(ds.x, ds.y, 3),
+    poly4: polyFit(ds.x, ds.y, 4),
+    poly5: polyFit(ds.x, ds.y, 5),
+    power: powerFit(ds.x, ds.y)
+  };
+}
+
+// ============================================================
+//  UI STATE
+// ============================================================
+const fitColors = { poly3:'#ef5350', poly4:'#ffa726', poly5:'#ab47bc', power:'#29b6f6' };
+const fitNames  = { poly3:'Polynomial (3rd)', poly4:'Polynomial (4th)', poly5:'Polynomial (5th)', power:'Power (a·x\u1D47+c)' };
+const fitDash   = { poly3:'dot', poly4:'dashdot', poly5:'dash', power:'solid' };
+const fitOrder  = ['poly3','poly4','poly5','power'];
+
+let activeDataset = 'all';
+let activeFits = new Set(['poly5','power']);
+let showExtrapolation = true;
+
+// ============================================================
+//  FORMATTING
+// ============================================================
+function fmt(v, sig) {
+  sig = sig || 4;
+  if (v === 0) return '0';
+  if (Math.abs(v) < 0.001 || Math.abs(v) >= 1e5) return v.toExponential(sig - 1);
+  return parseFloat(v.toPrecision(sig)).toString();
+}
+function getEquation(type, fit) {
+  if (type === 'power') return `y = ${fmt(fit.a)}·x^(${fmt(fit.b)}) + ${fmt(fit.c)}`;
+  const sup = ['','','²','³','⁴','⁵'];
+  const deg = fit.degree;
+  let s = 'y = ';
+  for (let i = deg; i >= 0; i--) {
+    const c = fit.coeffs[i];
+    if (i < deg) s += c >= 0 ? ' + ' : ' − ';
+    const v = i < deg ? fmt(Math.abs(c)) : fmt(c);
+    s += i === 0 ? v : i === 1 ? v + '·x' : v + '·x' + sup[i];
+  }
+  return s;
+}
+
+// ============================================================
+//  CHART RENDERING
+// ============================================================
+function render() {
+  const allX = [...datasets.curve1.x, ...datasets.curve2.x, ...datasets.curve3.x];
+  const maxDataX = Math.max(...allX);
+  const xEnd = showExtrapolation ? 25000 : maxDataX + 500;
+  const nPts = 600;
+  const evalXs = Array.from({length: nPts}, (_, i) => 150 + (xEnd - 150) * i / (nPts - 1));
+
+  const traces = [];
+  const keysToFit = activeDataset === 'all' ? curveKeys : [activeDataset];
+
+  // --- scatter traces ---
+  for (const key of curveKeys) {
+    const ds = datasets[key];
+    const sel = activeDataset === key || activeDataset === 'all';
+    traces.push({
+      x: ds.x, y: ds.y, mode: 'markers', type: 'scatter', name: ds.name,
+      marker: { color: ds.color, size: sel ? 8 : 5, opacity: sel ? 1 : 0.3 },
+      hovertemplate: `${ds.name}<br>Range: %{x:,.0f} km<br>Fuel: %{y:.3f} kg/km<extra></extra>`
+    });
+  }
+
+  // --- fit lines (one per curve being shown) ---
+  for (const ft of fitOrder) {
+    if (!activeFits.has(ft)) continue;
+    for (const key of keysToFit) {
+      const fits = allFits[key];
+      const ys = evalXs.map(x => fits[ft].eval(x));
+      const label = keysToFit.length > 1
+        ? `${fitNames[ft]} — ${datasets[key].name}`
+        : fitNames[ft];
+      const color = keysToFit.length > 1 ? datasets[key].color : fitColors[ft];
+      traces.push({
+        x: evalXs, y: ys, mode: 'lines', type: 'scatter', name: label,
+        line: { color, width: 2.5, dash: fitDash[ft] },
+        hovertemplate: `${label}<br>x: %{x:,.0f} km<br>y: %{y:.3f}<extra></extra>`
+      });
+    }
+  }
+
+  // --- layout ---
+  const shapes = [{
+    type:'rect', xref:'x', yref:'paper', x0:6500, x1:7500, y0:0, y1:1,
+    fillcolor:'rgba(88,166,255,0.06)', line:{width:0}
+  }];
+  const annotations = [{
+    x:7000, y:1.02, yref:'paper', xref:'x', showarrow:false,
+    text:'~7,000 km: types converge', font:{color:'#58a6ff',size:10}, yanchor:'bottom'
+  }];
+  if (showExtrapolation) {
+    shapes.push({
+      type:'line', xref:'x', yref:'paper', x0:maxDataX, x1:maxDataX, y0:0, y1:1,
+      line:{color:'rgba(139,148,158,0.4)',width:1,dash:'dash'}
+    });
+    annotations.push({
+      x:maxDataX, y:0.03, yref:'paper', xref:'x', showarrow:false,
+      text:'← Data  |  Extrapolation →', font:{color:'#8b949e',size:10}, xanchor:'center'
+    });
+  }
+
+  const layout = {
+    paper_bgcolor:'#0d1117', plot_bgcolor:'#0d1117',
+    font:{ family:'Inter, sans-serif', color:'#c9d1d9', size:12 },
+    xaxis:{ title:{text:'Range (km)',font:{size:13}}, gridcolor:'#21262d', zerolinecolor:'#30363d',
+            range:[0,xEnd], dtick:5000, tickformat:',d' },
+    yaxis:{ title:{text:'Fuel Burn (kg / km)',font:{size:13}}, gridcolor:'#21262d', zerolinecolor:'#30363d',
+            range:[-2,22] },
+    legend:{ bgcolor:'rgba(0,0,0,0)', font:{size:11}, x:1, xanchor:'right', y:1 },
+    margin:{t:30,r:20,b:55,l:65},
+    shapes, annotations, hovermode:'closest'
+  };
+
+  Plotly.react('chart', traces, layout, {
+    responsive:true, displayModeBar:'hover', displaylogo:false,
+    modeBarButtonsToRemove:['lasso2d','select2d','autoScale2d']
+  });
+
+  // --- results panel ---
+  const el = document.getElementById('results');
+  if (activeFits.size === 0) {
+    el.innerHTML = '<h3>Fit Results</h3><p class="no-fits">Select a fit type above</p>';
+    return;
+  }
+  let html = `<h3>Fit Results${activeDataset !== 'all' ? ' — ' + datasets[activeDataset].name : ''}</h3>`;
+  for (const key of keysToFit) {
+    const fits = allFits[key];
+    if (keysToFit.length > 1) {
+      html += `<div style="margin-top:0.5rem;font-size:0.75rem;font-weight:600;color:${datasets[key].color}">${datasets[key].name}</div>`;
+    }
+    for (const ft of fitOrder) {
+      if (!activeFits.has(ft)) continue;
+      const f = fits[ft];
+      const col = f.r2 > 0.98 ? '#66bb6a' : f.r2 > 0.95 ? '#ffa726' : '#ef5350';
+      html += `<div class="fit-result">
+        <span class="fit-name" style="color:${fitColors[ft]}">${fitNames[ft]}</span>
+        <span class="fit-equation">${getEquation(ft, f)}</span>
+        <span class="fit-r2" style="color:${col}">R² = ${f.r2.toFixed(5)}</span>
+      </div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ============================================================
+//  EVENT HANDLERS
+// ============================================================
+document.querySelectorAll('#dataset-btns .btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#dataset-btns .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeDataset = btn.dataset.dataset;
+    render();
+  });
+});
+document.querySelectorAll('#fit-btns .btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const ft = btn.dataset.fit;
+    btn.classList.toggle('active');
+    if (activeFits.has(ft)) activeFits.delete(ft); else activeFits.add(ft);
+    render();
+  });
+});
+document.getElementById('extrapolate').addEventListener('change', e => {
+  showExtrapolation = e.target.checked;
+  render();
+});
+
+// ============================================================
+//  INITIAL RENDER
+// ============================================================
+render();
+</script>
+</body>
+</html>
