@@ -158,6 +158,25 @@ export default function GraphFittingApp() {
             <GraphFittingTool />
           </div>
 
+          {/* Splines */}
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">A note on splines</h2>
+
+          <p className="text-gray-700 leading-relaxed mb-4">
+            After I posted this, <a href="https://en.wikipedia.org/wiki/Daniel_P._Raymer" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">Daniel Raymer</a> - aircraft designer, author of <em>Aircraft Design: A Conceptual Approach</em>, and someone whose textbooks I suspect most of us have on a shelf somewhere - left a comment pointing me to <a href="https://en.wikipedia.org/wiki/Akima_spline" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">Akima splines</a>. I hadn{"'"}t come across them before. So I{"'"}ve added both a standard cubic spline and an Akima spline to the tool above.
+          </p>
+
+          <p className="text-gray-700 leading-relaxed mb-4">
+            Splines are interpolation methods - they pass through every data point exactly, which means R² = 1 by definition. That{"'"}s not a statement about how good they are; it{"'"}s a statement about what they{"'"}re doing. They{"'"}re not fitting a model to data. They{"'"}re drawing a smooth curve through known points.
+          </p>
+
+          <p className="text-gray-700 leading-relaxed mb-4">
+            This makes them excellent for a specific class of problem: when you have points that you know are exact (or close enough), you absolutely do not need to extrapolate, and you just want a smooth, faithful interpolation between them. Geometry shaping is the classic case - Raymer uses Akima splines in RDSwin for fuselage lofting, where the cross-section control points are design intent and you want the surface to honour them without inventing wiggles between them. The Akima variant is particularly good at this because it uses a weighted slope-averaging scheme that suppresses the overshoot you get with standard cubic splines near sharp changes in the data.
+          </p>
+
+          <p className="text-gray-700 leading-relaxed mb-6">
+            For the fuel burn problem, though, splines don{"'"}t solve the underlying issue. Toggle them on in the tool and extend beyond the data range - you{"'"}ll see that both splines extrapolate badly (the cubic spline spectacularly so). They also don{"'"}t give you a compact functional form you can hand to someone else, and they can{"'"}t separate signal from noise in data that has measurement uncertainty. For this particular problem, the power function is still the right answer. But it{"'"}s good to have them in the toolbox, and I{"'"}m glad Raymer pointed me to Akima{"'"}s work.
+          </p>
+
           {/* Why this matters */}
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Why this matters</h2>
 

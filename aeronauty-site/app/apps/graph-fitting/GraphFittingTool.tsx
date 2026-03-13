@@ -24,13 +24,13 @@ const datasets = {
 } as const;
 
 type CurveKey = keyof typeof datasets;
-type FitType = 'poly3' | 'poly4' | 'poly5' | 'power';
+type FitType = 'poly3' | 'poly4' | 'poly5' | 'power' | 'spline' | 'akima';
 
 const curveKeys: CurveKey[] = ['curve1', 'curve2', 'curve3'];
-const fitColors: Record<FitType, string> = { poly3: '#dc2626', poly4: '#ea580c', poly5: '#9333ea', power: '#0284c7' };
-const fitNames: Record<FitType, string> = { poly3: 'Polynomial (3rd)', poly4: 'Polynomial (4th)', poly5: 'Polynomial (5th)', power: 'Power (a·xᵇ+c)' };
-const fitDash: Record<FitType, string> = { poly3: 'dot', poly4: 'dashdot', poly5: 'dash', power: 'solid' };
-const fitOrder: FitType[] = ['poly3', 'poly4', 'poly5', 'power'];
+const fitColors: Record<FitType, string> = { poly3: '#dc2626', poly4: '#ea580c', poly5: '#9333ea', power: '#0284c7', spline: '#0d9488', akima: '#c026d3' };
+const fitNames: Record<FitType, string> = { poly3: 'Polynomial (3rd)', poly4: 'Polynomial (4th)', poly5: 'Polynomial (5th)', power: 'Power (a·xᵇ+c)', spline: 'Cubic Spline', akima: 'Akima Spline' };
+const fitDash: Record<FitType, string> = { poly3: 'dot', poly4: 'dashdot', poly5: 'dash', power: 'solid', spline: 'longdash', akima: 'longdashdot' };
+const fitOrder: FitType[] = ['poly3', 'poly4', 'poly5', 'power', 'spline', 'akima'];
 
 // ============================================================
 //  LINEAR ALGEBRA
@@ -176,9 +176,123 @@ function powerFit(xs: readonly number[], ys: readonly number[]): PowerFitResult 
 }
 
 // ============================================================
+//  CUBIC SPLINE (natural boundary conditions)
+// ============================================================
+interface SplineFitResult {
+  eval: (x: number) => number;
+  r2: number;
+  kind: 'spline' | 'akima';
+}
+
+function cubicSpline(xs: readonly number[], ys: readonly number[]): SplineFitResult {
+  const n = xs.length;
+  const h = Array(n - 1).fill(0);
+  for (let i = 0; i < n - 1; i++) h[i] = xs[i + 1] - xs[i];
+
+  // Tridiagonal system for second derivatives (natural BCs: M_0 = M_{n-1} = 0)
+  const alpha = Array(n).fill(0);
+  for (let i = 1; i < n - 1; i++) {
+    alpha[i] = (3 / h[i]) * (ys[i + 1] - ys[i]) - (3 / h[i - 1]) * (ys[i] - ys[i - 1]);
+  }
+
+  const l = Array(n).fill(1);
+  const mu = Array(n).fill(0);
+  const z = Array(n).fill(0);
+  for (let i = 1; i < n - 1; i++) {
+    l[i] = 2 * (xs[i + 1] - xs[i - 1]) - h[i - 1] * mu[i - 1];
+    mu[i] = h[i] / l[i];
+    z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+  }
+
+  const c = Array(n).fill(0);
+  const b = Array(n - 1).fill(0);
+  const d = Array(n - 1).fill(0);
+  for (let j = n - 2; j >= 0; j--) {
+    c[j] = z[j] - mu[j] * c[j + 1];
+    b[j] = (ys[j + 1] - ys[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3;
+    d[j] = (c[j + 1] - c[j]) / (3 * h[j]);
+  }
+
+  const evalFn = (x: number) => {
+    let i: number;
+    if (x <= xs[0]) i = 0;
+    else if (x >= xs[n - 1]) i = n - 2;
+    else {
+      i = 0;
+      for (let k = 0; k < n - 1; k++) {
+        if (x >= xs[k] && x < xs[k + 1]) { i = k; break; }
+      }
+    }
+    const dx = x - xs[i];
+    return ys[i] + b[i] * dx + c[i] * dx * dx + d[i] * dx * dx * dx;
+  };
+
+  return { eval: evalFn, r2: 1.0, kind: 'spline' };
+}
+
+// ============================================================
+//  AKIMA SPLINE
+//  Hiroshi Akima (1970) — weighted slope averaging that
+//  suppresses oscillation near outliers.
+// ============================================================
+function akimaSpline(xs: readonly number[], ys: readonly number[]): SplineFitResult {
+  const n = xs.length;
+  const m = Array(n - 1).fill(0);
+  for (let i = 0; i < n - 1; i++) m[i] = (ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]);
+
+  // Pad slopes at boundaries using Akima's original reflection scheme
+  const mm = Array(n + 3).fill(0);
+  for (let i = 0; i < n - 1; i++) mm[i + 2] = m[i];
+  mm[1] = 2 * m[0] - m[1];
+  mm[0] = 2 * mm[1] - m[0];
+  mm[n + 1] = 2 * m[n - 2] - m[n - 3];
+  mm[n + 2] = 2 * mm[n + 1] - m[n - 2];
+
+  const t = Array(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    const k = i + 2;
+    const w1 = Math.abs(mm[k + 1] - mm[k]);
+    const w2 = Math.abs(mm[k - 1] - mm[k - 2]);
+    if (w1 + w2 > 1e-30) {
+      t[i] = (w1 * mm[k - 1] + w2 * mm[k]) / (w1 + w2);
+    } else {
+      t[i] = 0.5 * (mm[k - 1] + mm[k]);
+    }
+  }
+
+  // Hermite basis coefficients for each segment
+  const a0 = [...ys];
+  const a1 = [...t];
+  const a2 = Array(n - 1).fill(0);
+  const a3 = Array(n - 1).fill(0);
+  for (let i = 0; i < n - 1; i++) {
+    const hi = xs[i + 1] - xs[i];
+    a2[i] = (3 * m[i] - 2 * t[i] - t[i + 1]) / hi;
+    a3[i] = (t[i] + t[i + 1] - 2 * m[i]) / (hi * hi);
+  }
+
+  const evalFn = (x: number) => {
+    let i: number;
+    if (x <= xs[0]) i = 0;
+    else if (x >= xs[n - 1]) i = n - 2;
+    else {
+      i = 0;
+      for (let k = 0; k < n - 1; k++) {
+        if (x >= xs[k] && x < xs[k + 1]) { i = k; break; }
+      }
+    }
+    const dx = x - xs[i];
+    return a0[i] + a1[i] * dx + a2[i] * dx * dx + a3[i] * dx * dx * dx;
+  };
+
+  return { eval: evalFn, r2: 1.0, kind: 'akima' };
+}
+
+// ============================================================
 //  PRECOMPUTE ALL FITS
 // ============================================================
-type FitResults = Record<FitType, PolyFitResult | PowerFitResult>;
+type AnyFitResult = PolyFitResult | PowerFitResult | SplineFitResult;
+type FitResults = Record<FitType, AnyFitResult>;
 const allFits: Record<CurveKey, FitResults> = {} as Record<CurveKey, FitResults>;
 for (const key of curveKeys) {
   const ds = datasets[key];
@@ -186,7 +300,9 @@ for (const key of curveKeys) {
     poly3: polyFit(ds.x, ds.y, 3),
     poly4: polyFit(ds.x, ds.y, 4),
     poly5: polyFit(ds.x, ds.y, 5),
-    power: powerFit(ds.x, ds.y)
+    power: powerFit(ds.x, ds.y),
+    spline: cubicSpline(ds.x, ds.y),
+    akima: akimaSpline(ds.x, ds.y)
   };
 }
 
@@ -199,11 +315,13 @@ function fmt(v: number, sig = 4): string {
   return parseFloat(v.toPrecision(sig)).toString();
 }
 
-function getEquation(type: FitType, fit: PolyFitResult | PowerFitResult): string {
+function getEquation(type: FitType, fit: AnyFitResult): string {
   if (type === 'power') {
     const pf = fit as PowerFitResult;
     return `y = ${fmt(pf.a)}·x^(${fmt(pf.b)}) + ${fmt(pf.c)}`;
   }
+  if (type === 'spline') return 'Piecewise cubic (natural BCs)';
+  if (type === 'akima') return 'Piecewise cubic (Akima weights)';
   const sup = ['', '', '²', '³', '⁴', '⁵'];
   const pf = fit as PolyFitResult;
   const deg = pf.degree;
@@ -374,12 +492,12 @@ export default function GraphFittingTool() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider min-w-[50px]">Fit</span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 flex-wrap">
             {fitOrder.map(ft => (
               <button
                 key={ft}
                 onClick={() => toggleFit(ft)}
-                className="px-3 py-1.5 rounded-md border text-sm font-medium transition-all"
+                className="px-2.5 py-1.5 rounded-md border text-sm font-medium transition-all"
                 style={activeFits.has(ft) ? {
                   backgroundColor: fitColors[ft],
                   borderColor: fitColors[ft],
@@ -390,7 +508,7 @@ export default function GraphFittingTool() {
                   color: '#6b7280'
                 }}
               >
-                {ft === 'power' ? 'Power' : `Poly ${ft.slice(4)}`}
+                {ft === 'power' ? 'Power' : ft === 'spline' ? 'Cubic Spline' : ft === 'akima' ? 'Akima' : `Poly ${ft.slice(4)}`}
               </button>
             ))}
           </div>
