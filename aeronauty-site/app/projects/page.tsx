@@ -6,6 +6,14 @@ import { motion } from 'framer-motion';
 export default function ProjectsPage() {
   const projects = [
     {
+      title: 'Porting XFOIL to Rust',
+      description: 'Long-form write-up on building FlexCompute Foil, with the live applet embedded alongside interactive Plotly validation sweeps against XFOIL.',
+      tech: ['Rust', 'WebAssembly', 'Plotly', 'XFOIL', 'Validation'],
+      link: '/projects/flexcompute-foil',
+      status: 'New',
+      gradient: 'from-sky-500 to-indigo-500',
+    },
+    {
       title: 'Panel Code/Kutta Demo',
       description: 'Interactive demonstration of real aerodynamics using 2D panel methods. Debunks the equal-transit-time myth with actual physics and numerical methods.',
       tech: ['TypeScript', 'Next.js', 'Panel Methods', 'Aerodynamics', 'Education'],
