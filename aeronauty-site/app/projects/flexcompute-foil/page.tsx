@@ -463,6 +463,20 @@ export default function FlexComputeFoilPage() {
               has everything in one place.
             </p>
           </Reveal>
+          <Reveal delay={0.15}>
+            <p className="mt-6 text-base leading-[1.85] text-slate-500 italic">
+              A caveat on the non-NACA foils: the XFOIL side of the E387 and DAE11 comparisons is incomplete.
+              These sweeps were run using my instrumented fork of XFOIL, which writes detailed JSON debug dumps at
+              every internal checkpoint. That instrumentation adds significant memory and I/O overhead, and for
+              harder foils that require many Newton iterations per operating point, the instrumented binary
+              struggles to complete a full &minus;15&deg; to +25&deg; ASEQ sweep. The convergence failures you see
+              on those foils may be an artefact of the instrumentation rather than a real solver limitation.
+              Stock XFOIL without the debug hooks would almost certainly produce fuller polars. I haven&apos;t yet
+              had time to run the comparison through an uninstrumented build. If anyone wants to finish that
+              particular piece, I&apos;d genuinely welcome the help &mdash; the sweep scripts, the dataset, and
+              the Plotly embed generator are all in the repo.
+            </p>
+          </Reveal>
         </div>
 
         {/* Side-by-side: scrolling text (left) ↔ sticky chart (right) */}
