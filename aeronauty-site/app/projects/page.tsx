@@ -14,6 +14,14 @@ export default function ProjectsPage() {
       gradient: 'from-sky-500 to-indigo-500',
     },
     {
+      title: 'Porting XFOIL to Rust, Pt II',
+      description: 'The geometry problem: why a solver that matches XFOIL on clean airfoils falls apart with a flap deflection, and how porting the GDES FLAP procedure fixed it.',
+      tech: ['Rust', 'XFOIL', 'Splines', 'GDES', 'Flap Geometry'],
+      link: '/projects/flexcompute-foil-pt2',
+      status: 'New',
+      gradient: 'from-amber-500 to-orange-500',
+    },
+    {
       title: 'Panel Code/Kutta Demo',
       description: 'Interactive demonstration of real aerodynamics using 2D panel methods. Debunks the equal-transit-time myth with actual physics and numerical methods.',
       tech: ['TypeScript', 'Next.js', 'Panel Methods', 'Aerodynamics', 'Education'],

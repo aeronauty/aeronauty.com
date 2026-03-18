@@ -985,8 +985,26 @@ export default function FlexComputeFoilPage() {
               </p>
             </Reveal>
           </div>
+          <Reveal delay={0.25}>
+            <div className="mt-16 rounded-xl border border-slate-700/50 bg-slate-800/30 p-8 text-center">
+              <p className={`${display.className} text-xl font-bold text-[#e8e6e1]`}>
+                Part&nbsp;II: The Geometry Problem
+              </p>
+              <p className="mt-3 text-sm text-slate-500">
+                What happens when you deflect a flap and the solver stops converging &mdash;
+                and why the fix was porting XFOIL&rsquo;s GDES FLAP procedure line by line.
+              </p>
+              <a
+                className="mt-5 inline-block rounded-full px-6 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+                style={{ background: ACCENT }}
+                href="/projects/flexcompute-foil-pt2"
+              >
+                Read Part&nbsp;II &rarr;
+              </a>
+            </div>
+          </Reveal>
           <Reveal delay={0.3}>
-            <div className="mt-16 border-t border-slate-800 pt-8 text-sm text-slate-600">
+            <div className="mt-10 border-t border-slate-800 pt-8 text-sm text-slate-600">
               <em>
                 Flexcompute Foil is a free, browser-based airfoil analysis tool. Try it at{' '}
                 <a
