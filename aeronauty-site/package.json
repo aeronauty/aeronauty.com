@@ -11,15 +11,19 @@
     "sync-wind-turbine": "mkdir -p public/wind-turbine && cp submodules/WindTurbineExplainer/turbine_3d_interactive.html public/wind-turbine/ && cp submodules/WindTurbineExplainer/blade_harmonics.html public/wind-turbine/ && cp -r submodules/WindTurbineExplainer/blade-harmonics-app/whythreeblades public/wind-turbine/blade-harmonics"
   },
   "dependencies": {
+    "@upstash/redis": "^1.37.0",
     "csv-parse": "^6.1.0",
     "framer-motion": "^11.3.24",
+    "googleapis": "^171.4.0",
     "katex": "^0.16.28",
     "lucide-react": "^0.548.0",
     "next": "14.2.5",
+    "next-auth": "^5.0.0-beta.30",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-syntax-highlighter": "^15.5.0",
     "recharts": "^3.3.0",
+    "tsdav": "^2.1.8",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },
