@@ -39,26 +39,57 @@ export default function TimerButton() {
   const [editingName, setEditingName] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Ensure AudioContext is created and resumed on first user interaction
+  useEffect(() => {
+    const resume = () => {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      if (audioCtxRef.current.state === "suspended") {
+        audioCtxRef.current.resume();
+      }
+    };
+    // Resume on any user interaction (required by autoplay policy)
+    document.addEventListener("click", resume, { once: false });
+    document.addEventListener("touchstart", resume, { once: false });
+    return () => {
+      document.removeEventListener("click", resume);
+      document.removeEventListener("touchstart", resume);
+    };
+  }, []);
+
   const playAlarm = useCallback(() => {
     try {
-      const ctx = new AudioContext();
-      const playBeep = (time: number) => {
+      const ctx = audioCtxRef.current ?? new AudioContext();
+      audioCtxRef.current = ctx;
+      if (ctx.state === "suspended") ctx.resume();
+
+      // Play 3 rounds of double-beep (loud, unmissable)
+      const now = ctx.currentTime;
+      const playBeep = (time: number, freq: number) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.frequency.value = 880;
-        osc.type = "sine";
-        gain.gain.setValueAtTime(0.3, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+        osc.frequency.value = freq;
+        osc.type = "square"; // harsher, more audible than sine
+        gain.gain.setValueAtTime(0.6, time);
+        gain.gain.setValueAtTime(0.6, time + 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
         osc.start(time);
-        osc.stop(time + 0.3);
+        osc.stop(time + 0.25);
       };
-      playBeep(ctx.currentTime);
-      playBeep(ctx.currentTime + 0.4);
-      playBeep(ctx.currentTime + 0.8);
+
+      // Pattern: beep-beep, pause, beep-beep, pause, beep-beep
+      for (let round = 0; round < 3; round++) {
+        const t = now + round * 0.7;
+        playBeep(t, 1047);       // C6 — high, attention-getting
+        playBeep(t + 0.3, 1319); // E6
+      }
     } catch {
-      /* ignore */
+      /* fallback: ignore if Web Audio unavailable */
     }
   }, []);
 
