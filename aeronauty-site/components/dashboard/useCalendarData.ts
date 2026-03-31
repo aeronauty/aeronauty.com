@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useDashboardStore } from "@/lib/dashboard-store";
 import type { CalendarEvent, CalendarInfo, ReminderList } from "@/lib/types";
 
 const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -49,7 +50,34 @@ export function useCalendarData() {
     return () => clearInterval(interval);
   }, [fetchEvents, fetchCalendars]);
 
-  return { events, calendars, loading, error, refresh: fetchEvents };
+  const hiddenCalendarIds = useDashboardStore((s) => s.hiddenCalendarIds);
+  const calendarNicknames = useDashboardStore((s) => s.calendarNicknames);
+
+  // Filter hidden calendars and apply nicknames
+  const filteredEvents = useMemo(() => {
+    return events
+      .filter((e) => !hiddenCalendarIds.includes(e.calendarId))
+      .map((e) => ({
+        ...e,
+        calendarName: calendarNicknames[e.calendarId] || e.calendarName,
+      }));
+  }, [events, hiddenCalendarIds, calendarNicknames]);
+
+  const enrichedCalendars = useMemo(() => {
+    return calendars.map((c) => ({
+      ...c,
+      name: calendarNicknames[c.id] || c.name,
+    }));
+  }, [calendars, calendarNicknames]);
+
+  return {
+    events: filteredEvents,
+    calendars: enrichedCalendars,
+    allCalendars: calendars,
+    loading,
+    error,
+    refresh: fetchEvents,
+  };
 }
 
 export function useReminders() {
@@ -77,7 +105,14 @@ export function useReminders() {
     return () => clearInterval(interval);
   }, [fetchReminders]);
 
+  const getListInfo = (listId: string) => {
+    const list = lists.find((l) => l.id === listId);
+    return { source: list?.source, accountEmail: list?.accountEmail };
+  };
+
   const completeReminder = async (listId: string, reminderId: string) => {
+    const { source, accountEmail } = getListInfo(listId);
+
     // Optimistic update
     setLists((prev) =>
       prev.map((list) =>
@@ -96,7 +131,7 @@ export function useReminders() {
       await fetch("/api/reminders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listId, reminderId }),
+        body: JSON.stringify({ listId, reminderId, source, accountEmail }),
       });
     } catch {
       fetchReminders(); // Revert on error
@@ -108,11 +143,13 @@ export function useReminders() {
     title: string,
     dueDate?: string
   ) => {
+    const { source, accountEmail } = getListInfo(listId);
+
     try {
       await fetch("/api/reminders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listId, title, dueDate }),
+        body: JSON.stringify({ listId, source, accountEmail, title, dueDate }),
       });
       fetchReminders();
     } catch (err) {
@@ -121,6 +158,8 @@ export function useReminders() {
   };
 
   const deleteReminder = async (listId: string, reminderId: string) => {
+    const { source, accountEmail } = getListInfo(listId);
+
     setLists((prev) =>
       prev.map((list) =>
         list.id === listId
@@ -130,10 +169,13 @@ export function useReminders() {
     );
 
     try {
-      await fetch(
-        `/api/reminders?listId=${encodeURIComponent(listId)}&reminderId=${encodeURIComponent(reminderId)}`,
-        { method: "DELETE" }
-      );
+      const params = new URLSearchParams({
+        listId,
+        reminderId,
+        ...(source && { source }),
+        ...(accountEmail && { accountEmail }),
+      });
+      await fetch(`/api/reminders?${params}`, { method: "DELETE" });
     } catch {
       fetchReminders();
     }

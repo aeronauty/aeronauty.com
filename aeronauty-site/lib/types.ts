@@ -32,11 +32,15 @@ export interface Reminder {
   listId: string;
   listName: string;
   priority?: number; // 0=none, 1=high, 5=medium, 9=low
+  source?: "apple" | "google";
+  accountEmail?: string;
 }
 
 export interface ReminderList {
   id: string;
   name: string;
   color?: string;
+  source?: "apple" | "google";
+  accountEmail?: string;
   reminders: Reminder[];
 }

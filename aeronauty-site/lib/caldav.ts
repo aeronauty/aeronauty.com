@@ -229,7 +229,18 @@ export async function fetchAppleReminderLists(): Promise<ReminderList[]> {
     const comp = cal.components ?? [];
     if (!comp.includes("VTODO")) continue;
 
-    const objects = await client.fetchCalendarObjects({ calendar: cal });
+    // Apple's CalDAV requires explicit VTODO comp-filter to return todos
+    const objects = await client.fetchCalendarObjects({
+      calendar: cal,
+      filters: {
+        "comp-filter": {
+          _attributes: { name: "VCALENDAR" },
+          "comp-filter": {
+            _attributes: { name: "VTODO" },
+          },
+        },
+      },
+    });
     const reminders: Reminder[] = [];
     for (const obj of objects) {
       if (!obj.data) continue;

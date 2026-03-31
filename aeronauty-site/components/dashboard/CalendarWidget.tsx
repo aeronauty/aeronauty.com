@@ -39,7 +39,7 @@ export default function CalendarWidget({ events, onDaySelect, selectedDate, onCr
   const monthLabel = viewMonth.toLocaleDateString([], { month: "long", year: "numeric" });
 
   return (
-    <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col">
+    <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={prevMonth}
@@ -47,7 +47,19 @@ export default function CalendarWidget({ events, onDaySelect, selectedDate, onCr
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h2 className="text-lg font-semibold">{monthLabel}</h2>
+        <div className="flex items-center gap-2 drag-handle cursor-grab">
+          <h2 className="text-lg font-semibold">{monthLabel}</h2>
+          <button
+            onClick={() => {
+              const now = new Date();
+              setViewMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+              onDaySelect(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+            }}
+            className="px-2 py-0.5 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-blue-400 touch-manipulation"
+          >
+            Today
+          </button>
+        </div>
         <div className="flex items-center gap-1">
           <button
             onClick={onCreateEvent}
