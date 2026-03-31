@@ -188,7 +188,7 @@ export default function TimerButton() {
         onClick={() => setOpen((o) => !o)}
         className={`p-2.5 rounded-lg touch-manipulation transition-colors relative ${
           anyDone
-            ? "bg-red-600/30 hover:bg-red-600/50 animate-pulse"
+            ? "bg-red-600 hover:bg-red-500"
             : anyActive
               ? "bg-blue-600/30 hover:bg-blue-600/50"
               : "hover:bg-gray-800 active:bg-gray-700"
@@ -210,7 +210,7 @@ export default function TimerButton() {
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-gray-900/95 backdrop-blur-lg border border-gray-700/50 rounded-2xl p-3 shadow-2xl z-50 max-h-[80vh] overflow-y-auto">
+        <div className="absolute right-0 top-full mt-2 w-72 bg-gray-900 border border-gray-700/50 rounded-2xl p-3 shadow-2xl z-50 max-h-[80vh] overflow-y-auto">
           {/* Active timers list */}
           {timers.length > 0 && (
             <div className="space-y-2 mb-3">

@@ -464,7 +464,7 @@ export default function MusicWidget() {
   // --- Render ---
   if (configError) {
     return (
-      <div className="h-full bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 flex flex-col">
+      <div className="h-full bg-gray-900 rounded-2xl p-4 flex flex-col">
         <div className="drag-handle cursor-grab flex items-center gap-2 mb-3">
           <Music className="w-5 h-5 text-pink-400" />
           <h2 className="text-sm font-semibold">Music</h2>
@@ -481,7 +481,7 @@ export default function MusicWidget() {
 
   if (loading) {
     return (
-      <div className="h-full bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 flex flex-col">
+      <div className="h-full bg-gray-900 rounded-2xl p-4 flex flex-col">
         <div className="drag-handle cursor-grab flex items-center gap-2 mb-3">
           <Music className="w-5 h-5 text-pink-400" />
           <h2 className="text-sm font-semibold">Music</h2>
@@ -494,7 +494,7 @@ export default function MusicWidget() {
   }
 
   return (
-    <div className="h-full bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 flex flex-col overflow-hidden">
+    <div className="h-full bg-gray-900 rounded-2xl p-4 flex flex-col overflow-hidden">
       {/* Header with profile avatars */}
       <div className="drag-handle cursor-grab flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">

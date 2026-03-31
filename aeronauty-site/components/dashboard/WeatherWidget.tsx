@@ -38,7 +38,7 @@ export default function WeatherWidget() {
 
   if (!location) {
     return (
-      <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col">
+      <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col">
         <div className="drag-handle cursor-grab text-xs text-gray-400 mb-2">Weather</div>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-gray-500 text-sm text-center">Set a weather location in Settings</p>
@@ -49,7 +49,7 @@ export default function WeatherWidget() {
 
   if (loading && !weather) {
     return (
-      <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col">
+      <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col">
         <div className="drag-handle cursor-grab text-xs text-gray-400 mb-2">Weather</div>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-gray-500 text-sm">Loading weather…</p>
@@ -65,7 +65,7 @@ export default function WeatherWidget() {
   const uv = uvLabel(weather.current.uvIndex);
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col overflow-hidden">
+    <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col overflow-hidden">
       {/* Header with location + tabs */}
       <div className="drag-handle cursor-grab flex items-center justify-between mb-2">
         <span className="text-xs text-gray-400 truncate">{location.name}</span>

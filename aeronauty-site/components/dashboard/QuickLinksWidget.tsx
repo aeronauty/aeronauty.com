@@ -55,7 +55,7 @@ const LINKS: QuickLink[] = [
 
 export default function QuickLinksWidget() {
   return (
-    <div className="h-full bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 flex flex-col">
+    <div className="h-full bg-gray-900 rounded-2xl p-4 flex flex-col">
       <div className="drag-handle cursor-grab flex items-center gap-2 mb-3">
         <ExternalLink className="w-5 h-5 text-cyan-400" />
         <h2 className="text-sm font-semibold">Quick Links</h2>

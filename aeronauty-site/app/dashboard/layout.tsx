@@ -1,6 +1,7 @@
 import { SessionProvider } from "next-auth/react";
 import type { Metadata, Viewport } from "next";
 import BackgroundPhotos from "@/components/dashboard/BackgroundPhotos";
+import FloatingHomeButton from "@/components/dashboard/FloatingHomeButton";
 
 export const metadata: Metadata = {
   title: "Dashboard | Aeronauty",
@@ -31,6 +32,7 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-gray-950 text-white selection:bg-blue-600/30">
         <BackgroundPhotos />
         {children}
+        <FloatingHomeButton />
       </div>
     </SessionProvider>
   );

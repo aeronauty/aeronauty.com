@@ -54,7 +54,7 @@ export default function RemindersWidget({ lists, onComplete, onAdd, onDelete }: 
 
   if (lists.length === 0) {
     return (
-      <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex items-center justify-center">
+      <div className="bg-gray-900 rounded-2xl p-4 h-full flex items-center justify-center">
         <p className="text-gray-500 text-sm text-center">
           No reminder lists found.<br />
           Configure Apple CalDAV in Settings.
@@ -64,7 +64,7 @@ export default function RemindersWidget({ lists, onComplete, onAdd, onDelete }: 
   }
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col overflow-hidden">
+    <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col overflow-hidden">
       <h2 className="text-lg font-semibold mb-3 drag-handle cursor-grab">Reminders</h2>
 
       <div className="flex-1 overflow-y-auto space-y-3 pr-1 -mr-1">

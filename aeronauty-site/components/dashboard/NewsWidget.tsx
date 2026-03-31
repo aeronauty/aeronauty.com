@@ -68,7 +68,7 @@ export default function NewsWidget() {
   }, [fetchNews]);
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col overflow-hidden">
+    <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="drag-handle cursor-grab flex items-center gap-2 mb-3">
         <Newspaper className="w-4 h-4 text-gray-400" />
