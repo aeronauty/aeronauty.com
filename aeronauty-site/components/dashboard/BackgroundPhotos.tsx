@@ -74,7 +74,7 @@ const KENBURNS_VARIANTS = [
 
 function CollectionBackground({ theme }: { theme: BackgroundTheme }) {
   const collection = PHOTO_COLLECTIONS[theme];
-  if (!collection) return null;
+  const urls = collection?.urls ?? [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showFirst, setShowFirst] = useState(true);
@@ -83,26 +83,25 @@ function CollectionBackground({ theme }: { theme: BackgroundTheme }) {
 
   // Preload first two images
   useEffect(() => {
-    if (collection.urls.length > 0) {
+    if (urls.length > 0) {
       const img = new Image();
-      img.src = collection.urls[0];
+      img.src = urls[0];
     }
-    if (collection.urls.length > 1) {
+    if (urls.length > 1) {
       const img = new Image();
-      img.src = collection.urls[1];
+      img.src = urls[1];
     }
-  }, [collection.urls]);
+  }, [urls]);
 
   // Cycle photos
   useEffect(() => {
-    if (collection.urls.length <= 1) return;
+    if (urls.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => {
-        const next = (prev + 1) % collection.urls.length;
-        // Preload the one after next
-        const preloadIdx = (next + 1) % collection.urls.length;
+        const next = (prev + 1) % urls.length;
+        const preloadIdx = (next + 1) % urls.length;
         const img = new Image();
-        img.src = collection.urls[preloadIdx];
+        img.src = urls[preloadIdx];
         preloadRef.current = img;
         return next;
       });
@@ -110,11 +109,13 @@ function CollectionBackground({ theme }: { theme: BackgroundTheme }) {
       setVariant((prev) => (prev + 1) % KENBURNS_VARIANTS.length);
     }, CYCLE_INTERVAL);
     return () => clearInterval(interval);
-  }, [collection.urls]);
+  }, [urls]);
 
-  const prevIndex = (currentIndex - 1 + collection.urls.length) % collection.urls.length;
-  const firstUrl = showFirst ? collection.urls[currentIndex] : collection.urls[prevIndex];
-  const secondUrl = showFirst ? collection.urls[prevIndex] : collection.urls[currentIndex];
+  if (!collection) return null;
+
+  const prevIndex = (currentIndex - 1 + urls.length) % urls.length;
+  const firstUrl = showFirst ? urls[currentIndex] : urls[prevIndex];
+  const secondUrl = showFirst ? urls[prevIndex] : urls[currentIndex];
   const activeVariant = KENBURNS_VARIANTS[variant];
   const prevVariant = KENBURNS_VARIANTS[(variant - 1 + KENBURNS_VARIANTS.length) % KENBURNS_VARIANTS.length];
 

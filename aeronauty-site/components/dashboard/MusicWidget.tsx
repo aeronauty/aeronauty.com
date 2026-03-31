@@ -24,8 +24,23 @@ interface MKMediaItem {
   artwork?: { url: string };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MKInstance = any;
+// MusicKit JS v3 instance — loosely typed due to no TS definitions
+type MKInstance = Record<string, unknown> & {
+  authorize: () => Promise<string>;
+  unauthorize: () => Promise<void>;
+  isAuthorized: boolean;
+  play: () => Promise<void>;
+  pause: () => void;
+  stop: () => void;
+  skipToNextItem: () => Promise<void>;
+  skipToPreviousItem: () => Promise<void>;
+  setQueue: (opts: Record<string, unknown>) => Promise<void>;
+  nowPlayingItem: MKMediaItem | null;
+  playbackState: number;
+  volume: number;
+  addEventListener: (event: string, cb: () => void) => void;
+  removeEventListener: (event: string, cb: () => void) => void;
+};
 
 interface MKSearchResult {
   id: string;
@@ -84,8 +99,7 @@ function setActiveProfileId(id: string | null) {
 
 // --- Helpers ---
 function getArtworkUrl(item: MKMediaItem | MKSearchResult, size = 200): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const a = item as any;
+  const a = item as MKMediaItem & MKSearchResult;
   if (a.attributes?.artwork?.url) {
     return a.attributes.artwork.url.replace("{w}", String(size)).replace("{h}", String(size));
   }
@@ -101,8 +115,8 @@ function getArtworkUrl(item: MKMediaItem | MKSearchResult, size = 200): string {
 type MusicTab = "library" | "search";
 
 async function appleMusic(path: string, music: MKInstance): Promise<Record<string, unknown>> {
-  const devToken = music.developerToken || music._developerToken;
-  const userToken = music.musicUserToken || music._musicUserToken;
+  const devToken = String(music.developerToken || music._developerToken || "");
+  const userToken = String(music.musicUserToken || music._musicUserToken || "");
   const url = path.startsWith("http") ? path : `https://api.music.apple.com${path}`;
   const res = await fetch(url, {
     headers: {
@@ -307,7 +321,7 @@ export default function MusicWidget() {
       await music.authorize();
 
       // Grab the user token
-      const userToken = music.musicUserToken || music._musicUserToken;
+      const userToken = String(music.musicUserToken || music._musicUserToken || "");
       if (!userToken) throw new Error("No user token received");
 
       const profile: MusicProfile = {
@@ -361,7 +375,7 @@ export default function MusicWidget() {
         // Token expired — need to re-auth
         await music.unauthorize();
         await music.authorize();
-        const newToken = music.musicUserToken || music._musicUserToken;
+        const newToken = String(music.musicUserToken || music._musicUserToken || "");
         if (newToken) {
           // Update stored token
           const updated = profiles.map((p) =>
