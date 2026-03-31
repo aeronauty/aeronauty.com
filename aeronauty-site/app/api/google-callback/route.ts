@@ -3,6 +3,12 @@ import { auth } from "@/lib/auth";
 import { google } from "googleapis";
 import { upsertAccount } from "@/lib/token-store";
 
+function getBaseUrl(req: NextRequest): string {
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "localhost:3000";
+  return `${proto}://${host}`;
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.redirect(new URL("/dashboard/login", req.url));
@@ -16,7 +22,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? process.env.AUTH_URL ?? "http://localhost:3000";
+  const baseUrl = getBaseUrl(req);
 
   const oauth2 = new google.auth.OAuth2(
     process.env.AUTH_GOOGLE_ID,
