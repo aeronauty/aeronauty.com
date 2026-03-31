@@ -30,7 +30,34 @@ jobs:
           cache-dependency-path: aeronauty-site/package-lock.json
 
       - run: npm ci
+
+      # Temporarily move dynamic routes out so static export succeeds
+      # (dashboard + API routes can't be statically exported)
+      - name: Prepare for static export
+        run: |
+          mkdir -p /tmp/dynamic-routes
+          mv app/dashboard /tmp/dynamic-routes/ 2>/dev/null || true
+          mv app/api /tmp/dynamic-routes/ 2>/dev/null || true
+          mv middleware.ts /tmp/dynamic-routes/ 2>/dev/null || true
+          # Add static export config
+          cat > next.config.mjs << 'EOF'
+          /** @type {import('next').NextConfig} */
+          const nextConfig = {
+            output: "export",
+            images: { unoptimized: true },
+          };
+          export default nextConfig;
+          EOF
+
       - run: npm run build
+
+      # Restore dynamic routes (not needed for deploy, but keeps things clean)
+      - name: Restore dynamic routes
+        if: always()
+        run: |
+          mv /tmp/dynamic-routes/dashboard app/ 2>/dev/null || true
+          mv /tmp/dynamic-routes/api app/ 2>/dev/null || true
+          mv /tmp/dynamic-routes/middleware.ts . 2>/dev/null || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
