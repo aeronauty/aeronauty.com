@@ -29,8 +29,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="max-w-sm w-full space-y-6 text-center">
+    <div className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-xl flex items-center justify-center px-4">
+      <div className="max-w-sm w-full space-y-6 text-center bg-gray-900/80 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-gray-800/50">
         <div>
           <h1 className="text-3xl font-bold text-white">Dashboard</h1>
           <p className="mt-2 text-gray-400">Enter your password to continue</p>
@@ -43,8 +43,8 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             className={`
-              w-full bg-gray-900 rounded-xl px-5 py-4 text-xl text-center tracking-widest
-              outline-none focus:ring-2 transition-all
+              w-full bg-gray-800 rounded-xl px-5 py-4 text-xl text-center tracking-widest
+              outline-none focus:ring-2 transition-all border border-gray-700
               ${error ? "focus:ring-red-500 ring-1 ring-red-500/50" : "focus:ring-blue-500"}
             `}
             autoFocus
