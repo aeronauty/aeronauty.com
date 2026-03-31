@@ -1,15 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
-
-interface QuickLink {
-  href: string;
-  title: string;
-  hoverClass: string;
-  icon: React.ReactNode;
-}
-
-const LINKS: QuickLink[] = [
+const LINKS = [
   {
     href: "https://www.netflix.com/browse",
     title: "Netflix",
@@ -42,57 +33,18 @@ const LINKS: QuickLink[] = [
   },
 ];
 
-// Auto-return timeout: if the external window is still open after this,
-// bring focus back to the dashboard. User can re-open it.
-const AUTO_RETURN_MS = 10 * 60 * 1000; // 10 minutes
-
 export default function QuickLinks() {
-  const openWindowRef = useRef<Window | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
-
-  const openLink = useCallback((href: string) => {
-    // Close any previously opened external window
-    if (openWindowRef.current && !openWindowRef.current.closed) {
-      openWindowRef.current.close();
-    }
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    // Open in a new window (not tab — window can be closed by us)
-    const w = window.open(href, "dashboard-external", "noopener");
-    openWindowRef.current = w;
-
-    // Auto-close the external window after timeout and refocus dashboard
-    timerRef.current = setTimeout(() => {
-      if (w && !w.closed) {
-        w.close();
-      }
-      window.focus();
-    }, AUTO_RETURN_MS);
-
-    // Also poll: if user closed the window manually, clear the timer
-    const poll = setInterval(() => {
-      if (!w || w.closed) {
-        clearInterval(poll);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        window.focus();
-      }
-    }, 2000);
-
-    // Clean up poll after auto-return timeout
-    setTimeout(() => clearInterval(poll), AUTO_RETURN_MS + 5000);
-  }, []);
-
   return (
     <div className="hidden sm:flex items-center gap-1 ml-2">
       {LINKS.map((link) => (
-        <button
+        <a
           key={link.href}
-          onClick={() => openLink(link.href)}
+          href={link.href}
           className={`p-1.5 rounded-lg touch-manipulation ${link.hoverClass}`}
           title={link.title}
         >
           {link.icon}
-        </button>
+        </a>
       ))}
     </div>
   );
