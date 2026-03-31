@@ -26,11 +26,11 @@ const LOCAL_FILE = path.join(process.cwd(), ".data", "google-tokens.json");
 // --- Storage backends ---
 
 function getRedis(): Redis | null {
-  if (
-    process.env.UPSTASH_REDIS_REST_URL &&
-    process.env.UPSTASH_REDIS_REST_TOKEN
-  ) {
-    return Redis.fromEnv();
+  // Vercel's Upstash integration uses KV_REST_API_* naming
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+  if (url && token) {
+    return new Redis({ url, token });
   }
   return null;
 }
