@@ -78,7 +78,7 @@ export default function ScheduleWidget({ events, selectedDate, onEventClick }: P
   ];
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col overflow-hidden">
+    <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col overflow-hidden">
       {/* Tab bar doubles as drag handle */}
       <div className="flex gap-1 mb-3 bg-gray-800/50 rounded-xl p-1 drag-handle cursor-grab">
         {tabs.map((tab) => (

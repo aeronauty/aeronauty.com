@@ -51,7 +51,7 @@ export default function WidgetWrapper({ id, children }: Props) {
 
   if (isMaximized) {
     return (
-      <div className="fixed inset-0 z-50 bg-gray-950/95 backdrop-blur-lg p-4 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+      <div className="fixed inset-0 z-50 bg-gray-950 p-4 flex flex-col">
         {/* Maximize toolbar */}
         <div className="flex justify-end mb-2">
           <button

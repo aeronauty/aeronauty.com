@@ -39,7 +39,7 @@ export default function CalendarWidget({ events, onDaySelect, selectedDate, onCr
   const monthLabel = viewMonth.toLocaleDateString([], { month: "long", year: "numeric" });
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 h-full flex flex-col">
+    <div className="bg-gray-900 rounded-2xl p-4 h-full flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={prevMonth}

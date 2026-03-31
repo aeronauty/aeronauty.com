@@ -113,7 +113,7 @@ export default function DashboardPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden relative z-10">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-4 py-2 bg-gray-900/50 backdrop-blur-sm border-b border-gray-800/50 relative z-50">
+      <header className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800/50 relative z-50">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
             {session?.user?.name?.[0] ?? "O"}

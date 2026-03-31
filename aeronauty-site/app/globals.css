@@ -42,27 +42,7 @@ body {
   }
 }
 
-/* Ken Burns effect for background photos */
-@keyframes kenburns-move {
-  0% { transform: var(--kb-from, scale(1) translate(0%, 0%)); }
-  100% { transform: var(--kb-to, scale(1.15) translate(-3%, -2%)); }
-}
-
-/* Widget maximize animation */
-@keyframes widget-maximize {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-in {
-  animation: widget-maximize 0.2s ease-out;
-}
+/* No animations — keep things light for low-power devices */
 
 /* react-grid-layout dark theme overrides */
 .dashboard-grid .react-grid-placeholder {

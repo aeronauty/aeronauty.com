@@ -134,7 +134,7 @@ export default function BinsWidget() {
 
   if (!next) {
     return (
-      <div className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-3 h-full flex items-center justify-center drag-handle cursor-grab">
+      <div className="bg-gray-900 rounded-2xl p-3 h-full flex items-center justify-center drag-handle cursor-grab">
         <p className="text-gray-500 text-sm">No upcoming collections</p>
       </div>
     );
@@ -145,10 +145,10 @@ export default function BinsWidget() {
 
   return (
     <div
-      className={`backdrop-blur-md rounded-2xl p-3 h-full flex flex-col overflow-hidden transition-colors ${
+      className={`rounded-2xl p-3 h-full flex flex-col overflow-hidden transition-colors ${
         showAlert
-          ? "bg-amber-900/40 ring-2 ring-amber-500/60 animate-pulse"
-          : "bg-gray-900/80"
+          ? "bg-amber-900 ring-2 ring-amber-500"
+          : "bg-gray-900"
       }`}
     >
       {/* Alert banner */}
