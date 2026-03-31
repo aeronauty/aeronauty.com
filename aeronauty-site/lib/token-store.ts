@@ -26,13 +26,29 @@ const LOCAL_FILE = path.join(process.cwd(), ".data", "google-tokens.json");
 // --- Storage backends ---
 
 function getRedis(): Redis | null {
-  if (
-    process.env.UPSTASH_REDIS_REST_URL &&
-    process.env.UPSTASH_REDIS_REST_TOKEN
-  ) {
-    return Redis.fromEnv();
+  // Try all known Upstash/Vercel env var naming conventions
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+
+  if (!url || !token) {
+    const relevant = Object.keys(process.env).filter(
+      (k) => /redis|kv_|upstash/i.test(k)
+    );
+    console.warn(
+      "[token-store] No Redis REST URL/token found. Related env vars:",
+      relevant.length ? relevant.join(", ") : "(none)"
+    );
+    return null;
   }
-  return null;
+
+  // KV_REST_API_URL is an HTTP REST URL (same format as UPSTASH_REDIS_REST_URL)
+  console.log("[token-store] Using Redis at:", url.substring(0, 30) + "...");
+  try {
+    return new Redis({ url, token });
+  } catch (err) {
+    console.error("[token-store] Redis init failed:", err);
+    return null;
+  }
 }
 
 function readFile(): GoogleTokens[] {
