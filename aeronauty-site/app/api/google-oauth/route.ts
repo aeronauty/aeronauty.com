@@ -3,7 +3,13 @@ import { auth } from "@/lib/auth";
 import { google } from "googleapis";
 
 function getBaseUrl(req: NextRequest): string {
-  // Use x-forwarded headers (set by Vercel/proxies) to build the correct origin
+  // Prefer explicit env var (most reliable on Vercel)
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL.replace(/\/$/, "");
+  if (process.env.AUTH_URL) return process.env.AUTH_URL.replace(/\/$/, "");
+  // Vercel auto-set vars
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  // Fall back to request headers
   const proto = req.headers.get("x-forwarded-proto") ?? "https";
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "localhost:3000";
   return `${proto}://${host}`;
