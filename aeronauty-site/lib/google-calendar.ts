@@ -63,7 +63,13 @@ export async function fetchGoogleEvents(
     maxResults: 250,
   });
 
-  return (res.data.items ?? []).map((e) => ({
+  // Filter out working location events (e.g. "Home", "Office") which Google
+  // creates automatically and clutter the calendar view.
+  const items = (res.data.items ?? []).filter(
+    (e) => (e as Record<string, unknown>).eventType !== "workingLocation"
+  );
+
+  return items.map((e) => ({
     id: e.id!,
     title: e.summary ?? "(No title)",
     description: e.description ?? undefined,
