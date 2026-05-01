@@ -5,25 +5,25 @@ import { ProjectCard } from '@/components/ProjectCard';
 export default function Home() {
   const projects = [
     {
-      title: "Code Snippets",
-      description: "Useful snippets for CFD workflows, optimization, and interactive visualization",
-      link: "/snippets",
-      icon: "💻",
-      tags: ["Python", "TypeScript", "GPU", "Viz"],
+      title: "Projects",
+      description: "Interactive tools, demos, and engineering systems",
+      link: "/projects",
+      icon: "🚀",
+      tags: ["Apps", "Visualization", "Aerospace"],
+    },
+    {
+      title: "Writing",
+      description: "Technical stories, explainers, and arguments about engineering judgment",
+      link: "/writing",
+      icon: "✍️",
+      tags: ["Essays", "Stories", "Analysis"],
     },
     {
       title: "About Me",
-      description: "Aerodynamicist, systems engineer, and explainer of complex aerospace topics",
+      description: "Aerodynamicist, systems engineer, and builder of tools",
       link: "/about",
       icon: "✈️",
       tags: ["Aerospace", "CFD", "Optimization"],
-    },
-    {
-      title: "Projects",
-      description: "Tools, explainers, and systems that make complex problems tractable",
-      link: "/projects",
-      icon: "🚀",
-      tags: ["Decision Tools", "Visualization", "Education"],
     },
   ];
 
@@ -37,11 +37,14 @@ export default function Home() {
               Aeronauty
             </Link>
             <div className="flex space-x-8">
-              <Link href="/snippets" className="text-gray-300 hover:text-white transition-colors">
-                Snippets
-              </Link>
               <Link href="/projects" className="text-gray-300 hover:text-white transition-colors">
                 Projects
+              </Link>
+              <Link href="/writing" className="text-gray-300 hover:text-white transition-colors">
+                Writing
+              </Link>
+              <Link href="/snippets" className="text-gray-300 hover:text-white transition-colors">
+                Snippets
               </Link>
               <Link href="/about" className="text-gray-300 hover:text-white transition-colors">
                 About
@@ -62,7 +65,7 @@ export default function Home() {
             Explore the Collection
           </h2>
           <p className="text-gray-400 text-center mb-12 text-lg">
-            For those who appreciate elegant code and interesting projects
+            Tools for doing the work, writing about how the work thinks
           </p>
           <div className="grid md:grid-cols-3 gap-8">
             {projects.map((project, index) => (
@@ -96,4 +99,3 @@ export default function Home() {
     </div>
   );
 }
-

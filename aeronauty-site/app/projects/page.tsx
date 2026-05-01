@@ -6,22 +6,6 @@ import { motion } from 'framer-motion';
 export default function ProjectsPage() {
   const projects = [
     {
-      title: 'Porting XFOIL to Rust',
-      description: 'Long-form write-up on building FlexCompute Foil, with the live applet embedded alongside interactive Plotly validation sweeps against XFOIL.',
-      tech: ['Rust', 'WebAssembly', 'Plotly', 'XFOIL', 'Validation'],
-      link: '/projects/flexcompute-foil',
-      status: 'New',
-      gradient: 'from-sky-500 to-indigo-500',
-    },
-    {
-      title: 'Porting XFOIL to Rust, Pt II',
-      description: 'The geometry problem: why a solver that matches XFOIL on clean airfoils falls apart with a flap deflection, and how porting the GDES FLAP procedure fixed it.',
-      tech: ['Rust', 'XFOIL', 'Splines', 'GDES', 'Flap Geometry'],
-      link: '/projects/flexcompute-foil-pt2',
-      status: 'New',
-      gradient: 'from-amber-500 to-orange-500',
-    },
-    {
       title: 'Panel Code/Kutta Demo',
       description: 'Interactive demonstration of real aerodynamics using 2D panel methods. Debunks the equal-transit-time myth with actual physics and numerical methods.',
       tech: ['TypeScript', 'Next.js', 'Panel Methods', 'Aerodynamics', 'Education'],
@@ -54,8 +38,8 @@ export default function ProjectsPage() {
       gradient: 'from-orange-500 to-red-500',
     },
     {
-      title: 'Polynomial vs Power Fits',
-      description: 'Why polynomial trendlines fail for aircraft fuel efficiency. UK DfT data with poly 3/4/5 and power fits; compare R² and extrapolation behaviour.',
+      title: 'Polynomial vs Power Fit Explorer',
+      description: 'Interactive UK DfT aircraft fuel-efficiency fitting tool. Compare polynomial, spline, and power-law fits, including extrapolation behaviour.',
       tech: ['Plotly', 'Least-Squares', 'Levenberg–Marquardt', 'Flight Mechanics', 'Data Viz'],
       link: '/apps/graph-fitting',
       status: 'Live',
@@ -89,11 +73,14 @@ export default function ProjectsPage() {
               Aeronauty
             </Link>
             <div className="flex space-x-8">
-              <Link href="/snippets" className="text-gray-300 hover:text-white transition-colors">
-                Snippets
-              </Link>
               <Link href="/projects" className="text-white font-semibold">
                 Projects
+              </Link>
+              <Link href="/writing" className="text-gray-300 hover:text-white transition-colors">
+                Writing
+              </Link>
+              <Link href="/snippets" className="text-gray-300 hover:text-white transition-colors">
+                Snippets
               </Link>
               <Link href="/about" className="text-gray-300 hover:text-white transition-colors">
                 About
@@ -107,7 +94,7 @@ export default function ProjectsPage() {
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Projects</h1>
           <p className="text-xl text-gray-600">
-            Aerospace tools and systems that make complex things tractable
+            Interactive tools, demos, and systems that make complex things tractable
           </p>
         </div>
 
@@ -147,7 +134,7 @@ export default function ProjectsPage() {
                   href={project.link}
                   className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold transition-colors"
                 >
-                  Launch App →
+                  Open Project →
                 </Link>
               ) : (
                 <span className="text-gray-400 text-sm">Coming soon</span>
@@ -175,4 +162,3 @@ export default function ProjectsPage() {
     </div>
   );
 }
-

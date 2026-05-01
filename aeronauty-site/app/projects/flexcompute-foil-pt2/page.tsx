@@ -151,7 +151,7 @@ export default function FlexComputeFoilPt2Page() {
             className="mb-5 text-xs font-semibold uppercase tracking-[0.35em]"
             style={{ color: ACCENT }}
           >
-            Project &middot; Flexcompute Foil &middot; Part&nbsp;II
+            Writing &middot; Flexcompute Foil &middot; Part&nbsp;II
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 30 }}

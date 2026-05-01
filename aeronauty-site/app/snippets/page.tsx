@@ -13,11 +13,14 @@ export default function SnippetsPage() {
               Aeronauty
             </Link>
             <div className="flex space-x-8">
-              <Link href="/snippets" className="text-gray-900 font-semibold">
-                Snippets
-              </Link>
               <Link href="/projects" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Projects
+              </Link>
+              <Link href="/writing" className="text-gray-600 hover:text-gray-900 transition-colors">
+                Writing
+              </Link>
+              <Link href="/snippets" className="text-gray-900 font-semibold">
+                Snippets
               </Link>
               <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
                 About
@@ -58,4 +61,3 @@ export default function SnippetsPage() {
     </div>
   );
 }
-

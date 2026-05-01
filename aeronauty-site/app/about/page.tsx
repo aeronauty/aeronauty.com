@@ -81,11 +81,14 @@ export default function AboutPage() {
               Aeronauty
             </Link>
             <div className="flex space-x-8">
-              <Link href="/snippets" className="text-gray-300 hover:text-white transition-colors">
-                Snippets
-              </Link>
               <Link href="/projects" className="text-gray-300 hover:text-white transition-colors">
                 Projects
+              </Link>
+              <Link href="/writing" className="text-gray-300 hover:text-white transition-colors">
+                Writing
+              </Link>
+              <Link href="/snippets" className="text-gray-300 hover:text-white transition-colors">
+                Snippets
               </Link>
               <Link href="/about" className="text-white font-semibold">
                 About
@@ -389,4 +392,3 @@ export default function AboutPage() {
     </div>
   );
 }
-

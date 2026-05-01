@@ -83,11 +83,14 @@ export default function GraphFittingApp() {
               Aeronauty
             </Link>
             <div className="flex space-x-8">
-              <Link href="/snippets" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Snippets
-              </Link>
               <Link href="/projects" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Projects
+              </Link>
+              <Link href="/writing" className="text-gray-600 hover:text-gray-900 transition-colors">
+                Writing
+              </Link>
+              <Link href="/snippets" className="text-gray-600 hover:text-gray-900 transition-colors">
+                Snippets
               </Link>
               <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
                 About
@@ -104,7 +107,7 @@ export default function GraphFittingApp() {
           className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors mb-8 text-sm font-medium"
         >
           <ArrowLeft size={16} />
-          Back to Projects
+          Back to Writing
         </button>
 
         {/* Article */}
