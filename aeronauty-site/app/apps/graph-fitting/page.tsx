@@ -8,9 +8,66 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import GraphFittingTool from './GraphFittingTool';
 
+const redactedName = "[name redacted at OP's request]";
+
+const linkedInScreenshots = [
+  {
+    src: '/graph-fitting/linkedin-exchange/01-original-post-redacted.png',
+    alt: 'Original LinkedIn post sharing the DfT reports, with name and profile photo redacted',
+  },
+  {
+    src: '/graph-fitting/linkedin-exchange/02-andrew-first-question-redacted.png',
+    alt: "Andrew Smyth's first technical question with the chart",
+  },
+  {
+    src: '/graph-fitting/linkedin-exchange/03-response-defending-quintic-redacted.png',
+    alt: 'Response defending the quintic fit, with name and profile photo redacted',
+  },
+  {
+    src: '/graph-fitting/linkedin-exchange/04-andrew-power-function-followup-redacted.png',
+    alt: "Andrew Smyth's follow-up explaining why a power function is physically motivated",
+  },
+  {
+    src: '/graph-fitting/linkedin-exchange/05-initial-blunt-reply-redacted.png',
+    alt: 'Initial blunt reply, with referenced name redacted',
+  },
+  {
+    src: '/graph-fitting/linkedin-exchange/06-follow-up-apology-redacted.png',
+    alt: 'Follow-up apology, with referenced name redacted',
+  },
+  {
+    src: '/graph-fitting/linkedin-exchange/07-link-to-interactive-tool-redacted.png',
+    alt: 'Link to the interactive tool, with referenced name redacted',
+  },
+  {
+    src: '/graph-fitting/linkedin-exchange/08-please-dont-swear-redacted.png',
+    alt: "Reply asking not to swear on LinkedIn, with name and profile photo redacted",
+  },
+];
+
 function Tex({ children, display = false }: { children: string; display?: boolean }) {
   const html = katex.renderToString(children, { displayMode: display, throwOnError: false });
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function RedactedName({ linked = false }: { linked?: boolean }) {
+  const className =
+    'inline-block bg-gray-950 text-white px-1.5 py-0.5 align-baseline font-mono text-[0.92em] leading-tight line-through decoration-white decoration-2';
+
+  if (linked) {
+    return (
+      <a
+        href="https://lnkd.in/ej5VXA3w"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${className} hover:bg-gray-800 transition-colors`}
+      >
+        {redactedName}
+      </a>
+    );
+  }
+
+  return <span className={className}>{redactedName}</span>;
 }
 
 export default function GraphFittingApp() {
@@ -56,6 +113,12 @@ export default function GraphFittingApp() {
             Why choosing the right fit matters
           </h1>
 
+          <aside className="mb-10 rounded-lg border border-gray-300 bg-white/80 p-4 text-sm leading-relaxed text-gray-700 shadow-sm">
+            <p>
+              <strong className="text-gray-900">Editor{"'"}s note:</strong> This post originally named the report{"'"}s coordinator. He has requested removal of his personal details, and I have complied. Readers can view the public LinkedIn thread themselves via the link below.
+            </p>
+          </aside>
+
           <p className="text-lg text-gray-600 mb-10 leading-relaxed">
             I was too mean to a student on LinkedIn this morning, and I owe him an apology. But the thing I was mean about matters - and it matters beyond one chart in one report. So here{"'"}s the apology, the explanation, and an interactive tool you can use to see the problem for yourself.
           </p>
@@ -66,7 +129,7 @@ export default function GraphFittingApp() {
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">What happened</h2>
 
           <p className="text-gray-700 leading-relaxed mb-4">
-            <a href="https://www.linkedin.com/in/craig-heffernan-896558a2/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">Craig Heffernan</a>, a master{"'"}s student in Spatial, Transport, and Environmental Economics, shared two reports he{"'"}d coordinated at the UK Department for Transport on future aircraft fuel efficiency. They{"'"}re substantial pieces of work (one with the Aerospace Technology Institute on fuel efficiency estimates for future aircraft types, the other with the Aviation Impact Accelerator on operational efficiencies) and both are now published on GOV.UK.
+            <RedactedName linked />, a master{"'"}s student in Spatial, Transport, and Environmental Economics, shared two reports he{"'"}d coordinated at the UK Department for Transport on future aircraft fuel efficiency. They{"'"}re substantial pieces of work (one with the Aerospace Technology Institute on <a href="https://www.gov.uk/government/publications/revised-fuel-efficiency-assumptions-for-future-aircraft" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">fuel efficiency estimates for future aircraft types</a>, the other with the Aviation Impact Accelerator on <a href="https://www.gov.uk/government/publications/analysing-the-impact-of-operational-efficiencies-on-aviation" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">operational efficiencies</a>) and both are now published on GOV.UK.
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-4">
@@ -74,7 +137,7 @@ export default function GraphFittingApp() {
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-4">
-            Andrew asked (politely) why quintic functions had been chosen over other interpolation methods. Craig replied that model validation had found 5th-order polynomials struck the right balance between flexibility and overfit. Andrew pushed back: polynomials are fundamentally the wrong functional form for this kind of data. A power function is physically motivated, extrapolates sensibly, and doesn{"'"}t invent features that aren{"'"}t there. He even attached a comparison plot from his colleague Joaquin Exalto.
+            Andrew asked (politely) why quintic functions had been chosen over other interpolation methods. <RedactedName /> replied that model validation had found 5th-order polynomials struck the right balance between flexibility and overfit. Andrew pushed back: polynomials are fundamentally the wrong functional form for this kind of data. A power function is physically motivated, extrapolates sensibly, and doesn{"'"}t invent features that aren{"'"}t there. He even attached a comparison plot from his colleague Joaquin Exalto.
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-4">
@@ -82,7 +145,7 @@ export default function GraphFittingApp() {
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-4">
-            Which was true. And also too harsh. Craig is a student sharing published work he{"'"}s proud of, and I could{"'"}ve made the same point without being a dick about it. Sorry, Craig.
+            Which was true. And also too harsh. <RedactedName /> is a student sharing published work he{"'"}s proud of, and I could{"'"}ve made the same point without being a dick about it. Sorry, <RedactedName />.
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-6">
@@ -240,6 +303,32 @@ export default function GraphFittingApp() {
           <p className="text-sm text-gray-500 italic">
             Data digitised from DfT aviation fuel efficiency report. Fits computed via least-squares and Levenberg-Marquardt. Interactive tool built with Plotly.js.
           </p>
+
+          <section className="mt-16 border-t border-gray-200 pt-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">LinkedIn exchange</h2>
+            <p className="text-gray-700 leading-relaxed mb-6">
+              <a href="https://lnkd.in/ej5VXA3w" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">The full exchange on LinkedIn</a>. Names redacted at OP{"'"}s request.
+            </p>
+            <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+              {linkedInScreenshots.map((screenshot, index) => (
+                <figure
+                  key={screenshot.src}
+                  className="w-[min(82vw,360px)] shrink-0 snap-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+                >
+                  <Image
+                    src={screenshot.src}
+                    alt={screenshot.alt}
+                    width={720}
+                    height={1536}
+                    className="h-auto w-full"
+                  />
+                  <figcaption className="border-t border-gray-100 px-3 py-2 text-xs text-gray-500">
+                    {index + 1} / {linkedInScreenshots.length}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </section>
         </article>
       </main>
     </div>
