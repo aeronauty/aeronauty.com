@@ -118,7 +118,7 @@ export default function GraphFittingApp() {
 
           <aside className="mb-10 rounded-lg border border-gray-300 bg-white/80 p-4 text-sm leading-relaxed text-gray-700 shadow-sm">
             <p>
-              <strong className="text-gray-900">Editor{"'"}s note:</strong> This post originally named the report{"'"}s coordinator. He has requested removal of his personal details, and I have complied. Readers can view the public LinkedIn thread themselves via the link below.
+              <strong className="text-gray-900">Editor{"'"}s note:</strong> This post originally named the report{"'"}s coordinator. He has requested removal of his personal details, and I have complied. Screenshots from the public LinkedIn exchange are included below for context.
             </p>
           </aside>
 
@@ -148,7 +148,7 @@ export default function GraphFittingApp() {
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-4">
-            Which was true. And also too harsh. <RedactedName /> is a student sharing published work he{"'"}s proud of, and I could{"'"}ve made the same point without being a dick about it. Sorry, <RedactedName />.
+            The technical point was fair. The way I made it was too blunt. <RedactedName /> is a student sharing published work he{"'"}s proud of, and I could{"'"}ve made the same point with more care. Sorry, <RedactedName />.
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-6">
@@ -310,7 +310,7 @@ export default function GraphFittingApp() {
           <section className="mt-16 border-t border-gray-200 pt-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">LinkedIn exchange</h2>
             <p className="text-gray-700 leading-relaxed mb-6">
-              <a href="https://lnkd.in/ej5VXA3w" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">The full exchange on LinkedIn</a>. Names redacted at OP{"'"}s request.
+              Screenshots from the <a href="https://lnkd.in/ej5VXA3w" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors">public LinkedIn exchange</a>. Names redacted at OP{"'"}s request.
             </p>
             <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
               {linkedInScreenshots.map((screenshot, index) => (
