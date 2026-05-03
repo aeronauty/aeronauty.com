@@ -18,21 +18,21 @@ export default function LabPage() {
           Gated demos will live here.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-300">
-          This route is protected by a signed magic-link session on Vercel. It lets us test private
-          Aeronauty demos before moving the public domain away from GitHub Pages.
+          This route is protected by a signed magic-link session on Vercel. Private writing,
+          behind-the-scenes tools, and work-in-progress demos live here.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border border-gray-800 bg-gray-900/70 p-5">
-            <h2 className="font-semibold">Current purpose</h2>
+          <Link href="/lab/writing" className="rounded-lg border border-gray-800 bg-gray-900/70 p-5 transition hover:border-blue-400 hover:bg-gray-900">
+            <h2 className="font-semibold">Private writing</h2>
             <p className="mt-2 text-sm leading-6 text-gray-400">
-              Prove the auth flow, cookie behavior, and Vercel deployment path.
+              Early drafts, private notes, and behind-the-scenes technical posts.
             </p>
-          </div>
+          </Link>
           <div className="rounded-lg border border-gray-800 bg-gray-900/70 p-5">
-            <h2 className="font-semibold">Next use</h2>
+            <h2 className="font-semibold">Private demos</h2>
             <p className="mt-2 text-sm leading-6 text-gray-400">
-              Drop in behind-the-scenes tools, work-in-progress demos, and private write-ups.
+              Work-in-progress tools and demos can be added here as they become useful.
             </p>
           </div>
         </div>
