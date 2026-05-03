@@ -4,9 +4,19 @@ import {
   getRequestBaseUrl,
   isAllowedLabEmail,
 } from "@/lib/lab-auth";
+import { storeMagicLink } from "@/lib/lab-magic-link-store";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function getTokenId(token: string): string | null {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf-8"));
+    return typeof payload.jti === "string" ? payload.jti : null;
+  } catch {
+    return null;
+  }
 }
 
 async function sendMagicLink(email: string, url: string): Promise<void> {
@@ -31,8 +41,8 @@ async function sendMagicLink(email: string, url: string): Promise<void> {
       from,
       to: email,
       subject: "Your Aeronauty lab sign-in link",
-      text: `Use this link to sign in to the Aeronauty lab:\n\n${url}\n\nThis link expires in 15 minutes.`,
-      html: `<p>Use this link to sign in to the Aeronauty lab:</p><p><a href="${url}">Sign in to Aeronauty lab</a></p><p>This link expires in 15 minutes.</p>`,
+      text: `Use this link to sign in to the Aeronauty lab:\n\n${url}\n\nThis link expires in 15 minutes and allows up to three visits, so corporate link scanners should not burn it immediately.`,
+      html: `<p>Use this link to sign in to the Aeronauty lab:</p><p><a href="${url}">Sign in to Aeronauty lab</a></p><p>This link expires in 15 minutes and allows up to three visits, so corporate link scanners should not burn it immediately.</p>`,
     }),
   });
 
@@ -53,6 +63,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const token = await createLabMagicLinkToken(normalizedEmail);
+    const tokenId = getTokenId(token);
+    if (tokenId) {
+      await storeMagicLink(tokenId, normalizedEmail);
+    }
+
     const baseUrl = getRequestBaseUrl(req);
     const url = `${baseUrl}/api/lab/verify?token=${encodeURIComponent(token)}`;
 
