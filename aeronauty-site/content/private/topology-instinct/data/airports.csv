@@ -1,0 +1,176 @@
+id,iata,icao,name,city,country,lat,lon,route_count,annual_co2_outbound_tonnes
+3682,ATL,KATL,Hartsfield Jackson Atlanta International Airport,Atlanta,United States,33.6367,-84.428101,1826,5256743.0
+3830,ORD,KORD,Chicago O'Hare International Airport,Chicago,United States,41.9786,-87.9048,1108,6517251.9
+3364,PEK,ZBAA,Beijing Capital International Airport,Beijing,China,40.080101013183594,116.58499908447266,1069,6432601.1
+507,LHR,EGLL,London Heathrow Airport,London,United Kingdom,51.4706,-0.461941,1051,11566171.4
+1382,CDG,LFPG,Charles de Gaulle International Airport,Paris,France,49.012798,2.55,1041,8031104.6
+3484,LAX,KLAX,Los Angeles International Airport,Los Angeles,United States,33.94250107,-118.4079971,990,8622464.4
+340,FRA,EDDF,Frankfurt am Main Airport,Frankfurt,Germany,50.033333,8.570556,990,7562106.0
+3670,DFW,KDFW,Dallas Fort Worth International Airport,Dallas-Fort Worth,United States,32.896801,-97.038002,936,4014777.0
+3797,JFK,KJFK,John F Kennedy International Airport,New York,United States,40.63980103,-73.77890015,911,9321057.4
+580,AMS,EHAM,Amsterdam Airport Schiphol,Amsterdam,Netherlands,52.308601,4.76389,903,5816796.7
+3406,PVG,ZSPD,Shanghai Pudong International Airport,Shanghai,China,31.143400192260746,121.80500030517578,825,5445582.8
+3316,SIN,WSSS,Singapore Changi Airport,Singapore,Singapore,1.35019,103.994003,820,5929029.6
+1218,BCN,LEBL,Barcelona International Airport,Barcelona,Spain,41.2971,2.07846,783,2646391.3
+3930,ICN,RKSI,Incheon International Airport,Seoul,South Korea,37.46910095214844,126.45099639892578,740,6102692.6
+3751,DEN,KDEN,Denver International Airport,Denver,United States,39.861698150635,-104.672996521,735,1832858.2
+3576,MIA,KMIA,Miami International Airport,Miami,United States,25.79319953918457,-80.29060363769531,734,3684379.2
+346,MUC,EDDM,Munich Airport,Munich,Germany,48.353802,11.7861,728,3924297.1
+13696,IST,LTFM,Istanbul Airport,Istanbul,Turkey,41.275278,28.751944,719,3102993.2
+3077,HKG,VHHH,Hong Kong International Airport,Hong Kong,Hong Kong,22.308901,113.915001,710,5277209.0
+2188,DXB,OMDB,Dubai International Airport,Dubai,United Arab Emirates,25.2527999878,55.3643989563,710,5792987.8
+502,LGW,EGKK,London Gatwick Airport,London,United Kingdom,51.148102,-0.190278,708,2561591.4
+3370,CAN,ZGGG,Guangzhou Baiyun International Airport,Guangzhou,China,23.39240074157715,113.29900360107422,674,2710316.8
+1555,FCO,LIRF,Leonardo da Vinci–Fiumicino Airport,Rome,Italy,41.8002778,12.2388889,662,3910364.0
+1229,MAD,LEMD,Adolfo Suárez Madrid–Barajas Airport,Madrid,Spain,40.471926,-3.56264,661,4164177.1
+3885,BKK,VTBS,Suvarnabhumi Airport,Bangkok,Thailand,13.681099891662598,100.74700164794922,656,5250122.2
+4029,DME,UUDD,Domodedovo International Airport,Moscow,Russia,55.40879821777344,37.90629959106445,649,1729628.5
+3395,CTU,ZUUU,Chengdu Shuangliu International Airport,Chengdu,China,30.578500747680664,103.9469985961914,647,1816297.1
+193,YYZ,CYYZ,Lester B. Pearson International Airport,Toronto,Canada,43.6772003174,-79.63059997559999,636,4425817.9
+302,BRU,EBBR,Brussels Airport,Brussels,Belgium,50.9014015198,4.48443984985,631,2514683.1
+478,MAN,EGCC,Manchester Airport,Manchester,United Kingdom,53.35369873046875,-2.2749500274658203,627,2786267.9
+1613,VIE,LOWW,Vienna International Airport,Vienna,Austria,48.110298156738,16.569700241089,616,2040197.2
+3876,CLT,KCLT,Charlotte Douglas International Airport,Charlotte,United States,35.2140007019043,-80.94309997558594,600,1339762.6
+3752,PHL,KPHL,Philadelphia International Airport,Philadelphia,United States,39.87189865112305,-75.24109649658203,576,2760082.3
+2279,NRT,RJAA,Narita International Airport,Tokyo,Japan,35.7647018433,140.386001587,575,7125830.1
+345,DUS,EDDL,Düsseldorf Airport,Duesseldorf,Germany,51.289501,6.76678,570,2193925.3
+3379,XIY,ZLXY,Xi'an Xianyang International Airport,Xi'an,China,34.447102,108.751999,563,1222757.5
+3998,PMI,LEPA,Palma De Mallorca Airport,Palma de Mallorca,Spain,39.551700592,2.73881006241,548,948643.9
+3382,KMG,ZPPP,Kunming Changshui International Airport,Kunming,China,25.1019444,102.9291667,545,1336184.6
+3393,CKG,ZUCK,Chongqing Jiangbei International Airport,Chongqing,China,29.719200134277344,106.64199829101562,540,1157281.4
+3093,DEL,VIDP,Indira Gandhi International Airport,Delhi,India,28.5665,77.103104,527,2505078.4
+2276,TPE,RCTP,Taiwan Taoyuan International Airport,Taipei,Taiwan,25.0777,121.233002,527,2913649.5
+3304,KUL,WMKK,Kuala Lumpur International Airport,Kuala Lumpur,Malaysia,2.745579957962,101.70999908447,514,3029509.2
+3462,PHX,KPHX,Phoenix Sky Harbor International Airport,Phoenix,United States,33.43429946899414,-112.01200103759766,508,1710481.6
+3386,HGH,ZSHC,Hangzhou Xiaoshan International Airport,Hangzhou,China,30.22949981689453,120.43399810791016,506,1380709.4
+3494,EWR,KEWR,Newark Liberty International Airport,Newark,United States,40.692501068115234,-74.168701171875,505,4358506.9
+3469,SFO,KSFO,San Francisco International Airport,San Francisco,United States,37.61899948120117,-122.375,499,5404536.8
+3877,LAS,KLAS,McCarran International Airport,Las Vegas,United States,36.08010101,-115.1520004,498,2330744.9
+1678,ZRH,LSZH,Zürich Airport,Zurich,Switzerland,47.464699,8.54917,494,3168091.3
+1824,MEX,MMMX,Licenciado Benito Juarez International Airport,Mexico City,Mexico,19.4363,-99.072098,485,1925813.9
+3550,IAH,KIAH,George Bush Intercontinental Houston Airport,Houston,United States,29.984399795532227,-95.34140014648438,485,2753587.3
+2179,AUH,OMAA,Abu Dhabi International Airport,Abu Dhabi,United Arab Emirates,24.433000564575195,54.651100158691406,477,4346102.7
+3878,MCO,KMCO,Orlando International Airport,Orlando,United States,28.429399490356445,-81.30899810791016,475,1878032.7
+3374,SZX,ZGSZ,Shenzhen Bao'an International Airport,Shenzhen,China,22.639299392700195,113.81099700927734,467,1065504.4
+3383,XMN,ZSAM,Xiamen Gaoqi International Airport,Xiamen,China,24.54400062561035,118.12799835205078,466,1258612.8
+609,CPH,EKCH,Copenhagen Kastrup Airport,Copenhagen,Denmark,55.617900848389,12.656000137329,457,1878497.2
+2997,BOM,VABB,Chhatrapati Shivaji International Airport,Mumbai,India,19.0886993408,72.8678970337,452,2103140.6
+737,ARN,ESSA,Stockholm-Arlanda Airport,Stockholm,Sweden,59.651901245117,17.918600082397,439,1562575.1
+1638,LIS,LPPT,Humberto Delgado Airport (Lisbon Portela Airport),Lisbon,Portugal,38.7813,-9.13592,435,1843250.7
+3645,DTW,KDTW,Detroit Metropolitan Wayne County Airport,Detroit,United States,42.212398529052734,-83.35340118408203,433,1961203.4
+3858,MSP,KMSP,Minneapolis-St Paul International/Wold-Chamberlain Airport,Minneapolis,United States,44.882,-93.221802,430,1455659.5
+3448,BOS,KBOS,General Edward Lawrence Logan International Airport,Boston,United States,42.36429977,-71.00520325,424,2449739.0
+351,TXL,EDDT,Berlin-Tegel Airport,Berlin,Germany,52.5597,13.2877,418,1316217.1
+599,DUB,EIDW,Dublin Airport,Dublin,Ireland,53.421299,-6.27007,414,1951451.0
+3391,SHA,ZSSS,Shanghai Hongqiao International Airport,Shanghai,China,31.197900772094727,121.33599853515624,411,907925.3
+1230,AGP,LEMG,Málaga Airport,Malaga,Spain,36.67490005493164,-4.499110221862793,410,1183354.6
+3361,SYD,YSSY,Sydney Kingsford Smith International Airport,Sydney,Australia,-33.94609832763672,151.177001953125,410,3616537.8
+1386,ORY,LFPO,Paris-Orly Airport,Paris,France,48.7233333,2.3794444,404,745289.5
+3577,SEA,KSEA,Seattle Tacoma International Airport,Seattle,United States,47.449001,-122.308998,403,3166103.4
+3941,ATH,LGAV,Eleftherios Venizelos International Airport,Athens,Greece,37.9364013672,23.9444999695,403,1277713.5
+2985,SVO,UUEE,Sheremetyevo International Airport,Moscow,Russia,55.972599,37.4146,397,1916621.9
+3520,DCA,KDCA,Ronald Reagan Washington National Airport,Washington,United States,38.8521,-77.037697,388,693346.8
+2564,GRU,SBGR,Guarulhos - Governador André Franco Montoro International Airport,Sao Paulo,Brazil,-23.435556411743164,-46.47305679321289,387,3014127.0
+3714,IAD,KIAD,Washington Dulles International Airport,Washington,United States,38.94449997,-77.45580292,386,3368461.3
+2397,MNL,RPLL,Ninoy Aquino International Airport,Manila,Philippines,14.5086,121.019997,386,1585272.4
+1524,MXP,LIMC,Malpensa International Airport,Milano,Italy,45.6306,8.72811,386,2039048.4
+3371,CSX,ZGHA,Changsha Huanghua International Airport,Changcha,China,28.189199447599997,113.220001221,377,713051.5
+11051,DOH,OTHH,Hamad International Airport,Doha,Qatar,25.273056,51.608056,377,3414434.4
+2072,JED,OEJN,King Abdulaziz International Airport,Jeddah,Saudi Arabia,21.6796,39.156502,377,1971102.9
+3390,TAO,ZSQD,Liuting Airport,Qingdao,China,36.2661018372,120.374000549,376,770550.2
+3376,WUH,ZHHH,Wuhan Tianhe International Airport,Wuhan,China,30.7838,114.208,374,826327.7
+3533,FLL,KFLL,Fort Lauderdale Hollywood International Airport,Fort Lauderdale,United States,26.072599,-80.152702,374,1162016.7
+146,YUL,CYUL,Montreal / Pierre Elliott Trudeau International Airport,Montreal,Canada,45.4706001282,-73.7407989502,371,2266626.8
+2948,LED,ULLI,Pulkovo Airport,St. Petersburg,Russia,59.80030059814453,30.262500762939453,368,792391.3
+3275,CGK,WIII,Soekarno-Hatta International Airport,Jakarta,Indonesia,-6.1255698204,106.65599823,367,1635235.6
+644,OSL,ENGM,Oslo Lufthavn,Oslo,Norway,60.121,11.0502,363,1146091.6
+1587,PRG,LKPR,Václav Havel Airport Prague,Prague,Czech Republic,50.1008,14.26,361,950043.9
+3375,CGO,ZHCC,Zhengzhou Xinzheng International Airport,Zhengzhou,China,34.519699096699995,113.841003418,348,908962.4
+548,STN,EGSS,London Stansted Airport,London,United Kingdom,51.8849983215,0.234999999404,343,406132.3
+3388,NKG,ZSNJ,Nanjing Lukou Airport,Nanjing,China,31.742000579833984,118.86199951171876,330,1000507.3
+1665,GVA,LSGG,Geneva Cointrin International Airport,Geneva,Switzerland,46.23809814453125,6.108950138092041,329,1351299.2
+813,JNB,FAOR,OR Tambo International Airport,Johannesburg,South Africa,-26.1392,28.246,321,2546676.0
+342,HAM,EDDH,Hamburg Airport,Hamburg,Germany,53.630401611328,9.9882297515869,321,990620.8
+421,HEL,EFHK,Helsinki Vantaa Airport,Helsinki,Finland,60.317199707031,24.963300704956,320,1648169.4
+1056,TFS,GCTS,Tenerife South Airport,Tenerife,Spain,28.044500351,-16.5725002289,318,1606169.4
+3697,LGA,KLGA,La Guardia Airport,New York,United States,40.77719879,-73.87259674,316,499672.2
+2359,HND,RJTT,Tokyo Haneda International Airport,Tokyo,Japan,35.552299,139.779999,315,1923047.5
+156,YVR,CYVR,Vancouver International Airport,Vancouver,Canada,49.193901062,-123.183998108,315,2649770.3
+1212,ALC,LEAL,Alicante International Airport,Alicante,Spain,38.28219985961914,-0.5581560134887695,314,699598.4
+1852,CUN,MMUN,Cancún International Airport,Cancun,Mexico,21.036500930800003,-86.8770980835,311,2161367.6
+1054,LPA,GCLP,Gran Canaria Airport,Gran Canaria,Spain,27.931900024414062,-15.38659954071045,308,1334195.5
+2709,BOG,SKBO,El Dorado International Airport,Bogota,Colombia,4.70159,-74.1469,307,1087198.3
+3399,URC,ZWWW,Ürümqi Diwopu International Airport,Urumqi,China,43.907100677490234,87.47419738769531,306,1068316.3
+3992,KIX,RJBB,Kansai International Airport,Osaka,Japan,34.42729949951172,135.24400329589844,304,1967933.9
+1128,CAI,HECA,Cairo International Airport,Cairo,Egypt,30.12190055847168,31.40559959411621,303,1536101.4
+3320,BNE,YBBN,Brisbane International Airport,Brisbane,Australia,-27.384199142456055,153.11700439453125,296,1434065.3
+3368,TSN,ZBTJ,Tianjin Binhai International Airport,Tianjin,China,39.124401092499994,117.346000671,294,765042.0
+4317,SAW,LTFJ,Sabiha Gökçen International Airport,Istanbul,Turkey,40.898601532,29.3092002869,290,655263.2
+3849,BWI,KBWI,Baltimore/Washington International Thurgood Marshall Airport,Baltimore,United States,39.1754,-76.668297,286,845632.1
+3404,DLC,ZYTL,Zhoushuizi Airport,Dalian,China,38.9656982421875,121.53900146484376,285,537934.0
+3536,SLC,KSLC,Salt Lake City International Airport,Salt Lake City,United States,40.78839874267578,-111.97799682617188,278,868007.9
+2082,RUH,OERK,King Khaled International Airport,Riyadh,Saudi Arabia,24.957599639892575,46.69879913330078,276,1240088.7
+3646,TPA,KTPA,Tampa International Airport,Tampa,United States,27.975500106811523,-82.533203125,276,834516.9
+1335,LYS,LFLL,Lyon Saint-Exupéry Airport,Lyon,France,45.725556,5.081111,275,396825.6
+3394,KWE,ZUGY,Longdongbao Airport,Guiyang,China,26.53849983215332,106.8010025024414,274,619752.8
+350,STR,EDDS,Stuttgart Airport,Stuttgart,Germany,48.689899444599995,9.22196006775,273,721648.6
+4144,SHE,ZYTX,Taoxian Airport,Shenyang,China,41.639801025390625,123.48300170898438,272,794707.0
+1590,TLV,LLBG,Ben Gurion International Airport,Tel-aviv,Israel,32.01139831542969,34.88669967651367,271,2194716.8
+3747,MDW,KMDW,Chicago Midway International Airport,Chicago,United States,41.785999,-87.752403,271,488051.5
+4108,TNA,ZSJN,Yaoqiang Airport,Jinan,China,36.857200622558594,117.21600341796876,270,746195.9
+1354,NCE,LFMN,Nice-Côte d'Azur Airport,Nice,France,43.6584014893,7.215869903560001,269,630756.8
+3339,MEL,YMML,Melbourne International Airport,Melbourne,Australia,-37.673302,144.843002,269,2293859.9
+3385,FOC,ZSFZ,Fuzhou Changle International Airport,Fuzhou,China,25.93510055541992,119.66300201416016,266,786036.3
+344,CGN,EDDK,Cologne Bonn Airport,Cologne,Germany,50.8658981323,7.1427397728,265,615263.5
+1353,MRS,LFML,Marseille Provence Airport,Marseille,France,43.439271922,5.22142410278,265,388893.0
+469,BHX,EGBB,Birmingham International Airport,Birmingham,United Kingdom,52.453899383499994,-1.74802994728,264,802381.3
+3400,HRB,ZYHB,Taiping Airport,Harbin,China,45.6234016418457,126.25,259,703473.5
+4059,NBO,HKJK,Jomo Kenyatta International Airport,Nairobi,Kenya,-1.31923997402,36.9277992249,258,1354623.7
+1688,AYT,LTAI,Antalya International Airport,Antalya,Turkey,36.898701,30.800501,253,1009240.1
+1074,CMN,GMMN,Mohammed V International Airport,Casablanca,Morocco,33.36750030517578,-7.589970111846924,250,988805.1
+3861,MSY,KMSY,Louis Armstrong New Orleans International Airport,New Orleans,United States,29.99340057373047,-90.25800323486328,248,945861.3
+1551,VCE,LIPZ,Venice Marco Polo Airport,Venice,Italy,45.505299,12.3519,245,821203.8
+679,WAW,EPWA,Warsaw Chopin Airport,Warsaw,Poland,52.1656990051,20.967100143399996,240,836017.0
+2176,KWI,OKBK,Kuwait International Airport,Kuwait,Kuwait,29.226600646972656,47.96889877319336,239,863833.2
+3731,SAN,KSAN,San Diego International Airport,San Diego,United States,32.7336006165,-117.190002441,238,1500009.5
+535,EDI,EGPH,Edinburgh Airport,Edinburgh,United Kingdom,55.95000076293945,-3.372499942779541,237,622528.0
+1055,ACE,GCRR,Lanzarote Airport,Arrecife,Spain,28.945499,-13.6052,233,958256.6
+3728,HNL,PHNL,Daniel K Inouye International Airport,Honolulu,United States,21.32062,-157.924228,233,2740822.4
+1509,CTA,LICC,Catania-Fontanarossa Airport,Catania,Italy,37.466801,15.0664,233,679397.2
+2789,LIM,SPIM,Jorge Chávez International Airport,Lima,Peru,-12.0219,-77.114305,230,1364520.9
+3720,PDX,KPDX,Portland International Airport,Portland,United States,45.58869934,-122.5979996,230,1004160.6
+3373,NNG,ZGNN,Nanning Wuxu Airport,Nanning,China,22.608299255371097,108.1719970703125,228,567975.5
+178,YYC,CYYC,Calgary International Airport,Calgary,Canada,51.113899231,-114.019996643,228,1329660.1
+1657,OTP,LROP,Henri Coandă International Airport,Bucharest,Romania,44.5711111,26.085,227,614312.3
+1606,MLA,LMML,Malta International Airport,Malta,Malta,35.857498,14.4775,226,734032.1
+2170,AMM,OJAI,Queen Alia International Airport,Amman,Jordan,31.7226009369,35.9931983948,223,1346182.7
+3678,STL,KSTL,St Louis Lambert International Airport,St. Louis,United States,38.748697,-90.370003,221,583425.5
+3369,TYN,ZBYN,Taiyuan Wusu Airport,Taiyuan,China,37.74689865112305,112.62799835205078,220,524658.0
+1452,HER,LGIR,Heraklion International Nikos Kazantzakis Airport,Heraklion,Greece,35.3396987915,25.1802997589,219,892275.9
+4030,SYX,ZJSY,Sanya Phoenix International Airport,Sanya,China,18.302900314331055,109.41200256347656,218,775860.5
+3205,SGN,VVTS,Tan Son Nhat International Airport,Ho Chi Minh City,Vietnam,10.8187999725,106.652000427,218,1223217.9
+4120,HAK,ZJHK,Haikou Meilan International Airport,Haikou,China,19.934900283813477,110.45899963378906,215,641784.2
+492,LTN,EGGW,London Luton Airport,London,United Kingdom,51.874698638916016,-0.3683330118656158,214,517585.5
+3372,KWL,ZGKL,Guilin Liangjiang International Airport,Guilin,China,25.21809959411621,110.03900146484376,214,551197.8
+1107,ADD,HAAB,Addis Ababa Bole International Airport,Addis Ababa,Ethiopia,8.97789001465,38.7993011475,214,999332.6
+2006,AKL,NZAA,Auckland International Airport,Auckland,New Zealand,-37.008098602299995,174.792007446,213,1364798.7
+1871,PTY,MPTO,Tocumen International Airport,Panama City,Panama,9.0713596344,-79.3834991455,212,933563.1
+1626,FAO,LPFR,Faro Airport,Faro,Portugal,37.0144004822,-7.96590995789,211,614109.1
+3144,MAA,VOMM,Chennai International Airport,Madras,India,12.990005493164062,80.16929626464844,211,776819.7
+2194,MCT,OOMS,Muscat International Airport,Muscat,Oman,23.593299865722656,58.284400939941406,208,682223.4
+2890,SJU,TJSJ,Luis Munoz Marin International Airport,San Juan,Puerto Rico,18.4393997192,-66.0018005371,204,703617.3
+3024,CMB,VCBI,Bandaranaike International Colombo Airport,Colombo,Sri Lanka,7.180759906768799,79.88410186767578,203,1335149.2
+3953,RIX,EVRA,Riga International Airport,Riga,Latvia,56.92359924316406,23.971099853515625,202,547439.6
+2939,KBP,UKBB,Boryspil International Airport,Kiev,Ukraine,50.345001220703125,30.894699096679688,202,717582.8
+1225,IBZ,LEIB,Ibiza Airport,Ibiza,Spain,38.8728981018,1.3731199502899998,202,404619.9
+1636,OPO,LPPR,Francisco de Sá Carneiro Airport,Porto,Portugal,41.2481002808,-8.68138980865,202,597623.9
+3940,DPS,WADD,Ngurah Rai (Bali) International Airport,Denpasar,Indonesia,-8.7481698989868,115.16699981689,201,987927.7
+490,BRS,EGGD,Bristol Airport,Bristol,United Kingdom,51.382702,-2.71909,200,455518.7
+2975,SVX,USSS,Koltsovo Airport,Yekaterinburg,Russia,56.743099212646,60.802700042725,199,393117.9
+2531,BSB,SBBR,Presidente Juscelino Kubistschek International Airport,Brasilia,Brazil,-15.86916732788086,-47.92083358764648,197,296673.5
+534,GLA,EGPF,Glasgow International Airport,Glasgow,United Kingdom,55.8718986511,-4.43306016922,196,1002642.2
+3131,BLR,VOBL,Kempegowda International Airport,Bangalore,India,13.1979,77.706299,195,700589.2
+1489,BUD,LHBP,Budapest Liszt Ferenc International Airport,Budapest,Hungary,47.42976,19.261093,195,488114.5
+2191,SHJ,OMSJ,Sharjah International Airport,Sharjah,United Arab Emirates,25.32859992980957,55.5172004699707,195,299344.3
+2560,GIG,SBGL,Rio Galeão – Tom Jobim International Airport,Rio De Janeiro,Brazil,-22.8099994659,-43.2505569458,194,1290363.0
+3043,CCU,VECC,Netaji Subhash Chandra Bose International Airport,Kolkata,India,22.654699325561523,88.44670104980469,194,347205.6

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Figure B — Data as DAG vs flattened table.
+  Single SVG, side-by-side. ~1000px wide. Scales via viewBox so the article
+  CSS can stack it on mobile.
+
+  LEFT: a small CSV/pandas-shaped table (header + 4 data rows).
+  RIGHT: a small DAG (artifact -> operation -> artifact). 6 nodes total.
+  Artifacts are marked with a small dot prefix and "A"; operations with "O".
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1000 480"
+     role="img"
+     aria-labelledby="title-d desc-d"
+     preserveAspectRatio="xMidYMid meet">
+  <title id="title-d">Data flattened to a table vs data as a DAG</title>
+  <desc id="desc-d">Left half shows a small pandas-style table of solver runs. Right half shows the same data as a directed acyclic graph of artifacts and operations with provenance edges.</desc>
+
+  <defs>
+    <style><![CDATA[
+      :root {
+        --fg: #1f2328;
+        --muted: #6b7280;
+        --accent-art: #2f6f9f;     /* artifacts */
+        --accent-op:  #b08900;     /* operations */
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #e6e6e6;
+          --muted: #9aa0a6;
+          --accent-art: #6fb1d9;
+          --accent-op:  #e0b84a;
+        }
+      }
+      .title {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        fill: var(--fg);
+        text-anchor: middle;
+      }
+      .subtitle {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 12px;
+        font-style: italic;
+        fill: var(--muted);
+        text-anchor: middle;
+      }
+      .cell {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12px;
+        fill: var(--fg);
+        dominant-baseline: middle;
+      }
+      .cell-head {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12px;
+        fill: var(--fg);
+        font-weight: 600;
+        dominant-baseline: middle;
+      }
+      .grid {
+        stroke: var(--muted);
+        stroke-width: 0.7;
+      }
+      .grid-strong {
+        stroke: var(--fg);
+        stroke-width: 1.0;
+      }
+      .node {
+        fill: none;
+        stroke: var(--fg);
+        stroke-width: 1.4;
+      }
+      .node-art {
+        fill: none;
+        stroke: var(--accent-art);
+        stroke-width: 1.4;
+      }
+      .node-op {
+        fill: none;
+        stroke: var(--accent-op);
+        stroke-width: 1.4;
+      }
+      .nlabel {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 13px;
+        fill: var(--fg);
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+      .ntype {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 10px;
+        font-weight: 600;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+      .ntype-art { fill: var(--accent-art); }
+      .ntype-op  { fill: var(--accent-op); }
+      .edge {
+        stroke: var(--fg);
+        stroke-width: 1.3;
+        fill: none;
+      }
+      .legend-text {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 11px;
+        fill: var(--muted);
+        dominant-baseline: middle;
+      }
+      .divider {
+        stroke: var(--muted);
+        stroke-width: 0.6;
+        stroke-dasharray: 2 4;
+      }
+    ]]></style>
+
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--fg)"/>
+    </marker>
+  </defs>
+
+  <!-- =========================================================
+       LEFT half: flattened table
+       =========================================================
+       Reserved x range: 30 .. 470
+       Centre line: ~250
+  -->
+  <g>
+    <text class="title"    x="250" y="40">Flattened to a pandas/CSV table</text>
+
+    <!-- Table area: x 60..440, y 70..280, header row + 4 data rows -->
+    <!-- Columns: solver_run_id | mach | alpha | CL | CD | CM
+         widths chosen so solver_run_id is wide enough -->
+    <g transform="translate(60,70)">
+      <!-- Outer rectangle -->
+      <rect class="grid-strong" x="0" y="0" width="380" height="180" fill="none"/>
+
+      <!-- Header row separator -->
+      <line class="grid-strong" x1="0" y1="36" x2="380" y2="36"/>
+
+      <!-- Vertical column separators.
+           Column right-edges: 130, 180, 230, 280, 330, 380 -->
+      <line class="grid" x1="130" y1="0" x2="130" y2="180"/>
+      <line class="grid" x1="180" y1="0" x2="180" y2="180"/>
+      <line class="grid" x1="230" y1="0" x2="230" y2="180"/>
+      <line class="grid" x1="280" y1="0" x2="280" y2="180"/>
+      <line class="grid" x1="330" y1="0" x2="330" y2="180"/>
+
+      <!-- Row separators -->
+      <line class="grid" x1="0" y1="72"  x2="380" y2="72"/>
+      <line class="grid" x1="0" y1="108" x2="380" y2="108"/>
+      <line class="grid" x1="0" y1="144" x2="380" y2="144"/>
+
+      <!-- Header text. Column centres: 65, 155, 205, 255, 305, 355 -->
+      <text class="cell-head" x="65"  y="18">solver_run_id</text>
+      <text class="cell-head" x="155" y="18">mach</text>
+      <text class="cell-head" x="205" y="18">alpha</text>
+      <text class="cell-head" x="255" y="18">CL</text>
+      <text class="cell-head" x="305" y="18">CD</text>
+      <text class="cell-head" x="355" y="18">CM</text>
+
+      <!-- Row 1, y centre 54 -->
+      <text class="cell" x="65"  y="54" text-anchor="middle">run_0142</text>
+      <text class="cell" x="155" y="54" text-anchor="middle">0.20</text>
+      <text class="cell" x="205" y="54" text-anchor="middle">2.0</text>
+      <text class="cell" x="255" y="54" text-anchor="middle">0.241</text>
+      <text class="cell" x="305" y="54" text-anchor="middle">0.018</text>
+      <text class="cell" x="355" y="54" text-anchor="middle">-0.041</text>
+
+      <!-- Row 2, y centre 90 -->
+      <text class="cell" x="65"  y="90" text-anchor="middle">run_0143</text>
+      <text class="cell" x="155" y="90" text-anchor="middle">0.20</text>
+      <text class="cell" x="205" y="90" text-anchor="middle">4.0</text>
+      <text class="cell" x="255" y="90" text-anchor="middle">0.486</text>
+      <text class="cell" x="305" y="90" text-anchor="middle">0.025</text>
+      <text class="cell" x="355" y="90" text-anchor="middle">-0.052</text>
+
+      <!-- Row 3, y centre 126 -->
+      <text class="cell" x="65"  y="126" text-anchor="middle">run_0144</text>
+      <text class="cell" x="155" y="126" text-anchor="middle">0.20</text>
+      <text class="cell" x="205" y="126" text-anchor="middle">6.0</text>
+      <text class="cell" x="255" y="126" text-anchor="middle">0.722</text>
+      <text class="cell" x="305" y="126" text-anchor="middle">0.041</text>
+      <text class="cell" x="355" y="126" text-anchor="middle">-0.063</text>
+
+      <!-- Row 4, y centre 162 -->
+      <text class="cell" x="65"  y="162" text-anchor="middle">run_0145</text>
+      <text class="cell" x="155" y="162" text-anchor="middle">0.40</text>
+      <text class="cell" x="205" y="162" text-anchor="middle">2.0</text>
+      <text class="cell" x="255" y="162" text-anchor="middle">0.252</text>
+      <text class="cell" x="305" y="162" text-anchor="middle">0.021</text>
+      <text class="cell" x="355" y="162" text-anchor="middle">-0.044</text>
+    </g>
+
+    <text class="subtitle" x="250" y="305">Operations live in scripts. Provenance lives in your head.</text>
+  </g>
+
+  <!-- Vertical divider between halves -->
+  <line class="divider" x1="500" y1="60" x2="500" y2="420"/>
+
+  <!-- =========================================================
+       RIGHT half: DAG
+       =========================================================
+       Reserved x range: 530 .. 980
+       Layout (left to right):
+         column 1 (inputs):    geometry, mesh           (artifacts)
+         column 2 (ops):       mesh-refine, solver-run  (operations)
+         column 3 (outputs):   CL-alpha curve, residuals plot (artifacts)
+       6 nodes total (spec says 5-7).
+       Column x-centres ~590, 760, 920.
+  -->
+  <g>
+    <text class="title"    x="755" y="40">Data as a DAG in a database</text>
+
+    <!-- Legend -->
+    <g transform="translate(540,68)">
+      <rect class="node-art" x="0"  y="0" width="14" height="14" rx="3"/>
+      <text class="legend-text" x="20" y="7">artifact</text>
+      <rect class="node-op" x="90" y="0" width="14" height="14" rx="7"/>
+      <text class="legend-text" x="110" y="7">operation</text>
+    </g>
+
+    <!-- Column 1: input artifacts -->
+    <!-- geometry -->
+    <g>
+      <rect class="node-art" x="540" y="120" width="100" height="44" rx="6"/>
+      <text class="ntype ntype-art" x="552" y="142">A</text>
+      <text class="nlabel" x="598" y="142">geometry</text>
+    </g>
+    <!-- mesh -->
+    <g>
+      <rect class="node-art" x="540" y="200" width="100" height="44" rx="6"/>
+      <text class="ntype ntype-art" x="552" y="222">A</text>
+      <text class="nlabel" x="598" y="222">mesh</text>
+    </g>
+
+    <!-- Column 2: operations -->
+    <!-- mesh-refine -->
+    <g>
+      <rect class="node-op" x="700" y="160" width="120" height="44" rx="22"/>
+      <text class="ntype ntype-op" x="714" y="182">O</text>
+      <text class="nlabel" x="765" y="182">mesh-refine</text>
+    </g>
+    <!-- solver-run -->
+    <g>
+      <rect class="node-op" x="700" y="260" width="120" height="44" rx="22"/>
+      <text class="ntype ntype-op" x="714" y="282">O</text>
+      <text class="nlabel" x="765" y="282">solver-run</text>
+    </g>
+
+    <!-- Column 3: output artifacts -->
+    <!-- CL-alpha curve -->
+    <g>
+      <rect class="node-art" x="870" y="120" width="110" height="44" rx="6"/>
+      <text class="ntype ntype-art" x="882" y="142">A</text>
+      <text class="nlabel" x="930" y="142">CL-alpha curve</text>
+    </g>
+    <!-- residuals plot -->
+    <g>
+      <rect class="node-art" x="870" y="280" width="110" height="44" rx="6"/>
+      <text class="ntype ntype-art" x="882" y="302">A</text>
+      <text class="nlabel" x="930" y="302">residuals plot</text>
+    </g>
+
+    <!-- Edges -->
+    <!-- geometry -> mesh-refine -->
+    <line class="edge" x1="640" y1="142" x2="698" y2="178" marker-end="url(#arrow-d)"/>
+    <!-- mesh     -> mesh-refine -->
+    <line class="edge" x1="640" y1="222" x2="698" y2="194" marker-end="url(#arrow-d)"/>
+    <!-- mesh-refine -> solver-run (vertical-ish) -->
+    <line class="edge" x1="760" y1="204" x2="760" y2="258" marker-end="url(#arrow-d)"/>
+    <!-- mesh-refine -> CL-alpha curve  (a refined mesh feeds the curve via solver, but the convention here:
+         the operation produces an artifact only via its output. So instead route:
+         solver-run -> CL-alpha curve, solver-run -> residuals plot
+         and mesh-refine produces no direct downstream artifact in this small example.)
+         For pedagogical clarity, route only solver-run -> outputs. -->
+    <!-- solver-run -> CL-alpha curve -->
+    <line class="edge" x1="820" y1="276" x2="868" y2="148" marker-end="url(#arrow-d)"/>
+    <!-- solver-run -> residuals plot -->
+    <line class="edge" x1="820" y1="288" x2="868" y2="298" marker-end="url(#arrow-d)"/>
+
+    <text class="subtitle" x="755" y="380">Operations and provenance are first-class.</text>
+  </g>
+</svg>

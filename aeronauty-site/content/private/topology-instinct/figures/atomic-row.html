@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atomic row — Thread visual</title>
+<!-- Test: cd /Users/harry/aeronauty.com/aeronauty-site/public/articles/topology-instinct/figures && python3 -m http.server 8765 && open http://localhost:8765/atomic-row.html -->
+
+<style>
+/* Page chrome — only used for standalone viewing.
+   The integration step lifts the .ar-figure block, not this. */
+body {
+  margin: 0;
+  padding: 80px 20px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: #0a0e1a;
+  color: #e6edf6;
+}
+@media (prefers-color-scheme: light) {
+  body { background: #fafbfd; color: #1f2328; }
+}
+main { max-width: 880px; margin: 0 auto; }
+
+/* ===========================================================
+   ar- = atomic-row, namespaced to avoid collision with
+   the globe demo, the flowchart figure, or anything else.
+   =========================================================== */
+.ar-figure {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  --ar-bg:        #0c0c0f;
+  --ar-grid:      #1a1a2e;
+  --ar-text:      #94a3b8;
+  --ar-text-br:   #e2e8f0;
+  --ar-rail:      #334155;
+  /* the five colours match Thread's atomic-row canon */
+  --ar-operation: #a855f7;  /* violet */
+  --ar-tool:      #22c55e;  /* green */
+  --ar-artifact:  #3b82f6;  /* blue */
+  --ar-binding:   #06b6d4;  /* cyan */
+  --ar-group:     #ec4899;  /* pink */
+}
+@media (prefers-color-scheme: light) {
+  .ar-figure {
+    --ar-bg:      #ffffff;
+    --ar-grid:    #e5e7eb;
+    --ar-text:    #475569;
+    --ar-text-br: #1e293b;
+    --ar-rail:    #cbd5e1;
+  }
+}
+
+.ar-figure-frame {
+  background: var(--ar-bg);
+  border: 1px solid var(--ar-grid);
+  border-radius: 12px;
+  padding: 28px 24px 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ar-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ar-text);
+  margin: 0 0 14px;
+  font-weight: 600;
+}
+
+.ar-figure svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ar-rows {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Each "row" is a flat horizontal strip — the atomic unit.
+   Code on the left, comment on the right, accent stripe on the far left. */
+.ar-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px 10px 0;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--ar-row-color) 35%, transparent);
+  background: color-mix(in srgb, var(--ar-row-color) 6%, transparent);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+.ar-row.ar-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+.ar-row::before {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 100%;
+  background: var(--ar-row-color);
+  border-radius: 7px 0 0 7px;
+}
+.ar-code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13.5px;
+  color: var(--ar-text-br);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ar-comment {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--ar-row-color);
+  font-style: italic;
+  white-space: nowrap;
+}
+@media (max-width: 560px) {
+  .ar-comment { display: none; }
+  .ar-code { font-size: 12px; }
+}
+
+.ar-caption {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ar-text);
+}
+.ar-caption strong { color: var(--ar-text-br); font-weight: 600; }
+
+/* Subtle grid background as a treat (matches Thread's diagram aesthetic) */
+.ar-figure-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--ar-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ar-grid) 1px, transparent 1px);
+  background-size: 30px 30px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+.ar-rows, .ar-eyebrow, .ar-caption { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-row { transition: none; opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1 style="font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;">
+    Atomic row figure (preview)
+  </h1>
+  <p style="text-align:center;font-size:12px;color:#6b7280;margin-top:0;">
+    Standalone preview file. The integration step will lift the
+    <code>&lt;div class="ar-figure"&gt;</code> block plus the inline
+    <code>&lt;script&gt;</code> at the bottom into the article.
+  </p>
+
+  <!-- =========================================================
+       The figure itself. This block is what the integration step
+       lifts into the article.
+       ========================================================= -->
+  <div class="ar-figure" id="ar-figure">
+    <div class="ar-figure-frame">
+      <p class="ar-eyebrow">Five very different things, one shape</p>
+      <div class="ar-rows" id="ar-rows" role="list" aria-label="Five function calls, one row each">
+        <!-- Rows injected by JS so we can drive the stagger animation cleanly. -->
+      </div>
+      <p class="ar-caption">
+        A CFD run. A post-processor. A GP fit. An acquisition step. An LLM RAG
+        answer. <strong>Each one becomes a flat row</strong> &mdash; inputs on
+        the left, outputs on the right, with the actor and tool attached.
+        The DAG is what you get when you connect rows by their shared artefacts.
+      </p>
+    </div>
+  </div>
+</main>
+
+<script>
+window.AtomicRowFigure = (function () {
+  'use strict';
+
+  const ROWS = [
+    { code: "CL, CD = flow360(geom, mesh, bcs, cfg)",      comment: "# a CFD run",          color: "var(--ar-operation)" },
+    { code: "lift = integrate_spanwise(surface, chord)",   comment: "# a post-processor",   color: "var(--ar-tool)"      },
+    { code: "gp = fit(training_data, kernel)",             comment: "# a GP fit",           color: "var(--ar-artifact)"  },
+    { code: "next = acquire(gp, domain)",                  comment: "# an acquisition step",color: "var(--ar-binding)"   },
+    { code: "answer = rag(question, retrieved_context)",   comment: "# an LLM answer",      color: "var(--ar-group)"     },
+  ];
+
+  const FIGURE = document.getElementById('ar-figure');
+  const ROWS_EL = document.getElementById('ar-rows');
+
+  // Build rows.
+  const rowEls = ROWS.map((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'ar-row';
+    row.setAttribute('role', 'listitem');
+    row.style.setProperty('--ar-row-color', r.color);
+    row.style.transitionDelay = (i * 80) + 'ms';
+    const code = document.createElement('span');
+    code.className = 'ar-code';
+    code.textContent = r.code;
+    const comment = document.createElement('span');
+    comment.className = 'ar-comment';
+    comment.textContent = r.comment;
+    row.appendChild(document.createElement('span')); // for the ::before stripe spacer
+    row.appendChild(code);
+    row.appendChild(comment);
+    ROWS_EL.appendChild(row);
+    return row;
+  });
+
+  function reveal() {
+    rowEls.forEach(el => el.classList.add('ar-visible'));
+  }
+
+  function reset() {
+    rowEls.forEach(el => el.classList.remove('ar-visible'));
+  }
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) {
+    rowEls.forEach(el => el.classList.add('ar-visible'));
+  } else if ('IntersectionObserver' in window) {
+    let played = false;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !played) {
+          played = true;
+          reveal();
+          io.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    io.observe(FIGURE);
+  } else {
+    reveal();
+  }
+
+  return { reveal: reveal, reset: reset };
+})();
+</script>
+</body>
+</html>

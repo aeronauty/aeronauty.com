@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The flat view can't invent provenance</title>
+<!-- Test: cd /Users/harry/aeronauty.com/aeronauty-site/public/articles/topology-instinct/figures && python3 -m http.server 8765 && open http://localhost:8765/flat-view.html -->
+<!--
+  Ported from beat 5 of the atomic-unit presentation:
+  /Users/harry/Flex/thread-dev/thread/thread-api/app/presentations/atomic-unit/{index.html,scrolly.js,styles.css}
+  Hover any cell in the table; the DAG below walks back from that leaf artifact
+  to the conditions, tools, and actors that produced it.
+-->
+
+<style>
+/* Page chrome — only used for standalone viewing.
+   The integration step lifts the .fv-figure block, not this. */
+body {
+  margin: 0;
+  padding: 60px 20px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: #0a0e1a;
+  color: #e6edf6;
+}
+@media (prefers-color-scheme: light) {
+  body { background: #fafbfd; color: #1f2328; }
+}
+main { max-width: 980px; margin: 0 auto; }
+
+/* ===========================================================
+   fv- = flat-view, namespaced.
+   =========================================================== */
+.fv-figure {
+  width: 100%;
+  --fv-fg:        #e6edf6;
+  --fv-fg-dim:    #93a0b6;
+  --fv-fg-faint:  #5c6a82;
+  --fv-border:    #2a3447;
+  --fv-rule:      #2a3447;
+  --fv-surface:   #121826;
+  --fv-surface-2: #1a2233;
+  --fv-cell-hover:#1f2940;
+  --fv-cell-lit:  #22d3ee44;
+  --fv-cell-lit-fg: #22d3ee;
+  --fv-row-band:  rgba(34, 211, 238, 0.08);
+  --fv-input:     #f59e0b;   /* α, β, RPM — pivots */
+  --fv-derived:   #34d399;   /* C_L, C_Lα — derived */
+  --fv-mesh:      #a855f7;   /* mesh family */
+  --fv-tool:      #38bdf8;   /* solver identity */
+  --fv-empty:     #5c6a82;
+  --fv-edge:      #475569;
+  --fv-edge-active: #22d3ee;
+  --fv-empty-bg:  rgba(239, 68, 68, 0.06);
+  --fv-empty-fg:  #ef444488;
+  --fv-warn:      #ef4444;
+  --fv-warn-soft: rgba(239, 68, 68, 0.10);
+  --fv-warn-bord: rgba(239, 68, 68, 0.45);
+}
+@media (prefers-color-scheme: light) {
+  .fv-figure {
+    --fv-fg:        #1f2328;
+    --fv-fg-dim:    #5c6675;
+    --fv-fg-faint:  #8a93a3;
+    --fv-border:    #d8dde6;
+    --fv-rule:      #d8dde6;
+    --fv-surface:   #ffffff;
+    --fv-surface-2: #f3f5f8;
+    --fv-cell-hover:#eef2f7;
+    --fv-cell-lit:  #0e749022;
+    --fv-cell-lit-fg: #0e7490;
+    --fv-row-band:  rgba(14, 116, 144, 0.08);
+    --fv-input:     #b8580f;
+    --fv-derived:   #047857;
+    --fv-mesh:      #7e22ce;
+    --fv-tool:      #075985;
+    --fv-empty:     #94a3b8;
+    --fv-edge:      #cbd5e1;
+    --fv-edge-active: #0e7490;
+    --fv-empty-bg:  #fee2e2;
+    --fv-empty-fg:  #b91c1c;
+    --fv-warn:      #dc2626;
+    --fv-warn-soft: #fee2e2;
+    --fv-warn-bord: #fca5a5;
+  }
+}
+
+.fv-frame {
+  border: 1px solid var(--fv-border);
+  border-radius: 12px;
+  background: var(--fv-surface);
+  padding: 24px 22px 22px;
+}
+
+.fv-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fv-tool);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.fv-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--fv-fg);
+  letter-spacing: -0.01em;
+}
+.fv-subtitle {
+  font-size: 14px;
+  color: var(--fv-fg-dim);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+
+/* Table + DAG laid out vertically; on wide screens the user gets the
+   table above the graph, both full width.  */
+.fv-table-wrap {
+  border: 1px solid var(--fv-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--fv-surface-2);
+  margin-bottom: 12px;
+}
+.fv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.fv-table th {
+  text-align: right;
+  padding: 9px 12px;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--fv-fg-dim);
+  background: color-mix(in srgb, var(--fv-fg) 5%, transparent);
+  border-bottom: 1px solid var(--fv-border);
+}
+.fv-table th:first-child { text-align: left; padding-left: 14px; }
+.fv-table th[data-role="input"]   { color: var(--fv-input); }
+.fv-table th[data-role="derived"] { color: var(--fv-derived); }
+.fv-table th[data-role="mesh"]    { color: var(--fv-mesh); }
+
+.fv-table td {
+  text-align: right;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--fv-rule);
+  color: var(--fv-fg);
+  cursor: default;
+  transition: background 120ms ease, color 120ms ease;
+}
+.fv-table td:first-child {
+  text-align: left; padding-left: 14px;
+  color: var(--fv-fg-dim);
+}
+.fv-table tr:last-child td { border-bottom: 0; }
+.fv-table tr:hover td:not(.fv-empty) { background: var(--fv-cell-hover); }
+.fv-table td.fv-lit {
+  background: var(--fv-cell-lit) !important;
+  color: var(--fv-cell-lit-fg);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px var(--fv-cell-lit-fg);
+}
+/* Row-level hover: tint the whole row + a left accent stripe so it's
+   obvious which run is currently in focus. Cells in OTHER rows stay
+   completely default — no opacity drop, no fade. */
+.fv-table tr.fv-row-active td {
+  background: var(--fv-row-band);
+  transition: background 160ms ease;
+}
+.fv-table tr.fv-row-active td:first-child {
+  box-shadow: inset 3px 0 0 var(--fv-cell-lit-fg);
+  color: var(--fv-cell-lit-fg);
+}
+/* Within the active row only: cells get coloured by their lineage
+   relationship to the hovered cell. Three states:
+     ancestor   — this cell flowed into hovered (upstream): cyan/teal.
+     dependent  — hovered flowed into this cell (downstream): amber.
+     different  — no direct lineage either way: muted grey wash.
+   The hovered cell itself keeps its .fv-lit border + colour. */
+.fv-table tr.fv-row-active td.fv-cell-ancestor:not(.fv-empty):not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-cell-lit) 70%, transparent) !important;
+  color: var(--fv-cell-lit-fg);
+}
+.fv-table tr.fv-row-active td.fv-cell-dependent:not(.fv-empty):not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-input) 22%, transparent) !important;
+  color: var(--fv-input);
+}
+.fv-table tr.fv-row-active td.fv-cell-different:not(.fv-empty):not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-fg-faint) 14%, transparent) !important;
+  color: var(--fv-fg-faint);
+  font-style: italic;
+}
+.fv-table td.fv-empty {
+  color: var(--fv-empty);
+  font-style: italic;
+  background: var(--fv-empty-bg);
+  cursor: help;
+}
+.fv-table td.fv-empty.fv-lit {
+  color: var(--fv-empty-fg);
+  background: var(--fv-empty-bg) !important;
+}
+
+.fv-graph-wrap {
+  position: relative;
+  border: 1px solid var(--fv-border);
+  border-radius: 8px;
+  background: var(--fv-surface-2);
+  padding: 12px;
+}
+.fv-graph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.fv-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--fv-fg-faint);
+  line-height: 1.5;
+}
+.fv-hint kbd {
+  background: color-mix(in srgb, var(--fv-fg) 10%, transparent);
+  border: 1px solid var(--fv-border);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.fv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 14px 0 0;
+  font-size: 11px;
+  color: var(--fv-fg-dim);
+}
+.fv-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.fv-legend-swatch {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.fv-caption {
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fv-fg-dim);
+  border-top: 1px solid var(--fv-rule);
+  padding-top: 14px;
+}
+.fv-caption strong { color: var(--fv-fg); font-weight: 600; }
+.fv-caption em { color: var(--fv-fg); }
+
+/* ---------------------------------------------------------------
+   "False provenance implied" panels (Excel + pandas) — static cards
+   that come BEFORE the Thread flat view. Each shows a small slice of
+   a mixed-source table where one cell is highlighted red because the
+   value technically lives in another row's provenance, but the flat
+   layout makes it look harmless.
+   --------------------------------------------------------------- */
+.fv-mislead-section {
+  margin: 0 0 22px;
+}
+.fv-mislead-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 720px) {
+  .fv-mislead-grid { grid-template-columns: 1fr; }
+}
+.fv-mislead-card {
+  border: 1px solid var(--fv-warn-bord);
+  border-radius: 8px;
+  background: var(--fv-warn-soft);
+  padding: 14px 14px 12px;
+}
+.fv-mislead-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.fv-mislead-tag {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fv-fg);
+  font-weight: 700;
+}
+.fv-mislead-warn {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fv-warn);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.fv-mislead-warn::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: 1px;
+  background: var(--fv-warn);
+}
+.fv-mislead-lede {
+  font-size: 12.5px;
+  margin: 0 0 8px;
+  color: var(--fv-fg);
+  line-height: 1.5;
+}
+.fv-mislead-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  background: var(--fv-surface);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.fv-mislead-table th {
+  text-align: right;
+  padding: 5px 8px;
+  font-weight: 600;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--fv-fg-dim);
+  background: color-mix(in srgb, var(--fv-fg) 5%, transparent);
+  border-bottom: 1px solid var(--fv-border);
+}
+.fv-mislead-table th:first-child { text-align: left; padding-left: 10px; }
+.fv-mislead-table td {
+  text-align: right;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--fv-rule);
+  color: var(--fv-fg);
+}
+.fv-mislead-table td:first-child {
+  text-align: left;
+  padding-left: 10px;
+  color: var(--fv-fg-dim);
+}
+.fv-mislead-table tr:last-child td { border-bottom: 0; }
+.fv-mislead-table td.fv-mislead-cell {
+  background: color-mix(in srgb, var(--fv-warn) 22%, transparent);
+  color: var(--fv-warn);
+  font-weight: 700;
+  outline: 1.5px solid var(--fv-warn);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+.fv-mislead-table td.fv-mislead-empty {
+  color: var(--fv-fg-faint);
+  font-style: italic;
+}
+.fv-mislead-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 16px 0 18px;
+  font-size: 12px;
+  color: var(--fv-fg-dim);
+  text-align: center;
+}
+.fv-mislead-divider::before,
+.fv-mislead-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--fv-rule);
+}
+.fv-mislead-divider span {
+  font-style: italic;
+  color: var(--fv-cell-lit-fg);
+  letter-spacing: 0.02em;
+}
+
+/* ---------------------------------------------------------------
+   Scrollytelling: beats on the left, sticky panel on the right.
+   The panel cycles through three states (excel → pandas → thread)
+   as the reader scrolls through the corresponding beats.
+   --------------------------------------------------------------- */
+.fv-scrolly {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 28px;
+  margin: 8px 0 0;
+}
+@media (max-width: 800px) {
+  .fv-scrolly { grid-template-columns: 1fr; gap: 14px; }
+}
+.fv-scrolly-beats { display: flex; flex-direction: column; gap: 0; }
+.fv-scrolly-beat {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px 16px;
+  border-left: 3px solid var(--fv-fg-faint);
+  opacity: 0.42;
+  transition: opacity 350ms ease, border-left-color 350ms ease, background 350ms ease;
+}
+.fv-scrolly-beat.fv-active {
+  opacity: 1;
+  border-left-color: var(--fv-cell-lit-fg);
+  background: var(--fv-row-band);
+}
+.fv-scrolly-beat-tag {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fv-cell-lit-fg);
+  font-weight: 600;
+  margin: 0 0 6px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.fv-scrolly-beat h4 {
+  font-size: 16.5px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--fv-fg);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.fv-scrolly-beat p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--fv-fg-dim);
+  margin: 0;
+}
+.fv-scrolly-beat p strong { color: var(--fv-fg); font-weight: 600; }
+.fv-scrolly-beat p em { color: var(--fv-fg); }
+.fv-scrolly-beat code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--fv-fg) 8%, transparent);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--fv-fg);
+}
+
+.fv-scrolly-stage {
+  position: sticky;
+  top: 80px;
+  height: clamp(440px, 78vh, 620px);
+  border: 1px solid var(--fv-border);
+  border-radius: 10px;
+  background: var(--fv-surface-2);
+  overflow: hidden;
+}
+@media (max-width: 800px) {
+  .fv-scrolly-stage {
+    position: static;
+    height: auto;
+    min-height: 360px;
+  }
+}
+.fv-panel {
+  position: absolute;
+  inset: 0;
+  padding: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms ease;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.fv-panel.fv-panel-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (max-width: 800px) {
+  .fv-panel {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    padding: 16px 12px;
+  }
+  .fv-panel:not(.fv-panel-active) { display: none; }
+}
+
+/* Excel panel — looks like a spreadsheet slice */
+.fv-app-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--fv-fg-dim);
+  border-bottom: 1px solid var(--fv-rule);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.fv-app-titlebar::before {
+  content: "";
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--fv-warn);
+  flex-shrink: 0;
+}
+.fv-panel-excel .fv-app-titlebar::before { background: #16a34a; }
+.fv-panel-thread .fv-app-titlebar::before { background: var(--fv-cell-lit-fg); }
+.fv-panel-pandas .fv-app-titlebar::before { background: var(--fv-mesh); }
+
+.fv-panel h5 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--fv-fg);
+}
+.fv-panel-note {
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: 12px;
+  color: var(--fv-fg-dim);
+  line-height: 1.55;
+  border-top: 1px solid var(--fv-rule);
+}
+.fv-panel-note code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: color-mix(in srgb, var(--fv-fg) 8%, transparent);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11.5px;
+}
+.fv-panel-note .fv-warn-pill {
+  display: inline-block;
+  background: var(--fv-warn);
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+
+/* Bigger spreadsheet-style table for the panels (reuses .fv-mislead-table
+   styling but with a few tweaks for the larger format). */
+.fv-panel .fv-mislead-table {
+  font-size: 12px;
+}
+.fv-panel .fv-mislead-table th,
+.fv-panel .fv-mislead-table td {
+  padding: 6px 9px;
+}
+
+/* Pandas-specific: code block preamble */
+.fv-pandas-code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  background: var(--fv-surface);
+  border: 1px solid var(--fv-border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  color: var(--fv-fg);
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}
+.fv-pandas-code .pc-comment { color: var(--fv-fg-faint); }
+.fv-pandas-code .pc-kw      { color: var(--fv-mesh); font-weight: 600; }
+.fv-pandas-code .pc-str     { color: var(--fv-derived); }
+.fv-pandas-code .pc-num     { color: var(--fv-input); }
+
+/* Thread panel: the existing fv-table-wrap and fv-graph-wrap fit naturally
+   inside the panel container; nothing extra needed beyond layout tweaks. */
+.fv-panel-thread .fv-table-wrap { margin-bottom: 10px; }
+.fv-panel-thread .fv-graph-wrap { padding: 8px; }
+.fv-panel-thread .fv-graph svg  { max-height: 270px; }
+.fv-panel-thread .fv-hint       { margin-top: 8px; }
+.fv-panel-thread .fv-legend     { margin-top: 10px; }
+
+/* DAG node + edge styling */
+.fv-node text {
+  fill: var(--fv-fg);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 9.5px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+.fv-node .fv-sublabel {
+  font-size: 8px;
+  fill: var(--fv-fg-dim);
+}
+.fv-node--art      circle    { fill: color-mix(in srgb, var(--fv-input) 14%, var(--fv-surface));   stroke: var(--fv-input);   stroke-width: 1.4; }
+.fv-node--mesh-art circle    { fill: color-mix(in srgb, var(--fv-mesh) 14%, var(--fv-surface));    stroke: var(--fv-mesh);    stroke-width: 1.4; }
+.fv-node--der-art  circle    { fill: color-mix(in srgb, var(--fv-derived) 14%, var(--fv-surface)); stroke: var(--fv-derived); stroke-width: 1.4; }
+.fv-node--op       rect      { fill: color-mix(in srgb, var(--fv-tool) 12%, var(--fv-surface));    stroke: var(--fv-tool);    stroke-width: 1.4; rx: 4; }
+.fv-node--tool     polygon   { fill: color-mix(in srgb, var(--fv-tool) 14%, var(--fv-surface));    stroke: var(--fv-tool);    stroke-width: 1.4; }
+
+.fv-node, .fv-edge {
+  transition: opacity 240ms ease;
+}
+.fv-graph.fv-hovered .fv-node:not(.fv-active),
+.fv-graph.fv-hovered .fv-edge:not(.fv-active) {
+  opacity: 0.18;
+}
+.fv-node.fv-active circle,
+.fv-node.fv-active rect,
+.fv-node.fv-active polygon {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--fv-edge-active) 70%, transparent));
+}
+.fv-edge {
+  fill: none;
+  stroke: var(--fv-edge);
+  stroke-width: 1.2;
+}
+.fv-edge.fv-active {
+  stroke: var(--fv-edge-active);
+  stroke-width: 2;
+}
+.fv-edge.fv-dashed {
+  stroke-dasharray: 3 3;
+  opacity: 0.7;
+}
+
+/* Tooltip-on-empty-cell */
+.fv-empty-tooltip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--fv-surface);
+  border: 1px solid var(--fv-empty-fg);
+  color: var(--fv-empty-fg);
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  transform: translateY(-100%);
+}
+.fv-empty-tooltip.fv-show { opacity: 1; }
+
+/* ---------------------------------------------------------------
+   Right-click context menu — "ask the DAG" questions per cell.
+   The point: the flat table shows N columns, but the DAG behind
+   each cell knows N×many more facts — producer, timestamp, kind,
+   content hash, tool version, etc. — that simply aren't in the
+   table view. Right-click reveals them.
+   --------------------------------------------------------------- */
+.fv-ctxmenu {
+  position: fixed;       /* viewport-relative — clientX/clientY directly */
+  z-index: 100;
+  background: var(--fv-surface);
+  border: 1px solid var(--fv-cell-lit-fg);
+  border-radius: 8px;
+  padding: 6px;
+  min-width: 220px;
+  max-width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  font-size: 13px;
+  color: var(--fv-fg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+.fv-ctxmenu.fv-show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.fv-ctxhead {
+  padding: 6px 8px 8px;
+  border-bottom: 1px solid var(--fv-rule);
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fv-fg-dim);
+  font-weight: 600;
+}
+.fv-ctxhead strong { color: var(--fv-cell-lit-fg); font-weight: 700; }
+.fv-ctxitem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 7px 10px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--fv-fg);
+  cursor: pointer;
+}
+.fv-ctxitem:hover, .fv-ctxitem:focus-visible {
+  background: var(--fv-cell-lit);
+  color: var(--fv-cell-lit-fg);
+  outline: none;
+}
+.fv-ctxitem .fv-ctxq {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.fv-ctxitem .fv-ctxa {
+  display: none;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--fv-fg-dim);
+  margin-top: 4px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.fv-ctxitem.fv-revealed .fv-ctxa {
+  display: block;
+  color: var(--fv-cell-lit-fg);
+}
+.fv-ctxhint {
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  color: var(--fv-fg-faint);
+  font-style: italic;
+  border-top: 1px solid var(--fv-rule);
+  margin-top: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fv-table td, .fv-node, .fv-edge { transition: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1 style="font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;">
+    Flat view can&rsquo;t invent provenance (preview)
+  </h1>
+  <p style="text-align:center;font-size:12px;color:#6b7280;margin-top:0;">
+    Standalone preview file. The integration step lifts the
+    <code>&lt;div class="fv-figure"&gt;</code> block plus the inline
+    <code>&lt;script&gt;</code> at the bottom into the article.
+  </p>
+
+  <!-- =========================================================
+       The figure itself.
+       ========================================================= -->
+  <div class="fv-figure" id="fv-figure">
+    <div class="fv-frame">
+
+      <p class="fv-eyebrow">Not a spreadsheet join</p>
+      <h3 class="fv-title">The flat view can&rsquo;t invent provenance.</h3>
+      <p class="fv-subtitle">
+        Spreadsheets and pandas show data the way humans need to read it &mdash;
+        a flat table, one row per condition. They also <em>mislead benignly</em>:
+        every cell in a row implies it belongs with every other cell. Thread
+        gives you the same shape, but each cell remembers where it came from.
+      </p>
+
+      <!-- ============================================================
+           Scrollytelling: five beats on the left, sticky panel on the
+           right cycles through three states — Excel → pandas → Thread.
+           ============================================================ -->
+      <div class="fv-scrolly" id="fv-scrolly">
+
+        <div class="fv-scrolly-beats">
+
+          <section class="fv-scrolly-beat" data-state="excel" data-step="1">
+            <p class="fv-scrolly-beat-tag">01 · Excel · VLOOKUP</p>
+            <h4>A large mixed-model export makes the wrong join look harmless.</h4>
+            <p>A working spreadsheet from a real flight-dynamics review has rows from <strong>multiple analyses</strong> &mdash; a RANS run, an AVL fit, a panel-method surrogate &mdash; all tipped into the same flat table because that&rsquo;s what gets shipped between teams. The conditions columns (α, β, RPM, mesh_id) align row-by-row, and Excel will happily VLOOKUP across the table as if every cell in a row belongs together.</p>
+          </section>
+
+          <section class="fv-scrolly-beat" data-state="excel" data-step="2">
+            <p class="fv-scrolly-beat-tag">02 · The cell that fits, but doesn&rsquo;t</p>
+            <h4>5.317 isn&rsquo;t wrong. It just lives on the wrong row.</h4>
+            <p>The <code>AVL CLα</code> for α=3°, β=0° is a perfectly real number. It came from the AVL run on row <code>a004</code>. But it ends up displayed next to <code>r004</code>&rsquo;s RANS data because the row above had it. <strong>The flat-row layout makes the join look harmless.</strong> The receipt &mdash; which artefact, which tool, which actor &mdash; lives somewhere outside the table.</p>
+          </section>
+
+          <section class="fv-scrolly-beat" data-state="pandas" data-step="3">
+            <p class="fv-scrolly-beat-tag">03 · pandas · the same trap</p>
+            <h4>More respectable in code, same problem.</h4>
+            <p>A DataFrame is just a vectorised, type-aware Excel: same row implies same result. <code>df.loc[(df.alpha==3)&(df.beta==0)]</code> returns multiple rows, but the column you wanted is on row <code>case_031</code> while the row you got back was <code>case_004</code>. No exception, no warning. The mismatch <strong>doesn&rsquo;t live in the data structure</strong>, so the data structure can&rsquo;t catch it.</p>
+          </section>
+
+          <section class="fv-scrolly-beat" data-state="thread" data-step="4">
+            <p class="fv-scrolly-beat-tag">04 · Thread · same shape, different contract</p>
+            <h4>Thread renders the table you actually want to read.</h4>
+            <p>α and β as columns, derived quantities as columns, one row per condition &mdash; the shape humans need. But each cell is a leaf artefact whose provenance walks back to a specific operation, with the conditions it consumed and the tool that ran it. <strong>Empty means there is no leaf for that schema on this row;</strong> Thread doesn&rsquo;t invent one to make the table feel complete.</p>
+          </section>
+
+          <section class="fv-scrolly-beat" data-state="thread" data-step="5">
+            <p class="fv-scrolly-beat-tag">05 · try it</p>
+            <h4>Hover any cell. Different cells, different walks.</h4>
+            <p>An <code>AVL CLα</code> cell&rsquo;s walk stops at α and β &mdash; the AVL solver doesn&rsquo;t touch mesh. A <code>RANS CL</code> cell&rsquo;s walk lights up the mesh branch and the <code>mesh_id</code> cell because the Flow360 run consumed all of it. An empty cell has no walk to follow &mdash; that&rsquo;s the point.</p>
+          </section>
+
+        </div>
+
+        <div class="fv-scrolly-stage" id="fv-scrolly-stage" data-state="excel">
+
+          <!-- ===== Panel A — Excel ===== -->
+          <div class="fv-panel fv-panel-excel fv-panel-active" data-state="excel">
+            <div class="fv-app-titlebar">
+              <span>flight_dynamics_review_v3_FINAL_v7.xlsx</span>
+              <span style="margin-left:auto">Sheet1 · 10,247 rows</span>
+            </div>
+            <h5>Slice of a mixed-model export</h5>
+            <table class="fv-mislead-table" aria-label="Excel mock with a misleading AVL value next to a RANS row">
+              <thead>
+                <tr>
+                  <th>case</th><th>model</th><th>α</th><th>β</th>
+                  <th>RPM</th><th>mesh_id</th><th>C<sub>L</sub></th><th>AVL C<sub>Lα</sub></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>r002</td><td>RANS</td><td>0°</td><td>0°</td><td>2400</td><td>vm-0e23</td><td>0.031</td><td class="fv-mislead-empty">—</td></tr>
+                <tr><td>r003</td><td>RANS</td><td>2°</td><td>0°</td><td>2400</td><td>vm-0e23</td><td>0.221</td><td class="fv-mislead-empty">—</td></tr>
+                <tr><td>r004</td><td>RANS</td><td>3°</td><td>0°</td><td>2400</td><td>vm-0e23</td><td>1.281</td><td class="fv-mislead-cell" title="This value lives on a different row.">5.317</td></tr>
+                <tr><td>a004</td><td>AVL</td><td>3°</td><td>0°</td><td class="fv-mislead-empty">—</td><td class="fv-mislead-empty">—</td><td class="fv-mislead-empty">—</td><td>5.317</td></tr>
+                <tr><td>r005</td><td>RANS</td><td>4°</td><td>0°</td><td>2400</td><td>vm-0e23</td><td>0.413</td><td class="fv-mislead-empty">—</td></tr>
+                <tr><td>p012</td><td>Panel</td><td>4°</td><td>0°</td><td class="fv-mislead-empty">—</td><td class="fv-mislead-empty">—</td><td>0.398</td><td>5.412</td></tr>
+                <tr><td>…</td><td>mixed</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+              </tbody>
+            </table>
+            <p class="fv-panel-note">
+              <span class="fv-warn-pill">VLOOKUP</span>
+              <code>=VLOOKUP(3, A:H, 8, FALSE)</code> → <strong>5.317</strong>. Excel returns the first matching α, regardless of which model produced what. The 5.317 next to <code>r004</code>&rsquo;s RANS data isn&rsquo;t for that run.
+            </p>
+          </div>
+
+          <!-- ===== Panel B — pandas ===== -->
+          <div class="fv-panel fv-panel-pandas" data-state="pandas">
+            <div class="fv-app-titlebar">
+              <span>analysis.ipynb · cell [11]</span>
+              <span style="margin-left:auto">In&nbsp;[11]</span>
+            </div>
+            <pre class="fv-pandas-code"><span class="pc-kw">import</span> pandas <span class="pc-kw">as</span> pd
+
+df = pd.read_csv(<span class="pc-str">"flight_data_mixed.csv"</span>)
+df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class="pc-num">0</span>),
+       [<span class="pc-str">"model"</span>, <span class="pc-str">"mesh_id"</span>, <span class="pc-str">"C_L"</span>, <span class="pc-str">"AVL_CLalpha"</span>]]
+<span class="pc-comment"># Out[11]:</span></pre>
+            <table class="fv-mislead-table" aria-label="pandas DataFrame output with the same misleading 5.317">
+              <thead>
+                <tr><th>row</th><th>model</th><th>mesh_id</th><th>C<sub>L</sub></th><th>AVL_CLalpha</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>case_004</td><td>RANS</td><td>vm-0e23</td><td>1.281</td><td class="fv-mislead-cell">5.317</td></tr>
+                <tr><td>case_031</td><td>AVL</td><td class="fv-mislead-empty">NaN</td><td class="fv-mislead-empty">NaN</td><td>5.317</td></tr>
+                <tr><td>case_087</td><td>Panel</td><td class="fv-mislead-empty">NaN</td><td>0.398</td><td>5.412</td></tr>
+              </tbody>
+            </table>
+            <p class="fv-panel-note">
+              <span class="fv-warn-pill">No exception</span>
+              The DataFrame holds two rows for the same (α, β) pair &mdash; one from a RANS run, one from AVL. <code>.loc</code> returns both, but the column you actually wanted is on the <em>other</em> row. The mismatch isn&rsquo;t in the data structure, so the data structure can&rsquo;t catch it.
+            </p>
+          </div>
+
+          <!-- ===== Panel C — Thread (interactive) ===== -->
+          <div class="fv-panel fv-panel-thread" data-state="thread">
+            <div class="fv-app-titlebar">
+              <span>thread://airfoil-x57/branch/main · flat view</span>
+              <span style="margin-left:auto">5 conditions · live</span>
+            </div>
+            <div class="fv-table-wrap">
+              <table class="fv-table" id="fv-table">
+                <thead>
+                  <tr>
+                    <th>run</th>
+                    <th data-role="input">α</th>
+                    <th data-role="input">β</th>
+                    <th data-role="input">RPM</th>
+                    <th data-role="derived">AVL C<sub>Lα</sub></th>
+                    <th data-role="derived">RANS C<sub>L</sub></th>
+                    <th data-role="mesh">mesh_id</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <!-- The graph host stays in the DOM so the JS can write to it,
+                 but it's hidden — we no longer surface the graph as a
+                 visual; the table itself is meant to do the work via cell
+                 highlighting + right-click metadata. -->
+            <div class="fv-graph-wrap" style="display:none">
+              <div class="fv-graph" id="fv-graph"></div>
+            </div>
+            <div class="fv-empty-tooltip" id="fv-empty-tooltip" role="tooltip"></div>
+            <div class="fv-ctxmenu" id="fv-ctxmenu" role="menu" aria-label="Ask about this cell"></div>
+
+            <p class="fv-hint">
+              <kbd>hover</kbd> any cell &rarr; the rest of the row colour-codes by lineage relation to it &mdash; <span style="color:var(--fv-cell-lit-fg)">cyan&nbsp;ancestor</span> (this cell flowed into the hovered one), <span style="color:var(--fv-input)">amber&nbsp;dependent</span> (the hovered one flowed into this), <em>grey&nbsp;different&nbsp;thread</em> (no direct lineage either way). <kbd>right-click</kbd> any cell &rarr; ask what produced it, when, by which tool. Empty cells <em>(—)</em> have no source for that column &mdash; Thread doesn&rsquo;t invent one.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <p class="fv-caption">
+        Same dataset throughout. <strong>Excel</strong> would happily VLOOKUP a value across this table whether it belongs to the row or not. <strong>pandas</strong> would do the same in code, with a more respectable face. <strong>Thread</strong> can render the exact same flat view &mdash; the shape humans want to read &mdash; while keeping each cell honest about what produced it and what came from the same source. The view is a <em>projection</em>; the connections are the truth.
+      </p>
+
+    </div>
+  </div>
+</main>
+
+<script>
+window.FlatView = (function () {
+  'use strict';
+
+  // ---- Data ---------------------------------------------------------------
+  // Five rows. Some have AVL only, some have RANS only, some have both.
+  // The empty cells are the entire point: Thread doesn't invent values where
+  // no leaf artifact exists with the requested schema for that pivot tuple.
+  const ROWS = [
+    { run: '01', alpha: 0, beta: 0, rpm: 2400, avl_cla: 4.812, rans_cl: 0.031, mesh_id: 'vm-0e23' },
+    { run: '02', alpha: 2, beta: 0, rpm: null, avl_cla: 5.103, rans_cl: null,  mesh_id: null      },
+    { run: '03', alpha: 4, beta: 0, rpm: 2400, avl_cla: 5.317, rans_cl: 0.413, mesh_id: 'vm-0e23' },
+    { run: '04', alpha: 6, beta: 0, rpm: 2400, avl_cla: null,  rans_cl: 0.592, mesh_id: 'vm-0e23' },
+    { run: '05', alpha: 8, beta: 0, rpm: 2400, avl_cla: 4.984, rans_cl: 0.751, mesh_id: 'vm-0e23' },
+  ];
+
+  // Column metadata
+  const COLS = [
+    { id: 'run',      label: 'run',         get: (r) => r.run, fmt: v => v },
+    { id: 'alpha',    label: 'α',           get: (r) => r.alpha, fmt: v => v + '°' },
+    { id: 'beta',     label: 'β',           get: (r) => r.beta,  fmt: v => v + '°' },
+    { id: 'rpm',      label: 'RPM',         get: (r) => r.rpm,   fmt: v => String(v) },
+    { id: 'avl_cla',  label: 'AVL CLα',     get: (r) => r.avl_cla, fmt: v => v == null ? '—' : v.toFixed(3) },
+    { id: 'rans_cl',  label: 'RANS CL',     get: (r) => r.rans_cl, fmt: v => v == null ? '—' : v.toFixed(3) },
+    { id: 'mesh_id',  label: 'mesh_id',     get: (r) => r.mesh_id, fmt: v => v == null ? '—' : v },
+  ];
+
+  // ---- Build table --------------------------------------------------------
+  const tbody = document.querySelector('#fv-table tbody');
+  ROWS.forEach((r, ri) => {
+    const tr = document.createElement('tr');
+    COLS.forEach(c => {
+      const td = document.createElement('td');
+      const value = c.get(r);
+      const isEmpty = value == null;
+      td.dataset.run = String(ri);
+      td.dataset.col = c.id;
+      td.textContent = c.fmt(value);
+      if (isEmpty) {
+        td.classList.add('fv-empty');
+        td.title = 'no leaf artefact for this column on this row';
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // ---- Build DAG (small, layered SVG) -------------------------------------
+  // Layout (viewBox 720 × 320):
+  //   row 0 (y=40):   geom -> mesh-op -> mesh
+  //   row 1 (y=110):  α₁ α₂ α₃ α₄ α₅   (per-run α artifacts, share β, RPM)
+  //                    β   RPM   (shared, on the right of the α lane)
+  //   row 2 (y=200):  AVL₁..₅ (per-run AVL ops)         RANS₁..₅ (per-run RANS ops, only where mesh_id present)
+  //   row 3 (y=270):  AVL CLα₁..₅ (artifact)            RANS CL₁..₅ (artifact)
+  //   row 4 (right):  Tool icons, AVL @ vX, Flow360 @ v24.3
+  const VB_W = 760, VB_H = 360;
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, children) {
+    const e = document.createElementNS(NS, tag);
+    if (attrs) for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+    if (children) for (const c of children) if (c) e.appendChild(c);
+    return e;
+  }
+  function text(x, y, label, cls) {
+    const t = el('text', { x: x, y: y });
+    if (cls) t.setAttribute('class', cls);
+    t.textContent = label;
+    return t;
+  }
+
+  const svg = el('svg', {
+    viewBox: '0 0 ' + VB_W + ' ' + VB_H,
+    role: 'img', 'aria-label': 'Provenance DAG for the flat-view table',
+  });
+
+  // node helpers
+  function art(id, x, y, label, sub, kind) {
+    const cls = 'fv-node fv-node--' + (kind || 'art');
+    const r = 18;
+    const g = el('g', { id: id, class: cls, 'data-cx': x, 'data-cy': y, 'data-r': r }, [
+      el('circle', { cx: x, cy: y, r: r }),
+      text(x, sub ? y - 3 : y, label),
+      sub ? text(x, y + 8, sub, 'fv-sublabel') : null,
+    ]);
+    return g;
+  }
+  function op(id, x, y, label, sub) {
+    const w = 64, h = 22;
+    const g = el('g', { id: id, class: 'fv-node fv-node--op', 'data-cx': x, 'data-cy': y, 'data-w': w, 'data-h': h }, [
+      el('rect', { x: x - w/2, y: y - h/2, width: w, height: h }),
+      text(x, sub ? y - 3 : y, label),
+      sub ? text(x, y + 7, sub, 'fv-sublabel') : null,
+    ]);
+    return g;
+  }
+  function tool(id, x, y, label) {
+    const sz = 10;
+    const points = [x, y - sz, x + sz, y, x, y + sz, x - sz, y].join(' ');
+    const g = el('g', { id: id, class: 'fv-node fv-node--tool', 'data-cx': x, 'data-cy': y, 'data-r': sz }, [
+      el('polygon', { points: points }),
+      text(x, y + sz + 9, label, 'fv-sublabel'),
+    ]);
+    return g;
+  }
+  function edge(id, fromCx, fromCy, fromR, toCx, toCy, toR, opts) {
+    opts = opts || {};
+    // Trim line endpoints to circle/rect edges.
+    const dx = toCx - fromCx, dy = toCy - fromCy;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    const x1 = fromCx + ux * (fromR || 0);
+    const y1 = fromCy + uy * (fromR || 0);
+    const x2 = toCx - ux * (toR || 0);
+    const y2 = toCy - uy * (toR || 0);
+    const path = el('path', {
+      id: id, class: 'fv-edge' + (opts.dashed ? ' fv-dashed' : ''),
+      d: 'M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) +
+         ' L ' + x2.toFixed(1) + ' ' + y2.toFixed(1),
+    });
+    return path;
+  }
+
+  // shared upstream
+  const SHARED_Y = 40;
+  const N_GEOM = { id: 'fv-geom', x: 60,  y: SHARED_Y, r: 18 };
+  const N_MOP  = { id: 'fv-mop',  x: 160, y: SHARED_Y, r: 18 };  // op
+  const N_MESH = { id: 'fv-mesh', x: 260, y: SHARED_Y, r: 18 };  // artifact (mesh_id source)
+  const N_BETA = { id: 'fv-beta', x: 380, y: SHARED_Y, r: 18 };
+  const N_RPM  = { id: 'fv-rpm',  x: 480, y: SHARED_Y, r: 18 };
+
+  // tools (bottom-corner)
+  const N_AVLT = { id: 'fv-tool-avl',  x: 90,  y: 320, r: 10 };
+  const N_F360 = { id: 'fv-tool-f360', x: 410, y: 320, r: 10 };
+
+  const nodes = [
+    art(N_GEOM.id, N_GEOM.x, N_GEOM.y, 'geom', 'v11', 'art'),
+    op (N_MOP.id,  N_MOP.x,  N_MOP.y,  'mesh', 'Op'),
+    art(N_MESH.id, N_MESH.x, N_MESH.y, 'mesh', 'lvl 3', 'mesh-art'),
+    art(N_BETA.id, N_BETA.x, N_BETA.y, 'β', '0°', 'art'),
+    art(N_RPM.id,  N_RPM.x,  N_RPM.y,  'RPM', '2400', 'art'),
+    tool(N_AVLT.id, N_AVLT.x, N_AVLT.y, 'AVL @ v3.4'),
+    tool(N_F360.id, N_F360.x, N_F360.y, 'Flow360 @ v24.3'),
+  ];
+  const edges = [
+    edge('fv-e-geom-mop',  N_GEOM.x, N_GEOM.y, N_GEOM.r, N_MOP.x,  N_MOP.y,  N_MOP.r/2),
+    edge('fv-e-mop-mesh',  N_MOP.x,  N_MOP.y,  N_MOP.r/2, N_MESH.x, N_MESH.y, N_MESH.r),
+  ];
+
+  // per-run nodes
+  // 5 runs across the figure. Two analyses per run: AVL (left half) and RANS (right half).
+  // x positions:  leftHalf  AVL ops + their CLα products, mirroring rightHalf for RANS.
+  const ALPHA_Y = 110;
+  const OP_Y    = 200;
+  const ART_Y   = 280;
+
+  // Two columns of runs: left for AVL (mostly α-driven), right for RANS (α + mesh + β + RPM).
+  const AVL_X    = [70, 130, 190, 250, 310];   // α-AVL artifacts (per row)
+  const AVL_OPX  = [70, 130, 190, 250, 310];   // AVL operation centres
+  const AVL_ARTX = [70, 130, 190, 250, 310];   // CLα artifact x's
+  const RANS_X    = [430, 490, 550, 610, 670]; // α-RANS artifacts (per row, separate copies — same condition different consumer)
+  const RANS_OPX  = [430, 490, 550, 610, 670];
+  const RANS_ARTX = [430, 490, 550, 610, 670];
+
+  // For each row, we also need a per-row α artifact in the AVL lane and another in the RANS lane.
+  // (They share the conceptual α value but each consumer has its own input artifact.)
+  ROWS.forEach((r, i) => {
+    const rid = String(i);
+    nodes.push(art('fv-a-avl-' + rid,  AVL_X[i],  ALPHA_Y, 'α', r.alpha + '°', 'art'));
+    nodes.push(art('fv-a-rans-' + rid, RANS_X[i], ALPHA_Y, 'α', r.alpha + '°', 'art'));
+    if (r.avl_cla != null) {
+      nodes.push(op ('fv-op-avl-' + rid,  AVL_OPX[i],  OP_Y, 'AVL', 'run ' + r.run));
+      nodes.push(art('fv-art-avl-' + rid, AVL_ARTX[i], ART_Y, 'CLα', r.avl_cla.toFixed(2), 'der-art'));
+    }
+    if (r.rans_cl != null) {
+      nodes.push(op ('fv-op-rans-' + rid,  RANS_OPX[i],  OP_Y,  'RANS', 'run ' + r.run));
+      nodes.push(art('fv-art-rans-' + rid, RANS_ARTX[i], ART_Y, 'CL', r.rans_cl.toFixed(3), 'der-art'));
+    }
+  });
+
+  // edges: AVL side
+  ROWS.forEach((r, i) => {
+    const rid = String(i);
+    if (r.avl_cla != null) {
+      // α(AVL) -> AVL_op
+      edges.push(edge('fv-e-aavl-op-' + rid,  AVL_X[i], ALPHA_Y, 18, AVL_OPX[i], OP_Y, 11));
+      // β -> AVL_op
+      edges.push(edge('fv-e-beta-avlop-' + rid, N_BETA.x, N_BETA.y, N_BETA.r, AVL_OPX[i], OP_Y, 11));
+      // tool dashed -> AVL_op
+      edges.push(edge('fv-e-toolavl-op-' + rid, N_AVLT.x, N_AVLT.y, N_AVLT.r, AVL_OPX[i], OP_Y, 11, { dashed: true }));
+      // AVL_op -> CLα artifact
+      edges.push(edge('fv-e-avlop-art-' + rid, AVL_OPX[i], OP_Y, 11, AVL_ARTX[i], ART_Y, 18));
+    }
+    if (r.rans_cl != null) {
+      // α(RANS) -> RANS_op
+      edges.push(edge('fv-e-arans-op-' + rid, RANS_X[i], ALPHA_Y, 18, RANS_OPX[i], OP_Y, 11));
+      // β -> RANS_op
+      edges.push(edge('fv-e-beta-rop-' + rid, N_BETA.x, N_BETA.y, N_BETA.r, RANS_OPX[i], OP_Y, 11));
+      // RPM -> RANS_op
+      edges.push(edge('fv-e-rpm-rop-' + rid, N_RPM.x, N_RPM.y, N_RPM.r, RANS_OPX[i], OP_Y, 11));
+      // mesh -> RANS_op
+      edges.push(edge('fv-e-mesh-rop-' + rid, N_MESH.x, N_MESH.y, N_MESH.r, RANS_OPX[i], OP_Y, 11));
+      // tool dashed -> RANS_op
+      edges.push(edge('fv-e-toolf-op-' + rid, N_F360.x, N_F360.y, N_F360.r, RANS_OPX[i], OP_Y, 11, { dashed: true }));
+      // RANS_op -> CL artifact
+      edges.push(edge('fv-e-rop-art-' + rid, RANS_OPX[i], OP_Y, 11, RANS_ARTX[i], ART_Y, 18));
+    }
+  });
+
+  // Order: edges first so nodes render on top
+  edges.forEach(e => svg.appendChild(e));
+  nodes.forEach(n => svg.appendChild(n));
+  document.getElementById('fv-graph').appendChild(svg);
+  const graphHost = document.getElementById('fv-graph');
+
+  // ---- Highlight logic ----------------------------------------------------
+  function activate(ids) {
+    const set = new Set(ids);
+    if (set.size === 0) {
+      graphHost.classList.remove('fv-hovered');
+      svg.querySelectorAll('.fv-active').forEach(n => n.classList.remove('fv-active'));
+      return;
+    }
+    graphHost.classList.add('fv-hovered');
+    svg.querySelectorAll('.fv-node, .fv-edge').forEach(n => {
+      n.classList.toggle('fv-active', set.has(n.id));
+    });
+  }
+
+  function provenance(rowIdx, col) {
+    const r = ROWS[rowIdx];
+    const rid = String(rowIdx);
+    if (col === 'run') return ['fv-a-avl-' + rid, 'fv-a-rans-' + rid];
+    if (col === 'alpha') {
+      // Both per-run α artifacts in both lanes (if they exist).
+      const ids = ['fv-a-avl-' + rid, 'fv-a-rans-' + rid];
+      if (r.avl_cla != null) ids.push('fv-e-aavl-op-' + rid, 'fv-op-avl-' + rid);
+      if (r.rans_cl != null) ids.push('fv-e-arans-op-' + rid, 'fv-op-rans-' + rid);
+      return ids;
+    }
+    if (col === 'beta') {
+      const ids = [N_BETA.id];
+      if (r.avl_cla != null) ids.push('fv-e-beta-avlop-' + rid, 'fv-op-avl-' + rid);
+      if (r.rans_cl != null) ids.push('fv-e-beta-rop-' + rid,   'fv-op-rans-' + rid);
+      return ids;
+    }
+    if (col === 'rpm') {
+      // RPM is consumed only by the RANS lane.
+      if (r.rans_cl == null) return [N_RPM.id];   // it's there, just not consumed for this row
+      return [N_RPM.id, 'fv-e-rpm-rop-' + rid, 'fv-op-rans-' + rid];
+    }
+    if (col === 'avl_cla') {
+      if (r.avl_cla == null) return [];   // empty cell — no provenance
+      return [
+        'fv-a-avl-' + rid,
+        N_BETA.id,
+        N_AVLT.id,
+        'fv-e-aavl-op-' + rid,
+        'fv-e-beta-avlop-' + rid,
+        'fv-e-toolavl-op-' + rid,
+        'fv-op-avl-' + rid,
+        'fv-e-avlop-art-' + rid,
+        'fv-art-avl-' + rid,
+      ];
+    }
+    if (col === 'rans_cl') {
+      if (r.rans_cl == null) return [];
+      return [
+        N_GEOM.id, N_MOP.id, N_MESH.id, 'fv-e-geom-mop', 'fv-e-mop-mesh',
+        'fv-a-rans-' + rid,
+        N_BETA.id, N_RPM.id, N_F360.id,
+        'fv-e-arans-op-' + rid,
+        'fv-e-beta-rop-' + rid,
+        'fv-e-rpm-rop-' + rid,
+        'fv-e-mesh-rop-' + rid,
+        'fv-e-toolf-op-' + rid,
+        'fv-op-rans-' + rid,
+        'fv-e-rop-art-' + rid,
+        'fv-art-rans-' + rid,
+      ];
+    }
+    if (col === 'mesh_id') {
+      if (r.mesh_id == null) return [];
+      // The mesh artefact is the source of mesh_id.
+      // It only "applies" to a row if that row has a RANS run consuming it.
+      return [N_GEOM.id, N_MOP.id, N_MESH.id, 'fv-e-geom-mop', 'fv-e-mop-mesh'];
+    }
+    return [];
+  }
+
+  // ---- Cell-to-cell connection map ----------------------------------------
+  // For each table cell (rowIdx, col), return the DAG ids that, if any are
+  // in the *hovered* cell's provenance walk, mean this cell is "connected".
+  // When β or RPM appear in the hovered walk, every β / RPM cell in the
+  // table lights up — that's the right behaviour: those cells are presenting
+  // the same shared artefact across rows.
+  function cellArtifactIds(rowIdx, col) {
+    switch (col) {
+      case 'alpha':   return ['fv-a-avl-' + rowIdx, 'fv-a-rans-' + rowIdx];
+      case 'beta':    return [N_BETA.id];
+      case 'rpm':     return [N_RPM.id];
+      case 'avl_cla': return ['fv-art-avl-' + rowIdx];
+      case 'rans_cl': return ['fv-art-rans-' + rowIdx];
+      case 'mesh_id': return [N_MESH.id];
+      default:        return [];   // 'run' is a row label, not part of provenance
+    }
+  }
+
+  function applyCellHighlight(hoveredWalkIds, hoveredRowIdx, hoveredCol) {
+    const hoveredWalkSet = new Set(hoveredWalkIds);
+    const hoveredLeafIds = cellArtifactIds(hoveredRowIdx, hoveredCol);
+
+    // Mark the row that's currently hovered. Other rows stay default.
+    tbody.querySelectorAll('tr').forEach((tr, i) => {
+      tr.classList.toggle('fv-row-active', i === hoveredRowIdx);
+    });
+
+    // Within the active row, classify each other cell by its lineage
+    // relation to the hovered cell:
+    //   ancestor   — this cell's leaf appears in hovered's walk (upstream)
+    //   dependent  — hovered's leaf appears in this cell's walk (downstream)
+    //   different  — neither (no direct lineage)
+    // Cells in other rows are left alone — the row band already shows
+    // which run is in focus.
+    tbody.querySelectorAll('td').forEach(td => {
+      td.classList.remove('fv-cell-ancestor');
+      td.classList.remove('fv-cell-dependent');
+      td.classList.remove('fv-cell-different');
+      if (+td.dataset.run !== hoveredRowIdx) return;     // other row — untouched
+      if (td.classList.contains('fv-lit'))   return;     // hovered cell — keep its own style
+      if (td.dataset.col === 'run')          return;     // row label
+      if (td.classList.contains('fv-empty')) return;     // empty cell — already styled
+      if (hoveredWalkIds.length === 0)       return;     // no walk on hover — leave default
+
+      const cellIds = cellArtifactIds(+td.dataset.run, td.dataset.col);
+      if (cellIds.length === 0) return;
+
+      // Ancestor: this cell's underlying artefact is in hovered's walk.
+      if (cellIds.some(id => hoveredWalkSet.has(id))) {
+        td.classList.add('fv-cell-ancestor');
+        return;
+      }
+
+      // Dependent: hovered's leaf is in this cell's walk.
+      const cellWalk = provenance(+td.dataset.run, td.dataset.col);
+      if (hoveredLeafIds.some(id => cellWalk.includes(id))) {
+        td.classList.add('fv-cell-dependent');
+        return;
+      }
+
+      // Otherwise — same row in the projection, no lineage relation.
+      td.classList.add('fv-cell-different');
+    });
+  }
+
+  function clearCellHighlight() {
+    tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('fv-row-active'));
+    tbody.querySelectorAll('td').forEach(td => {
+      td.classList.remove('fv-cell-ancestor');
+      td.classList.remove('fv-cell-dependent');
+      td.classList.remove('fv-cell-different');
+    });
+  }
+
+  // ---- Wire interactions --------------------------------------------------
+  const tooltip = document.getElementById('fv-empty-tooltip');
+
+  tbody.querySelectorAll('td').forEach(td => {
+    const rowIdx = +td.dataset.run;
+    const col = td.dataset.col;
+    td.addEventListener('mouseenter', (ev) => {
+      tbody.querySelectorAll('td.fv-lit').forEach(c => c.classList.remove('fv-lit'));
+      td.classList.add('fv-lit');
+
+      const walk = provenance(rowIdx, col);
+      activate(walk);
+      // Always row-mark the hovered row; only apply cell-connection
+      // highlights if we have a non-empty provenance walk (empty cells
+      // mean "no leaf artefact" — there's nothing to connect to).
+      applyCellHighlight(walk, rowIdx, col);
+
+      if (td.classList.contains('fv-empty')) {
+        const rect = td.getBoundingClientRect();
+        const figRect = document.getElementById('fv-figure').getBoundingClientRect();
+        tooltip.textContent = '— no provenance for this cell';
+        tooltip.style.left = (rect.left - figRect.left + rect.width / 2 - 90) + 'px';
+        tooltip.style.top  = (rect.top - figRect.top - 4) + 'px';
+        tooltip.classList.add('fv-show');
+      } else {
+        tooltip.classList.remove('fv-show');
+      }
+    });
+  });
+
+  document.getElementById('fv-figure').addEventListener('mouseleave', () => {
+    tbody.querySelectorAll('td.fv-lit').forEach(c => c.classList.remove('fv-lit'));
+    clearCellHighlight();
+    activate([]);
+    tooltip.classList.remove('fv-show');
+  });
+
+  // ---- Scrollytelling state machine --------------------------------------
+  // Each beat declares its panel state via data-state. As the reader scrolls
+  // a beat into the centre band of the viewport, the right-side stage swaps
+  // to the matching panel. Same trick the data-black-market figure uses.
+  (function setupScrolly() {
+    const figure = document.getElementById('fv-figure');
+    if (!figure) return;
+    const stage  = document.getElementById('fv-scrolly-stage');
+    const beats  = Array.from(figure.querySelectorAll('.fv-scrolly-beat'));
+    const panels = Array.from(figure.querySelectorAll('.fv-panel'));
+
+    function setState(state) {
+      stage.dataset.state = state;
+      panels.forEach(p => p.classList.toggle('fv-panel-active', p.dataset.state === state));
+    }
+    function setActiveBeat(beat) {
+      beats.forEach(b => b.classList.toggle('fv-active', b === beat));
+      if (beat) setState(beat.dataset.state);
+    }
+
+    // Initialise: first beat active, Excel panel showing.
+    setActiveBeat(beats[0]);
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        const inView = entries.filter(e => e.isIntersecting).map(e => e.target);
+        if (inView.length === 0) return;
+        // Pick the last in-view beat in document order — the most recent
+        // one the reader has scrolled INTO, not the one they've already
+        // passed.
+        inView.sort((a, b) => beats.indexOf(a) - beats.indexOf(b));
+        setActiveBeat(inView[inView.length - 1]);
+      }, { threshold: 0, rootMargin: "-40% 0px -40% 0px" });
+      beats.forEach(b => io.observe(b));
+    }
+
+    // Reduced-motion: just leave panel C visible (the punchline) and don't
+    // run the scroll-driven state machine. Beats stay readable, the Thread
+    // panel is the resting state.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      beats.forEach(b => b.classList.add('fv-active'));
+      setState('thread');
+    }
+  })();
+
+  // ---- Right-click context menu — "ask the DAG" --------------------------
+  // Each non-empty cell carries far more than the value shown in the table.
+  // Right-click any cell to ask the DAG questions whose answers aren't in
+  // the projection — producer, timestamp, kind, content hash. The point is
+  // that the table is a view; the DAG underneath knows N×many more facts.
+  const CTX_MENU = document.getElementById('fv-ctxmenu');
+
+  // Per-(rowIdx, col) metadata generator. Mock but realistic — the article
+  // is a teaching demo, not a live Thread instance.
+  function _hash4(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+    const hex = (h >>> 0).toString(16).padStart(8, '0').slice(0, 8);
+    return 'sha256:' + hex + '…';
+  }
+  function _when(rowIdx, col) {
+    // Deterministic pseudo-timestamps — minutes after a base, so they look
+    // like a real session log.
+    const base = new Date('2026-04-12T14:23:00Z').getTime();
+    const colOffset = { alpha: 0, beta: 0, rpm: 2, avl_cla: 8, rans_cl: 199, mesh_id: -315 }[col] || 0;
+    const t = new Date(base + (rowIdx * 7 + colOffset) * 60_000);
+    return t.toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC');
+  }
+  function cellMeta(rowIdx, col) {
+    const r = ROWS[rowIdx];
+    const cellLabel = COLS.find(c => c.id === col).label;
+    const when = _when(rowIdx, col);
+    if (col === 'alpha' || col === 'beta') {
+      return {
+        cell:     `${cellLabel} on run ${r.run}`,
+        producer: 'harry@flexcompute.com',
+        tool:     'manual input · trim sweep',
+        kind:     'condition (input pivot)',
+        when:     when,
+        hash:     _hash4(`${col}-${rowIdx}-${r[col === 'alpha' ? 'alpha' : 'beta']}`),
+      };
+    }
+    if (col === 'rpm') {
+      return {
+        cell:     `RPM on run ${r.run}`,
+        producer: 'trim-solver',
+        tool:     'avl-trim v3.4',
+        kind:     'condition (solved)',
+        when:     when,
+        hash:     _hash4(`rpm-${rowIdx}-${r.rpm}`),
+      };
+    }
+    if (col === 'avl_cla') {
+      return {
+        cell:     `AVL CLα on run ${r.run}`,
+        producer: 'avl@avl-pod-21d3',
+        tool:     'AVL v3.4',
+        kind:     'derived (lift slope from AVL fit)',
+        when:     when,
+        hash:     _hash4(`avlcla-${rowIdx}-${r.avl_cla}`),
+      };
+    }
+    if (col === 'rans_cl') {
+      return {
+        cell:     `RANS CL on run ${r.run}`,
+        producer: 'flow360-runner@cfd-pod-7e8a',
+        tool:     'Flow360 v24.3',
+        kind:     'derived (CL from CFD run)',
+        when:     when,
+        hash:     _hash4(`ranscl-${rowIdx}-${r.rans_cl}`),
+      };
+    }
+    if (col === 'mesh_id') {
+      return {
+        cell:     `mesh on run ${r.run}`,
+        producer: 'mesh-refine-op',
+        tool:     'mesh-refine v2.1',
+        kind:     'artifact (volume mesh, level 3)',
+        when:     when,
+        hash:     'sha256:0e23a4…',
+      };
+    }
+    return null;
+  }
+
+  const QUESTIONS = [
+    { q: 'Who produced this?',     a: (m) => `${m.producer}\n  via ${m.tool}` },
+    { q: 'When was this run?',     a: (m) => m.when },
+    { q: 'What kind of thing is it?', a: (m) => m.kind },
+    { q: 'What’s the content hash?', a: (m) => m.hash },
+  ];
+
+  function buildCtxMenu(rowIdx, col) {
+    const m = cellMeta(rowIdx, col);
+    if (!m) return null;
+    CTX_MENU.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'fv-ctxhead';
+    head.innerHTML = `Ask about <strong>${m.cell}</strong>`;
+    CTX_MENU.appendChild(head);
+    QUESTIONS.forEach(qa => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'fv-ctxitem';
+      btn.setAttribute('role', 'menuitem');
+      const q = document.createElement('span');
+      q.className = 'fv-ctxq';
+      q.textContent = qa.q;
+      const a = document.createElement('span');
+      a.className = 'fv-ctxa';
+      a.textContent = qa.a(m);
+      btn.appendChild(q);
+      btn.appendChild(a);
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        btn.classList.toggle('fv-revealed');
+      });
+      CTX_MENU.appendChild(btn);
+    });
+    const hint = document.createElement('div');
+    hint.className = 'fv-ctxhint';
+    hint.textContent = "None of these are in the table. The connections still know.";
+    CTX_MENU.appendChild(hint);
+    return CTX_MENU;
+  }
+
+  function showCtxMenu(rowIdx, col, clientX, clientY) {
+    if (!buildCtxMenu(rowIdx, col)) return;
+    // position: fixed → clientX/clientY are already viewport-relative.
+    let left = clientX + 4;
+    let top  = clientY + 4;
+    CTX_MENU.style.left = left + 'px';
+    CTX_MENU.style.top  = top  + 'px';
+    CTX_MENU.classList.add('fv-show');
+    // Clamp so it doesn't escape the viewport on the right or bottom.
+    requestAnimationFrame(() => {
+      const mr = CTX_MENU.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if (mr.right > vw - 8) {
+        CTX_MENU.style.left = Math.max(8, vw - mr.width - 12) + 'px';
+      }
+      if (mr.bottom > vh - 8) {
+        CTX_MENU.style.top = Math.max(8, vh - mr.height - 12) + 'px';
+      }
+    });
+  }
+  function hideCtxMenu() {
+    CTX_MENU.classList.remove('fv-show');
+  }
+
+  // Wire contextmenu events on every non-empty cell.
+  tbody.querySelectorAll('td').forEach(td => {
+    td.addEventListener('contextmenu', (ev) => {
+      if (td.classList.contains('fv-empty')) return;
+      if (td.dataset.col === 'run')          return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      showCtxMenu(+td.dataset.run, td.dataset.col, ev.clientX, ev.clientY);
+    });
+  });
+  // Close menu on outside click, Escape, scroll, or another contextmenu.
+  document.addEventListener('click', (ev) => {
+    if (!CTX_MENU.contains(ev.target)) hideCtxMenu();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') hideCtxMenu();
+  });
+  window.addEventListener('scroll', hideCtxMenu, { passive: true });
+
+  return { activate: activate, provenance: provenance, showCtxMenu: showCtxMenu, hideCtxMenu: hideCtxMenu };
+})();
+</script>
+</body>
+</html>

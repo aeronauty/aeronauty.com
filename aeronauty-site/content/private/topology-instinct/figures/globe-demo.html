@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Topology Instinct — interactive globe demo</title>
+
+<!--
+  TESTING:
+    cd /tmp/topology-instinct-build && python3 -m http.server 8765
+    open http://localhost:8765/globe-demo.html
+
+  INTEGRATION NOTES:
+    - All CSS classes in this file are prefixed `tg-` (topology-globe-) to avoid collisions.
+    - All JS is wrapped in an IIFE assigned to window.TopologyGlobe — no other globals.
+    - Tailwind Play CDN is included for parity with the article's stack but only used in two
+      utility classes; the integration step can drop the CDN line and leave the layout intact.
+    - The JSON path is set on TopologyGlobe.dataPath. Integration: change to "data/milp_solutions.json".
+
+  DATA-FLOW CONTRACT:
+    1. Load JSON from TopologyGlobe.dataPath.
+    2. State = { strategy, budget, year, showFaintRoutes }.
+    3. currentSolution = data.solutions[strategy][String(year)][String(budget)].
+    4. Globe layers re-render whenever state changes:
+        - pointsData = data.airports (with derived `upgraded` flag).
+        - arcsData   = data.routes filtered by upgraded_route_ids (or all if showFaintRoutes).
+    5. Comparison chart re-renders on year change; on every state change, the highlighted bar moves.
+-->
+
+<!-- Tailwind Play CDN — kept minimal so it can be ripped out at integration time. -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- D3 v7 -->
+<script src="https://unpkg.com/d3@7"></script>
+
+<!-- Globe.gl (Vasco Asturiano) -->
+<script src="https://unpkg.com/globe.gl"></script>
+
+<style>
+  /* ---------- design tokens (CSS variables, swappable at integration time) ---------- */
+  :root {
+    --tg-bg:           #0a0e1a;
+    --tg-surface:      #121826;
+    --tg-surface-2:    #1a2233;
+    --tg-border:       #2a3447;
+    --tg-text:         #e6edf6;
+    --tg-text-dim:     #93a0b6;
+    --tg-text-faint:   #5c6a82;
+    --tg-accent:       #22d3ee;     /* cyan-400 — upgraded airports + selected bar */
+    --tg-accent-soft:  #22d3ee33;
+    --tg-arc:          #22d3ee;
+    --tg-arc-faint:    #93a0b633;
+    --tg-strat-optimal: #22d3ee;
+    --tg-strat-traffic: #f59e0b;    /* amber */
+    --tg-strat-myopic:  #a78bfa;    /* violet */
+    --tg-strat-cities:  #f472b6;    /* pink */
+    --tg-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  html, body { background: var(--tg-bg); color: var(--tg-text); font-family: var(--tg-font); margin: 0; }
+
+  .tg-root {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+  }
+
+  .tg-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+  }
+  .tg-subtitle {
+    font-size: 13px;
+    color: var(--tg-text-dim);
+    margin: 0 0 16px;
+  }
+
+  /* ---------- globe + controls layout ---------- */
+  .tg-stage {
+    position: relative;
+    border: 1px solid var(--tg-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at top, #0f1626 0%, var(--tg-bg) 70%);
+  }
+
+  .tg-globe {
+    width: 100%;
+    height: 70vh;
+    min-height: 480px;
+  }
+  @media (max-width: 600px) {
+    .tg-globe { height: 50vh; min-height: 320px; }
+  }
+
+  .tg-loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--tg-text-dim); font-size: 14px;
+    pointer-events: none;
+    background: var(--tg-bg);
+    z-index: 5;
+  }
+  .tg-loading.tg-hidden { display: none; }
+
+  /* Controls panel — top-right on desktop, below on mobile */
+  .tg-controls {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 280px;
+    background: rgba(18,24,38,0.92);
+    border: 1px solid var(--tg-border);
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-size: 13px;
+    z-index: 4;
+  }
+  @media (max-width: 720px) {
+    .tg-controls {
+      position: static;
+      width: auto;
+      margin-top: 0;
+      border-radius: 0;
+      border-left: none; border-right: none; border-bottom: none;
+      backdrop-filter: none;
+    }
+  }
+
+  .tg-control-group { margin-bottom: 12px; }
+  .tg-control-group:last-child { margin-bottom: 0; }
+  .tg-control-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--tg-text-dim);
+    margin-bottom: 6px;
+  }
+
+  .tg-radio-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+  .tg-radio-list label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+  }
+  .tg-radio-list label:hover { background: var(--tg-surface-2); }
+  .tg-radio-list input[type=radio] { accent-color: var(--tg-accent); }
+
+  .tg-slider-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .tg-slider-row input[type=range] {
+    flex: 1;
+    accent-color: var(--tg-accent);
+  }
+  .tg-slider-readout {
+    font-variant-numeric: tabular-nums;
+    color: var(--tg-text);
+    font-size: 12px;
+    min-width: 56px;
+    text-align: right;
+  }
+
+  .tg-checkbox-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .tg-checkbox-row input[type=checkbox] { accent-color: var(--tg-accent); }
+
+  .tg-table-toggle {
+    margin-top: 8px;
+    background: transparent;
+    color: var(--tg-text-dim);
+    border: 1px solid var(--tg-border);
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .tg-table-toggle:hover { color: var(--tg-text); border-color: var(--tg-text-dim); }
+
+  /* Globe.gl tooltip override (default is too bright) */
+  .tg-tooltip {
+    background: rgba(10,14,26,0.95);
+    border: 1px solid var(--tg-border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: var(--tg-text);
+    font-size: 12px;
+    line-height: 1.4;
+    pointer-events: none;
+    max-width: 240px;
+  }
+  .tg-tooltip b { color: var(--tg-accent); font-weight: 600; }
+  .tg-tooltip .tg-tt-dim { color: var(--tg-text-dim); }
+
+  /* ---------- comparison chart ---------- */
+  .tg-comparison {
+    margin-top: 24px;
+    padding: 20px 20px 12px;
+    border: 1px solid var(--tg-border);
+    border-radius: 12px;
+    background: var(--tg-surface);
+  }
+  .tg-comparison-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .tg-comparison-title {
+    font-size: 14px; font-weight: 600;
+    margin: 0;
+  }
+  .tg-comparison-year {
+    font-size: 12px; color: var(--tg-text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .tg-chart-svg {
+    display: block;
+    width: 100%;
+    height: 280px;
+  }
+  .tg-legend {
+    display: flex; flex-wrap: wrap; gap: 12px 18px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--tg-text-dim);
+  }
+  .tg-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .tg-legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  .tg-caption {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--tg-text);
+    padding: 12px 16px;
+    background: var(--tg-surface-2);
+    border-left: 3px solid var(--tg-accent);
+    border-radius: 0 6px 6px 0;
+  }
+  .tg-caption .tg-caption-num { color: var(--tg-accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ---------- fallback table ---------- */
+  .tg-fallback {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid var(--tg-border);
+    border-radius: 10px;
+    background: var(--tg-surface);
+  }
+  .tg-fallback[hidden] { display: none; }
+  .tg-fallback h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  .tg-fallback table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tg-fallback th, .tg-fallback td {
+    text-align: left; padding: 6px 8px;
+    border-bottom: 1px solid var(--tg-border);
+    color: var(--tg-text);
+  }
+  .tg-fallback th { color: var(--tg-text-dim); font-weight: 500; }
+  .tg-fallback td.tg-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---------- chart axis styling ---------- */
+  .tg-chart-svg .tick line { stroke: var(--tg-border); }
+  .tg-chart-svg .tick text { fill: var(--tg-text-dim); font-size: 11px; }
+  .tg-chart-svg .domain { stroke: var(--tg-border); }
+  .tg-chart-svg .tg-axis-label {
+    fill: var(--tg-text-dim);
+    font-size: 11px;
+  }
+
+  /* ---------- accessibility ---------- */
+  .tg-sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  :focus-visible {
+    outline: 2px solid var(--tg-accent);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     STRUCTURAL HTML — the integration step embeds this block in
+     the article at the demo placeholder. Everything inside .tg-root
+     is self-contained.
+============================================================ -->
+<div class="tg-root">
+
+  <h2 class="tg-title">Sequencing the upgrade — MILP vs. three baselines</h2>
+  <p class="tg-subtitle">Pick a strategy, a budget, and a year. The arcs are the routes that get the new aircraft because <em>both</em> endpoints have been upgraded.</p>
+
+  <div class="tg-stage" id="tg-stage">
+    <div class="tg-globe" id="tg-globe" role="img" aria-label="Interactive globe showing upgraded airports and routes"></div>
+    <div class="tg-loading" id="tg-loading">Loading optimisation data…</div>
+
+    <div class="tg-controls" id="tg-controls" role="region" aria-label="Demo controls">
+
+      <div class="tg-control-group" role="radiogroup" aria-label="Strategy">
+        <span class="tg-control-label">Strategy</span>
+        <div class="tg-radio-list" id="tg-strategy-list">
+          <!-- radios injected by JS so labels stay in sync with data -->
+        </div>
+      </div>
+
+      <div class="tg-control-group">
+        <label class="tg-control-label" for="tg-budget">Budget</label>
+        <div class="tg-slider-row">
+          <input id="tg-budget" type="range" min="0" max="0" step="1" value="0"
+                 aria-label="Budget — number of upgraded airports" />
+          <span class="tg-slider-readout" id="tg-budget-readout">K = —</span>
+        </div>
+      </div>
+
+      <div class="tg-control-group">
+        <label class="tg-control-label" for="tg-year">Year</label>
+        <div class="tg-slider-row">
+          <input id="tg-year" type="range" min="0" max="0" step="1" value="0"
+                 aria-label="Year of upgrade snapshot" />
+          <span class="tg-slider-readout" id="tg-year-readout">Year: —</span>
+        </div>
+      </div>
+
+      <div class="tg-control-group">
+        <label class="tg-checkbox-row" for="tg-faint-toggle">
+          <input id="tg-faint-toggle" type="checkbox" />
+          Show all routes faintly
+        </label>
+      </div>
+
+      <button type="button" class="tg-table-toggle" id="tg-table-btn"
+              aria-expanded="false" aria-controls="tg-fallback">
+        View as table
+      </button>
+    </div>
+  </div>
+
+  <div class="tg-fallback" id="tg-fallback" hidden>
+    <h3>Upgraded airports for the current selection</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>IATA</th><th>Airport</th><th>City</th><th>Country</th>
+          <th class="tg-num">Routes</th><th class="tg-num">CO2 (t/yr)</th>
+        </tr>
+      </thead>
+      <tbody id="tg-fallback-body"></tbody>
+    </table>
+  </div>
+
+  <div class="tg-comparison" aria-label="Strategy comparison chart">
+    <div class="tg-comparison-header">
+      <h3 class="tg-comparison-title">CO2 captured by strategy and budget</h3>
+      <span class="tg-comparison-year" id="tg-comparison-year">Year —</span>
+    </div>
+    <svg class="tg-chart-svg" id="tg-chart" role="img" aria-label="Grouped bar chart comparing CO2 captured across strategies and budgets"></svg>
+    <div class="tg-legend" id="tg-legend"></div>
+  </div>
+
+  <p class="tg-caption" id="tg-caption" aria-live="polite">
+    Loading…
+  </p>
+</div>
+
+<script>
+window.TopologyGlobe = (() => {
+  "use strict";
+
+  // ---- configuration -------------------------------------------------------
+  const CONFIG = {
+    // Integration step: change to "data/milp_solutions.json".
+    dataPath: "fixture-milp_solutions.json",
+
+    defaults: {
+      strategy: "optimal",
+      budget:   15,
+      year:     2030,
+      showFaintRoutes: false,
+    },
+
+    strategies: [
+      { id: "optimal",        label: "Optimal MILP",       color: "var(--tg-strat-optimal)" },
+      { id: "greedy_traffic", label: "Greedy by traffic",  color: "var(--tg-strat-traffic)" },
+      { id: "greedy_myopic",  label: "Greedy myopic",      color: "var(--tg-strat-myopic)"  },
+      { id: "biggest_cities", label: "Biggest cities",     color: "var(--tg-strat-cities)"  },
+    ],
+
+    // Globe.gl visuals.
+    globe: {
+      bgColor:       "rgba(0,0,0,0)",   // transparent — page bg shows through
+      atmosphereCol: "#3b82f6",
+      atmosphereAlt: 0.18,
+      camera:        { lat: 30, lng: -30, altitude: 2.5 },
+      pointDimRadius: 0.18,
+      pointBrightRadius: 0.55,
+      pointDimColor:  "#5c6a82",
+      pointBrightColor: "#22d3ee",
+    },
+  };
+
+  // ---- internal state ------------------------------------------------------
+  const state = { ...CONFIG.defaults, data: null };
+
+  // ---- helpers -------------------------------------------------------------
+  const fmtTonnes = (t) => {
+    if (t == null || isNaN(t)) return "—";
+    if (t >= 1e6) return (t / 1e6).toFixed(2) + " Mt";
+    if (t >= 1e3) return (t / 1e3).toFixed(0) + " kt";
+    return t.toFixed(0) + " t";
+  };
+  const fmtPct = (x) => (x >= 0 ? "+" : "") + x.toFixed(1) + "%";
+  const numberWithCommas = (n) => n.toLocaleString("en-GB");
+
+  // Resolve currentSolution for the global state. Returns null if the path is missing.
+  const getSolution = (strategy = state.strategy, year = state.year, budget = state.budget) => {
+    const d = state.data;
+    if (!d) return null;
+    const byStrategy = d.solutions[strategy];
+    if (!byStrategy) return null;
+    const byYear = byStrategy[String(year)];
+    if (!byYear) return null;
+    return byYear[String(budget)] || null;
+  };
+
+  // ---- globe ---------------------------------------------------------------
+  let globe; // Globe.gl instance
+
+  function initGlobe() {
+    const el = document.getElementById("tg-globe");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    globe = Globe()(el)
+      .backgroundColor(CONFIG.globe.bgColor)
+      .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-night.jpg")
+      .bumpImageUrl("https://unpkg.com/three-globe/example/img/earth-topology.png")
+      .showAtmosphere(true)
+      .atmosphereColor(CONFIG.globe.atmosphereCol)
+      .atmosphereAltitude(CONFIG.globe.atmosphereAlt)
+      // points
+      .pointsData([])
+      .pointLat(d => d.lat)
+      .pointLng(d => d.lon)
+      .pointAltitude(d => d._upgraded ? 0.012 : 0.005)
+      .pointRadius(d => d._upgraded ? CONFIG.globe.pointBrightRadius : CONFIG.globe.pointDimRadius)
+      .pointColor(d => d._upgraded ? CONFIG.globe.pointBrightColor : CONFIG.globe.pointDimColor)
+      .pointLabel(d => airportTooltip(d))
+      // arcs
+      .arcsData([])
+      .arcStartLat(d => d._srcLat)
+      .arcStartLng(d => d._srcLon)
+      .arcEndLat(d => d._dstLat)
+      .arcEndLng(d => d._dstLon)
+      .arcColor(d => d._color)
+      .arcStroke(d => d._stroke)
+      .arcAltitudeAutoScale(0.5)
+      .arcDashLength(0.4)
+      .arcDashGap(0.2)
+      .arcDashAnimateTime(d => d._faint ? 0 : 6000)
+      .arcLabel(d => arcTooltip(d));
+
+    // Initial camera.
+    globe.pointOfView(CONFIG.globe.camera, 0);
+
+    // Auto-rotate idle, stop on interaction. Skip if user prefers reduced motion.
+    const controls = globe.controls();
+    if (!reduceMotion) {
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.35;
+      const stopAuto = () => { controls.autoRotate = false; };
+      controls.addEventListener("start", stopAuto);
+      el.addEventListener("wheel", stopAuto, { passive: true });
+      el.addEventListener("touchstart", stopAuto, { passive: true });
+    }
+
+    // Resize handling.
+    const ro = new ResizeObserver(() => {
+      globe.width(el.clientWidth);
+      globe.height(el.clientHeight);
+    });
+    ro.observe(el);
+  }
+
+  function airportTooltip(d) {
+    return `<div class="tg-tooltip">
+      <div><b>${d.iata}</b> <span class="tg-tt-dim">${d.icao || ""}</span></div>
+      <div>${d.name}</div>
+      <div class="tg-tt-dim">${d.city}, ${d.country}</div>
+      <div class="tg-tt-dim">${d.route_count} routes · ${fmtTonnes(d.annual_co2_outbound_tonnes)} CO2/yr outbound</div>
+    </div>`;
+  }
+
+  function arcTooltip(d) {
+    return `<div class="tg-tooltip">
+      <div><b>${d._src}</b> → <b>${d._dst}</b></div>
+      <div class="tg-tt-dim">${fmtTonnes(d._co2)} CO2/yr · ${numberWithCommas(d._distance)} km</div>
+    </div>`;
+  }
+
+  // ---- data binding --------------------------------------------------------
+  function applyToGlobe() {
+    if (!globe || !state.data) return;
+    const sol = getSolution();
+    const upgraded = new Set(sol ? sol.upgraded_airports : []);
+    const upgradedRouteIds = new Set(sol ? sol.upgraded_route_ids : []);
+
+    // Points: mark upgraded.
+    const points = state.data.airports.map(a => ({ ...a, _upgraded: upgraded.has(a.id) }));
+    globe.pointsData(points);
+
+    // Build a coordinate lookup for arc endpoints.
+    const coords = Object.fromEntries(state.data.airports.map(a => [a.id, a]));
+
+    // Arcs: bright for upgraded routes; faint for others if toggled.
+    // CO2 magnitude → arc opacity weighting.
+    const co2Max = Math.max(1, ...state.data.routes.map(r => r.annual_co2_tonnes_2023));
+    const arcs = [];
+    for (const r of state.data.routes) {
+      const src = coords[r.src], dst = coords[r.dst];
+      if (!src || !dst) continue;
+      const upgradedArc = upgradedRouteIds.has(r.id);
+      if (!upgradedArc && !state.showFaintRoutes) continue;
+      const weight = r.annual_co2_tonnes_2023 / co2Max; // 0..1
+      arcs.push({
+        _src: r.src, _dst: r.dst,
+        _srcLat: src.lat, _srcLon: src.lon,
+        _dstLat: dst.lat, _dstLon: dst.lon,
+        _co2: r.annual_co2_tonnes_2023,
+        _distance: r.distance_km,
+        _faint: !upgradedArc,
+        _color: upgradedArc
+          ? `rgba(34, 211, 238, ${0.45 + 0.45 * weight})`
+          : `rgba(147, 160, 182, ${0.08 + 0.10 * weight})`,
+        _stroke: upgradedArc ? (0.35 + 0.7 * weight) : (0.2 + 0.3 * weight),
+      });
+    }
+    globe.arcsData(arcs);
+  }
+
+  // ---- controls ------------------------------------------------------------
+  function buildControls() {
+    // strategy radios
+    const list = document.getElementById("tg-strategy-list");
+    list.innerHTML = "";
+    CONFIG.strategies.forEach(s => {
+      const id = `tg-strat-${s.id}`;
+      const wrap = document.createElement("label");
+      wrap.setAttribute("for", id);
+      wrap.innerHTML = `
+        <input type="radio" name="tg-strategy" id="${id}" value="${s.id}"
+               ${s.id === state.strategy ? "checked" : ""} aria-label="${s.label}">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${s.color}"></span>
+        <span>${s.label}</span>`;
+      list.appendChild(wrap);
+    });
+    list.addEventListener("change", e => {
+      if (e.target.name === "tg-strategy") {
+        state.strategy = e.target.value;
+        onStateChanged();
+      }
+    });
+
+    // budget slider — discrete index over data.budgets
+    const budgetInput = document.getElementById("tg-budget");
+    const budgets = state.data.budgets;
+    budgetInput.min = 0;
+    budgetInput.max = budgets.length - 1;
+    let bIdx = budgets.indexOf(state.budget);
+    if (bIdx < 0) bIdx = Math.floor(budgets.length / 2);
+    budgetInput.value = String(bIdx);
+    state.budget = budgets[bIdx];
+    budgetInput.addEventListener("input", e => {
+      const idx = +e.target.value;
+      state.budget = budgets[idx];
+      onStateChanged();
+    });
+
+    // year slider — discrete index over data.years
+    const yearInput = document.getElementById("tg-year");
+    const years = state.data.years;
+    yearInput.min = 0;
+    yearInput.max = years.length - 1;
+    let yIdx = years.indexOf(state.year);
+    if (yIdx < 0) yIdx = 0;
+    yearInput.value = String(yIdx);
+    state.year = years[yIdx];
+    yearInput.addEventListener("input", e => {
+      const idx = +e.target.value;
+      state.year = years[idx];
+      onStateChanged();
+    });
+
+    // faint-routes toggle
+    const faint = document.getElementById("tg-faint-toggle");
+    faint.checked = state.showFaintRoutes;
+    faint.addEventListener("change", e => {
+      state.showFaintRoutes = e.target.checked;
+      applyToGlobe();
+    });
+
+    // table toggle
+    const tbtn = document.getElementById("tg-table-btn");
+    const fb = document.getElementById("tg-fallback");
+    tbtn.addEventListener("click", () => {
+      const open = fb.hasAttribute("hidden");
+      if (open) {
+        fb.removeAttribute("hidden");
+        tbtn.setAttribute("aria-expanded", "true");
+        tbtn.textContent = "Hide table";
+      } else {
+        fb.setAttribute("hidden", "");
+        tbtn.setAttribute("aria-expanded", "false");
+        tbtn.textContent = "View as table";
+      }
+      renderFallbackTable();
+    });
+  }
+
+  // ---- readouts + caption + fallback ---------------------------------------
+  function updateReadouts() {
+    const sol = getSolution();
+    const k = sol ? sol.upgraded_airports.length : state.budget;
+    document.getElementById("tg-budget-readout").textContent = `K = ${k} airports`;
+    document.getElementById("tg-year-readout").textContent = `Year: ${state.year}`;
+    document.getElementById("tg-comparison-year").textContent = `Year ${state.year}`;
+  }
+
+  function updateCaption() {
+    const sol = getSolution("optimal");
+    const traf = getSolution("greedy_traffic");
+    const cities = getSolution("biggest_cities");
+    const cap = document.getElementById("tg-caption");
+    if (!sol || !traf || !cities) {
+      cap.textContent = "Comparison data unavailable for the current selection.";
+      return;
+    }
+    const milp = sol.co2_captured_tonnes;
+    const dTraf = traf.co2_captured_tonnes ? (milp / traf.co2_captured_tonnes - 1) * 100 : 0;
+    const dCit  = cities.co2_captured_tonnes ? (milp / cities.co2_captured_tonnes - 1) * 100 : 0;
+    cap.innerHTML =
+      `At <span class="tg-caption-num">K = ${state.budget}</span> airports upgraded in ` +
+      `<span class="tg-caption-num">${state.year}</span>, the MILP captures ` +
+      `<span class="tg-caption-num">${fmtPct(dTraf)}</span> vs. greedy-by-traffic and ` +
+      `<span class="tg-caption-num">${fmtPct(dCit)}</span> vs. picking biggest cities first.`;
+  }
+
+  function renderFallbackTable() {
+    const tbody = document.getElementById("tg-fallback-body");
+    const sol = getSolution();
+    if (!sol || !tbody) return;
+    const byId = Object.fromEntries(state.data.airports.map(a => [a.id, a]));
+    const rows = sol.upgraded_airports.map(id => byId[id]).filter(Boolean);
+    tbody.innerHTML = rows.map(a => `
+      <tr>
+        <td>${a.iata}</td>
+        <td>${a.name}</td>
+        <td>${a.city}</td>
+        <td>${a.country}</td>
+        <td class="tg-num">${a.route_count}</td>
+        <td class="tg-num">${numberWithCommas(a.annual_co2_outbound_tonnes)}</td>
+      </tr>`).join("");
+  }
+
+  // ---- comparison chart (D3) -----------------------------------------------
+  let chartLayout = null;
+
+  function buildChartLegend() {
+    const wrap = document.getElementById("tg-legend");
+    wrap.innerHTML = CONFIG.strategies.map(s =>
+      `<span class="tg-legend-item">
+         <span class="tg-legend-swatch" style="background:${s.color}"></span>
+         ${s.label}
+       </span>`).join("");
+  }
+
+  function renderChart() {
+    const svg = d3.select("#tg-chart");
+    const node = svg.node();
+    if (!node) return;
+    const width = node.clientWidth || 600;
+    const height = node.clientHeight || 280;
+    const margin = { top: 12, right: 12, bottom: 38, left: 56 };
+
+    svg.selectAll("*").remove();
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+
+    const budgets = state.data.budgets;
+    const strategies = CONFIG.strategies.map(s => s.id);
+
+    // Values: rows[budget][strategy] = co2
+    const rows = budgets.map(b => {
+      const o = { budget: b };
+      for (const s of strategies) {
+        const sol = getSolution(s, state.year, b);
+        o[s] = sol ? sol.co2_captured_tonnes : 0;
+      }
+      return o;
+    });
+
+    const x0 = d3.scaleBand().domain(budgets).range([0, innerW]).padding(0.18);
+    const x1 = d3.scaleBand().domain(strategies).range([0, x0.bandwidth()]).padding(0.08);
+    const yMax = d3.max(rows, r => d3.max(strategies, s => r[s])) || 1;
+    const y = d3.scaleLinear().domain([0, yMax * 1.05]).range([innerH, 0]).nice();
+
+    const stratColor = Object.fromEntries(CONFIG.strategies.map(s => [s.id,
+      // resolve CSS variable to actual hex by reading it from a temp element
+      getComputedStyle(document.documentElement).getPropertyValue(s.color.replace("var(", "").replace(")", "").trim()) || s.color
+    ]));
+
+    // axes
+    g.append("g")
+      .attr("transform", `translate(0,${innerH})`)
+      .call(d3.axisBottom(x0).tickSize(0).tickPadding(8).tickFormat(d => "K=" + d));
+
+    g.append("g")
+      .call(d3.axisLeft(y).ticks(5).tickFormat(d => fmtTonnes(d)));
+
+    // y-axis label
+    g.append("text")
+      .attr("class", "tg-axis-label")
+      .attr("transform", `translate(${-margin.left + 14},${innerH / 2}) rotate(-90)`)
+      .attr("text-anchor", "middle")
+      .text("CO2 captured (tonnes/yr)");
+
+    // bars
+    const groups = g.selectAll(".tg-bar-group")
+      .data(rows)
+      .join("g")
+      .attr("class", "tg-bar-group")
+      .attr("transform", r => `translate(${x0(r.budget)},0)`);
+
+    groups.selectAll("rect")
+      .data(r => strategies.map(s => ({
+        strategy: s, budget: r.budget, value: r[s],
+        selected: (s === state.strategy && r.budget === state.budget),
+      })))
+      .join("rect")
+      .attr("x", d => x1(d.strategy))
+      .attr("y", d => y(d.value))
+      .attr("width", x1.bandwidth())
+      .attr("height", d => innerH - y(d.value))
+      .attr("fill", d => stratColor[d.strategy])
+      .attr("opacity", d => d.selected ? 1 : 0.55)
+      .attr("stroke", d => d.selected ? "#ffffff" : "none")
+      .attr("stroke-width", d => d.selected ? 1.5 : 0)
+      .append("title")
+      .text(d => `${CONFIG.strategies.find(s => s.id === d.strategy).label}\nK=${d.budget}\n${fmtTonnes(d.value)}`);
+
+    chartLayout = { width, height };
+  }
+
+  // ---- state change pipeline -----------------------------------------------
+  function onStateChanged() {
+    updateReadouts();
+    applyToGlobe();
+    updateCaption();
+    renderChart();
+    if (!document.getElementById("tg-fallback").hasAttribute("hidden")) {
+      renderFallbackTable();
+    }
+  }
+
+  // ---- bootstrap -----------------------------------------------------------
+  async function loadData() {
+    try {
+      const res = await fetch(CONFIG.dataPath, { cache: "no-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} loading ${CONFIG.dataPath}`);
+      return await res.json();
+    } catch (err) {
+      console.error("[TopologyGlobe] failed to load data:", err);
+      throw err;
+    }
+  }
+
+  async function start() {
+    initGlobe();
+    try {
+      state.data = await loadData();
+    } catch (err) {
+      const loading = document.getElementById("tg-loading");
+      loading.textContent = "Could not load optimisation data. See console.";
+      return;
+    }
+
+    buildControls();
+    buildChartLegend();
+    onStateChanged();
+
+    document.getElementById("tg-loading").classList.add("tg-hidden");
+
+    // Re-render chart on resize (D3 needs explicit handling).
+    let resizeT;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(renderChart, 120);
+    });
+  }
+
+  // public surface
+  const api = {
+    start,
+    get state() { return { ...state }; },
+    get dataPath() { return CONFIG.dataPath; },
+    set dataPath(p) { CONFIG.dataPath = p; },
+  };
+
+  // auto-start on DOM ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { api.start(); });
+  } else {
+    api.start();
+  }
+
+  return api;
+})();
+</script>
+</body>
+</html>

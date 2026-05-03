@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vera applet (preview) — rotation animation</title>
+<!-- Test: cd /Users/harry/aeronauty.com/aeronauty-site/public/articles/topology-instinct/figures && python3 -m http.server 8765 && open http://localhost:8765/vera-applet.html -->
+<!--
+  Faithful port of the public flight-dynamics widget at
+  https://aircraftflightmechanics.com/Dynamics/RotationAnimation/index.html
+  This is the artefact Vera saw on the open web.
+
+  The source is a Vite/React app (~922KB minified bundle) that uses Recharts
+  for the chart frame plus a hand-rolled SVG overlay for the aircraft, the
+  CG marker, the ICR marker, the velocity vector, and the CG→ICR line.
+  The aircraft itself is 69 black-stroke SVG paths originally exported from
+  Inkscape.
+
+  This port keeps:
+    - the aircraft (all 69 paths, vendored verbatim from the bundle)
+    - the sinusoidal motion math (functions ik / ak / ok / sk / nk / gre,
+      ported byte-for-byte)
+    - CG marker, ICR marker, motion-centre marker, velocity vector,
+      CG→ICR dashed line
+    - zoom controls (+, −, ⌂) with the "Zoom: X.Xx" indicator
+    - drag-to-pan, wheel-to-zoom
+    - "Animation" header + Download PNG button
+
+  This port drops:
+    - React, Recharts, Tailwind (the whole bundle)
+    - the side-panel parameter sliders (amplitude / frequency / phase
+      controls, trail toggles, axis-range fields). They're useful in the
+      tutorial context; in the article context, the animation is the point
+      and exposing every parameter would dwarf the prose.
+    - the bar / aircraft scene selector (only the aircraft scene matters here)
+    - the trail history overlays (default-off in the source on first load)
+    - the Animation Details readout panel (numerical state for ICR, theta,
+      angular velocity — useful in the tutorial, noise in the article)
+
+  Namespaced `va-` (vera-applet). All state lives on `window.VeraApplet`.
+-->
+<style>
+/* Page chrome — only used for standalone viewing.
+   The integration step lifts the .va-figure block, not this. */
+body {
+  margin: 0;
+  padding: 60px 20px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: #0a0e1a;
+  color: #e6edf6;
+}
+@media (prefers-color-scheme: light) {
+  body { background: #fafbfd; color: #1f2328; }
+}
+main { max-width: 980px; margin: 0 auto; }
+
+/* ============================================================
+   va- = vera-applet, namespaced.
+   ============================================================ */
+.va-figure {
+  width: 100%;
+  --va-fg:        #e6edf6;
+  --va-fg-dim:    #93a0b6;
+  --va-fg-faint:  #5c6a82;
+  --va-border:    #2a3447;
+  --va-rule:      #2a3447;
+  --va-surface:   #121826;
+  --va-stage:     #f8fafc;       /* the canvas itself stays light — the
+                                    aircraft is hand-drawn in black ink, so
+                                    we keep a paper-coloured stage in both
+                                    light and dark mode and let it sit on a
+                                    panel that adapts. */
+  --va-stage-fg:  #111827;       /* aircraft & overlays use this on the stage */
+  --va-stage-mute:#6b7280;
+  --va-cg:        #3b82f6;       /* CG (blue dot)            — source colour */
+  --va-icr:       #ef4444;       /* ICR (red ring)           — source colour */
+  --va-centre:    #10b981;       /* motion centre (green ×)  — source colour */
+  --va-velocity:  #8b5cf6;       /* velocity vector (purple) — source colour */
+  --va-cgicr:     #f97316;       /* CG→ICR line (orange)     — source colour */
+  --va-accent:    #22d3ee;
+}
+@media (prefers-color-scheme: light) {
+  .va-figure {
+    --va-fg:        #1f2328;
+    --va-fg-dim:    #5c6675;
+    --va-fg-faint:  #8a93a3;
+    --va-border:    #d8dde6;
+    --va-rule:      #d8dde6;
+    --va-surface:   #ffffff;
+    --va-accent:    #0e7490;
+  }
+}
+
+.va-frame {
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface);
+  padding: 16px 16px 14px;
+}
+
+.va-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--va-accent);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.va-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+.va-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--va-fg);
+  letter-spacing: -0.01em;
+}
+.va-download {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--va-fg-dim);
+  border: 1px solid var(--va-border);
+  border-radius: 4px;
+  padding: 5px 9px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.va-download:hover {
+  color: var(--va-fg);
+  border-color: var(--va-accent);
+  background: color-mix(in srgb, var(--va-accent) 12%, transparent);
+}
+
+.va-stage-wrap {
+  position: relative;
+  background: var(--va-stage);
+  border: 1px solid var(--va-border);
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  min-height: 280px;
+  cursor: grab;
+  touch-action: none;
+}
+.va-stage-wrap.va-grabbing { cursor: grabbing; }
+.va-stage-wrap svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+/* Zoom controls */
+.va-zoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 5;
+}
+.va-zoom button {
+  width: 30px; height: 30px;
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  line-height: 1;
+}
+.va-zoom button:hover { background: #f3f4f6; }
+.va-zoom button:active { background: #e5e7eb; }
+
+.va-zoom-readout {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  background: rgba(255,255,255,0.85);
+  color: #4b5563;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  z-index: 5;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+}
+
+.va-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  font-size: 10.5px;
+  color: var(--va-stage-mute);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* Legend strip below the stage */
+.va-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--va-fg-dim);
+}
+.va-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.va-legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.va-legend-ring {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--va-icr);
+  box-sizing: border-box;
+  display: inline-block;
+}
+.va-legend-x {
+  width: 10px; height: 10px;
+  display: inline-block;
+  position: relative;
+}
+.va-legend-x::before, .va-legend-x::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2px;
+  background: var(--va-centre);
+  transform-origin: 50% 50%;
+}
+.va-legend-x::before { transform: rotate( 45deg); }
+.va-legend-x::after  { transform: rotate(-45deg); }
+.va-legend-bar {
+  width: 14px; height: 2px;
+  display: inline-block;
+}
+.va-legend-bar.va-legend-dashed {
+  background-image: linear-gradient(to right, currentColor 50%, transparent 50%);
+  background-size: 4px 2px;
+  background-repeat: repeat-x;
+  height: 2px;
+}
+
+.va-caption {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--va-fg-dim);
+  border-top: 1px solid var(--va-rule);
+  padding-top: 12px;
+}
+.va-caption a {
+  color: var(--va-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--va-accent) 40%, transparent);
+  text-underline-offset: 3px;
+}
+.va-caption a:hover { text-decoration-color: currentColor; }
+.va-caption em { color: var(--va-fg); font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+  <h1 style="font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;">
+    Vera applet (preview)
+  </h1>
+  <p style="text-align:center;font-size:12px;color:#6b7280;margin-top:0;">
+    Standalone preview file. The integration step lifts the
+    <code>&lt;div class="va-figure"&gt;</code> block plus the inline
+    <code>&lt;script&gt;</code> at the bottom into the article.
+  </p>
+
+  <!-- =========================================================
+       The figure itself — lifted into beat 6 of the article.
+       ========================================================= -->
+  <div class="va-figure" id="va-figure">
+    <div class="va-frame">
+
+      <p class="va-eyebrow">Public-web flight-dynamics explainer</p>
+      <div class="va-title-row">
+        <h3 class="va-title">Animation</h3>
+        <button class="va-download" id="va-download" type="button" aria-label="Download PNG of current frame">Download PNG</button>
+      </div>
+
+      <div class="va-stage-wrap" id="va-stage-wrap">
+        <div class="va-zoom-readout" id="va-zoom-readout">Zoom: 1.0&times;</div>
+        <div class="va-zoom">
+          <button id="va-zoom-in"    type="button" title="Zoom In">+</button>
+          <button id="va-zoom-out"   type="button" title="Zoom Out">&minus;</button>
+          <button id="va-zoom-home"  type="button" title="Reset Zoom" style="font-size:13px">&#x2302;</button>
+        </div>
+        <svg id="va-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="va-arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6" />
+            </marker>
+          </defs>
+          <g id="va-scene"></g>
+        </svg>
+        <div class="va-hint">drag to pan &middot; scroll to zoom</div>
+      </div>
+
+      <div class="va-legend" aria-label="Legend">
+        <span class="va-legend-item"><span class="va-legend-dot" style="background:var(--va-cg)"></span>CG</span>
+        <span class="va-legend-item"><span class="va-legend-ring"></span>ICR</span>
+        <span class="va-legend-item"><span class="va-legend-x"></span>motion centre</span>
+        <span class="va-legend-item" style="color:var(--va-velocity)"><span class="va-legend-bar" style="background:var(--va-velocity)"></span>velocity</span>
+        <span class="va-legend-item" style="color:var(--va-cgicr)"><span class="va-legend-bar va-legend-dashed"></span>CG &rarr; ICR</span>
+      </div>
+
+      <p class="va-caption">
+        The interactive flight-dynamics explainer at
+        <a href="https://aircraftflightmechanics.com/" target="_blank" rel="noopener">aircraftflightmechanics.com</a>
+        &mdash; the kind of artefact Vera was looking for when she found me.
+        <em>Drag</em> to pan, <em>scroll</em> to zoom. The aircraft, CG, ICR
+        and velocity arrow are all the originals.
+      </p>
+
+    </div>
+  </div>
+</main>
+
+<script>
+window.VeraApplet = (function () {
+  'use strict';
+
+  // ------------------------------------------------------------------
+  // 1. Aircraft path data — vendored verbatim from the source bundle's
+  //    `wre` component. 69 paths, two stroke-widths (1 = thick @ 8.0,
+  //    0 = thin @ 4.0). All fill="none", stroke="#000".
+  //    The drawing lives inside an outer transform; see RENDER below.
+  // ------------------------------------------------------------------
+  const AIRCRAFT = [["m -1156.1805,-142.24084 -6.2512,-13.9897 c 20.5924,-4.30966 36.44,-5.79221 45.3418,0.0983 8.9019,5.89056 155.02595,111.622339 155.02595,111.622339 l 22.91729,-0.330565 c 0,0 2.76292,-0.541426 2.814,2.968888 0.0511,3.510313 -0.14238,7.525737 -0.14238,7.525737 0,0 5.83241,2.674558 -22.37712,2.830678 m -139.65344,10.039664 -55.9941,-117.307711",1],["m -688.42534,-38.676098 c 36.62599,6.995381 145.55146,14.452644 179.55326,14.212975",0],["m -1106.814,-1.1238712 0.5467,31.1784612",0],["m -1084.6966,-7.0495667 0.6476,45.0942117",0],["m -1079.7141,-9.2114494 0.6609,46.9953684",0],["m -1053.5598,-11.675516 0.4231,29.076836",0],["m -1053.3742,13.326028 -25.8279,0.336488",0],["m -695.89648,-50.104649 c 16.2344,7.791097 -3.3871,9.578852 110.33788,17.970041 4.29594,-16.36329 7.18665,-25.433409 7.18665,-25.433409",0],["m -572.04316,-55.402202 -5.48945,20.894722 c 0,0 -2.20087,4.545952 3.84324,4.45877 6.04413,-0.08718 53.14882,-0.01426 53.14882,-0.01426",0],["m -952.09874,-7.6940558 38.03898,-0.8929479",0],["m -914.38963,-28.938099 0.38087,41.16589",0],["m -764.13921,-40.091876 0.0638,4.387889 -27.7971,2.53267 c 0,0 -1.62783,0.650449 -2.06944,-3.731991",0],["m -779.22579,-38.244129 0.30474,3.63205",0],["m -515.14819,20.267954 0.0456,3.134205 4.02941,-0.05812 1.62979,-2.906985",0],["m -515.72279,-27.875357 -0.0365,-2.507368 3.02205,-0.04359 0.0584,4.011791",0],["m -1065.407,-24.853991 -65.8051,-110.057899",0],["m -1152.2253,-135.11629 25.821,-0.37244",0],["m -1133.1188,-142.67838 71.1184,114.243059 0.1722,0.323749 3.2582,2.656926",0],["m -1109.9821,-0.24240921 0.9355,29.01646321 c 24.93,10.925426 65.7044,13.650559 84.2243,13.383423 30.70279,5.696779 320.3198,10.01383 373.79957,11.263414 5.38082,0.125726 12.62086,2.970197 12.62086,2.970197 l 1.28043,-4.337303 c 0,0 7.63494,-4.688656 15.63548,-26.121171 12.96966,-0.18708 16.62132,-0.23975 16.62132,-0.23975 l -0.10033,-6.895268 c 0,0 99.42493,2.517647 126.35702,1.126015 26.9321,-1.391631 57.44475,-6.535905 70.21187,-11.9866418 -28.92117,-14.1286276 -69.68239,-28.3372632 -101.16733,-32.5032442 l -55.45168,-27.679666 c 0,0 -21.8956,-11.388289 -48.26125,-11.717319 -26.36564,-0.32904 -29.86525,3.977486 -83.14889,14.322147 -53.28364,10.34467 -127.34037,14.395917 -147.96359,15.611727 -56.02376,3.302797 -84.22353,7.208613 -151.02012,9.976285 0.58751,-0.01329 -50.84106,-1.084719 -67.44816,-0.727576 -16.6072,0.357143 -44.4643,3.571429 -44.4643,7.142857 0,3.571429 0.1785,7.142858 0.1785,7.142858 z",1],["m -625.484,-30.910416 c -39.88914,0.575371 -199.21356,5.510001 -238.37491,7.138885 -39.16136,1.628886 -217.53769,7.941191 -246.22409,23.88612581",0],["m -1048.75,-24.959248 -9.1071,-13.214286",0],["m -1038.0357,-25.13782 -9.8214,-13.392857 -13.75,-0.178571 c 0,0 -1.0715,-2.5 1.4285,-2.5 2.5,0 48.9286,0.714285 48.9286,0.714285 0,0 34.46428,-4.464285 49.82143,-3.928571",0],["m -997.85714,-42.102105 9.82142,-21.25",0],["M -990.53572,-57.994963 -1105.1786,-142.28068",0],["m -1156.4286,-142.28068 h 58.3929",0],["m -1114.4643,-141.92353 13.2143,13.21428 h 22.3214",0],["m -1130.7143,-139.42353 h -13.5714 l 0.1786,-2.67858",0],["m -1144.1071,-139.60211 c -3.3353,0.74492 -8.6021,0.47072 -10.8675,0.25254 -6.575,-0.0396 -3.2128,-3.74103 -0.5611,-3.10968",0],["m -1020.3571,-74.602105 -2.2322,2.232142 12.4107,9.553572 2.5,-2.678572 z",0],["m -1005.8929,-16.209248 10.53576,32.5",0],["m -1010.7143,15.397895 12.85716,-5.178572",0],["M -998.03572,8.7907518 -611.42857,7.7193233",0],["m -509.64286,-24.780677 v 45",0],["M -509.82143,-15.494962 -552.5,-15.316391",0],["m -560.53572,-26.38782 c -5.53571,2.142857 -6.96428,2.857143 -6.96428,2.857143 0,0 22.85714,4.642858 39.82142,5.000001 16.96429,0.357142 17.85715,-5.714286 17.85715,-5.714286",0],["m -550.89286,-20.673534 -7.14286,19.6428573",0],["m -555.17857,-1.0306767 c 3.03571,-4.6428572 9.28571,-7.5000001 13.21428,-0.3571429",0],["M -592.5,0.21932325 -609.10714,17.005038 c 0,0 9.10714,2.857142 30.35714,-1.964286 21.25,-4.821429 61.07143,-14.64285732 61.07143,-14.64285732 0,0 -57.32143,-2.85714288 -74.82143,-0.17857143 z",0],["M -530.71429,-0.1378196 -595,16.290752 h -13.21429",0],["m -557.14286,19.86218 v -9.821428 l 47.32143,-0.5357144",0],["m -557.32143,16.826466 h -30.89286",0],["M -952.57385,-45.168559 V 17.965975",0],["m -929.46661,-27.364621 0.12627,6.944799",0],["m -939.44187,-32.289115 c 0,0 1.51523,4.040611 4.29315,4.671956",1],["m -939.18933,-44.916022 -0.25254,12.626907",0],["m -620.10739,-30.773886 8.9651,23.6123159 -0.37881,15.1522882 3.283,2.6516509 -0.25254,5.682108",0],["m -608.11183,10.768638 h 4.79822",0],["m -612.53122,13.357154 a 3.093595,1.9571724 0 1 1 -6.18719,0 3.093595,1.9571724 0 1 1 6.18719,0 z",0],["m -665.18542,29.267056 a 2.714785,2.714785 0 1 1 -5.42957,0 2.714785,2.714785 0 1 1 5.42957,0 z",0],["m -679.20134,36.527527 a 4.6719556,4.6719556 0 1 1 -9.34391,0 4.6719556,4.6719556 0 1 1 9.34391,0 z",0],["M -762.85714,-26.923534 V 12.005038",0],["m -701.17214,-48.830363 c 1.76777,8.586297 29.67323,94.322995 29.67323,94.322995 l -0.375,7.185915",0],["m -948.33454,18.415033 c 36.18713,-7.907684 69.68288,-7.416552 106.3727,-7.736826 71.6845,-0.625752 140.13747,6.255321 158.84618,14.106298 -42.7772,0.613392 -180.81292,5.434822 -240.81292,0.791965",0],["m -1035.3571,19.147895 c 3.2142,-5 77.49996,-2.857143 97.49996,0.714286 20,3.571429 22.5,6.428571 3.92857,8.571429 -18.57143,2.142857 -85.71433,1.071428 -101.42853,-9.285715 z",0],["M -1005.1018,16.071939 V 26.67854",0],["M -958.5085,17.965975 V 28.951383",0],["m -954.46789,22.511661 c 2.02031,-1.894036 10.35407,-1.010153 11.86929,0.378807 1.51523,1.38896 1.13643,2.146574 -4.41941,1.894036 -5.55584,-0.252538 -7.44988,-2.272843 -7.44988,-2.272843 z",0],["m -947.64936,21.501508 v 3.156727",0],["m -936.15887,19.98628 v 8.838834",0],["m -928.33019,21.754047 c 0,0 162.98908,4.992116 194.55635,-6.119562",0],["m -852.37935,22.63793 c 4.29315,1.26269 4.9245,4.671955 4.9245,4.671955",0],["m -770,20.397895 c 6.42857,0 13.03571,6.071428 13.03571,6.071428",0],["m -760.53572,20.040752 c 10.17858,1.607143 11.25,3.035714 17.67858,5.892857",0],["m -735,16.11218 c 20.53571,3.75 26.07143,3.75 34.64286,8.75",0],["m -744.48243,14.935517 c -32.82995,-1.010152 -143.94674,-2.525381 -190.91883,5.050763",0],["m -874.79211,-23.197741 v 33.84011",0],["M -831.35555,-24.71297 V 10.137293",0],["m -856.60936,-32.79419 v 8.08122",0],["m -849.79083,-33.804343 c 0,-2.272843 4.29315,-3.030458 4.79822,0",0]];
+
+  // ------------------------------------------------------------------
+  // 2. Motion math — ported byte-for-byte from the source bundle.
+  //    All five functions take time `t` in seconds. Defaults below
+  //    match the source's aircraft-scene defaults (the values you'd see
+  //    landing on `?scene=aircraft` with nothing else changed).
+  // ------------------------------------------------------------------
+
+  // gre(v) — perpendicular vector. (-y, x).
+  function gre(v) { return { x: -v.y, y: v.x }; }
+
+  // ik(centre, ax, fx, px, ay, fy, py, t) — CG position vs time.
+  // Two independent sinusoids, one per axis. Source: ik in bundle.
+  function ik(c, ax, fx, px, ay, fy, py, t) {
+    return {
+      x: c.x + ax * Math.sin(2 * Math.PI * fx * t + px),
+      y: c.y + ay * Math.sin(2 * Math.PI * fy * t + py),
+    };
+  }
+
+  // ak(...) — CG velocity (analytic derivative of ik). Source: ak.
+  function ak(ax, fx, px, ay, fy, py, t) {
+    return {
+      x: 2 * Math.PI * fx * ax * Math.cos(2 * Math.PI * fx * t + px),
+      y: 2 * Math.PI * fy * ay * Math.cos(2 * Math.PI * fy * t + py),
+    };
+  }
+
+  // ok(amp, freq, t, phase) — body angle theta vs time. Source: ok.
+  function ok(amp, freq, t, phase) {
+    return amp * Math.sin(2 * Math.PI * freq * t + phase);
+  }
+
+  // sk(...) — angular velocity (derivative of ok). Source: sk.
+  function sk(amp, freq, t, phase) {
+    return 2 * Math.PI * freq * amp * Math.cos(2 * Math.PI * freq * t + phase);
+  }
+
+  // nk(cgPos, cgVel, omega) — instantaneous centre of rotation.
+  // For a planar rigid body, ICR = CG - perp(v) / omega.
+  // Returns null if omega is too small (translation-only instant).
+  // Source: nk.
+  function nk(cgPos, cgVel, omega, eps) {
+    if (eps == null) eps = 1e-6;
+    if (!isFinite(omega) || !isFinite(cgPos.x) || !isFinite(cgPos.y) ||
+        !isFinite(cgVel.x) || !isFinite(cgVel.y) || Math.abs(omega) < eps) return null;
+    const p = gre(cgVel);
+    const offset = { x: p.x / omega, y: p.y / omega };
+    if (!isFinite(offset.x) || !isFinite(offset.y)) return null;
+    return { x: cgPos.x - offset.x, y: cgPos.y - offset.y };
+  }
+
+  // ------------------------------------------------------------------
+  // 3. Parameters. The source schema lives at ~line 10000 of the bundle
+  //    and has 30+ knobs; these are the ones that matter for the aircraft
+  //    scene with default values.
+  // ------------------------------------------------------------------
+  const PARAMS = {
+    // CG sinusoid amplitudes / frequencies / phases
+    amplitudeX:   2,
+    frequencyX:   1,
+    phaseX:       0,
+    amplitudeY:   0.4,
+    frequencyY:   0.5,
+    phaseY:       Math.PI / 2,
+    // Body rotation sinusoid
+    amplitudeRot: 6 * Math.PI / 180,
+    frequencyRot: 2,
+    phaseRot:     0,
+    // Geometry
+    aircraftScale: 5,
+    centerX: 0,
+    centerY: 0,
+    // Playback
+    isPlaying: true,
+    speedMultiplier: 1,
+    // World-frame view extents (logical units; 1 unit ≈ 1 wing semispan)
+    xMin: -8, xMax: 8,
+    yMin: -6, yMax: 6,
+    // Overlay toggles (all ON by default in the source)
+    showCG: true,
+    showICR: true,
+    showCenter: true,
+    showCGToICR: true,
+    showVelocity: true,
+  };
+
+  // ------------------------------------------------------------------
+  // 4. Renderer.
+  // ------------------------------------------------------------------
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const wrap     = document.getElementById('va-stage-wrap');
+  const svg      = document.getElementById('va-svg');
+  const sceneG   = document.getElementById('va-scene');
+  const readout  = document.getElementById('va-zoom-readout');
+
+  // Pan + zoom state. The source uses three numbers — `zoom`, `panX`, `panY`
+  // — that adjust the world-frame view extents around their midpoint.
+  // We mirror that behaviour exactly so the controls feel identical.
+  const VIEW = { zoom: 1, panX: 0, panY: 0 };
+
+  // SVG canvas pixel size (set on resize).
+  let W = 800, H = 450;
+
+  function setViewBox() {
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  }
+
+  function resize() {
+    const r = wrap.getBoundingClientRect();
+    W = Math.max(120, Math.round(r.width));
+    H = Math.max(120, Math.round(r.height));
+    setViewBox();
+  }
+
+  // Translate world-frame (x,y) into SVG-pixel (x,y) given the current
+  // view state. The source does this identically — see `Y` extent calc
+  // and `ne` projector in the bundle.
+  function worldToSvg() {
+    const ix = PARAMS.xMax - PARAMS.xMin;
+    const iy = PARAMS.yMax - PARAMS.yMin;
+    const w = ix / VIEW.zoom;
+    const h = iy / VIEW.zoom;
+    const cx = (PARAMS.xMin + PARAMS.xMax) / 2 + VIEW.panX;
+    const cy = (PARAMS.yMin + PARAMS.yMax) / 2 + VIEW.panY;
+    const xMin = cx - w / 2, xMax = cx + w / 2;
+    const yMin = cy - h / 2, yMax = cy + h / 2;
+    const xRange = xMax - xMin, yRange = yMax - yMin;
+    return function (p) {
+      return {
+        x: ((p.x - xMin) / xRange) * W,
+        y: H - ((p.y - yMin) / yRange) * H,
+      };
+    };
+  }
+
+  // Build a fresh SVG element with attributes.
+  function el(tag, attrs) {
+    const e = document.createElementNS(SVG_NS, tag);
+    if (attrs) for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+    return e;
+  }
+
+  // Build the aircraft as a re-usable <g> tree we render once and then
+  // reposition per frame via its outer transform.
+  function buildAircraft() {
+    // Outer group — its `transform` attribute is the moving part.
+    const outer = el('g', { id: 'va-aircraft', 'data-role': 'aircraft' });
+    // Inner static group: the source has a fixed inner matrix that flips +
+    // scales the Inkscape coordinate system.
+    const inner = el('g', {
+      transform: 'matrix(-0.69843263,0,0,0.69832227,-282.83349,112.78836)',
+    });
+    AIRCRAFT.forEach(function (entry) {
+      const d = entry[0], thick = entry[1];
+      const path = el('path', {
+        d: d,
+        fill: 'none',
+        stroke: 'var(--va-stage-fg)',
+        'stroke-width': thick ? 8 : 4,
+        'stroke-linecap': 'butt',
+        'stroke-miterlimit': 4,
+      });
+      inner.appendChild(path);
+    });
+    outer.appendChild(inner);
+    return outer;
+  }
+
+  // Build all overlay elements (CG dot, ICR ring, motion centre ×,
+  // velocity arrow, CG→ICR dashed line). They're created once and updated
+  // each frame via their attributes.
+  let aircraft, cgDot, icrRing, centreA, centreB, velLine, cgicrLine;
+  function buildScene() {
+    sceneG.innerHTML = '';
+    aircraft = buildAircraft();
+    sceneG.appendChild(aircraft);
+
+    // CG → ICR dashed line
+    cgicrLine = el('line', {
+      stroke: 'var(--va-cgicr)',
+      'stroke-width': 1,
+      'stroke-dasharray': '3 3',
+      visibility: 'hidden',
+    });
+    sceneG.appendChild(cgicrLine);
+
+    // CG (filled blue dot)
+    cgDot = el('circle', {
+      r: 4,
+      fill: 'var(--va-cg)',
+      stroke: '#1e40af',
+      'stroke-width': 1,
+    });
+    sceneG.appendChild(cgDot);
+
+    // Motion centre (green ×)
+    centreA = el('line', { stroke: 'var(--va-centre)', 'stroke-width': 2 });
+    centreB = el('line', { stroke: 'var(--va-centre)', 'stroke-width': 2 });
+    sceneG.appendChild(centreA);
+    sceneG.appendChild(centreB);
+
+    // ICR (red ring)
+    icrRing = el('circle', {
+      r: 4,
+      fill: 'none',
+      stroke: 'var(--va-icr)',
+      'stroke-width': 2,
+      visibility: 'hidden',
+    });
+    sceneG.appendChild(icrRing);
+
+    // Velocity vector (purple arrow)
+    velLine = el('line', {
+      stroke: 'var(--va-velocity)',
+      'stroke-width': 2,
+      'marker-end': 'url(#va-arrowhead)',
+    });
+    sceneG.appendChild(velLine);
+  }
+
+  // Per-frame update.
+  function update(time) {
+    const toSvg = worldToSvg();
+
+    // Body angle + angular velocity at this instant.
+    const theta = ok(PARAMS.amplitudeRot, PARAMS.frequencyRot, time, PARAMS.phaseRot);
+    const omega = sk(PARAMS.amplitudeRot, PARAMS.frequencyRot, time, PARAMS.phaseRot);
+
+    // CG position + velocity at this instant.
+    const cgWorld = ik(
+      { x: PARAMS.centerX, y: PARAMS.centerY },
+      PARAMS.amplitudeX, PARAMS.frequencyX, PARAMS.phaseX,
+      PARAMS.amplitudeY, PARAMS.frequencyY, PARAMS.phaseY,
+      time
+    );
+    const cgVel = ak(
+      PARAMS.amplitudeX, PARAMS.frequencyX, PARAMS.phaseX,
+      PARAMS.amplitudeY, PARAMS.frequencyY, PARAMS.phaseY,
+      time
+    );
+
+    // ICR — null when omega ≈ 0 (pure translation).
+    const icrWorld = nk(cgWorld, cgVel, omega);
+
+    // Project everything to SVG pixels.
+    const cgPix     = toSvg(cgWorld);
+    const centrePix = toSvg({ x: PARAMS.centerX, y: PARAMS.centerY });
+    const icrPix    = icrWorld ? toSvg(icrWorld) : null;
+    // Velocity tip: source uses a fixed scale of 2 in world units, mapped
+    // to SVG pixels with the y axis inverted (source: `O = { x: p.x +
+    // c.x*P, y: p.y - c.y*P }`). Replicate exactly.
+    const VEL_SCALE = 2;
+    const velTipPix = {
+      x: cgPix.x + cgVel.x * VEL_SCALE,
+      y: cgPix.y - cgVel.y * VEL_SCALE,
+    };
+
+    // Aircraft outer transform. The source builds:
+    //   translate(cgX, cgY) rotate(theta_deg) scale(0.02 * scale * zoomFactor)
+    //   translate(-265.235, -117.165)
+    // The 0.02 factor + (-265.235,-117.165) translation centre the
+    // Inkscape-imported drawing on the CG. We pass `zoomFactor = VIEW.zoom`
+    // so the aircraft scales with the view, just like in the source.
+    const aircraftScale = 0.02 * PARAMS.aircraftScale * VIEW.zoom;
+    const thetaDeg = theta * 180 / Math.PI;
+    aircraft.setAttribute(
+      'transform',
+      'translate(' + cgPix.x + ', ' + cgPix.y + ') ' +
+      'rotate(' + thetaDeg + ') ' +
+      'scale(' + aircraftScale + ') ' +
+      'translate(' + (-265.235) + ', ' + (-117.165) + ')'
+    );
+
+    // CG dot
+    if (PARAMS.showCG) {
+      cgDot.setAttribute('cx', cgPix.x);
+      cgDot.setAttribute('cy', cgPix.y);
+      cgDot.setAttribute('visibility', 'visible');
+    } else {
+      cgDot.setAttribute('visibility', 'hidden');
+    }
+
+    // Motion centre ×
+    if (PARAMS.showCenter) {
+      const cx = centrePix.x, cy = centrePix.y;
+      centreA.setAttribute('x1', cx - 4); centreA.setAttribute('y1', cy - 4);
+      centreA.setAttribute('x2', cx + 4); centreA.setAttribute('y2', cy + 4);
+      centreB.setAttribute('x1', cx - 4); centreB.setAttribute('y1', cy + 4);
+      centreB.setAttribute('x2', cx + 4); centreB.setAttribute('y2', cy - 4);
+      centreA.setAttribute('visibility', 'visible');
+      centreB.setAttribute('visibility', 'visible');
+    } else {
+      centreA.setAttribute('visibility', 'hidden');
+      centreB.setAttribute('visibility', 'hidden');
+    }
+
+    // ICR ring
+    if (PARAMS.showICR && icrPix) {
+      icrRing.setAttribute('cx', icrPix.x);
+      icrRing.setAttribute('cy', icrPix.y);
+      icrRing.setAttribute('visibility', 'visible');
+    } else {
+      icrRing.setAttribute('visibility', 'hidden');
+    }
+
+    // CG → ICR dashed line
+    if (PARAMS.showCGToICR && icrPix) {
+      cgicrLine.setAttribute('x1', cgPix.x);
+      cgicrLine.setAttribute('y1', cgPix.y);
+      cgicrLine.setAttribute('x2', icrPix.x);
+      cgicrLine.setAttribute('y2', icrPix.y);
+      cgicrLine.setAttribute('visibility', 'visible');
+    } else {
+      cgicrLine.setAttribute('visibility', 'hidden');
+    }
+
+    // Velocity arrow
+    if (PARAMS.showVelocity) {
+      velLine.setAttribute('x1', cgPix.x);
+      velLine.setAttribute('y1', cgPix.y);
+      velLine.setAttribute('x2', velTipPix.x);
+      velLine.setAttribute('y2', velTipPix.y);
+      velLine.setAttribute('visibility', 'visible');
+    } else {
+      velLine.setAttribute('visibility', 'hidden');
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // 5. Animation loop.
+  // ------------------------------------------------------------------
+  let t0 = 0, simTime = 0, raf = 0;
+  function loop(now) {
+    if (!t0) t0 = now;
+    const dt = (now - t0) / 1000;
+    t0 = now;
+    if (PARAMS.isPlaying) simTime += dt * PARAMS.speedMultiplier;
+    update(simTime);
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ------------------------------------------------------------------
+  // 6. UI: zoom, pan, download.
+  // ------------------------------------------------------------------
+  function setZoom(z) {
+    VIEW.zoom = Math.max(0.1, Math.min(10, z));
+    readout.textContent = 'Zoom: ' + VIEW.zoom.toFixed(1) + '×';
+  }
+  document.getElementById('va-zoom-in').addEventListener('click',  function () { setZoom(VIEW.zoom * 1.2); });
+  document.getElementById('va-zoom-out').addEventListener('click', function () { setZoom(VIEW.zoom * 0.8); });
+  document.getElementById('va-zoom-home').addEventListener('click', function () {
+    VIEW.zoom = 1; VIEW.panX = 0; VIEW.panY = 0;
+    readout.textContent = 'Zoom: 1.0×';
+  });
+
+  // Wheel zoom — mirrors the source: deltaY > 0 → 0.9×, else 1.1×.
+  wrap.addEventListener('wheel', function (ev) {
+    const factor = ev.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(VIEW.zoom * factor);
+    ev.preventDefault();
+  }, { passive: false });
+
+  // Drag pan — replicates the source's `oe` handler: pan rate scales with
+  // 1/zoom so it feels constant in world units.
+  let dragging = false, lastX = 0, lastY = 0;
+  function onDown(ev) {
+    dragging = true;
+    wrap.classList.add('va-grabbing');
+    const p = pt(ev);
+    lastX = p.x; lastY = p.y;
+    if (ev.preventDefault) ev.preventDefault();
+  }
+  function onMove(ev) {
+    if (!dragging) return;
+    const p = pt(ev);
+    const dx = p.x - lastX, dy = p.y - lastY;
+    lastX = p.x; lastY = p.y;
+    const k = 0.01 / VIEW.zoom;
+    VIEW.panX -= dx * k;
+    VIEW.panY += dy * k;
+    if (ev.preventDefault) ev.preventDefault();
+  }
+  function onUp() { dragging = false; wrap.classList.remove('va-grabbing'); }
+  function pt(ev) {
+    if (ev.touches && ev.touches[0]) return { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+    return { x: ev.clientX, y: ev.clientY };
+  }
+  wrap.addEventListener('mousedown',   onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup',   onUp);
+  wrap.addEventListener('mouseleave',  onUp);
+  wrap.addEventListener('touchstart',  onDown, { passive: false });
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('touchend',  onUp);
+
+  // Download PNG. The source uses html-to-image; we do it the smaller way:
+  // serialise the live SVG, paint it to a canvas, export the canvas.
+  document.getElementById('va-download').addEventListener('click', function () {
+    try {
+      const clone = svg.cloneNode(true);
+      // Inline the computed CSS variables so the rasterised SVG keeps the
+      // colours even out of the page context.
+      const cs = getComputedStyle(document.getElementById('va-figure'));
+      const vars = ['--va-stage-fg', '--va-cg', '--va-icr', '--va-centre', '--va-velocity', '--va-cgicr'];
+      let styleStr = '';
+      vars.forEach(function (v) { styleStr += v + ': ' + cs.getPropertyValue(v).trim() + '; '; });
+      clone.setAttribute('style', styleStr + 'background:' + cs.getPropertyValue('--va-stage').trim());
+      clone.setAttribute('xmlns', SVG_NS);
+      const data = new XMLSerializer().serializeToString(clone);
+      const svgBlob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = function () {
+        const c = document.createElement('canvas');
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        c.width = W * dpr; c.height = H * dpr;
+        const cx = c.getContext('2d');
+        cx.fillStyle = cs.getPropertyValue('--va-stage').trim() || '#ffffff';
+        cx.fillRect(0, 0, c.width, c.height);
+        cx.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (blob) {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'rotation-animation.png';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        }, 'image/png');
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); };
+      img.src = url;
+    } catch (e) { /* no-op — best-effort export */ }
+  });
+
+  // ------------------------------------------------------------------
+  // 7. Boot.
+  // ------------------------------------------------------------------
+  buildScene();
+  resize();
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(function () { resize(); }).observe(wrap);
+  } else {
+    window.addEventListener('resize', resize);
+  }
+  raf = requestAnimationFrame(loop);
+
+  // Public API — handy for debugging or wiring custom behaviour later.
+  return {
+    params: PARAMS,
+    view: VIEW,
+    pause: function () { PARAMS.isPlaying = false; },
+    play:  function () { PARAMS.isPlaying = true;  },
+    setTime: function (t) { simTime = t; update(simTime); },
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+{
+  "metadata": {
+    "title": "Airport upgrade sequencing — MILP demo data (FIXTURE)",
+    "year_baseline": 2023,
+    "co2_unit": "tonnes_per_year",
+    "data_source": "Hand-crafted fixture with real coordinates for 8 hubs; CO2 numbers fabricated for sanity-check rendering only.",
+    "data_source_caveat": "FIXTURE FILE — NOT REAL DATA. Replace with the agent-generated dataset before publishing.",
+    "growth_assumptions": {
+      "2030": "1.10× 2023 traffic on every route (uniform growth, simplification)",
+      "2040": "1.30× 2023 traffic",
+      "2050": "1.50× 2023 traffic"
+    },
+    "milp_formulation": "max sum_ij R_ij * CO2_ij  s.t.  R_ij <= A_i,  R_ij <= A_j,  sum_i A_i <= K (per stage),  A_i^(t+1) >= A_i^(t) (monotonic).",
+    "solver": "PuLP (CBC backend)"
+  },
+  "airports": [
+    { "id": "JFK", "iata": "JFK", "icao": "KJFK", "name": "John F Kennedy Intl",        "city": "New York",   "country": "United States",        "lat": 40.6398, "lon": -73.7789, "route_count": 218, "annual_co2_outbound_tonnes": 4523000 },
+    { "id": "LHR", "iata": "LHR", "icao": "EGLL", "name": "London Heathrow",            "city": "London",     "country": "United Kingdom",       "lat": 51.4700, "lon":  -0.4543, "route_count": 204, "annual_co2_outbound_tonnes": 4310000 },
+    { "id": "CDG", "iata": "CDG", "icao": "LFPG", "name": "Paris Charles de Gaulle",    "city": "Paris",      "country": "France",               "lat": 49.0097, "lon":   2.5479, "route_count": 192, "annual_co2_outbound_tonnes": 3915000 },
+    { "id": "FRA", "iata": "FRA", "icao": "EDDF", "name": "Frankfurt am Main",          "city": "Frankfurt",  "country": "Germany",              "lat": 50.0379, "lon":   8.5622, "route_count": 188, "annual_co2_outbound_tonnes": 3782000 },
+    { "id": "DXB", "iata": "DXB", "icao": "OMDB", "name": "Dubai Intl",                 "city": "Dubai",      "country": "United Arab Emirates", "lat": 25.2532, "lon":  55.3657, "route_count": 245, "annual_co2_outbound_tonnes": 5102000 },
+    { "id": "SIN", "iata": "SIN", "icao": "WSSS", "name": "Singapore Changi",           "city": "Singapore",  "country": "Singapore",            "lat":  1.3644, "lon": 103.9915, "route_count": 178, "annual_co2_outbound_tonnes": 3450000 },
+    { "id": "HND", "iata": "HND", "icao": "RJTT", "name": "Tokyo Haneda",               "city": "Tokyo",      "country": "Japan",                "lat": 35.5494, "lon": 139.7798, "route_count": 165, "annual_co2_outbound_tonnes": 3190000 },
+    { "id": "LAX", "iata": "LAX", "icao": "KLAX", "name": "Los Angeles Intl",           "city": "Los Angeles","country": "United States",        "lat": 33.9416, "lon":-118.4085, "route_count": 210, "annual_co2_outbound_tonnes": 4380000 }
+  ],
+  "routes": [
+    { "id":  0, "src": "JFK", "dst": "LHR", "frequency_per_year_2023": 2185, "distance_km": 5540, "annual_co2_tonnes_2023": 425000 },
+    { "id":  1, "src": "JFK", "dst": "CDG", "frequency_per_year_2023": 1820, "distance_km": 5836, "annual_co2_tonnes_2023": 372000 },
+    { "id":  2, "src": "JFK", "dst": "FRA", "frequency_per_year_2023": 1610, "distance_km": 6193, "annual_co2_tonnes_2023": 348000 },
+    { "id":  3, "src": "JFK", "dst": "LAX", "frequency_per_year_2023": 4210, "distance_km": 3974, "annual_co2_tonnes_2023": 612000 },
+    { "id":  4, "src": "JFK", "dst": "DXB", "frequency_per_year_2023":  920, "distance_km":11003, "annual_co2_tonnes_2023": 295000 },
+    { "id":  5, "src": "LHR", "dst": "CDG", "frequency_per_year_2023": 3340, "distance_km":  344, "annual_co2_tonnes_2023":  92000 },
+    { "id":  6, "src": "LHR", "dst": "FRA", "frequency_per_year_2023": 2980, "distance_km":  656, "annual_co2_tonnes_2023": 138000 },
+    { "id":  7, "src": "LHR", "dst": "DXB", "frequency_per_year_2023": 2520, "distance_km": 5494, "annual_co2_tonnes_2023": 488000 },
+    { "id":  8, "src": "LHR", "dst": "SIN", "frequency_per_year_2023": 1640, "distance_km":10860, "annual_co2_tonnes_2023": 510000 },
+    { "id":  9, "src": "LHR", "dst": "LAX", "frequency_per_year_2023": 1910, "distance_km": 8757, "annual_co2_tonnes_2023": 482000 },
+    { "id": 10, "src": "CDG", "dst": "FRA", "frequency_per_year_2023": 2210, "distance_km":  450, "annual_co2_tonnes_2023":  82000 },
+    { "id": 11, "src": "CDG", "dst": "DXB", "frequency_per_year_2023": 1780, "distance_km": 5247, "annual_co2_tonnes_2023": 322000 },
+    { "id": 12, "src": "FRA", "dst": "DXB", "frequency_per_year_2023": 1980, "distance_km": 4847, "annual_co2_tonnes_2023": 338000 },
+    { "id": 13, "src": "FRA", "dst": "SIN", "frequency_per_year_2023": 1120, "distance_km":10288, "annual_co2_tonnes_2023": 386000 },
+    { "id": 14, "src": "DXB", "dst": "SIN", "frequency_per_year_2023": 2640, "distance_km": 5839, "annual_co2_tonnes_2023": 462000 },
+    { "id": 15, "src": "DXB", "dst": "HND", "frequency_per_year_2023":  890, "distance_km": 7950, "annual_co2_tonnes_2023": 215000 },
+    { "id": 16, "src": "SIN", "dst": "HND", "frequency_per_year_2023": 1740, "distance_km": 5310, "annual_co2_tonnes_2023": 265000 },
+    { "id": 17, "src": "SIN", "dst": "LAX", "frequency_per_year_2023":  720, "distance_km":14114, "annual_co2_tonnes_2023": 305000 },
+    { "id": 18, "src": "HND", "dst": "LAX", "frequency_per_year_2023": 1560, "distance_km": 8815, "annual_co2_tonnes_2023": 408000 },
+    { "id": 19, "src": "LAX", "dst": "CDG", "frequency_per_year_2023":  870, "distance_km": 9112, "annual_co2_tonnes_2023": 248000 }
+  ],
+  "budgets": [5, 10, 15, 20, 30, 50, 75, 100],
+  "years": [2030, 2040, 2050],
+  "solutions": {
+    "optimal": {
+      "2030": {
+        "5":   { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA"],                                     "upgraded_route_ids": [0,1,2,5,6,7,11,12], "co2_captured_tonnes": 2810000 },
+        "10":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "15":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "20":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "30":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "50":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "75":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "100": { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 }
+      },
+      "2040": {
+        "5":   { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA"],                                     "upgraded_route_ids": [0,1,2,5,6,7,11,12], "co2_captured_tonnes": 3320000 },
+        "10":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "15":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "20":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "30":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "50":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "75":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "100": { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 }
+      },
+      "2050": {
+        "5":   { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA"],                                     "upgraded_route_ids": [0,1,2,5,6,7,11,12], "co2_captured_tonnes": 3830000 },
+        "10":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "15":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "20":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "30":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "50":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "75":  { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "100": { "upgraded_airports": ["JFK","LHR","DXB","CDG","FRA","SIN","LAX","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 }
+      }
+    },
+    "greedy_traffic": {
+      "2030": {
+        "5":   { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG"],                                     "upgraded_route_ids": [0,1,3,4,5,7,9,11,19], "co2_captured_tonnes": 2418000 },
+        "10":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "15":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "20":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "30":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "50":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "75":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "100": { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 }
+      },
+      "2040": {
+        "5":   { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG"],                                     "upgraded_route_ids": [0,1,3,4,5,7,9,11,19], "co2_captured_tonnes": 2854000 },
+        "10":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "15":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "20":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "30":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "50":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "75":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "100": { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 }
+      },
+      "2050": {
+        "5":   { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG"],                                     "upgraded_route_ids": [0,1,3,4,5,7,9,11,19], "co2_captured_tonnes": 3290000 },
+        "10":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "15":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "20":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "30":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "50":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "75":  { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "100": { "upgraded_airports": ["DXB","JFK","LAX","LHR","CDG","FRA","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 }
+      }
+    },
+    "greedy_myopic": {
+      "2030": {
+        "5":   { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX"],                                     "upgraded_route_ids": [0,2,3,4,6,7,9,12], "co2_captured_tonnes": 2615000 },
+        "10":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "15":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "20":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "30":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "50":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "75":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "100": { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 }
+      },
+      "2040": {
+        "5":   { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX"],                                     "upgraded_route_ids": [0,2,3,4,6,7,9,12], "co2_captured_tonnes": 3088000 },
+        "10":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "15":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "20":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "30":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "50":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "75":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "100": { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 }
+      },
+      "2050": {
+        "5":   { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX"],                                     "upgraded_route_ids": [0,2,3,4,6,7,9,12], "co2_captured_tonnes": 3562000 },
+        "10":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "15":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "20":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "30":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "50":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "75":  { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "100": { "upgraded_airports": ["JFK","LHR","DXB","FRA","LAX","CDG","SIN","HND"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 }
+      }
+    },
+    "biggest_cities": {
+      "2030": {
+        "5":   { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR"],                                     "upgraded_route_ids": [3,8,9,16,17,18], "co2_captured_tonnes": 1980000 },
+        "10":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "15":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "20":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "30":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "50":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "75":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 },
+        "100": { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 7321000 }
+      },
+      "2040": {
+        "5":   { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR"],                                     "upgraded_route_ids": [3,8,9,16,17,18], "co2_captured_tonnes": 2338000 },
+        "10":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "15":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "20":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "30":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "50":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "75":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 },
+        "100": { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 8651000 }
+      },
+      "2050": {
+        "5":   { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR"],                                     "upgraded_route_ids": [3,8,9,16,17,18], "co2_captured_tonnes": 2697000 },
+        "10":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "15":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "20":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "30":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "50":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "75":  { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 },
+        "100": { "upgraded_airports": ["JFK","LAX","HND","SIN","LHR","CDG","FRA","DXB"],                   "upgraded_route_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], "co2_captured_tonnes": 9982000 }
+      }
+    }
+  }
+}
