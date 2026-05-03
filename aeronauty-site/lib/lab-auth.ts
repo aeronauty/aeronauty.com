@@ -25,12 +25,17 @@ function getSecret(): Uint8Array {
 export function isAllowedLabEmail(email: string): boolean {
   const normalized = normalizeEmail(email);
   const rawAllowlist = process.env.AERONAUTY_LAB_ALLOWED_EMAILS ?? "";
-  const allowedEmails = rawAllowlist
+  const allowlist = rawAllowlist
     .split(",")
     .map((item) => normalizeEmail(item))
     .filter(Boolean);
 
-  return allowedEmails.includes(normalized);
+  return allowlist.some((entry) => {
+    if (entry.startsWith("*@")) {
+      return normalized.endsWith(entry.slice(1));
+    }
+    return entry === normalized;
+  });
 }
 
 export async function createLabMagicLinkToken(email: string): Promise<string> {
