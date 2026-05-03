@@ -6,6 +6,7 @@ import {
   verifyLabMagicLinkToken,
 } from "@/lib/lab-auth";
 import { consumeMagicLinkClick, hasMagicLinkStore } from "@/lib/lab-magic-link-store";
+import { recordActivityEvent } from "@/lib/activity-store";
 
 function getTokenId(token: string): string | null {
   try {
@@ -39,6 +40,15 @@ export async function GET(req: NextRequest) {
     sameSite: "lax",
     path: "/",
     maxAge: getLabSessionMaxAge(),
+  });
+
+  await recordActivityEvent(req, {
+    eventType: "lab_login",
+    path: "/lab",
+    email,
+    authMethod: "magic_link",
+  }).catch((error) => {
+    console.debug("Activity logging failed:", error);
   });
 
   return response;

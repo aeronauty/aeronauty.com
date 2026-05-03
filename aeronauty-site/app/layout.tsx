@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import Analytics from "@/components/Analytics";
 
@@ -15,11 +16,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <Analytics />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
         {children}
       </body>
     </html>
   );
 }
-
 

@@ -35,6 +35,12 @@ export default function LabPage() {
               Work-in-progress tools and demos can be added here as they become useful.
             </p>
           </div>
+          <Link href="/lab/activity" className="rounded-lg border border-gray-800 bg-gray-900/70 p-5 transition hover:border-blue-400 hover:bg-gray-900">
+            <h2 className="font-semibold">Activity</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-400">
+              See which private posts and demos are actually being used.
+            </p>
+          </Link>
         </div>
       </div>
     </main>
