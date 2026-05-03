@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKnownUser, getRecentActivity } from "@/lib/activity-store";
+import { getKnownUser, getRecentActivity, hasActivityStore } from "@/lib/activity-store";
 import { isAllowedLabEmail } from "@/lib/lab-auth";
 
 export async function GET(req: NextRequest) {
@@ -12,5 +12,5 @@ export async function GET(req: NextRequest) {
   const limit = Number(req.nextUrl.searchParams.get("limit") ?? 100);
   const events = await getRecentActivity(Number.isFinite(limit) ? limit : 100);
 
-  return NextResponse.json({ events });
+  return NextResponse.json({ activityStoreConfigured: hasActivityStore(), events });
 }

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKnownUser, recordActivityEvent } from "@/lib/activity-store";
+import { getKnownUser, hasActivityStore, recordActivityEvent } from "@/lib/activity-store";
 
 export async function POST(req: NextRequest) {
   const user = await getKnownUser(req);
 
   if (!user.email) {
     return NextResponse.json({ ok: true });
+  }
+
+  if (!hasActivityStore()) {
+    return NextResponse.json({ ok: true, recorded: false, reason: "activity-store-not-configured" });
   }
 
   const body = await req.json().catch(() => ({}));

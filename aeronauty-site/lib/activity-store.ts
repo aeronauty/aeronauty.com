@@ -31,6 +31,13 @@ function getRedis(): Redis | null {
   return new Redis({ url, token });
 }
 
+export function hasActivityStore(): boolean {
+  return Boolean(
+    (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) ||
+      (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+  );
+}
+
 function truncate(value: string | null, max: number): string | null {
   if (!value) return null;
   return value.slice(0, max);
