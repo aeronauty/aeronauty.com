@@ -1672,11 +1672,32 @@ main { max-width: 980px; margin: 0 auto; }
 /* Table + DAG laid out vertically; on wide screens the user gets the
    table above the graph, both full width.  */
 .fv-table-wrap {
+  position: relative;            /* anchor for the absolute-positioned demo cursor */
   border: 1px solid var(--fv-border);
   border-radius: 8px;
   overflow: hidden;
   background: var(--fv-surface-2);
   margin-bottom: 12px;
+}
+/* Auto-play demo cursor — moves between cells while explaining the
+   ancestor / dependent / different-thread colour scheme by example.
+   Hidden by default; revealed when the demo runs (after the user
+   reaches the Thread panel) and stepped aside when they hover. */
+.fv-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 12;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.55));
+  transition: transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1),
+              opacity 240ms ease;
+  will-change: transform, opacity;
+}
+.fv-cursor.fv-cursor-show { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .fv-cursor { transition: opacity 200ms ease; }
 }
 .fv-table {
   width: 100%;
@@ -1731,19 +1752,30 @@ main { max-width: 980px; margin: 0 auto; }
   box-shadow: inset 3px 0 0 var(--fv-cell-lit-fg);
   color: var(--fv-cell-lit-fg);
 }
-/* Within the active row only: cells get coloured by their lineage
-   relationship to the hovered cell. Three states:
+/* Cells get coloured by their lineage relationship to the hovered cell.
+   Three states:
      ancestor   — this cell flowed into hovered (upstream): cyan/teal.
      dependent  — hovered flowed into this cell (downstream): amber.
-     different  — no direct lineage either way: muted grey wash.
-   The hovered cell itself keeps its .fv-lit border + colour. */
-.fv-table tr.fv-row-active td.fv-cell-ancestor:not(.fv-empty):not(.fv-lit) {
-  background: color-mix(in srgb, var(--fv-cell-lit) 70%, transparent) !important;
+     different  — same row in the projection, no lineage relation: muted
+                  grey (only applied within the hovered row, otherwise
+                  every other cell would be greyed-out noise).
+   ancestor + dependent apply across all rows so cross-row lineage
+   (e.g. RANS CLα central-difference depending on CL above + below) is
+   visible. Cells in the active row use a stronger tint than cells in
+   other rows. */
+.fv-table td.fv-cell-ancestor:not(.fv-empty):not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-cell-lit) 50%, transparent) !important;
   color: var(--fv-cell-lit-fg);
 }
-.fv-table tr.fv-row-active td.fv-cell-dependent:not(.fv-empty):not(.fv-lit) {
-  background: color-mix(in srgb, var(--fv-input) 22%, transparent) !important;
+.fv-table tr.fv-row-active td.fv-cell-ancestor:not(.fv-empty):not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-cell-lit) 75%, transparent) !important;
+}
+.fv-table td.fv-cell-dependent:not(.fv-empty):not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-input) 16%, transparent) !important;
   color: var(--fv-input);
+}
+.fv-table tr.fv-row-active td.fv-cell-dependent:not(.fv-empty):not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-input) 26%, transparent) !important;
 }
 .fv-table tr.fv-row-active td.fv-cell-different:not(.fv-empty):not(.fv-lit) {
   background: color-mix(in srgb, var(--fv-fg-faint) 14%, transparent) !important;
@@ -3087,11 +3119,19 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
                     <th data-role="input">RPM</th>
                     <th data-role="derived">AVL C<sub>Lα</sub></th>
                     <th data-role="derived">RANS C<sub>L</sub></th>
+                    <th data-role="derived">RANS C<sub>Lα</sub></th>
                     <th data-role="mesh">mesh_id</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
               </table>
+              <!-- Animated demo cursor — autoplay walks the reader through
+                   ancestor / dependent / different-thread by example,
+                   then steps aside when the user hovers themselves. -->
+              <svg class="fv-cursor" id="fv-cursor" viewBox="0 0 16 16" width="22" height="22" aria-hidden="true">
+                <path d="M2 2 L14 8.6 L8.4 9.4 L9.4 14.6 L7.4 14.9 L6 9.7 L2 9.6 Z"
+                      fill="#fff" stroke="#0a0e1a" stroke-width="0.9" stroke-linejoin="round"/>
+              </svg>
             </div>
 
             <!-- The graph host stays in the DOM so the JS can write to it,
@@ -3105,7 +3145,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
             <div class="fv-ctxmenu" id="fv-ctxmenu" role="menu" aria-label="Ask about this cell"></div>
 
             <p class="fv-hint">
-              <kbd>hover</kbd> any cell &rarr; the rest of the row colour-codes by lineage relation to it &mdash; <span style="color:var(--fv-cell-lit-fg)">cyan&nbsp;ancestor</span> (this cell flowed into the hovered one), <span style="color:var(--fv-input)">amber&nbsp;dependent</span> (the hovered one flowed into this), <em>grey&nbsp;different&nbsp;thread</em> (no direct lineage either way). <kbd>right-click</kbd> any cell &rarr; ask what produced it, when, by which tool. Empty cells <em>(—)</em> have no source for that column &mdash; Thread doesn&rsquo;t invent one.
+              If you mouseover a cell, you can see the dependents and ancestors of a particular data item &mdash; here&rsquo;s it simulated <em>(you can try it yourself in a moment)</em>. <span style="color:var(--fv-cell-lit-fg)">cyan&nbsp;=&nbsp;ancestor</span>, <span style="color:var(--fv-input)">amber&nbsp;=&nbsp;dependent</span>, <em>grey&nbsp;italic&nbsp;=&nbsp;different&nbsp;thread</em>.
             </p>
           </div>
 
@@ -4827,12 +4867,17 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   // Five rows. Some have AVL only, some have RANS only, some have both.
   // The empty cells are the entire point: Thread doesn't invent values where
   // no leaf artifact exists with the requested schema for that pivot tuple.
+  // RANS CLα is computed by central differencing across α neighbours:
+  //   rans_cla[N] = (rans_cl[N+1] - rans_cl[N-1]) / (alpha[N+1] - alpha[N-1])
+  // Boundary rows (first / last) and rows whose neighbour has no RANS CL
+  // come out null — Thread doesn't invent a slope where the neighbours
+  // can't supply one.
   const ROWS = [
-    { run: '01', alpha: 0, beta: 0, rpm: 2400, avl_cla: 4.812, rans_cl: 0.031, mesh_id: 'vm-0e23' },
-    { run: '02', alpha: 2, beta: 0, rpm: null, avl_cla: 5.103, rans_cl: null,  mesh_id: null      },
-    { run: '03', alpha: 4, beta: 0, rpm: 2400, avl_cla: 5.317, rans_cl: 0.413, mesh_id: 'vm-0e23' },
-    { run: '04', alpha: 6, beta: 0, rpm: 2400, avl_cla: null,  rans_cl: 0.592, mesh_id: 'vm-0e23' },
-    { run: '05', alpha: 8, beta: 0, rpm: 2400, avl_cla: 4.984, rans_cl: 0.751, mesh_id: 'vm-0e23' },
+    { run: '01', alpha: 0, beta: 0, rpm: 2400, avl_cla: 4.812, rans_cl: 0.031, rans_cla: null,  mesh_id: 'vm-0e23' },
+    { run: '02', alpha: 2, beta: 0, rpm: null, avl_cla: 5.103, rans_cl: null,  rans_cla: 5.469, mesh_id: null      },
+    { run: '03', alpha: 4, beta: 0, rpm: 2400, avl_cla: 5.317, rans_cl: 0.413, rans_cla: null,  mesh_id: 'vm-0e23' },
+    { run: '04', alpha: 6, beta: 0, rpm: 2400, avl_cla: null,  rans_cl: 0.592, rans_cla: 4.840, mesh_id: 'vm-0e23' },
+    { run: '05', alpha: 8, beta: 0, rpm: 2400, avl_cla: 4.984, rans_cl: 0.751, rans_cla: null,  mesh_id: 'vm-0e23' },
   ];
 
   // Column metadata
@@ -4843,6 +4888,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     { id: 'rpm',      label: 'RPM',         get: (r) => r.rpm,   fmt: v => String(v) },
     { id: 'avl_cla',  label: 'AVL CLα',     get: (r) => r.avl_cla, fmt: v => v == null ? '—' : v.toFixed(3) },
     { id: 'rans_cl',  label: 'RANS CL',     get: (r) => r.rans_cl, fmt: v => v == null ? '—' : v.toFixed(3) },
+    { id: 'rans_cla', label: 'RANS CLα',    get: (r) => r.rans_cla, fmt: v => v == null ? '—' : v.toFixed(3) },
     { id: 'mesh_id',  label: 'mesh_id',     get: (r) => r.mesh_id, fmt: v => v == null ? '—' : v },
   ];
 
@@ -5099,6 +5145,33 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
         'fv-art-rans-' + rid,
       ];
     }
+    if (col === 'rans_cla') {
+      if (r.rans_cla == null) return [];
+      // Central-difference op consumes the two adjacent rows' RANS CL
+      // leaves *and* their α conditions, plus this row's flight context.
+      // The "this row depends on rows above and below" is the whole
+      // demonstration point — show those neighbours as ancestors.
+      const ids = [
+        // Own row's flight conditions
+        'fv-a-rans-' + rid,
+        N_BETA.id, N_RPM.id,
+        // Mesh chain (RANS-derived → mesh is in the lineage)
+        N_GEOM.id, N_MOP.id, N_MESH.id, 'fv-e-geom-mop', 'fv-e-mop-mesh',
+        // Tool / op for the central-difference
+        'fv-op-rans-cla-' + rid,
+        'fv-art-rans-cla-' + rid,
+      ];
+      // Adjacent rows' RANS CL leaves (the central-difference inputs).
+      if (rowIdx > 0) {
+        ids.push('fv-art-rans-' + (rowIdx - 1));
+        ids.push('fv-a-rans-'  + (rowIdx - 1));
+      }
+      if (rowIdx < ROWS.length - 1) {
+        ids.push('fv-art-rans-' + (rowIdx + 1));
+        ids.push('fv-a-rans-'  + (rowIdx + 1));
+      }
+      return ids;
+    }
     if (col === 'mesh_id') {
       if (r.mesh_id == null) return [];
       // The mesh artefact is the source of mesh_id.
@@ -5119,9 +5192,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       case 'alpha':   return ['fv-a-avl-' + rowIdx, 'fv-a-rans-' + rowIdx];
       case 'beta':    return [N_BETA.id];
       case 'rpm':     return [N_RPM.id];
-      case 'avl_cla': return ['fv-art-avl-' + rowIdx];
-      case 'rans_cl': return ['fv-art-rans-' + rowIdx];
-      case 'mesh_id': return [N_MESH.id];
+      case 'avl_cla':  return ['fv-art-avl-' + rowIdx];
+      case 'rans_cl':  return ['fv-art-rans-' + rowIdx];
+      case 'rans_cla': return ['fv-art-rans-cla-' + rowIdx];
+      case 'mesh_id':  return [N_MESH.id];
       default:        return [];   // 'run' is a row label, not part of provenance
     }
   }
@@ -5135,24 +5209,27 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       tr.classList.toggle('fv-row-active', i === hoveredRowIdx);
     });
 
-    // Within the active row, classify each other cell by its lineage
-    // relation to the hovered cell:
+    // Classify EVERY cell in the table by its lineage relation to the
+    // hovered cell:
     //   ancestor   — this cell's leaf appears in hovered's walk (upstream)
     //   dependent  — hovered's leaf appears in this cell's walk (downstream)
-    //   different  — neither (no direct lineage)
-    // Cells in other rows are left alone — the row band already shows
-    // which run is in focus.
+    //   different  — same row in the projection, no lineage relation
+    // Cross-row colouring matters: RANS CLα at row N depends on RANS CL
+    // at rows N-1 and N+1 (central differencing). Without colouring
+    // cells in other rows, that cross-row dependency is invisible.
+    // The "different" class is scoped to the active row only — flagging
+    // every disconnected cell in other rows would be visual noise.
     tbody.querySelectorAll('td').forEach(td => {
       td.classList.remove('fv-cell-ancestor');
       td.classList.remove('fv-cell-dependent');
       td.classList.remove('fv-cell-different');
-      if (+td.dataset.run !== hoveredRowIdx) return;     // other row — untouched
       if (td.classList.contains('fv-lit'))   return;     // hovered cell — keep its own style
       if (td.dataset.col === 'run')          return;     // row label
       if (td.classList.contains('fv-empty')) return;     // empty cell — already styled
       if (hoveredWalkIds.length === 0)       return;     // no walk on hover — leave default
 
-      const cellIds = cellArtifactIds(+td.dataset.run, td.dataset.col);
+      const cellRow = +td.dataset.run;
+      const cellIds = cellArtifactIds(cellRow, td.dataset.col);
       if (cellIds.length === 0) return;
 
       // Ancestor: this cell's underlying artefact is in hovered's walk.
@@ -5162,14 +5239,17 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       }
 
       // Dependent: hovered's leaf is in this cell's walk.
-      const cellWalk = provenance(+td.dataset.run, td.dataset.col);
+      const cellWalk = provenance(cellRow, td.dataset.col);
       if (hoveredLeafIds.some(id => cellWalk.includes(id))) {
         td.classList.add('fv-cell-dependent');
         return;
       }
 
-      // Otherwise — same row in the projection, no lineage relation.
-      td.classList.add('fv-cell-different');
+      // Different: only flag cells in the hovered row. Cells in other
+      // rows that have no lineage relation just stay default.
+      if (cellRow === hoveredRowIdx) {
+        td.classList.add('fv-cell-different');
+      }
     });
   }
 
@@ -5218,6 +5298,153 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     activate([]);
     tooltip.classList.remove('fv-show');
   });
+
+  // ---- Auto-play demo cursor --------------------------------------------
+  // Walks a small preset of cells with synthetic hovers so the reader can
+  // *see* the ancestor / dependent / different-thread colour scheme
+  // happen, instead of reading a static legend. RANS CLα goes first
+  // because its central-difference dependency on the rows above and
+  // below is the most surprising relation to a CFD reader.
+  (function setupDemoCursor() {
+    const cursor   = document.getElementById('fv-cursor');
+    const wrap     = document.querySelector('.fv-panel-thread .fv-table-wrap');
+    const figure   = document.getElementById('fv-figure');
+    if (!cursor || !wrap || !figure) return;
+
+    const SEQUENCE = [
+      // Row index 3 = run 04 (α=6°). RANS CLα at row 3 is non-null and
+      // depends on RANS CL at rows 2 and 4 — the cross-row central
+      // differencing showcase.
+      { row: 3, col: 'rans_cla', dwell: 2400 },
+      // AVL CLα is analytical — fewer ancestors, mesh shows up as
+      // different-thread instead of ancestor.
+      { row: 3, col: 'avl_cla',  dwell: 2200 },
+      // mesh_id is shared across all rows and is consumed by RANS CL +
+      // RANS CLα but not by AVL — clean contrast.
+      { row: 3, col: 'mesh_id',  dwell: 2200 },
+    ];
+
+    let demoTimer = null;
+    let demoIdx   = 0;
+    let demoActive = false;
+    let userTookOver = false;
+
+    function findCell(rowIdx, col) {
+      return tbody.querySelector(`td[data-run="${rowIdx}"][data-col="${col}"]`);
+    }
+    function moveCursorTo(rowIdx, col) {
+      const td = findCell(rowIdx, col);
+      if (!td) return null;
+      const wrapRect = wrap.getBoundingClientRect();
+      const tdRect   = td.getBoundingClientRect();
+      // Cursor's hot-spot (point of arrow) sits ~3px in from top-left.
+      const x = (tdRect.left - wrapRect.left) + tdRect.width  * 0.62 - 3;
+      const y = (tdRect.top  - wrapRect.top ) + tdRect.height * 0.55 - 3;
+      cursor.style.transform = `translate(${x}px, ${y}px)`;
+      cursor.classList.add('fv-cursor-show');
+      return td;
+    }
+    function syntheticHover(td, rowIdx, col) {
+      tbody.querySelectorAll('td.fv-lit').forEach(c => c.classList.remove('fv-lit'));
+      td.classList.add('fv-lit');
+      const walk = provenance(rowIdx, col);
+      activate(walk);
+      applyCellHighlight(walk, rowIdx, col);
+    }
+
+    function step() {
+      if (!demoActive || userTookOver) return;
+      const item = SEQUENCE[demoIdx];
+      const td = moveCursorTo(item.row, item.col);
+      // Apply the hover halfway through the cursor's move so the reader
+      // sees the destination light up as the cursor lands.
+      setTimeout(() => {
+        if (!demoActive || userTookOver) return;
+        if (td) syntheticHover(td, item.row, item.col);
+      }, 600);
+      demoTimer = setTimeout(() => {
+        if (!demoActive || userTookOver) return;
+        demoIdx = (demoIdx + 1) % SEQUENCE.length;
+        step();
+      }, item.dwell + 800);
+    }
+
+    function startDemo() {
+      if (demoActive || userTookOver) return;
+      demoActive = true;
+      demoIdx = 0;
+      step();
+    }
+    function stopDemo() {
+      demoActive = false;
+      if (demoTimer) { clearTimeout(demoTimer); demoTimer = null; }
+      cursor.classList.remove('fv-cursor-show');
+    }
+
+    // First user hover anywhere on the table → step the demo aside for
+    // good. Reader takes the wheel.
+    tbody.addEventListener('pointerenter', () => {
+      userTookOver = true;
+      stopDemo();
+      // Don't clear the user's hover state — let normal hover handlers run.
+    }, { capture: true, once: true });
+
+    // Reduced motion: don't animate; just place the cursor on the
+    // first cell with the highlights applied, leave it static.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const item = SEQUENCE[0];
+      const td = moveCursorTo(item.row, item.col);
+      if (td) syntheticHover(td, item.row, item.col);
+      cursor.classList.add('fv-cursor-show');
+      return;
+    }
+
+    // Trigger the demo once the Thread panel is meaningfully visible.
+    // The figure's scrolly switches panels by class; we listen for the
+    // table-wrap entering the viewport while it's the active panel.
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          // Start when the table is at least 40% visible AND the panel
+          // is showing (parent doesn't have display:none style).
+          const inThreadPanel = wrap.closest('.fv-panel-thread')?.classList.contains('fv-panel-active');
+          if (e.isIntersecting && inThreadPanel) {
+            startDemo();
+          }
+        });
+      }, { threshold: 0.4 });
+      io.observe(wrap);
+
+      // Also watch for panel state changes (the scrolly toggles
+      // .fv-panel-active on each panel as the user scrolls). When the
+      // Thread panel becomes active and the table is in view, start.
+      const stage = document.getElementById('fv-scrolly-stage');
+      if (stage) {
+        const mo = new MutationObserver(() => {
+          const threadPanel = stage.querySelector('.fv-panel-thread');
+          if (threadPanel && threadPanel.classList.contains('fv-panel-active')) {
+            // Defer to the next frame so the panel is laid out before we
+            // measure cell rects.
+            requestAnimationFrame(() => startDemo());
+          } else {
+            stopDemo();
+          }
+        });
+        mo.observe(stage, { attributes: true, subtree: true, attributeFilter: ['class'] });
+      }
+    } else {
+      // No IO — just start eagerly on load.
+      setTimeout(startDemo, 1500);
+    }
+
+    // Reposition the cursor on resize so it stays glued to the cell it
+    // last visited.
+    window.addEventListener('resize', () => {
+      if (!demoActive || userTookOver) return;
+      const item = SEQUENCE[demoIdx];
+      moveCursorTo(item.row, item.col);
+    }, { passive: true });
+  })();
 
   // ---- Scrollytelling state machine --------------------------------------
   // Each beat declares its panel state via data-state. As the reader scrolls
@@ -5283,7 +5510,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     // Deterministic pseudo-timestamps — minutes after a base, so they look
     // like a real session log.
     const base = new Date('2026-04-12T14:23:00Z').getTime();
-    const colOffset = { alpha: 0, beta: 0, rpm: 2, avl_cla: 8, rans_cl: 199, mesh_id: -315 }[col] || 0;
+    const colOffset = { alpha: 0, beta: 0, rpm: 2, avl_cla: 8, rans_cl: 199, rans_cla: 218, mesh_id: -315 }[col] || 0;
     const t = new Date(base + (rowIdx * 7 + colOffset) * 60_000);
     return t.toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC');
   }
@@ -5316,7 +5543,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
         cell:     `AVL CLα on run ${r.run}`,
         producer: 'avl@avl-pod-21d3',
         tool:     'AVL v3.4',
-        kind:     'derived (lift slope from AVL fit)',
+        kind:     'derived analytically (∂CL/∂α from AVL solution)',
         when:     when,
         hash:     _hash4(`avlcla-${rowIdx}-${r.avl_cla}`),
       };
@@ -5329,6 +5556,16 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
         kind:     'derived (CL from CFD run)',
         when:     when,
         hash:     _hash4(`ranscl-${rowIdx}-${r.rans_cl}`),
+      };
+    }
+    if (col === 'rans_cla') {
+      return {
+        cell:     `RANS CLα on run ${r.run}`,
+        producer: 'central-diff-op@stat-pod-1f04',
+        tool:     'central-difference v0.2',
+        kind:     'derived numerically (∂CL/∂α via central differencing across α neighbours)',
+        when:     when,
+        hash:     _hash4(`ranscla-${rowIdx}-${r.rans_cla}`),
       };
     }
     if (col === 'mesh_id') {
