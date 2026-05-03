@@ -140,8 +140,18 @@ main { max-width: 980px; margin: 0 auto; }
   will-change: transform, opacity;
 }
 .fv-cursor.fv-cursor-show { opacity: 1; }
+.fv-cursor.fv-cursor-click {
+  animation: fv-cursor-blip 380ms ease-out;
+}
+@keyframes fv-cursor-blip {
+  0%   { filter: drop-shadow(0 1px 3px rgba(0,0,0,0.55)); }
+  35%  { filter: drop-shadow(0 0 0 var(--fv-cell-lit-fg))
+                drop-shadow(0 0 6px var(--fv-cell-lit-fg)); }
+  100% { filter: drop-shadow(0 1px 3px rgba(0,0,0,0.55)); }
+}
 @media (prefers-reduced-motion: reduce) {
   .fv-cursor { transition: opacity 200ms ease; }
+  .fv-cursor.fv-cursor-click { animation: none; }
 }
 .fv-table {
   width: 100%;
@@ -1451,6 +1461,10 @@ window.FlatView = (function () {
       // mesh_id is shared across all rows and is consumed by RANS CL +
       // RANS CLα but not by AVL — clean contrast.
       { row: 3, col: 'mesh_id',  dwell: 2200 },
+      // Right-click demonstration: open the metadata menu on a derived
+      // cell so the reader sees you can ask Thread questions the table
+      // itself doesn't answer (producer, tool, hash, when).
+      { row: 3, col: 'rans_cl',  dwell: 4200, rightClick: true },
     ];
 
     let demoTimer = null;
@@ -1481,18 +1495,46 @@ window.FlatView = (function () {
       applyCellHighlight(walk, rowIdx, col);
     }
 
+    function fireRipple() {
+      // Tiny visual blip on the cursor to communicate "click".
+      cursor.classList.add('fv-cursor-click');
+      setTimeout(() => cursor.classList.remove('fv-cursor-click'), 380);
+    }
+
     function step() {
       if (!demoActive || userTookOver) return;
       const item = SEQUENCE[demoIdx];
       const td = moveCursorTo(item.row, item.col);
+      // Always close any prior right-click menu before the next step.
+      if (typeof hideCtxMenu === 'function') hideCtxMenu();
+
       // Apply the hover halfway through the cursor's move so the reader
       // sees the destination light up as the cursor lands.
       setTimeout(() => {
         if (!demoActive || userTookOver) return;
         if (td) syntheticHover(td, item.row, item.col);
       }, 600);
+
+      // Right-click stage: 200 ms after the hover lands, fire a click
+      // ripple and open the metadata menu programmatically. The ripple
+      // + menu give the demo two clear "click" affordances.
+      if (item.rightClick && td) {
+        setTimeout(() => {
+          if (!demoActive || userTookOver) return;
+          const rect = td.getBoundingClientRect();
+          fireRipple();
+          if (typeof showCtxMenu === 'function') {
+            // Open the menu just to the right of the cursor's hot-spot.
+            showCtxMenu(item.row, item.col,
+              rect.left + rect.width  * 0.62,
+              rect.top  + rect.height * 0.55);
+          }
+        }, 800);
+      }
+
       demoTimer = setTimeout(() => {
         if (!demoActive || userTookOver) return;
+        if (typeof hideCtxMenu === 'function') hideCtxMenu();
         demoIdx = (demoIdx + 1) % SEQUENCE.length;
         step();
       }, item.dwell + 800);

@@ -50,6 +50,7 @@ FLOW_HTML    = ROOT / "figures" / "adhd-flowchart-animated.html"
 ATOMIC_HTML  = ROOT / "figures" / "atomic-row.html"
 PV_HTML      = ROOT / "figures" / "plotly-vs-powerpoint.html"
 DBM_HTML     = ROOT / "figures" / "data-black-market.html"
+ATP_HTML     = ROOT / "figures" / "ask-the-plot.html"
 FV_FIG_HTML  = ROOT / "figures" / "flat-view.html"
 VA_FIG_HTML  = ROOT / "figures" / "vera-applet.html"
 HOMER_GIF    = ROOT / "figures" / "homer-ice-cream.gif"
@@ -182,6 +183,10 @@ def vera_applet_assets() -> tuple[str, str, str]:
 
 def plotly_vs_pp_assets() -> tuple[str, str, str]:
     return _iife_assets(PV_HTML, "PlotlyVsPP", '<div class="pv-figure"')
+
+
+def ask_the_plot_assets() -> tuple[str, str, str]:
+    return _iife_assets(ATP_HTML, "AskThePlot", '<div class="atp-figure"')
 
 
 def data_black_market_assets() -> tuple[str, str, str]:
@@ -370,6 +375,20 @@ def substitute_data_black_market(html: str, dbm_structure: str) -> str:
     )
     return re.sub(
         r"<p>\[FIGURE:\s*data-black-market\]</p>",
+        block,
+        html,
+        count=1,
+    )
+
+
+def substitute_ask_the_plot(html: str, atp_structure: str) -> str:
+    block = (
+        '<aside class="ti-ask-the-plot" aria-label="Plots are projections — Thread keeps the rest attached to the dot">\n'
+        f"{atp_structure}\n"
+        "</aside>"
+    )
+    return re.sub(
+        r"<p>\[FIGURE:\s*ask-the-plot\]</p>",
         block,
         html,
         count=1,
@@ -750,6 +769,35 @@ ARTICLE_CSS = r"""
   /* ---- structural ---- */
   .ti-page { padding: 28px 20px 96px; }
   .ti-narrow { max-width: var(--ti-content-w); margin: 0 auto; }
+  /* Cinematic figures break out wider than the prose column on desktop.
+     The interactive demos (table, plot, scrolly) want room to breathe;
+     the prose around them stays at reading width. */
+  .ti-prose .ti-flat-view,
+  .ti-prose .ti-ask-the-plot,
+  .ti-prose .ti-data-black-market {
+    margin-left: calc(50% - 50vw + 8px);
+    margin-right: calc(50% - 50vw + 8px);
+    max-width: 1240px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1100px) {
+    .ti-prose .ti-flat-view,
+    .ti-prose .ti-ask-the-plot {
+      width: min(1180px, calc(100vw - 64px));
+      max-width: none;
+      margin-left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+  @media (max-width: 720px) {
+    .ti-prose .ti-flat-view,
+    .ti-prose .ti-ask-the-plot,
+    .ti-prose .ti-data-black-market {
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+    }
+  }
   .ti-wide   { max-width: var(--ti-wide-w);   margin: 0 auto; }
 
   /* ---- masthead ---- */
@@ -1232,6 +1280,7 @@ HTML_TEMPLATE = """<!doctype html>
 <style>{dbm_css}</style>
 <style>{fv_css}</style>
 <style>{va_css}</style>
+<style>{atp_css}</style>
 </head>
 <body>
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
@@ -1267,6 +1316,7 @@ HTML_TEMPLATE = """<!doctype html>
 <script>{dbm_js}</script>
 <script>{fv_js}</script>
 <script>{va_js}</script>
+<script>{atp_js}</script>
 
 </body>
 </html>
@@ -1298,6 +1348,9 @@ def main() -> None:
     print("Extracting data-black-market assets...")
     dbm_css, dbm_js, dbm_struct = data_black_market_assets()
 
+    print("Extracting ask-the-plot assets...")
+    atp_css, atp_js, atp_struct = ask_the_plot_assets()
+
     print("Substituting placeholders...")
     prose_html = substitute_asides(prose_html)
     prose_html = substitute_excel_solari_video(prose_html)
@@ -1308,6 +1361,7 @@ def main() -> None:
     prose_html = substitute_atomic_row(prose_html, atomic_struct)
     prose_html = substitute_data_black_market(prose_html, dbm_struct)
     prose_html = substitute_flat_view(prose_html, fv_struct)
+    prose_html = substitute_ask_the_plot(prose_html, atp_struct)
     prose_html = substitute_vera_applet(prose_html, va_struct)
     prose_html = substitute_cartoon_normal_things(prose_html)
     prose_html = substitute_cartoon_ip_printer(prose_html)
@@ -1360,6 +1414,7 @@ def main() -> None:
         dbm_css=dbm_css,
         fv_css=fv_css,
         va_css=va_css,
+        atp_css=atp_css,
         prose=prose_html,
         progress_js=PROGRESS_JS,
         globe_js=globe_js,
@@ -1369,6 +1424,7 @@ def main() -> None:
         dbm_js=dbm_js,
         fv_js=fv_js,
         va_js=va_js,
+        atp_js=atp_js,
     )
 
     OUT.write_text(out)

@@ -132,7 +132,9 @@ Stored properly — rather than scattered across a directory of files with a nam
 
 **The view is a projection. The connections are the truth.** The flat table is a perfectly good thing to look at, and Thread will render it for you — without quietly throwing the structure away to do so. You can ask it questions a flat table can't answer.
 
-<we will insert a video fo this working here>
+The same trick lights up on a plot. A scatter chart is a projection of two columns; the rest — which mesh, which solver, which run, which actor, when — has nowhere to go on the page. In Thread it stays attached to the dot. *Hover the dot, ask the question, get the answer that wasn't on the chart.* And because each plot ships with a QR code and the Thread URL embedded in the PNG metadata, the chart can wander into a deck or a memo or a Slack thread and the connection back to the data still works.
+
+[FIGURE: ask-the-plot]
 
 That frees the user from the rectilinear constraints of pandas, polars, Excel, CSV. The original sin of computational workflows: the format you ship results in is the format you end up thinking about results in, and CSV in particular has been quietly limiting what people are willing to ask of their own data for thirty years.
 
