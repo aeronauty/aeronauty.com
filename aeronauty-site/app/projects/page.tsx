@@ -1,164 +1,128 @@
-'use client';
+import Link from "next/link";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteNav } from "@/components/SiteNav";
 
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+const projects = [
+  {
+    title: "Polynomial vs Power Fit Explorer",
+    description:
+      "Compare polynomial, spline, and power-law fits for aircraft fuel-efficiency data, including extrapolation behaviour.",
+    tech: ["Plotly", "Least squares", "Flight mechanics", "Data viz"],
+    link: "/apps/graph-fitting",
+    status: "Live",
+  },
+  {
+    title: "Specific Range Explorer",
+    description:
+      "An interactive analysis of why SR curves bend above the optimum altitude, fitted to published airline data.",
+    tech: ["React", "Optimization", "Performance", "KaTeX"],
+    link: "/apps/specific-range",
+    status: "Live",
+  },
+  {
+    title: "Panel Code / Kutta Demo",
+    description:
+      "A browser-based panel-method demonstration for explaining circulation, pressure, and the equal-transit-time myth.",
+    tech: ["TypeScript", "Panel methods", "Aerodynamics"],
+    link: "/apps/panel-code",
+    status: "Live",
+  },
+  {
+    title: "Wind Turbine Explainer",
+    description:
+      "A 3D turbine and accompanying physics model for blade loading, wake behaviour, and design intuition.",
+    tech: ["Three.js", "WebGL", "Education"],
+    link: "/apps/wind-turbine",
+    status: "Live",
+  },
+  {
+    title: "Blade Harmonics",
+    description:
+      "A compact mathematical visualisation of harmonic cancellation in equally spaced rotating blades.",
+    tech: ["React", "Recharts", "Maths"],
+    link: "/apps/blade-harmonics",
+    status: "Live",
+  },
+  {
+    title: "FlexCompute Foil",
+    description:
+      "Rust and WebAssembly airfoil tooling, with validation notes and the geometry problems that make solver work interesting.",
+    tech: ["Rust", "WASM", "XFOIL", "Validation"],
+    link: "/projects/flexcompute-foil",
+    status: "Write-up",
+  },
+  {
+    title: "PARADIGM",
+    description:
+      "A systems-of-systems optimisation platform for aircraft, energy, logistics, and infrastructure trade studies.",
+    tech: ["Python", "Optimization", "Geospatial", "ROMs"],
+    link: "#",
+    status: "Archive",
+  },
+  {
+    title: "Deckide",
+    description:
+      "Decision intelligence experiments for exploring multi-dimensional trade spaces without reducing them to one bad chart.",
+    tech: ["TypeScript", "React", "Data viz"],
+    link: "#",
+    status: "Private",
+  },
+];
 
 export default function ProjectsPage() {
-  const projects = [
-    {
-      title: 'Panel Code/Kutta Demo',
-      description: 'Interactive demonstration of real aerodynamics using 2D panel methods. Debunks the equal-transit-time myth with actual physics and numerical methods.',
-      tech: ['TypeScript', 'Next.js', 'Panel Methods', 'Aerodynamics', 'Education'],
-      link: '/apps/panel-code',
-      status: 'Live',
-      gradient: 'from-purple-500 to-pink-500',
-    },
-    {
-      title: 'Wind Turbine Explainer',
-      description: 'Interactive 3D wind turbine with real-time physics simulation. Explore blade harmonics, aerodynamic forces, and understand why turbines have three blades.',
-      tech: ['Three.js', 'React', 'WebGL', 'Physics Simulation', 'Education'],
-      link: '/apps/wind-turbine',
-      status: 'Live',
-      gradient: 'from-green-500 to-emerald-500',
-    },
-    {
-      title: 'Blade Harmonics',
-      description: 'Mathematical visualization showing why equally-spaced turbine blades create perfectly balanced forces through harmonic cancellation.',
-      tech: ['React', 'TypeScript', 'Recharts', 'Mathematics', 'Visualization'],
-      link: '/apps/blade-harmonics',
-      status: 'Live',
-      gradient: 'from-cyan-500 to-blue-500',
-    },
-    {
-      title: 'Specific Range Explorer',
-      description: 'Interactive analysis of why SR curves bend above the optimum altitude. Fitted to Lufthansa published data with Nelder-Mead optimization.',
-      tech: ['React', 'TypeScript', 'Recharts', 'KaTeX', 'Flight Mechanics'],
-      link: '/apps/specific-range',
-      status: 'Live',
-      gradient: 'from-orange-500 to-red-500',
-    },
-    {
-      title: 'Polynomial vs Power Fit Explorer',
-      description: 'Interactive UK DfT aircraft fuel-efficiency fitting tool. Compare polynomial, spline, and power-law fits, including extrapolation behaviour.',
-      tech: ['Plotly', 'Least-Squares', 'Levenberg–Marquardt', 'Flight Mechanics', 'Data Viz'],
-      link: '/apps/graph-fitting',
-      status: 'Live',
-      gradient: 'from-amber-500 to-rose-500',
-    },
-    {
-      title: 'PARADIGM',
-      description: 'Systems-of-systems optimization platform for future aircraft. Energy/fuel/logistics modeling with reduced-order models. Boeing Innovation Award winner.',
-      tech: ['Python', 'React', 'Reduced-Order Models', 'Geospatial', 'Optimization'],
-      link: '#',
-      status: 'Boeing',
-      gradient: 'from-blue-500 to-cyan-500',
-    },
-    {
-      title: 'Deckide',
-      description: 'Decision intelligence platform for exploring multi-dimensional trade spaces.',
-      tech: ['TypeScript', 'React', 'deck.gl', 'Data Visualization'],
-      link: '#',
-      status: 'Active',
-      gradient: 'from-slate-500 to-slate-600',
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-lg border-b border-gray-200 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold gradient-text">
-              Aeronauty
-            </Link>
-            <div className="flex space-x-8">
-              <Link href="/projects" className="text-white font-semibold">
-                Projects
-              </Link>
-              <Link href="/writing" className="text-gray-300 hover:text-white transition-colors">
-                Writing
-              </Link>
-              <Link href="/snippets" className="text-gray-300 hover:text-white transition-colors">
-                Snippets
-              </Link>
-              <Link href="/about" className="text-gray-300 hover:text-white transition-colors">
-                About
-              </Link>
-            </div>
+    <div className="min-h-screen bg-[var(--paper)] text-stone-950">
+      <SiteNav />
+      <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
+        <header className="grid gap-8 border-b border-stone-300 pb-12 lg:grid-cols-[0.7fr_1.3fr]">
+          <div>
+            <p className="eyebrow">Projects</p>
+            <h1 className="mt-4 text-5xl font-semibold tracking-tight sm:text-6xl">
+              Things that run.
+            </h1>
           </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">Projects</h1>
-          <p className="text-xl text-gray-600">
-            Interactive tools, demos, and systems that make complex things tractable
+          <p className="max-w-3xl text-lg leading-8 text-stone-600 lg:pt-10">
+            Interactive models, engineering tools, and a few archived systems. The live ones open
+            directly; the private ones are kept back until they are useful enough to survive a
+            stranger clicking around.
           </p>
-        </div>
+        </header>
 
-        {/* Projects Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
-          {projects.map((project, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              className="bg-white/80 backdrop-blur-lg border border-gray-200 rounded-xl p-8 hover:border-blue-300 hover:shadow-lg transition-all"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-2xl font-bold text-gray-900">{project.title}</h3>
-                <span className={`px-3 py-1 bg-gradient-to-r ${project.gradient} rounded-full text-white text-sm font-semibold`}>
+        <section className="mt-12 divide-y divide-stone-200 border-y border-stone-200 bg-white">
+          {projects.map((project) => (
+            <article key={project.title} className="grid gap-6 p-6 transition hover:bg-stone-50 md:grid-cols-[1fr_1.5fr_0.42fr] md:p-8">
+              <div>
+                <span className="rounded-full border border-stone-300 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
                   {project.status}
                 </span>
+                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-stone-950">
+                  {project.title}
+                </h2>
               </div>
-              
-              <p className="text-gray-600 mb-6">{project.description}</p>
-              
-              <div className="flex flex-wrap gap-2 mb-6">
-                {project.tech.map((tech, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
-                  >
-                    {tech}
-                  </span>
-                ))}
+              <div>
+                <p className="leading-7 text-stone-600">{project.description}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {project.tech.map((tech) => (
+                    <span key={tech} className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
-
-              {project.link !== '#' ? (
-                <Link
-                  href={project.link}
-                  className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-                >
-                  Open Project →
-                </Link>
-              ) : (
-                <span className="text-gray-400 text-sm">Coming soon</span>
-              )}
-            </motion.div>
+              <div className="flex items-start md:justify-end">
+                {project.link !== "#" ? (
+                  <Link href={project.link} className="button-secondary">
+                    Open
+                  </Link>
+                ) : (
+                  <span className="text-sm font-medium text-stone-400">Not public</span>
+                )}
+              </div>
+            </article>
           ))}
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-16 text-center bg-white/60 rounded-2xl border border-gray-200 p-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Interested in Collaborating?
-          </h2>
-          <p className="text-gray-600 text-lg mb-6">
-            Working on aerospace problems, optimization challenges, or building tools that make engineering decisions clearer? Let's talk.
-          </p>
-          <Link
-            href="/about"
-            className="inline-block px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:scale-105 transition-transform shadow-md"
-          >
-            Get in Touch
-          </Link>
-        </div>
+        </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }

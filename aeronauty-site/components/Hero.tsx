@@ -1,58 +1,53 @@
-'use client';
-
-import { motion } from 'framer-motion';
+import Link from "next/link";
 
 export function Hero() {
   return (
-    <div className="relative pt-32 pb-20 px-4">
-      <div className="max-w-7xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1 className="text-6xl md:text-8xl font-bold mb-6">
-            <span className="gradient-text">Aeronauty</span>
+    <section className="border-b border-stone-200 bg-[var(--paper)]">
+      <div className="mx-auto grid min-h-[78vh] max-w-7xl items-end gap-12 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:px-10">
+        <div className="max-w-3xl">
+          <p className="eyebrow">Aeronauty</p>
+          <h1 className="mt-5 text-5xl font-semibold leading-[0.98] tracking-tight text-stone-950 sm:text-7xl lg:text-8xl">
+            Useful tools for awkward engineering questions.
           </h1>
-          <p className="text-2xl md:text-3xl text-gray-700 mb-4">
-            Where I host aerospace tools, explainers, and code
+          <p className="mt-8 max-w-2xl text-lg leading-8 text-stone-600 sm:text-xl">
+            A working notebook of aerospace demos, curve-fitting arguments, solver experiments, and
+            the occasional story about choosing the right abstraction before the wrong one costs
+            everyone a week.
           </p>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Aerodynamicist • Systems Engineer • Reduced-Order Modeling • 
-            Builder of tools that make complex problems visual and tractable
-          </p>
-        </motion.div>
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Link href="/projects" className="button-primary">
+              Browse projects
+            </Link>
+            <Link href="/writing" className="button-secondary">
+              Read writing
+            </Link>
+          </div>
+        </div>
 
-        {/* Floating Elements */}
-        <div className="mt-16 flex justify-center space-x-8">
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="text-6xl"
-          >
-            🚀
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-            className="text-6xl"
-          >
-            💻
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-            className="text-6xl"
-          >
-            ⚡
-          </motion.div>
+        <div className="grid gap-3 text-sm text-stone-700">
+          <div className="border-y border-stone-300 py-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+              Current bias
+            </p>
+            <p className="mt-3 text-2xl font-semibold leading-tight text-stone-950">
+              Make the model visible, then argue with it honestly.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-stone-300 bg-stone-300">
+            {[
+              ["Flight physics", "Stability, performance, aero data"],
+              ["Interfaces", "Interactive tools over static slides"],
+              ["Optimization", "Trade spaces, routing, decisions"],
+              ["Writing", "Technical judgment in public"],
+            ].map(([title, body]) => (
+              <div key={title} className="bg-white p-5">
+                <h2 className="font-semibold text-stone-950">{title}</h2>
+                <p className="mt-2 leading-6 text-stone-600">{body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
-      {/* Gradient Orbs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
-      <div className="absolute top-20 right-1/4 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
-    </div>
+    </section>
   );
 }
-

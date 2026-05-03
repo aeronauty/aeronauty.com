@@ -3,16 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  --background: #f7f4ee;
+  --foreground: #1c1917;
+  --paper: #f7f4ee;
+  --ink: #1c1917;
+  --muted: #68615a;
+  --accent: #0f766e;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Helvetica Neue',
     sans-serif;
+  text-rendering: optimizeLegibility;
 }
 
 @layer utilities {
@@ -21,25 +26,46 @@ body {
   }
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #0ea5e9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  background-size: 200% 200%;
-  animation: gradient-shift 5s ease infinite;
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+.button-primary,
+.button-secondary {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.button-primary {
+  background: var(--ink);
+  color: white;
+}
+
+.button-primary:hover {
+  background: #0f0f0f;
+}
+
+.button-secondary {
+  background: transparent;
+  border: 1px solid #d6d0c7;
+  color: var(--ink);
+}
+
+.button-secondary:hover {
+  border-color: #a8a29e;
+  background: white;
 }
 
 /* No animations — keep things light for low-power devices */
@@ -69,4 +95,3 @@ body {
 .dashboard-grid .react-grid-item > * {
   height: 100%;
 }
-

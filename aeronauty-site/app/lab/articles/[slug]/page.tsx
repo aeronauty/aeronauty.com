@@ -15,21 +15,21 @@ export default function LabArticlePage({ params }: { params: { slug: string } })
   const src = `${article.assetPrefix}/${article.buildFile}`;
 
   return (
-    <main className="flex min-h-screen flex-col bg-gray-950 text-white">
-      <header className="flex flex-shrink-0 items-center justify-between border-b border-gray-800 px-6 py-3">
+    <main className="flex min-h-screen flex-col bg-[var(--paper)] text-stone-950">
+      <header className="flex flex-shrink-0 items-center justify-between border-b border-stone-200 bg-[var(--paper)] px-6 py-3">
         <div className="flex items-center gap-4">
           <Link
             href="/lab/writing"
-            className="text-sm font-semibold text-blue-300 hover:text-blue-200"
+            className="text-sm font-semibold text-[var(--accent)] hover:text-stone-950"
           >
-            ← Private writing
+            Private writing
           </Link>
-          <span className="text-sm text-gray-500">·</span>
-          <span className="text-sm text-gray-400">{article.title}</span>
+          <span className="text-sm text-stone-400">/</span>
+          <span className="text-sm text-stone-500">{article.title}</span>
         </div>
         <a
           href="/api/lab/logout"
-          className="text-sm text-gray-400 hover:text-white"
+          className="text-sm text-stone-500 hover:text-stone-950"
         >
           Sign out
         </a>
