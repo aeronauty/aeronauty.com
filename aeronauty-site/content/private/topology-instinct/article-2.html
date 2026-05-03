@@ -4930,14 +4930,16 @@ main { max-width: 980px; margin: 0 auto; }
       }, { threshold: 0.4 });
       io.observe(wrap);
 
-      // Also watch for panel state changes (the scrolly toggles
-      // .fv-panel-active on each panel as the user scrolls). When the
-      // Thread panel becomes active and the table is in view, start.
+      // Also watch for panel state changes — the scrolly toggles
+      // .fv-panel-active on each panel as the user scrolls. We watch
+      // ONLY the Thread panel's own class attribute (no subtree), so
+      // table-cell class changes from applyCellHighlight don't bounce
+      // the observer back into startDemo and cause an infinite loop.
       const stage = document.getElementById('fv-scrolly-stage');
-      if (stage) {
+      const threadPanel = stage ? stage.querySelector('.fv-panel-thread') : null;
+      if (threadPanel) {
         const mo = new MutationObserver(() => {
-          const threadPanel = stage.querySelector('.fv-panel-thread');
-          if (threadPanel && threadPanel.classList.contains('fv-panel-active')) {
+          if (threadPanel.classList.contains('fv-panel-active')) {
             // Defer to the next frame so the panel is laid out before we
             // measure cell rects.
             requestAnimationFrame(() => startDemo());
@@ -4945,7 +4947,7 @@ main { max-width: 980px; margin: 0 auto; }
             stopDemo();
           }
         });
-        mo.observe(stage, { attributes: true, subtree: true, attributeFilter: ['class'] });
+        mo.observe(threadPanel, { attributes: true, attributeFilter: ['class'] });
       }
     } else {
       // No IO — just start eagerly on load.
