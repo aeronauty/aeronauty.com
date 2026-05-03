@@ -38,6 +38,8 @@ That's what the swarm can't do. Each specialist is excellent at the room it live
 
 The PhD supervisor analogy is the closest thing I have to an honest description of what the orchestrator role looks like day to day. A good supervisor doesn't write the thesis. They don't run the simulations either. They notice that the result you're stuck on connects to a chapter from somebody else's group last year, send you a paper, ask the right next question, kick you off the dead end you'd have stayed on for three more weeks. Their value is almost entirely about routing and shape-recognition, and almost none of it is about doing the bounded work. Anyone who's had a good one will know what I mean. Anyone who's had a bad one will know what I mean even more clearly.
 
+[VIDEO: notebook-flip]
+
 ## Why this configuration didn't exist before
 
 A brain wired the way mine is — refusing to flatten, jumping between problems, holding loose connections across communities, pathologically uninterested in the boring grind — was previously an engineering tax. You paid it in unfinished projects, dropped tools, and a CV that read as "scattered" to anyone whose filter rewarded coherence over connection. There was no operational answer to the grind. You either ground through it yourself, badly, eventually, or you didn't, and the work didn't ship.
@@ -53,6 +55,8 @@ Neither alone would have done it. The meds without the agents would have given m
 A small social side-effect I wasn't expecting: I used to vocalise hair-brained ideas at whoever was in earshot, because saying a thing out loud is how I worked out whether it was any good. Now I can talk to people about normal things and route the half-formed pre-ideas to an AI instead. Lorraine has noticed. The improvement is, on her end, considerable.
 
 [FIGURE: cartoon-normal-things]
+
+[VIDEO: coffee-rings]
 
 ## The thing the swarm can't do
 

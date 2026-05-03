@@ -90,6 +90,13 @@ main { max-width: 980px; margin: 0 auto; }
   background: var(--fv-surface);
   padding: 24px 22px 22px;
 }
+@media (max-width: 480px) {
+  .fv-frame { padding: 16px 12px 14px; border-radius: 10px; }
+  .fv-title { font-size: 17px; }
+  .fv-subtitle { font-size: 13px; }
+  /* Bigger tap targets on phones (>= 36 px). */
+  .fv-table th, .fv-table td { padding: 11px 10px; }
+}
 
 .fv-eyebrow {
   font-size: 11px;
@@ -122,6 +129,19 @@ main { max-width: 980px; margin: 0 auto; }
   overflow: hidden;
   background: var(--fv-surface-2);
   margin-bottom: 12px;
+}
+/* On narrow viewports the 8-column table is wider than the screen.
+   Allow horizontal scroll inside the wrap and give the table a sensible
+   minimum width so columns don't crush together. The demo cursor is
+   positioned relative to .fv-table-wrap, so it scrolls with the table. */
+@media (max-width: 720px) {
+  .fv-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fv-table {
+    min-width: 640px;
+  }
 }
 /* Auto-play demo cursor — moves between cells while explaining the
    ancestor / dependent / different-thread colour scheme by example.
@@ -1478,11 +1498,22 @@ window.FlatView = (function () {
     function moveCursorTo(rowIdx, col) {
       const td = findCell(rowIdx, col);
       if (!td) return null;
+      // On narrow viewports the wrap scrolls horizontally — bring the
+      // target cell into view first so the cursor lands somewhere visible.
+      if (wrap.scrollWidth > wrap.clientWidth + 1) {
+        const tdRectEarly = td.getBoundingClientRect();
+        const wrapRectEarly = wrap.getBoundingClientRect();
+        const targetCentreInWrap = (tdRectEarly.left - wrapRectEarly.left) + wrap.scrollLeft + tdRectEarly.width / 2;
+        const desiredScroll = Math.max(0, targetCentreInWrap - wrap.clientWidth / 2);
+        wrap.scrollTo({ left: desiredScroll, behavior: 'smooth' });
+      }
       const wrapRect = wrap.getBoundingClientRect();
       const tdRect   = td.getBoundingClientRect();
       // Cursor's hot-spot (point of arrow) sits ~3px in from top-left.
-      const x = (tdRect.left - wrapRect.left) + tdRect.width  * 0.62 - 3;
-      const y = (tdRect.top  - wrapRect.top ) + tdRect.height * 0.55 - 3;
+      // Account for the wrap's horizontal scroll position so the cursor
+      // lands on the cell as it appears in the visible window.
+      const x = (tdRect.left - wrapRect.left) + wrap.scrollLeft + tdRect.width  * 0.62 - 3;
+      const y = (tdRect.top  - wrapRect.top ) + wrap.scrollTop  + tdRect.height * 0.55 - 3;
       cursor.style.transform = `translate(${x}px, ${y}px)`;
       cursor.classList.add('fv-cursor-show');
       return td;

@@ -105,6 +105,11 @@
 
   /* ---- structural ---- */
   .ti-page { padding: 28px 20px 96px; }
+  /* On phones, ease the side padding so prose has comfortable room
+     (16 px each side at iPhone 13 Pro / 390 px viewport). */
+  @media (max-width: 480px) {
+    .ti-page { padding: 20px 16px 72px; }
+  }
   .ti-narrow { max-width: var(--ti-content-w); margin: 0 auto; }
   /* Cinematic figures break out wider than the prose column on desktop.
      The interactive demos (table, plot, scrolly) want room to breathe;
@@ -198,6 +203,13 @@
   .ti-prose {
     font-size: 17px;
     line-height: 1.7;
+  }
+  /* Prose stays >= 16 px on phones; cap it so it doesn't shrink. */
+  @media (max-width: 480px) {
+    .ti-prose { font-size: 16.5px; line-height: 1.65; }
+    .ti-prose blockquote { font-size: 17px; padding-left: 16px; }
+    .ti-hero { margin: 16px 0 56px; }
+    .ti-hero-deck { font-size: 17px; }
   }
   /* Drop cap on the first paragraph after the hero (cold open). */
   .ti-prose > p:first-of-type::first-letter,
@@ -384,6 +396,9 @@
     border: 1px solid var(--ti-border);
     border-radius: 12px;
   }
+  @media (max-width: 480px) {
+    .ti-figure { padding: 12px; margin: 28px 0; }
+  }
   .ti-figure svg { width: 100%; height: auto; display: block; }
   .ti-figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 8px; }
   .ti-figcap {
@@ -407,6 +422,7 @@
     background: #000;
     border-radius: 8px;
     overflow: hidden;
+    max-width: 100%;
   }
   .ti-video-wrap iframe,
   .ti-video-wrap video {
@@ -497,11 +513,24 @@
     overflow-x: auto;
     overflow-y: hidden;
     padding: 6px 4px;
+    -webkit-overflow-scrolling: touch;
     /* KaTeX's display equations carry their own top/bottom margins, so we
        don't add extra here. */
   }
   .ti-milp-eq .katex-display {
     margin: 0.4em 0;
+  }
+  .ti-milp-eq .katex-display > .katex {
+    /* Prevent KaTeX from forcing the math to centre and clip on narrow
+       viewports — keep it left-aligned so users can scroll right to see
+       the rest. */
+    text-align: left;
+    white-space: nowrap;
+  }
+  @media (max-width: 480px) {
+    .ti-figure-milp { padding: 14px 10px 12px; }
+    .ti-milp-eq { padding: 6px 2px; }
+    .ti-milp-eq .katex-display { font-size: 0.95em; }
   }
   .ti-figure-milp .ti-figcap {
     text-align: center;
@@ -1675,6 +1704,13 @@ main { max-width: 980px; margin: 0 auto; }
   background: var(--fv-surface);
   padding: 24px 22px 22px;
 }
+@media (max-width: 480px) {
+  .fv-frame { padding: 16px 12px 14px; border-radius: 10px; }
+  .fv-title { font-size: 17px; }
+  .fv-subtitle { font-size: 13px; }
+  /* Bigger tap targets on phones (>= 36 px). */
+  .fv-table th, .fv-table td { padding: 11px 10px; }
+}
 
 .fv-eyebrow {
   font-size: 11px;
@@ -1707,6 +1743,19 @@ main { max-width: 980px; margin: 0 auto; }
   overflow: hidden;
   background: var(--fv-surface-2);
   margin-bottom: 12px;
+}
+/* On narrow viewports the 8-column table is wider than the screen.
+   Allow horizontal scroll inside the wrap and give the table a sensible
+   minimum width so columns don't crush together. The demo cursor is
+   positioned relative to .fv-table-wrap, so it scrolls with the table. */
+@media (max-width: 720px) {
+  .fv-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fv-table {
+    min-width: 640px;
+  }
 }
 /* Auto-play demo cursor — moves between cells while explaining the
    ancestor / dependent / different-thread colour scheme by example.
@@ -2495,6 +2544,11 @@ main { max-width: 980px; margin: 0 auto; }
   cursor: grab;
   touch-action: none;
 }
+@media (max-width: 480px) {
+  .va-stage-wrap { min-height: 240px; }
+  .va-frame { padding: 12px 12px 10px; }
+  .va-title { font-size: 15px; }
+}
 .va-stage-wrap.va-grabbing { cursor: grabbing; }
 .va-stage-wrap svg {
   display: block;
@@ -2528,6 +2582,10 @@ main { max-width: 980px; margin: 0 auto; }
   justify-content: center;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   line-height: 1;
+}
+@media (max-width: 480px), (pointer: coarse) {
+  .va-zoom button { width: 36px; height: 36px; font-size: 16px; }
+  .va-zoom { gap: 6px; }
 }
 .va-zoom button:hover { background: #f3f4f6; }
 .va-zoom button:active { background: #e5e7eb; }
@@ -2881,6 +2939,18 @@ main { max-width: 1200px; margin: 0 auto; }
   transform: translateY(4px);
   transition: opacity 320ms ease, transform 320ms ease;
 }
+@media (max-width: 480px) {
+  .atp-q-list li {
+    /* Stack q above a on narrow phones so neither column gets crushed. */
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 6px 0;
+  }
+  .atp-card { padding: 12px 14px; }
+  .atp-frame { padding: 16px 14px 14px; }
+  .atp-title { font-size: 18px; }
+  .atp-subtitle { font-size: 13px; margin: 0 0 14px; }
+}
 .atp-q-list li:last-child { border-bottom: 0; }
 .atp-q-list li.atp-q-shown { opacity: 1; transform: translateY(0); }
 .atp-q { color: var(--atp-fg-dim); font-style: italic; }
@@ -3052,6 +3122,12 @@ main { max-width: 1200px; margin: 0 auto; }
 <p>It&rsquo;s worth being precise about what <em>cross-domain taste</em> means here, because the phrase gets used loosely. It isn&rsquo;t being a polymath. I&rsquo;m not a polymath. I&rsquo;m someone who has been a mediocre specialist in a slightly unusual number of communities — flight dynamics, controls, optimisation, software engineering, databases, scientific viz, OR — and the <em>badly, in all of them</em> is doing the work. The thing you can do, after enough of that, is recognise when a problem in one community is structurally the same as a problem you&rsquo;ve already seen in another. You don&rsquo;t need to be the best in the room at any of them. You need to have wandered through enough rooms to recognise the furniture.</p>
 <p>That&rsquo;s what the swarm can&rsquo;t do. Each specialist is excellent at the room it lives in. Almost none of them have wandered.</p>
 <p>The PhD supervisor analogy is the closest thing I have to an honest description of what the orchestrator role looks like day to day. A good supervisor doesn&rsquo;t write the thesis. They don&rsquo;t run the simulations either. They notice that the result you&rsquo;re stuck on connects to a chapter from somebody else&rsquo;s group last year, send you a paper, ask the right next question, kick you off the dead end you&rsquo;d have stayed on for three more weeks. Their value is almost entirely about routing and shape-recognition, and almost none of it is about doing the bounded work. Anyone who&rsquo;s had a good one will know what I mean. Anyone who&rsquo;s had a bad one will know what I mean even more clearly.</p>
+<figure class="ti-figure ti-figure-video-pending" aria-labelledby="ti-video-notebook-flip-figcap">
+  <div class="ti-video-pending-box" role="img" aria-label="Top-down view of a hand flipping through a hardcover engineering notebook, pausing on a page with a small cyan-teal circled note before resuming">
+    <span class="ti-video-pending-label">Video pending &middot; notebook-flip</span>
+  </div>
+  <figcaption id="ti-video-notebook-flip-figcap" class="ti-figcap">A good supervisor pauses on the right page.</figcaption>
+</figure>
 <h2>Why this configuration didn&rsquo;t exist before</h2>
 <p>A brain wired the way mine is — refusing to flatten, jumping between problems, holding loose connections across communities, pathologically uninterested in the boring grind — was previously an engineering tax. You paid it in unfinished projects, dropped tools, and a CV that read as &ldquo;scattered&rdquo; to anyone whose filter rewarded coherence over connection. There was no operational answer to the grind. You either ground through it yourself, badly, eventually, or you didn&rsquo;t, and the work didn&rsquo;t ship.</p>
 <p>Two things changed at roughly the same time.</p>
@@ -3062,6 +3138,12 @@ main { max-width: 1200px; margin: 0 auto; }
 <figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-cartoon-normal-figcap">
   <img src="figures/cartoon-normal-things.png" alt="Two friends in casual conversation over coffee, while a phone on the table shows AI work happening separately" loading="lazy" />
   <figcaption id="ti-cartoon-normal-figcap" class="ti-figcap">Talking to humans about human things while the swarm works on the rest. The cyan accent is on the phone screen for a reason.</figcaption>
+</figure>
+<figure class="ti-figure ti-figure-video-pending" aria-labelledby="ti-video-coffee-rings-figcap">
+  <div class="ti-video-pending-box" role="img" aria-label="Top-down view of a coffee mug being set down repeatedly on a wooden table, leaving overlapping coffee rings, the last one tinted cyan-teal">
+    <span class="ti-video-pending-label">Video pending &middot; coffee-rings</span>
+  </div>
+  <figcaption id="ti-video-coffee-rings-figcap" class="ti-figcap">Normal things, observed at the right pace.</figcaption>
 </figure>
 <h2>The thing the swarm can&rsquo;t do</h2>
 <p>Use the previous article as the worked example. I told the LLM about Plotly, Paradigm, Postgres, Thread. It saw the surface pattern (refusing to flatten data) early and confidently. It did not see the deeper one (topology as first-class) until I named it. We had four beats fitted into a &ldquo;data richness&rdquo; frame before I noticed the frame was wrong.</p>
@@ -5248,11 +5330,22 @@ main { max-width: 1200px; margin: 0 auto; }
     function moveCursorTo(rowIdx, col) {
       const td = findCell(rowIdx, col);
       if (!td) return null;
+      // On narrow viewports the wrap scrolls horizontally — bring the
+      // target cell into view first so the cursor lands somewhere visible.
+      if (wrap.scrollWidth > wrap.clientWidth + 1) {
+        const tdRectEarly = td.getBoundingClientRect();
+        const wrapRectEarly = wrap.getBoundingClientRect();
+        const targetCentreInWrap = (tdRectEarly.left - wrapRectEarly.left) + wrap.scrollLeft + tdRectEarly.width / 2;
+        const desiredScroll = Math.max(0, targetCentreInWrap - wrap.clientWidth / 2);
+        wrap.scrollTo({ left: desiredScroll, behavior: 'smooth' });
+      }
       const wrapRect = wrap.getBoundingClientRect();
       const tdRect   = td.getBoundingClientRect();
       // Cursor's hot-spot (point of arrow) sits ~3px in from top-left.
-      const x = (tdRect.left - wrapRect.left) + tdRect.width  * 0.62 - 3;
-      const y = (tdRect.top  - wrapRect.top ) + tdRect.height * 0.55 - 3;
+      // Account for the wrap's horizontal scroll position so the cursor
+      // lands on the cell as it appears in the visible window.
+      const x = (tdRect.left - wrapRect.left) + wrap.scrollLeft + tdRect.width  * 0.62 - 3;
+      const y = (tdRect.top  - wrapRect.top ) + wrap.scrollTop  + tdRect.height * 0.55 - 3;
       cursor.style.transform = `translate(${x}px, ${y}px)`;
       cursor.classList.add('fv-cursor-show');
       return td;

@@ -105,6 +105,11 @@
 
   /* ---- structural ---- */
   .ti-page { padding: 28px 20px 96px; }
+  /* On phones, ease the side padding so prose has comfortable room
+     (16 px each side at iPhone 13 Pro / 390 px viewport). */
+  @media (max-width: 480px) {
+    .ti-page { padding: 20px 16px 72px; }
+  }
   .ti-narrow { max-width: var(--ti-content-w); margin: 0 auto; }
   /* Cinematic figures break out wider than the prose column on desktop.
      The interactive demos (table, plot, scrolly) want room to breathe;
@@ -198,6 +203,13 @@
   .ti-prose {
     font-size: 17px;
     line-height: 1.7;
+  }
+  /* Prose stays >= 16 px on phones; cap it so it doesn't shrink. */
+  @media (max-width: 480px) {
+    .ti-prose { font-size: 16.5px; line-height: 1.65; }
+    .ti-prose blockquote { font-size: 17px; padding-left: 16px; }
+    .ti-hero { margin: 16px 0 56px; }
+    .ti-hero-deck { font-size: 17px; }
   }
   /* Drop cap on the first paragraph after the hero (cold open). */
   .ti-prose > p:first-of-type::first-letter,
@@ -384,6 +396,9 @@
     border: 1px solid var(--ti-border);
     border-radius: 12px;
   }
+  @media (max-width: 480px) {
+    .ti-figure { padding: 12px; margin: 28px 0; }
+  }
   .ti-figure svg { width: 100%; height: auto; display: block; }
   .ti-figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 8px; }
   .ti-figcap {
@@ -407,6 +422,7 @@
     background: #000;
     border-radius: 8px;
     overflow: hidden;
+    max-width: 100%;
   }
   .ti-video-wrap iframe,
   .ti-video-wrap video {
@@ -497,11 +513,24 @@
     overflow-x: auto;
     overflow-y: hidden;
     padding: 6px 4px;
+    -webkit-overflow-scrolling: touch;
     /* KaTeX's display equations carry their own top/bottom margins, so we
        don't add extra here. */
   }
   .ti-milp-eq .katex-display {
     margin: 0.4em 0;
+  }
+  .ti-milp-eq .katex-display > .katex {
+    /* Prevent KaTeX from forcing the math to centre and clip on narrow
+       viewports — keep it left-aligned so users can scroll right to see
+       the rest. */
+    text-align: left;
+    white-space: nowrap;
+  }
+  @media (max-width: 480px) {
+    .ti-figure-milp { padding: 14px 10px 12px; }
+    .ti-milp-eq { padding: 6px 2px; }
+    .ti-milp-eq .katex-display { font-size: 0.95em; }
   }
   .ti-figure-milp .ti-figcap {
     text-align: center;
@@ -1675,6 +1704,13 @@ main { max-width: 980px; margin: 0 auto; }
   background: var(--fv-surface);
   padding: 24px 22px 22px;
 }
+@media (max-width: 480px) {
+  .fv-frame { padding: 16px 12px 14px; border-radius: 10px; }
+  .fv-title { font-size: 17px; }
+  .fv-subtitle { font-size: 13px; }
+  /* Bigger tap targets on phones (>= 36 px). */
+  .fv-table th, .fv-table td { padding: 11px 10px; }
+}
 
 .fv-eyebrow {
   font-size: 11px;
@@ -1707,6 +1743,19 @@ main { max-width: 980px; margin: 0 auto; }
   overflow: hidden;
   background: var(--fv-surface-2);
   margin-bottom: 12px;
+}
+/* On narrow viewports the 8-column table is wider than the screen.
+   Allow horizontal scroll inside the wrap and give the table a sensible
+   minimum width so columns don't crush together. The demo cursor is
+   positioned relative to .fv-table-wrap, so it scrolls with the table. */
+@media (max-width: 720px) {
+  .fv-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fv-table {
+    min-width: 640px;
+  }
 }
 /* Auto-play demo cursor — moves between cells while explaining the
    ancestor / dependent / different-thread colour scheme by example.
@@ -2495,6 +2544,11 @@ main { max-width: 980px; margin: 0 auto; }
   cursor: grab;
   touch-action: none;
 }
+@media (max-width: 480px) {
+  .va-stage-wrap { min-height: 240px; }
+  .va-frame { padding: 12px 12px 10px; }
+  .va-title { font-size: 15px; }
+}
 .va-stage-wrap.va-grabbing { cursor: grabbing; }
 .va-stage-wrap svg {
   display: block;
@@ -2528,6 +2582,10 @@ main { max-width: 980px; margin: 0 auto; }
   justify-content: center;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   line-height: 1;
+}
+@media (max-width: 480px), (pointer: coarse) {
+  .va-zoom button { width: 36px; height: 36px; font-size: 16px; }
+  .va-zoom { gap: 6px; }
 }
 .va-zoom button:hover { background: #f3f4f6; }
 .va-zoom button:active { background: #e5e7eb; }
@@ -2881,6 +2939,18 @@ main { max-width: 1200px; margin: 0 auto; }
   transform: translateY(4px);
   transition: opacity 320ms ease, transform 320ms ease;
 }
+@media (max-width: 480px) {
+  .atp-q-list li {
+    /* Stack q above a on narrow phones so neither column gets crushed. */
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 6px 0;
+  }
+  .atp-card { padding: 12px 14px; }
+  .atp-frame { padding: 16px 14px 14px; }
+  .atp-title { font-size: 18px; }
+  .atp-subtitle { font-size: 13px; margin: 0 0 14px; }
+}
 .atp-q-list li:last-child { border-bottom: 0; }
 .atp-q-list li.atp-q-shown { opacity: 1; transform: translateY(0); }
 .atp-q { color: var(--atp-fg-dim); font-style: italic; }
@@ -3184,6 +3254,12 @@ $$
 </figure>
 <p>I&rsquo;m spelling it out at all is that I don&rsquo;t want anyone reading the rest of this post to think I&rsquo;m claiming exceptionalism. My understanding of infrastructure caught up to my instinct slowly, and I had many wrong steps along the way. The instinct was visible all along; the supporting tooling was the bit that took the years.</p>
 <p>If I had to put the through-line on a t-shirt: I have spent over a decade trying not to become the join<make join a true-type font so it looks like code>. The join between two formats. The join between a database and a paper form. The join between a fleet model and an airport model. The join between an analysis tool and a slide deck. Every time the system can&rsquo;t connect two things itself, a person has to. That person is an engineer who usually has to do this in lieu of their actual job, and it&rsquo;s the mundane bullshit that you&rsquo;re not taught in an actual engineering degree<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-21">*</sup><span class="ti-aside-content" id="ti-aside-21" role="tooltip">Case-in-point, my most watched YouTube video is &ldquo;How to loop over files in a directory using Python&rdquo;<Put this link along with the quote: https://www.youtube.com/watch?v=uhz_RKgCqe4></span></span>.</p>
+<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-post-it-onslaught-figcap">
+  <div class="ti-video-wrap">
+    <video src="figures/post-it-onslaught.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Top-down stop-motion of a wooden desk being buried under an absurd flurry of yellow Post-it notes, with one cyan-teal note highlighted at the end"></video>
+  </div>
+  <figcaption id="ti-video-post-it-onslaught-figcap" class="ti-figcap">Twenty years of being the join, one Post-it at a time.</figcaption>
+</figure>
 <p>The frustrating bit is that the tooling for not-being-the-join existed for most of those twenty years. Foreign keys are not new. Graph databases are not new. Provenance tracking is not new. What was missing wasn&rsquo;t the technology; it was anyone willing to sit in the gap between the engineers who had the data and the database people who knew how to store it properly. The OR community had MILP. The CFD community had file formats. Neither group routinely picked up the other one&rsquo;s tools, so the engineer in the middle ended up doing the picking up — which is, again, the same complaint. Two systems that should be coupled aren&rsquo;t, and a human ends up holding the coupling. Every time I migrated a storage layer, it was because nobody else had decided that the engineering data deserved the database treatment that the rest of the world had been using for decades. It wasn&rsquo;t a frontier. It was just a gap nobody had stepped into.</p>
 <h2>Vera</h2>
 <p>Vera Yang is the president of Flexcompute. She somehow found me through one of my interactive flight-dynamics explainers — the Plotly-not-PowerPoint instinct, in a LinkedIn post<link: https://www.linkedin.com/posts/smithharry_flightdynamics-aislop-cursor-activity-7376916528644026368-kM7c?utm_source=share&utm_medium=member_desktop&rcm=ACoAAANMdVwBKLOcMRpXWyRH2Z7n96t-w04J4Zw> — and decided I should be at her company.</p>
@@ -3381,6 +3457,12 @@ $$
 
   </div>
 </aside>
+<figure class="ti-figure ti-figure-video-pending" aria-labelledby="ti-video-folder-tabs-cascade-figcap">
+  <div class="ti-video-pending-box" role="img" aria-label="Slow dolly along a drawer of crammed, illegibly-labelled folder tabs, accelerating into a blur and resolving on a single cyan-teal tab">
+    <span class="ti-video-pending-label">Video pending &middot; folder-tabs-cascade</span>
+  </div>
+  <figcaption id="ti-video-folder-tabs-cascade-figcap" class="ti-figcap">The data black market, viewed from inside the cabinet.</figcaption>
+</figure>
 <p>You get engineering archaeology. Someone digs through three project folders, finds a spreadsheet from a previous version, opens a screenshot whose filename references a deleted directory, and reconstructs — by hand, badly — what should have been a single query. The reconstruction job is the data-entry job. The structure was there once. It got lost in the flatten, and data became <em>stale</em>, immediately.</p>
 <p>The clean version of the failure looks like this. An engineer has a pandas DataFrame open. The columns are run IDs, lift coefficients, drag coefficients, a comment column, maybe a timestamp. Someone in another meeting asks where one row came from — what mesh, what solver settings, what geometry version, what upstream study fed it. The DataFrame doesn&rsquo;t know.</p>
 <p>If you do manage to pull all of that information into a spreadsheet or Excel, and you&rsquo;re using those to compare different simulation models, then you can end up with accidental misalignment - where an excel lookup or a Pandas where tells you that your panel method has a mesh, your CFD results have an AIC, and your data row was produced by one person where it may have been many. This may seem like a trite <em>not-really-a-problem</em> problem, but if you don&rsquo;t do these things properly (and no-one really does), then you end up in the mess that resonated when I spelled it out a couple of months ago. <link to the CFD stuck in the file era></p>
@@ -5848,11 +5930,22 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     function moveCursorTo(rowIdx, col) {
       const td = findCell(rowIdx, col);
       if (!td) return null;
+      // On narrow viewports the wrap scrolls horizontally — bring the
+      // target cell into view first so the cursor lands somewhere visible.
+      if (wrap.scrollWidth > wrap.clientWidth + 1) {
+        const tdRectEarly = td.getBoundingClientRect();
+        const wrapRectEarly = wrap.getBoundingClientRect();
+        const targetCentreInWrap = (tdRectEarly.left - wrapRectEarly.left) + wrap.scrollLeft + tdRectEarly.width / 2;
+        const desiredScroll = Math.max(0, targetCentreInWrap - wrap.clientWidth / 2);
+        wrap.scrollTo({ left: desiredScroll, behavior: 'smooth' });
+      }
       const wrapRect = wrap.getBoundingClientRect();
       const tdRect   = td.getBoundingClientRect();
       // Cursor's hot-spot (point of arrow) sits ~3px in from top-left.
-      const x = (tdRect.left - wrapRect.left) + tdRect.width  * 0.62 - 3;
-      const y = (tdRect.top  - wrapRect.top ) + tdRect.height * 0.55 - 3;
+      // Account for the wrap's horizontal scroll position so the cursor
+      // lands on the cell as it appears in the visible window.
+      const x = (tdRect.left - wrapRect.left) + wrap.scrollLeft + tdRect.width  * 0.62 - 3;
+      const y = (tdRect.top  - wrapRect.top ) + wrap.scrollTop  + tdRect.height * 0.55 - 3;
       cursor.style.transform = `translate(${x}px, ${y}px)`;
       cursor.classList.add('fv-cursor-show');
       return td;

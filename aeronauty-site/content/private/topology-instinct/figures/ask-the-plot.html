@@ -277,6 +277,18 @@ main { max-width: 1200px; margin: 0 auto; }
   transform: translateY(4px);
   transition: opacity 320ms ease, transform 320ms ease;
 }
+@media (max-width: 480px) {
+  .atp-q-list li {
+    /* Stack q above a on narrow phones so neither column gets crushed. */
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 6px 0;
+  }
+  .atp-card { padding: 12px 14px; }
+  .atp-frame { padding: 16px 14px 14px; }
+  .atp-title { font-size: 18px; }
+  .atp-subtitle { font-size: 13px; margin: 0 0 14px; }
+}
 .atp-q-list li:last-child { border-bottom: 0; }
 .atp-q-list li.atp-q-shown { opacity: 1; transform: translateY(0); }
 .atp-q { color: var(--atp-fg-dim); font-style: italic; }

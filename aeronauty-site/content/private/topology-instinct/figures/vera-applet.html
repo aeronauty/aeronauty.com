@@ -150,6 +150,11 @@ main { max-width: 980px; margin: 0 auto; }
   cursor: grab;
   touch-action: none;
 }
+@media (max-width: 480px) {
+  .va-stage-wrap { min-height: 240px; }
+  .va-frame { padding: 12px 12px 10px; }
+  .va-title { font-size: 15px; }
+}
 .va-stage-wrap.va-grabbing { cursor: grabbing; }
 .va-stage-wrap svg {
   display: block;
@@ -183,6 +188,10 @@ main { max-width: 980px; margin: 0 auto; }
   justify-content: center;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   line-height: 1;
+}
+@media (max-width: 480px), (pointer: coarse) {
+  .va-zoom button { width: 36px; height: 36px; font-size: 16px; }
+  .va-zoom { gap: 6px; }
 }
 .va-zoom button:hover { background: #f3f4f6; }
 .va-zoom button:active { background: #e5e7eb; }

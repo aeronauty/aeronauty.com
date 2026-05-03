@@ -768,6 +768,11 @@ ARTICLE_CSS = r"""
 
   /* ---- structural ---- */
   .ti-page { padding: 28px 20px 96px; }
+  /* On phones, ease the side padding so prose has comfortable room
+     (16 px each side at iPhone 13 Pro / 390 px viewport). */
+  @media (max-width: 480px) {
+    .ti-page { padding: 20px 16px 72px; }
+  }
   .ti-narrow { max-width: var(--ti-content-w); margin: 0 auto; }
   /* Cinematic figures break out wider than the prose column on desktop.
      The interactive demos (table, plot, scrolly) want room to breathe;
@@ -861,6 +866,13 @@ ARTICLE_CSS = r"""
   .ti-prose {
     font-size: 17px;
     line-height: 1.7;
+  }
+  /* Prose stays >= 16 px on phones; cap it so it doesn't shrink. */
+  @media (max-width: 480px) {
+    .ti-prose { font-size: 16.5px; line-height: 1.65; }
+    .ti-prose blockquote { font-size: 17px; padding-left: 16px; }
+    .ti-hero { margin: 16px 0 56px; }
+    .ti-hero-deck { font-size: 17px; }
   }
   /* Drop cap on the first paragraph after the hero (cold open). */
   .ti-prose > p:first-of-type::first-letter,
@@ -1047,6 +1059,9 @@ ARTICLE_CSS = r"""
     border: 1px solid var(--ti-border);
     border-radius: 12px;
   }
+  @media (max-width: 480px) {
+    .ti-figure { padding: 12px; margin: 28px 0; }
+  }
   .ti-figure svg { width: 100%; height: auto; display: block; }
   .ti-figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 8px; }
   .ti-figcap {
@@ -1070,6 +1085,7 @@ ARTICLE_CSS = r"""
     background: #000;
     border-radius: 8px;
     overflow: hidden;
+    max-width: 100%;
   }
   .ti-video-wrap iframe,
   .ti-video-wrap video {
@@ -1160,11 +1176,24 @@ ARTICLE_CSS = r"""
     overflow-x: auto;
     overflow-y: hidden;
     padding: 6px 4px;
+    -webkit-overflow-scrolling: touch;
     /* KaTeX's display equations carry their own top/bottom margins, so we
        don't add extra here. */
   }
   .ti-milp-eq .katex-display {
     margin: 0.4em 0;
+  }
+  .ti-milp-eq .katex-display > .katex {
+    /* Prevent KaTeX from forcing the math to centre and clip on narrow
+       viewports — keep it left-aligned so users can scroll right to see
+       the rest. */
+    text-align: left;
+    white-space: nowrap;
+  }
+  @media (max-width: 480px) {
+    .ti-figure-milp { padding: 14px 10px 12px; }
+    .ti-milp-eq { padding: 6px 2px; }
+    .ti-milp-eq .katex-display { font-size: 0.95em; }
   }
   .ti-figure-milp .ti-figcap {
     text-align: center;
@@ -1401,6 +1430,34 @@ def main() -> None:
         mp4_filename="orchestrator-day.mp4",
         aria_label="Time-lapse of a desk from dawn to evening, with cartoon agent-shapes coming and going around a single calm figure who stays focused",
         caption="The brain that was a tax is now an asset.",
+    )
+    prose_html = substitute_runway_video(
+        prose_html,
+        marker="post-it-onslaught",
+        mp4_filename="post-it-onslaught.mp4",
+        aria_label="Top-down stop-motion of a wooden desk being buried under an absurd flurry of yellow Post-it notes, with one cyan-teal note highlighted at the end",
+        caption="Twenty years of being the join, one Post-it at a time.",
+    )
+    prose_html = substitute_runway_video(
+        prose_html,
+        marker="folder-tabs-cascade",
+        mp4_filename="folder-tabs-cascade.mp4",
+        aria_label="Slow dolly along a drawer of crammed, illegibly-labelled folder tabs, accelerating into a blur and resolving on a single cyan-teal tab",
+        caption="The data black market, viewed from inside the cabinet.",
+    )
+    prose_html = substitute_runway_video(
+        prose_html,
+        marker="notebook-flip",
+        mp4_filename="notebook-flip.mp4",
+        aria_label="Top-down view of a hand flipping through a hardcover engineering notebook, pausing on a page with a small cyan-teal circled note before resuming",
+        caption="A good supervisor pauses on the right page.",
+    )
+    prose_html = substitute_runway_video(
+        prose_html,
+        marker="coffee-rings",
+        mp4_filename="coffee-rings.mp4",
+        aria_label="Top-down view of a coffee mug being set down repeatedly on a wooden table, leaving overlapping coffee rings, the last one tinted cyan-teal",
+        caption="Normal things, observed at the right pace.",
     )
 
     print("Rendering article...")
