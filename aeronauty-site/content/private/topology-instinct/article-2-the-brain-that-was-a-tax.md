@@ -86,4 +86,6 @@ The brain didn't get fixed. It got supplemented. The meds made the unfinished lo
 
 Maybe AI compresses that role later. I don't know. In 2026, it is real.
 
+[VIDEO: orchestrator-day]
+
 The brain that was a tax is now an asset.

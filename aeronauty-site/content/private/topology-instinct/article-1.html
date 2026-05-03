@@ -2618,6 +2618,12 @@ main { max-width: 980px; margin: 0 auto; }
     </p>
   </div>
 </aside>
+<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-plotly-vs-powerpoint-morph-figcap">
+  <div class="ti-video-wrap">
+    <video src="figures/plotly-vs-powerpoint-morph.mp4" autoplay muted loop playsinline preload="metadata" aria-label="A static slide-deck chart that, on cursor click, fluidly unfolds into an interactive Plotly figure with spinning axes and live points"></video>
+  </div>
+  <figcaption id="ti-video-plotly-vs-powerpoint-morph-figcap" class="ti-figcap">The dead version is what shipped. The alive version is what you actually had.</figcaption>
+</figure>
 <p>This is the first instance of a pattern that&rsquo;s about to keep happening: the topology-shaped output is the better way to keep data alive and the rectilinear-shaped output is the one that most systems can absorb.</p>
 <p>That gap between them and what it loses is the whole post.</p>
 <h2>Paradigm</h2>
@@ -2643,6 +2649,12 @@ $$
 $$
   </div>
   <figcaption id="ti-milp-figcap" class="ti-figcap">The core MILP. Each <em>A<sub>i</sub></em> is a binary upgrade decision per airport; each <em>R<sub>ij</sub></em> is a binary route eligibility, gated by both endpoints being upgraded; <em>K</em> is the airport budget; the objective is route-weighted CO<sub>2</sub>.</figcaption>
+</figure>
+<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-paradigm-globe-pan-figcap">
+  <div class="ti-video-wrap">
+    <video src="figures/paradigm-globe-pan.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Slow cinematic pan over Earth from low orbit, with great-circle arcs drawing in across continents"></video>
+  </div>
+  <figcaption id="ti-video-paradigm-globe-pan-figcap" class="ti-figcap">The network the fleet flies on, before the demo lets you play with it.</figcaption>
 </figure>
 <aside class="ti-demo" aria-labelledby="ti-demo-title">
 <div class="tg-root">
@@ -3106,6 +3118,12 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 <p>That frees the user from the rectilinear constraints of pandas, polars, Excel, CSV. The original sin of computational workflows: the format you ship results in is the format you end up thinking about results in, and CSV in particular has been quietly limiting what people are willing to ask of their own data for thirty years.</p>
 <p>There&rsquo;s a second thing this buys you, harder to demonstrate in a screenshot but the bit users notice after a week of using it. <em>What changed</em> becomes a real question with a real answer. Two runs differ — and instead of squinting at numbers and filenames to guess why, you get <em>why</em> directly. That kind of query was technically possible before, in the same way that recovering the structure manually from a stack of CSVs is technically possible — but the cost per question was too high. Drop the cost per question and people start asking better questions, and that&rsquo;s most of the value.</p>
 <p>Thread is the topology instinct given proper tooling, and structurally the same complaint as the PowerPoint deck refusal: <em>data has structure, and the format you&rsquo;re forcing it through doesn&rsquo;t.</em> The difference is twenty years of catching up. Refuse the flattening. Store the topology. Let the user query the actual shape of their work. Stop making humans re-enter structure the system should have kept.</p>
+<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-connections-by-hand-figcap">
+  <div class="ti-video-wrap">
+    <video src="figures/connections-by-hand.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Time-lapse of a hand drawing a flat table on paper, then drawing arcing connecting lines between cells"></video>
+  </div>
+  <figcaption id="ti-video-connections-by-hand-figcap" class="ti-figcap">The connections were always meant to be first-class. Engineering data just got there last.</figcaption>
+</figure>
 <h2>The thread</h2>
 <p>A short note before the close. The reason I could finally see all of this as one thing rather than as twenty separate annoyances is that I got an ADHD diagnosis and started medication a few months ago. I&rsquo;ll write about that properly in the next post — there&rsquo;s more to say than fits here. The relevant bit for this article is small: the diagnosis made the through-line legible, and the meds made it easier to finish the project rather than abandon it at the same point I always did before. The instinct didn&rsquo;t change. The visibility did.</p>
 <p>So.</p>

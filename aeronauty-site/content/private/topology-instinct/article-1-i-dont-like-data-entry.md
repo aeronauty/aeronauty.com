@@ -32,6 +32,8 @@ I realise now, that my recalcitrant objection was philosophical and topological[
 
 [FIGURE: plotly-vs-powerpoint]
 
+[VIDEO: plotly-vs-powerpoint-morph]
+
 This is the first instance of a pattern that's about to keep happening: the topology-shaped output is the better way to keep data alive and the rectilinear-shaped output is the one that most systems can absorb.
 
 That gap between them and what it loses is the whole post.
@@ -55,6 +57,8 @@ Which is to say: it's a problem well-suited for MILP. Mixed-integer linear progr
 I later than, under advisement from a specialist smarter than me[asterisk: Thanks Jeremy Harris<link to his LinkedIn>] moved to CP-SAT, which enabled a LOT more that I won't bore you with.
 
 [FIGURE: milp-equations]
+
+[VIDEO: paradigm-globe-pan]
 
 [INTERACTIVE DEMO: globe with budget K and year sliders. Shows optimal vs. greedy-by-traffic vs. greedy-myopic vs. biggest-cities. Hover for tooltips. Comparison chart below.]
 
@@ -135,6 +139,8 @@ That frees the user from the rectilinear constraints of pandas, polars, Excel, C
 There's a second thing this buys you, harder to demonstrate in a screenshot but the bit users notice after a week of using it. *What changed* becomes a real question with a real answer. Two runs differ — and instead of squinting at numbers and filenames to guess why, you get *why* directly. That kind of query was technically possible before, in the same way that recovering the structure manually from a stack of CSVs is technically possible — but the cost per question was too high. Drop the cost per question and people start asking better questions, and that's most of the value.
 
 Thread is the topology instinct given proper tooling, and structurally the same complaint as the PowerPoint deck refusal: *data has structure, and the format you're forcing it through doesn't.* The difference is twenty years of catching up. Refuse the flattening. Store the topology. Let the user query the actual shape of their work. Stop making humans re-enter structure the system should have kept.
+
+[VIDEO: connections-by-hand]
 
 ## The thread
 
