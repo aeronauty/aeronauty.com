@@ -149,12 +149,13 @@ main { max-width: 1080px; margin: 0 auto; }
 }
 .dbm-shot figure { margin: 0; }
 .dbm-shot img,
-.dbm-shot iframe {
+.dbm-shot iframe,
+.dbm-shot video {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 10px;
   background: var(--dbm-surface-2);
   box-shadow: 0 8px 28px color-mix(in srgb, #000 22%, transparent);
@@ -163,8 +164,10 @@ main { max-width: 1080px; margin: 0 auto; }
   aspect-ratio: auto;        /* iframe sets its own height */
   object-fit: unset;
 }
-.dbm-fullbleed img {
-  aspect-ratio: 21 / 9;      /* the closing shot is wider/cinematic */
+.dbm-fullbleed img,
+.dbm-fullbleed video {
+  aspect-ratio: auto;        /* let the asset's own ratio drive the box */
+  object-fit: contain;       /* show the whole frame; the dark vignette overlay handles the close */
 }
 .dbm-shot iframe {
   border: 0;

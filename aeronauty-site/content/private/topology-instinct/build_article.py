@@ -1023,12 +1023,15 @@ ARTICLE_CSS = r"""
     border-radius: 8px;
     overflow: hidden;
   }
-  .ti-video-wrap iframe {
+  .ti-video-wrap iframe,
+  .ti-video-wrap video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     border: 0;
+    object-fit: contain;     /* show the whole frame; no Runway-output cropping */
+    background: #000;
   }
 
   /* ---- atomic-row figure (Thread visual) ---- */
