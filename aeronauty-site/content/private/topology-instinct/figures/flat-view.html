@@ -50,7 +50,7 @@ main { max-width: 980px; margin: 0 auto; }
   --fv-empty:     #5c6a82;
   --fv-edge:      #475569;
   --fv-edge-active: #22d3ee;
-  --fv-empty-bg:  rgba(239, 68, 68, 0.06);
+  --fv-empty-bg:  transparent;          /* let the empty signal come from the em-dash + italic, not a bg wash */
   --fv-empty-fg:  #ef444488;
   --fv-warn:      #ef4444;
   --fv-warn-soft: rgba(239, 68, 68, 0.10);
@@ -76,7 +76,7 @@ main { max-width: 980px; margin: 0 auto; }
     --fv-empty:     #94a3b8;
     --fv-edge:      #cbd5e1;
     --fv-edge-active: #0e7490;
-    --fv-empty-bg:  #fee2e2;
+    --fv-empty-bg:  transparent;
     --fv-empty-fg:  #b91c1c;
     --fv-warn:      #dc2626;
     --fv-warn-soft: #fee2e2;
@@ -198,33 +198,50 @@ main { max-width: 980px; margin: 0 auto; }
 }
 /* Cells get coloured by their lineage relationship to the hovered cell.
    Three states:
-     ancestor   — this cell flowed into hovered (upstream): cyan/teal.
-     dependent  — hovered flowed into this cell (downstream): amber.
+     ancestor   — this cell flowed into hovered (upstream): cyan + left bar.
+     dependent  — hovered flowed into this cell (downstream): amber + left bar.
      different  — same row in the projection, no lineage relation: muted
-                  grey (only applied within the hovered row, otherwise
-                  every other cell would be greyed-out noise).
+                  grey, italic, line-through (only applied within the
+                  hovered row, otherwise greying every other cell would
+                  be visual noise).
    ancestor + dependent apply across all rows so cross-row lineage
    (e.g. RANS CLα central-difference depending on CL above + below) is
    visible. Cells in the active row use a stronger tint than cells in
-   other rows. */
-.fv-table td.fv-cell-ancestor:not(.fv-empty):not(.fv-lit) {
-  background: color-mix(in srgb, var(--fv-cell-lit) 50%, transparent) !important;
-  color: var(--fv-cell-lit-fg);
+   other rows. The 4px left bar gives an at-a-glance directional cue
+   on top of the colour fill. */
+.fv-table td.fv-cell-ancestor:not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-cell-lit-fg) 26%, var(--fv-surface)) !important;
+  color: var(--fv-cell-lit-fg) !important;
+  font-weight: 600;
+  box-shadow: inset 4px 0 0 var(--fv-cell-lit-fg);
 }
-.fv-table tr.fv-row-active td.fv-cell-ancestor:not(.fv-empty):not(.fv-lit) {
-  background: color-mix(in srgb, var(--fv-cell-lit) 75%, transparent) !important;
+.fv-table tr.fv-row-active td.fv-cell-ancestor:not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-cell-lit-fg) 42%, var(--fv-surface)) !important;
+  color: #fff !important;
 }
-.fv-table td.fv-cell-dependent:not(.fv-empty):not(.fv-lit) {
-  background: color-mix(in srgb, var(--fv-input) 16%, transparent) !important;
-  color: var(--fv-input);
+.fv-table td.fv-cell-dependent:not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-input) 26%, var(--fv-surface)) !important;
+  color: var(--fv-input) !important;
+  font-weight: 600;
+  box-shadow: inset 4px 0 0 var(--fv-input);
 }
-.fv-table tr.fv-row-active td.fv-cell-dependent:not(.fv-empty):not(.fv-lit) {
-  background: color-mix(in srgb, var(--fv-input) 26%, transparent) !important;
+.fv-table tr.fv-row-active td.fv-cell-dependent:not(.fv-lit) {
+  background: color-mix(in srgb, var(--fv-input) 42%, var(--fv-surface)) !important;
+  color: #fff !important;
 }
 .fv-table tr.fv-row-active td.fv-cell-different:not(.fv-empty):not(.fv-lit) {
-  background: color-mix(in srgb, var(--fv-fg-faint) 14%, transparent) !important;
-  color: var(--fv-fg-faint);
+  background: color-mix(in srgb, var(--fv-fg-faint) 18%, transparent) !important;
+  color: var(--fv-fg-faint) !important;
   font-style: italic;
+  text-decoration: line-through;
+  text-decoration-color: var(--fv-fg-faint);
+  text-decoration-thickness: 1px;
+}
+@media (prefers-color-scheme: light) {
+  .fv-table tr.fv-row-active td.fv-cell-ancestor:not(.fv-lit),
+  .fv-table tr.fv-row-active td.fv-cell-dependent:not(.fv-lit) {
+    color: #fff !important;   /* readable contrast on the saturated tint */
+  }
 }
 .fv-table td.fv-empty {
   color: var(--fv-empty);
@@ -252,13 +269,19 @@ main { max-width: 980px; margin: 0 auto; }
 }
 
 .fv-hint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0 0;
+  display: block;            /* normal text wrap — was flex, which forced inline children into broken columns when the panel narrowed */
+  margin: 0 0 10px;
   font-size: 12px;
   color: var(--fv-fg-faint);
   line-height: 1.5;
+}
+.fv-hint .fv-key-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  vertical-align: -1px;
+  margin-right: 4px;
 }
 .fv-hint kbd {
   background: color-mix(in srgb, var(--fv-fg) 10%, transparent);
@@ -831,13 +854,13 @@ main { max-width: 980px; margin: 0 auto; }
           <section class="fv-scrolly-beat" data-state="thread" data-step="4">
             <p class="fv-scrolly-beat-tag">04 · Thread · same shape, different contract</p>
             <h4>Thread renders the table you actually want to read.</h4>
-            <p>α and β as columns, derived quantities as columns, one row per condition &mdash; the shape humans need. But each cell is a leaf artefact whose provenance walks back to a specific operation, with the conditions it consumed and the tool that ran it. <strong>Empty means there is no leaf for that schema on this row;</strong> Thread doesn&rsquo;t invent one to make the table feel complete.</p>
+            <p>α and β as columns, derived quantities as columns, one row per condition &mdash; the shape humans need. But each cell is honest: <strong>Thread knows what flowed into it and what didn&rsquo;t share a source</strong>. Empty means there&rsquo;s nothing honest to put there &mdash; Thread doesn&rsquo;t invent a value to make the table feel complete.</p>
           </section>
 
           <section class="fv-scrolly-beat" data-state="thread" data-step="5">
             <p class="fv-scrolly-beat-tag">05 · try it</p>
-            <h4>Hover any cell. Different cells, different walks.</h4>
-            <p>An <code>AVL CLα</code> cell&rsquo;s walk stops at α and β &mdash; the AVL solver doesn&rsquo;t touch mesh. A <code>RANS CL</code> cell&rsquo;s walk lights up the mesh branch and the <code>mesh_id</code> cell because the Flow360 run consumed all of it. An empty cell has no walk to follow &mdash; that&rsquo;s the point.</p>
+            <h4>Hover any cell. Different cells, different families.</h4>
+            <p>Each cell colours the rest of the table by relationship: <span style="color:var(--fv-cell-lit-fg);font-weight:600;">cyan</span> means it flowed into the hovered one, <span style="color:var(--fv-input);font-weight:600;">amber</span> means the hovered one flowed into it, grey-italic means same row but no shared source. <strong>Thread already knows which is which.</strong></p>
           </section>
 
         </div>
@@ -904,6 +927,16 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 
           <!-- ===== Panel C — Thread (interactive) ===== -->
           <div class="fv-panel fv-panel-thread" data-state="thread">
+            <p class="fv-hint" style="margin-top:6px;">
+              Mouseover any cell &mdash; Thread already knows what flowed into it and what didn&rsquo;t share a source. <em>Here it is, simulated; you&rsquo;ll be able to try it yourself in a moment.</em>
+              <span style="display:inline-block;margin-left:6px;white-space:nowrap;">
+                <span class="fv-key-swatch" style="background:var(--fv-cell-lit-fg)"></span><span style="color:var(--fv-cell-lit-fg);font-weight:600;">ancestor</span>
+                &nbsp;&middot;&nbsp;
+                <span class="fv-key-swatch" style="background:var(--fv-input)"></span><span style="color:var(--fv-input);font-weight:600;">dependent</span>
+                &nbsp;&middot;&nbsp;
+                <span style="font-style:italic;text-decoration:line-through;color:var(--fv-fg-faint);">different thread</span>
+              </span>
+            </p>
             <div class="fv-app-titlebar">
               <span>thread://airfoil-x57/branch/main · flat view</span>
               <span style="margin-left:auto">5 conditions · live</span>
@@ -943,9 +976,6 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
             <div class="fv-empty-tooltip" id="fv-empty-tooltip" role="tooltip"></div>
             <div class="fv-ctxmenu" id="fv-ctxmenu" role="menu" aria-label="Ask about this cell"></div>
 
-            <p class="fv-hint">
-              If you mouseover a cell, you can see the dependents and ancestors of a particular data item &mdash; here&rsquo;s it simulated <em>(you can try it yourself in a moment)</em>. <span style="color:var(--fv-cell-lit-fg)">cyan&nbsp;=&nbsp;ancestor</span>, <span style="color:var(--fv-input)">amber&nbsp;=&nbsp;dependent</span>, <em>grey&nbsp;italic&nbsp;=&nbsp;different&nbsp;thread</em>.
-            </p>
           </div>
 
         </div>
@@ -967,17 +997,19 @@ window.FlatView = (function () {
   // Five rows. Some have AVL only, some have RANS only, some have both.
   // The empty cells are the entire point: Thread doesn't invent values where
   // no leaf artifact exists with the requested schema for that pivot tuple.
-  // RANS CLα is computed by central differencing across α neighbours:
+  // CL data picked so the RANS CLα central-difference series reads cleanly:
   //   rans_cla[N] = (rans_cl[N+1] - rans_cl[N-1]) / (alpha[N+1] - alpha[N-1])
-  // Boundary rows (first / last) and rows whose neighbour has no RANS CL
-  // come out null — Thread doesn't invent a slope where the neighbours
-  // can't supply one.
+  // First and last rows have no neighbour and stay empty. AVL CLα is
+  // analytical (per row, no neighbour dependence) and present everywhere
+  // except run 04, which only ran the RANS branch.
   const ROWS = [
-    { run: '01', alpha: 0, beta: 0, rpm: 2400, avl_cla: 4.812, rans_cl: 0.031, rans_cla: null,  mesh_id: 'vm-0e23' },
-    { run: '02', alpha: 2, beta: 0, rpm: null, avl_cla: 5.103, rans_cl: null,  rans_cla: 5.469, mesh_id: null      },
-    { run: '03', alpha: 4, beta: 0, rpm: 2400, avl_cla: 5.317, rans_cl: 0.413, rans_cla: null,  mesh_id: 'vm-0e23' },
-    { run: '04', alpha: 6, beta: 0, rpm: 2400, avl_cla: null,  rans_cl: 0.592, rans_cla: 4.840, mesh_id: 'vm-0e23' },
-    { run: '05', alpha: 8, beta: 0, rpm: 2400, avl_cla: 4.984, rans_cl: 0.751, rans_cla: null,  mesh_id: 'vm-0e23' },
+    { run: '01', alpha:  0, beta: 0, rpm: 2400, avl_cla: 4.812, rans_cl: 0.031, rans_cla: null, mesh_id: 'vm-0e23' },
+    { run: '02', alpha:  2, beta: 0, rpm: 2400, avl_cla: 5.103, rans_cl: 0.220, rans_cla: 5.47, mesh_id: 'vm-0e23' },
+    { run: '03', alpha:  4, beta: 0, rpm: 2400, avl_cla: 5.317, rans_cl: 0.413, rans_cla: 5.33, mesh_id: 'vm-0e23' },
+    { run: '04', alpha:  6, beta: 0, rpm: 2400, avl_cla: null,  rans_cl: 0.592, rans_cla: 5.00, mesh_id: 'vm-0e23' },
+    { run: '05', alpha:  8, beta: 0, rpm: 2400, avl_cla: 4.984, rans_cl: 0.762, rans_cla: 4.50, mesh_id: 'vm-0e23' },
+    { run: '06', alpha: 10, beta: 0, rpm: 2400, avl_cla: 5.025, rans_cl: 0.906, rans_cla: 3.50, mesh_id: 'vm-0e23' },
+    { run: '07', alpha: 12, beta: 0, rpm: 2400, avl_cla: 4.892, rans_cl: 1.006, rans_cla: null, mesh_id: 'vm-0e23' },
   ];
 
   // Column metadata
@@ -1005,7 +1037,7 @@ window.FlatView = (function () {
       td.textContent = c.fmt(value);
       if (isEmpty) {
         td.classList.add('fv-empty');
-        td.title = 'no leaf artefact for this column on this row';
+        td.title = 'Thread doesn’t invent a value here';
       }
       tr.appendChild(td);
     });
@@ -1645,7 +1677,7 @@ window.FlatView = (function () {
         cell:     `AVL CLα on run ${r.run}`,
         producer: 'avl@avl-pod-21d3',
         tool:     'AVL v3.4',
-        kind:     'derived analytically (∂CL/∂α from AVL solution)',
+        kind:     'derived (∂CL/∂α from AVL)',
         when:     when,
         hash:     _hash4(`avlcla-${rowIdx}-${r.avl_cla}`),
       };
@@ -1665,7 +1697,7 @@ window.FlatView = (function () {
         cell:     `RANS CLα on run ${r.run}`,
         producer: 'central-diff-op@stat-pod-1f04',
         tool:     'central-difference v0.2',
-        kind:     'derived numerically (∂CL/∂α via central differencing across α neighbours)',
+        kind:     'derived (∂CL/∂α from RANS)',
         when:     when,
         hash:     _hash4(`ranscla-${rowIdx}-${r.rans_cla}`),
       };
