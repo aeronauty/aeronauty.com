@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 export default function LabLoginPage() {
   const [email, setEmail] = useState("");
@@ -29,10 +30,24 @@ export default function LabLoginPage() {
 
         <h1 className="text-3xl font-bold tracking-tight">Lab access</h1>
         <p className="mt-3 text-gray-400">
-          Enter an approved email address and I{"'"}ll send you a sign-in link.
+          Continue with Google or enter an approved email address and I{"'"}ll send you a sign-in link.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <button
+          type="button"
+          onClick={() => signIn("google", { callbackUrl: "/lab" })}
+          className="mt-8 w-full rounded-lg border border-gray-700 bg-white px-4 py-3 font-semibold text-gray-950 transition hover:bg-gray-100"
+        >
+          Continue with Google
+        </button>
+
+        <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-[0.2em] text-gray-600">
+          <div className="h-px flex-1 bg-gray-800" />
+          or
+          <div className="h-px flex-1 bg-gray-800" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block">
             <span className="text-sm font-medium text-gray-300">Email</span>
             <input

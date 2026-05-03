@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import { isAllowedLabEmail } from "@/lib/lab-auth";
 
 // Simple in-memory brute-force protection.
 // Locks out an IP for 15 minutes after 10 failed attempts.
@@ -28,6 +30,10 @@ function recordSuccess(ip: string) {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+    }),
     Credentials({
       credentials: {
         password: { label: "Password", type: "password" },
@@ -59,6 +65,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider !== "google") return true;
+      return Boolean(user.email && isAllowedLabEmail(user.email));
+    },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname === "/dashboard/login";

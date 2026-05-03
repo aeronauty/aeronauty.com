@@ -14,6 +14,10 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+export function normalizeLabEmail(email: string): string {
+  return normalizeEmail(email);
+}
+
 function getSecret(): Uint8Array {
   const secret = process.env.AERONAUTY_AUTH_SECRET ?? process.env.AUTH_SECRET;
   if (!secret) {

@@ -2,17 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { LAB_SESSION_COOKIE, verifyLabSessionToken } from "@/lib/lab-auth";
 
-export async function middleware(req: NextRequest) {
+export default async function middleware(req: NextRequest) {
+  const authSession = await auth();
+
   if (req.nextUrl.pathname.startsWith("/lab")) {
     const isLoginPage = req.nextUrl.pathname === "/lab/login";
     const token = req.cookies.get(LAB_SESSION_COOKIE)?.value;
     const email = token ? await verifyLabSessionToken(token) : null;
+    const isGoogleLoggedIn = Boolean(authSession?.user?.email);
 
-    if (email && isLoginPage) {
+    if ((email || isGoogleLoggedIn) && isLoginPage) {
       return NextResponse.redirect(new URL("/lab", req.url));
     }
 
-    if (!email && !isLoginPage) {
+    if (!email && !isGoogleLoggedIn && !isLoginPage) {
       const loginUrl = new URL("/lab/login", req.url);
       loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
       return NextResponse.redirect(loginUrl);
@@ -21,7 +24,16 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  return (auth as unknown as (request: NextRequest) => ReturnType<typeof NextResponse.next> | Promise<ReturnType<typeof NextResponse.next>>)(req);
+  const isDashboardLogin = req.nextUrl.pathname === "/dashboard/login";
+  if (isDashboardLogin) return NextResponse.next();
+
+  if (!authSession?.user) {
+    const loginUrl = new URL("/dashboard/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
