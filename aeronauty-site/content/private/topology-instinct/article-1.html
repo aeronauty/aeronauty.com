@@ -5132,26 +5132,19 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     if (col === 'alpha') {
       // Both per-run α artifacts in both lanes (if they exist).
       const ids = ['fv-a-avl-' + rid, 'fv-a-rans-' + rid];
-      if (r.avl_cla != null) ids.push('fv-e-aavl-op-' + rid, 'fv-op-avl-' + rid);
-      if (r.rans_cl != null) ids.push('fv-e-arans-op-' + rid, 'fv-op-rans-' + rid);
       return ids;
     }
     if (col === 'beta') {
-      const ids = [N_BETA.id];
-      if (r.avl_cla != null) ids.push('fv-e-beta-avlop-' + rid, 'fv-op-avl-' + rid);
-      if (r.rans_cl != null) ids.push('fv-e-beta-rop-' + rid,   'fv-op-rans-' + rid);
-      return ids;
+      return [N_BETA.id, 'fv-beta-cell-' + rid];
     }
     if (col === 'rpm') {
-      // RPM is consumed only by the RANS lane.
-      if (r.rans_cl == null) return [N_RPM.id];   // it's there, just not consumed for this row
-      return [N_RPM.id, 'fv-e-rpm-rop-' + rid, 'fv-op-rans-' + rid];
+      return [N_RPM.id, 'fv-rpm-cell-' + rid];
     }
     if (col === 'avl_cla') {
       if (r.avl_cla == null) return [];   // empty cell — no provenance
       return [
         'fv-a-avl-' + rid,
-        N_BETA.id,
+        N_BETA.id, 'fv-beta-cell-' + rid,
         N_AVLT.id,
         'fv-e-aavl-op-' + rid,
         'fv-e-beta-avlop-' + rid,
@@ -5166,7 +5159,9 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       return [
         N_GEOM.id, N_MOP.id, N_MESH.id, 'fv-e-geom-mop', 'fv-e-mop-mesh',
         'fv-a-rans-' + rid,
-        N_BETA.id, N_RPM.id, N_F360.id,
+        N_BETA.id, 'fv-beta-cell-' + rid,
+        N_RPM.id, 'fv-rpm-cell-' + rid,
+        N_F360.id,
         'fv-e-arans-op-' + rid,
         'fv-e-beta-rop-' + rid,
         'fv-e-rpm-rop-' + rid,
@@ -5186,7 +5181,8 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       const ids = [
         // Own row's flight conditions
         'fv-a-rans-' + rid,
-        N_BETA.id, N_RPM.id,
+        N_BETA.id, 'fv-beta-cell-' + rid,
+        N_RPM.id, 'fv-rpm-cell-' + rid,
         // Mesh chain (RANS-derived → mesh is in the lineage)
         N_GEOM.id, N_MOP.id, N_MESH.id, 'fv-e-geom-mop', 'fv-e-mop-mesh',
         // Tool / op for the central-difference
@@ -5216,14 +5212,15 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   // ---- Cell-to-cell connection map ----------------------------------------
   // For each table cell (rowIdx, col), return the DAG ids that, if any are
   // in the *hovered* cell's provenance walk, mean this cell is "connected".
-  // When β or RPM appear in the hovered walk, every β / RPM cell in the
-  // table lights up — that's the right behaviour: those cells are presenting
-  // the same shared artefact across rows.
+  // Repeated scalar values such as β=0 or RPM=2400 are not treated as one
+  // global artefact. Each row has its own condition cell, even if the value
+  // happens to be identical. Shared generated artefacts, such as mesh_id,
+  // can still fan out across rows.
   function cellArtifactIds(rowIdx, col) {
     switch (col) {
       case 'alpha':   return ['fv-a-avl-' + rowIdx, 'fv-a-rans-' + rowIdx];
-      case 'beta':    return [N_BETA.id];
-      case 'rpm':     return [N_RPM.id];
+      case 'beta':    return ['fv-beta-cell-' + rowIdx];
+      case 'rpm':     return ['fv-rpm-cell-' + rowIdx];
       case 'avl_cla':  return ['fv-art-avl-' + rowIdx];
       case 'rans_cl':  return ['fv-art-rans-' + rowIdx];
       case 'rans_cla': return ['fv-art-rans-cla-' + rowIdx];
