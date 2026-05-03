@@ -28,7 +28,11 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 import requests
-import pulp
+
+try:
+    import pulp
+except ModuleNotFoundError:
+    pulp = None
 
 
 # --- config ---------------------------------------------------------------
@@ -346,6 +350,9 @@ def solve_joint_milp(
     Optional `warmstart_picks` is a {year_int: [iata]} dict with a feasible
     monotonic chain CBC can start from. Uses PuLP's MPS-based warm start.
     """
+    if pulp is None:
+        raise RuntimeError("PuLP is required for CBC MILP solves")
+
     prob = pulp.LpProblem(f"airports_K{K}", pulp.LpMaximize)
 
     A = {
@@ -602,6 +609,9 @@ def solve_single_stage_dks(
     cost of more integer variables. With ~7400 R vars and ~175 A vars on
     our subset, single-K solves still finish within 5-30s.
     """
+    if pulp is None:
+        raise RuntimeError("PuLP is required for CBC MILP solves")
+
     co2 = {int(r.id): float(r.annual_co2_tonnes_2023) * weight_factor
            for r in routes_df.itertuples(index=False)}
     src_of = {int(r.id): r.src for r in routes_df.itertuples(index=False)}

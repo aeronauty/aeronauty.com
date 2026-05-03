@@ -388,7 +388,7 @@ window.TopologyGlobe = (() => {
     },
 
     strategies: [
-      { id: "optimal",        label: "Optimal MILP",       color: "var(--tg-strat-optimal)" },
+      { id: "optimal",        label: "Optimised sequence",       color: "var(--tg-strat-optimal)" },
       { id: "greedy_traffic", label: "Greedy by traffic",  color: "var(--tg-strat-traffic)" },
       { id: "greedy_myopic",  label: "Greedy myopic",      color: "var(--tg-strat-myopic)"  },
       { id: "biggest_cities", label: "Biggest cities",     color: "var(--tg-strat-cities)"  },
@@ -647,7 +647,7 @@ window.TopologyGlobe = (() => {
     const dCit  = cities.co2_captured_tonnes ? (milp / cities.co2_captured_tonnes - 1) * 100 : 0;
     cap.innerHTML =
       `At <span class="tg-caption-num">K = ${state.budget}</span> airports upgraded in ` +
-      `<span class="tg-caption-num">${state.year}</span>, the MILP captures ` +
+      `<span class="tg-caption-num">${state.year}</span>, the optimiser captures ` +
       `<span class="tg-caption-num">${fmtPct(dTraf)}</span> vs. greedy-by-traffic and ` +
       `<span class="tg-caption-num">${fmtPct(dCit)}</span> vs. picking biggest cities first.`;
   }
