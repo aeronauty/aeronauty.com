@@ -107,11 +107,19 @@
      the prose around them stays at reading width. */
   .ti-prose .ti-flat-view,
   .ti-prose .ti-ask-the-plot,
-  .ti-prose .ti-data-black-market {
+  .ti-prose .ti-data-black-market,
+  .ti-prose .ti-what-changed {
     margin-left: calc(50% - 50vw + 8px);
     margin-right: calc(50% - 50vw + 8px);
     max-width: 1240px;
     margin-inline: auto;
+  }
+  .ti-prose .ti-what-changed {
+    width: calc(100vw - 32px);
+    max-width: 1180px;
+    margin-left: calc(50% - min(50vw - 16px, 590px));
+    margin-right: auto;
+    transform: none;
   }
   @media (min-width: 1100px) {
     .ti-prose .ti-flat-view,
@@ -121,11 +129,28 @@
       margin-left: 50%;
       transform: translateX(-50%);
     }
+    .ti-prose .ti-what-changed {
+      width: calc(100vw - 64px);
+      max-width: 1180px;
+      margin-left: calc(50% - min(50vw - 32px, 590px));
+      margin-right: auto;
+      transform: none;
+    }
+  }
+  @media (min-width: 760px) and (max-width: 1099px) {
+    .ti-prose .ti-what-changed {
+      width: calc(100vw - 32px);
+      max-width: 980px;
+      margin-left: calc(50% - min(50vw - 16px, 490px));
+      margin-right: auto;
+      transform: none;
+    }
   }
   @media (max-width: 720px) {
     .ti-prose .ti-flat-view,
     .ti-prose .ti-ask-the-plot,
-    .ti-prose .ti-data-black-market {
+    .ti-prose .ti-data-black-market,
+    .ti-prose .ti-what-changed {
       margin-left: 0;
       margin-right: 0;
       width: 100%;
@@ -359,6 +384,63 @@
     font-size: 18px;
     line-height: 1.55;
   }
+
+  /* ---- pull-quote (Guardian/NYT-style breakout) ----
+     A single-sentence emphasis lifted out of the prose. Generous
+     vertical whitespace, larger type, hairline rules above and below.
+     Wired in via inline <aside class="ti-pullquote"> in the markdown. */
+  .ti-prose .ti-pullquote {
+    display: block;
+    margin: 56px auto;
+    padding: 22px 0 24px;
+    max-width: 30ch;
+    border-top: 1px solid var(--ti-rule);
+    border-bottom: 1px solid var(--ti-rule);
+    text-align: center;
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: clamp(22px, 2.6vw, 28px);
+    line-height: 1.32;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-pullquote {
+      margin: 36px auto;
+      padding: 16px 0 18px;
+      font-size: 21px;
+      max-width: 24ch;
+    }
+  }
+
+  /* ---- final line (closing emphasis) ----
+     The last line of the essay: larger, italic, generous whitespace
+     above. Wired via <p class="ti-final"> in the markdown. */
+  .ti-prose .ti-final {
+    margin: 72px 0 16px;
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: clamp(22px, 2.4vw, 27px);
+    line-height: 1.3;
+    text-align: center;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-final {
+      margin: 48px 0 8px;
+      font-size: 21px;
+    }
+  }
+  /* Ensure drop-cap stays visible on mobile (some browsers shrink it). */
+  @media (max-width: 480px) {
+    .ti-prose > p:first-of-type::first-letter {
+      font-size: 3.6em;
+      padding: 4px 8px 0 0;
+    }
+  }
   .ti-prose a {
     color: var(--ti-link);
     text-decoration: underline;
@@ -554,7 +636,8 @@
   .ti-demo,
   .ti-flat-view,
   .ti-ask-the-plot,
-  .ti-data-black-market {
+  .ti-data-black-market,
+  .ti-what-changed {
     transition: opacity 520ms ease, transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
   }
   html.ti-js .ti-reveal {
@@ -828,13 +911,23 @@
       body { background: #111418; color: #e6e6e6; }
     }
     main {
-      max-width: 980px;
+      max-width: 1080px;
       margin: 0 auto;
     }
 
     /* ===========================================================
        af- = adhd-flowchart, namespaced to avoid collision with
        the globe demo or anything else on the article page.
+
+       Per-step scrollytelling figure. Eight steps total:
+         01 — get new idea           (meme node 1 + cartoon)
+         02 — start new project      (meme node 2 + cartoon)
+         03 — tell everyone          (meme node 3 + cartoon, loop closes)
+         04 — finish project, orphaned (the gag — finish faded off-side)
+         05 — recognise it's connected to three previous ideas (subversion node 1)
+         06 — hand the boring bits to a swarm of agents (subversion node 2)
+         07 — stay at the connection level (subversion node 3)
+         08 — actually finish (subversion node 4 — green)
        =========================================================== */
 
     .af-figure {
@@ -844,14 +937,14 @@
       --af-fg: #1f2328;
       --af-muted: #6b7280;
       --af-faint: #b0b6bf;
-      --af-accent: #854d0e;
-      --af-row-band: rgba(133, 77, 14, 0.08);
-      --af-loop-fill: #fef9c3;
-      --af-loop-stroke: #854d0e;
-      --af-ai-fill: #dbeafe;
-      --af-ai-stroke: #1e3a8a;
-      --af-finish-grey-fill: #d1d5db;
-      --af-finish-grey-stroke: #4b5563;
+      --af-accent: #0e7490;
+      --af-row-band: rgba(14, 116, 144, 0.06);
+      --af-meme-fill: #fef9c3;
+      --af-meme-stroke: #854d0e;
+      --af-sub-fill: #e0f2fe;
+      --af-sub-stroke: #0e7490;
+      --af-orphan-fill: #d1d5db;
+      --af-orphan-stroke: #6b7280;
       --af-finish-green-fill: #bbf7d0;
       --af-finish-green-stroke: #166534;
       --af-edge: #1f2328;
@@ -866,14 +959,14 @@
         --af-fg: #e6e6e6;
         --af-muted: #9aa0a6;
         --af-faint: #5c6a82;
-        --af-accent: #e0b84a;
-        --af-row-band: rgba(224, 184, 74, 0.10);
-        --af-loop-fill: #4a3508;
-        --af-loop-stroke: #e0b84a;
-        --af-ai-fill: #1b2840;
-        --af-ai-stroke: #6fb1d9;
-        --af-finish-grey-fill: #2a2f36;
-        --af-finish-grey-stroke: #6b7280;
+        --af-accent: #67e8f9;
+        --af-row-band: rgba(103, 232, 249, 0.08);
+        --af-meme-fill: #4a3508;
+        --af-meme-stroke: #e0b84a;
+        --af-sub-fill: #0f2942;
+        --af-sub-stroke: #67e8f9;
+        --af-orphan-fill: #2a2f36;
+        --af-orphan-stroke: #6b7280;
         --af-finish-green-fill: #14391f;
         --af-finish-green-stroke: #5fc07b;
         --af-edge: #e6e6e6;
@@ -884,83 +977,67 @@
       }
     }
 
-    /* ----- Scrollytelling layout: beats left, sticky stage right ----- */
-    .af-scrolly {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-      gap: 28px;
-      margin: 0;
-    }
-    @media (max-width: 800px) {
-      .af-scrolly { grid-template-columns: 1fr; gap: 14px; }
-    }
-
-    .af-scrolly-beats { display: flex; flex-direction: column; gap: 0; }
-    .af-scrolly-beat {
-      min-height: 60vh;
+    /* ----- Top step bar ----- */
+    .af-stepbar {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 22px 16px;
-      border-left: 3px solid var(--af-faint);
-      opacity: 0.42;
-      transition: opacity 350ms ease, border-left-color 350ms ease, background 350ms ease;
+      gap: 6px;
+      margin: 0 0 14px;
+      padding: 0;
+      list-style: none;
+      flex-wrap: wrap;
     }
-    .af-scrolly-beat.af-active {
-      opacity: 1;
-      border-left-color: var(--af-accent);
-      background: var(--af-row-band);
+    .af-stepbar li {
+      flex: 1 1 0;
+      min-width: 28px;
+      height: 3px;
+      background: var(--af-rule);
+      border-radius: 2px;
+      transition: background 320ms ease, transform 320ms ease;
+      cursor: pointer;
     }
-    .af-scrolly-beat-tag {
-      font-size: 11px;
-      letter-spacing: 0.16em;
+    .af-stepbar li.af-step-done { background: var(--af-muted); }
+    .af-stepbar li.af-step-active {
+      background: var(--af-accent);
+      transform: scaleY(1.6);
+    }
+    .af-stepbar-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 12px;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--af-accent);
-      font-weight: 600;
-      margin: 0 0 6px;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    }
-    .af-scrolly-beat h4 {
-      font-size: 16.5px;
-      font-weight: 700;
-      margin: 0 0 8px;
-      color: var(--af-fg);
-      letter-spacing: -0.005em;
-      line-height: 1.3;
-    }
-    .af-scrolly-beat p {
-      font-size: 14px;
-      line-height: 1.55;
       color: var(--af-muted);
-      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      margin: 0 0 16px;
     }
-    .af-scrolly-beat p strong { color: var(--af-fg); font-weight: 600; }
-    .af-scrolly-beat p em { color: var(--af-fg); }
+    .af-stepbar-meta .af-phase { color: var(--af-accent); font-weight: 600; }
+    .af-stepbar-meta .af-counter { font-variant-numeric: tabular-nums; }
 
-    .af-scrolly-stage {
-      position: sticky;
-      top: 80px;
-      align-self: start;
-      height: clamp(440px, 78vh, 620px);
+    /* ----- Two-column layout: flowchart left, cartoon panel right ----- */
+    .af-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+    @media (max-width: 760px) {
+      .af-stage { grid-template-columns: 1fr; gap: 16px; }
+    }
+
+    .af-svg-pane {
+      position: relative;
       border: 1px solid var(--af-stage-border);
       border-radius: 10px;
       background: var(--af-stage-bg);
-      padding: 18px 18px 14px;
+      padding: 16px 14px 12px;
+      min-height: 420px;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
-    @media (max-width: 800px) {
-      .af-scrolly-stage {
-        position: static;
-        height: auto;
-        min-height: 360px;
-      }
-    }
-
     .af-svg-wrap {
       flex: 1 1 auto;
-      min-height: 0;
+      min-height: 380px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -973,92 +1050,144 @@
       overflow: visible;
     }
 
-    .af-caption {
-      margin-top: 12px;
+    .af-cartoon-pane {
+      position: relative;
+      border: 1px solid var(--af-stage-border);
+      border-radius: 10px;
+      background: var(--af-stage-bg);
+      overflow: hidden;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+    }
+    .af-cartoon-stack {
+      position: relative;
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 0;
+    }
+    .af-cartoon-frame {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      opacity: 0;
+      transform: translateX(18px);
+      transition: opacity 360ms ease, transform 420ms cubic-bezier(.2,.8,.2,1);
+      pointer-events: none;
+    }
+    .af-cartoon-frame img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 6px;
+      display: block;
+    }
+    .af-cartoon-frame.af-show {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .af-cartoon-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 26px;
+      color: var(--af-muted);
+      font-style: italic;
+      font-size: 14px;
       text-align: center;
+      opacity: 0;
+      transition: opacity 320ms ease;
+    }
+    .af-cartoon-empty.af-show { opacity: 1; }
+
+    .af-caption {
+      padding: 12px 16px 14px;
+      text-align: left;
       font-style: italic;
       color: var(--af-muted);
       font-size: 14px;
+      line-height: 1.5;
       min-height: 1.4em;
       transition: opacity 220ms ease;
+      border-top: 1px solid var(--af-rule);
     }
 
+    /* ----- Controls (pause/play indicator + replay) ----- */
+    .af-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--af-muted);
+    }
+    .af-controls .af-hint {
+      letter-spacing: 0.04em;
+    }
     .af-replay {
-      position: absolute;
-      bottom: 8px;
-      right: 12px;
       background: transparent;
       border: 1px solid var(--af-muted);
       color: var(--af-muted);
-      padding: 4px 10px;
+      padding: 4px 12px;
       font: inherit;
       font-size: 12px;
       border-radius: 4px;
       cursor: pointer;
-      opacity: 0.55;
-      transition: opacity 150ms ease, color 150ms ease, border-color 150ms ease;
+      transition: color 150ms ease, border-color 150ms ease;
     }
-    .af-replay:hover { opacity: 1; color: var(--af-fg); border-color: var(--af-fg); }
+    .af-replay:hover { color: var(--af-fg); border-color: var(--af-fg); }
 
-    /* Animation primitives. rough.js renders <path>/<g> children inside
-       host groups; we control fade/draw via parent group classes. */
-    .af-ai-group {
+    /* ----- Node + edge animation primitives ----- */
+    /* Each step toggles classes on these groups. Hidden = display:none
+       so layout doesn't reserve space for unborn nodes; visible = opacity
+       fade in. */
+    .af-node-group {
       opacity: 0;
-      transition: opacity 350ms ease;
-    }
-    .af-ai-group.af-visible { opacity: 1; }
-
-    /* Tell-everyone node + the two bypass edges (start→tell, tell→idea)
-       fade out together when the swarm takes over (state 2). */
-    .af-tell-group, .af-loop-edges-bypass {
-      opacity: 1;
-      transition: opacity 380ms ease;
-    }
-    .af-tell-group.af-faded, .af-loop-edges-bypass.af-faded {
-      opacity: 0;
-    }
-
-    .af-finish-group .af-finish-grey { transition: opacity 250ms ease; }
-    .af-finish-group .af-finish-green {
-      opacity: 0;
+      transition: opacity 380ms ease, transform 420ms cubic-bezier(.2,.8,.2,1);
       transform-box: fill-box;
       transform-origin: center;
-      transition: opacity 250ms ease, transform 350ms cubic-bezier(.34,1.56,.64,1);
     }
-    .af-finish-group.af-finished .af-finish-grey { opacity: 0; }
-    .af-finish-group.af-finished .af-finish-green {
-      opacity: 1;
-      animation: af-pulse 480ms cubic-bezier(.34,1.56,.64,1) 0s 1;
+    .af-node-group.af-visible { opacity: 1; }
+    .af-node-group.af-highlight {
+      animation: af-pulse 520ms cubic-bezier(.34,1.56,.64,1) 0s 1;
     }
     @keyframes af-pulse {
       0%   { transform: scale(1); }
-      40%  { transform: scale(1.10); }
+      40%  { transform: scale(1.08); }
       100% { transform: scale(1); }
+    }
+
+    /* Edges: stroke-dashoffset draw-on. */
+    .af-edge-anim {
+      transition: stroke-dashoffset 460ms ease-in-out, opacity 320ms ease;
     }
 
     .af-label {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      font-size: 14px;
+      font-size: 13.5px;
       fill: var(--af-fg);
       text-anchor: middle;
       dominant-baseline: middle;
       pointer-events: none;
     }
-    .af-label-finish-grey { fill: var(--af-muted); }
+    .af-label-orphan { fill: var(--af-muted); font-style: italic; }
     .af-label-finish-green { fill: var(--af-fg); }
-
-    /* Path-draw animation: stroke-dasharray controlled inline by JS. */
-    .af-edge-anim {
-      transition: stroke-dashoffset 420ms ease-in-out;
-    }
 
     /* Reduced motion: render the settled end-state instantly. */
     @media (prefers-reduced-motion: reduce) {
-      .af-ai-group { opacity: 1; transition: none; }
-      .af-finish-group .af-finish-grey { opacity: 0; }
-      .af-finish-group .af-finish-green { opacity: 1; animation: none; }
+      .af-node-group { opacity: 1; transition: none; }
+      .af-node-group.af-highlight { animation: none; }
       .af-edge-anim { transition: none; }
-      .af-scrolly-beat { opacity: 1; transition: none; }
+      .af-cartoon-frame { transition: none; }
     }
   </style>
 <style></style>
@@ -1105,54 +1234,47 @@
 <aside class="ti-flowchart" aria-label="ADHD flowchart, then and now">
 <div class="af-figure" id="af-figure">
 
-      <div class="af-scrolly" id="af-scrolly">
+      <p class="af-stepbar-meta">
+        <span class="af-phase" id="af-phase">the meme</span>
+        <span class="af-counter"><span id="af-counter-now">1</span> / 8</span>
+      </p>
+      <ol class="af-stepbar" id="af-stepbar" aria-label="Flowchart steps">
+        <li data-step="1" data-phase="meme"></li>
+        <li data-step="2" data-phase="meme"></li>
+        <li data-step="3" data-phase="meme"></li>
+        <li data-step="4" data-phase="orphan"></li>
+        <li data-step="5" data-phase="sub"></li>
+        <li data-step="6" data-phase="sub"></li>
+        <li data-step="7" data-phase="sub"></li>
+        <li data-step="8" data-phase="sub"></li>
+      </ol>
 
-        <div class="af-scrolly-beats">
+      <div class="af-stage" id="af-stage">
 
-          <section class="af-scrolly-beat" data-step="1">
-            <p class="af-scrolly-beat-tag">01 · the meme</p>
-            <h4>The meme everyone&rsquo;s seen.</h4>
-            <p>Get new idea &rarr; start new project &rarr; tell everyone &rarr; back to a new idea. <strong>Finish project</strong> sits in the corner, untouched. The original flowchart isn&rsquo;t mine but it bloody rings true.</p>
-          </section>
-
-          <section class="af-scrolly-beat" data-step="2">
-            <p class="af-scrolly-beat-tag">02 · the orphan</p>
-            <h4>Finish project, sitting in the corner.</h4>
-            <p>The joke is that it never gets connected. The loop runs <em>tell &rarr; idea</em> diagonally up-left and skips it entirely. Same picture &mdash; just look at the bottom-left now.</p>
-          </section>
-
-          <section class="af-scrolly-beat" data-step="3">
-            <p class="af-scrolly-beat-tag">03 · back-and-forth</p>
-            <h4>A swarm to send work to, and answers coming back.</h4>
-            <p>The loop didn&rsquo;t get fixed. It got <em>supplemented.</em> &ldquo;Tell everyone&rdquo; fades out; AI agents fade in. Work goes down to them &mdash; answers come back up. The brain still cycles through <strong>start</strong>; the swarm just gives it more to chew on.</p>
-          </section>
-
-          <section class="af-scrolly-beat" data-step="4">
-            <p class="af-scrolly-beat-tag">04 · I close the loop</p>
-            <h4>The swarm reports up; I close the loop.</h4>
-            <p>One last edge draws diagonally across the square, from <strong>start</strong> to <strong>finish</strong>. <em>PhD supervisor energy.</em> The brain that was a tax is now an asset.</p>
-          </section>
-
-        </div>
-
-        <div class="af-scrolly-stage" id="af-scrolly-stage" data-step="1">
+        <div class="af-svg-pane">
           <div class="af-svg-wrap">
-            <svg id="af-svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet"
+            <svg id="af-svg" viewBox="0 0 600 520" preserveAspectRatio="xMidYMid meet"
                  role="img" aria-labelledby="af-title af-desc">
-              <title id="af-title">ADHD flowchart: meme then supplemented by AI agents</title>
-              <desc id="af-desc">A three-node loop of "get new idea, start new project, tell everyone" with a disconnected greyed-out "finish project". As the reader scrolls, "tell everyone" and its diagonal back-edge fade out and four AI agent nodes fade in. Paired delegation and report-back edges draw between "start new project" and the agents — work going down, answers coming back. Finally a single closer edge draws diagonally from "start new project" to "finish project", which shifts from grey to green.</desc>
+              <title id="af-title">ADHD flowchart: meme then subverted</title>
+              <desc id="af-desc">A step-by-step animation. The meme half lights up three nodes — get new idea, start new project, tell everyone — looping back to the start. A fourth, faded "finish project" sits off to the side, disconnected. The subverted half then lights up four new nodes — recognise the connection, hand the boring bits to a swarm, stay at the connection level, actually finish — closing the loop in green.</desc>
 
-              <!-- All graphics are injected by JS so rough.js can theme them
-                   cleanly on dark/light scheme changes. -->
               <g id="af-root"></g>
             </svg>
           </div>
-          <div class="af-caption" id="af-caption">
-            the original flowchart isn&#8217;t mine but it bloody rings true
+          <div class="af-controls">
+            <span class="af-hint" id="af-hint">auto-advancing &middot; hover to pause</span>
+            <button type="button" class="af-replay" id="af-replay" aria-label="Replay animation">replay</button>
           </div>
-          <button type="button" class="af-replay" id="af-replay" aria-label="Replay animation">
-            replay
-          </button>
+        </div>
+
+        <div class="af-cartoon-pane" id="af-cartoon-pane">
+          <div class="af-cartoon-stack" id="af-cartoon-stack">
+            <!-- Cartoon frames are inserted by JS so missing PNGs degrade
+                 gracefully to the empty state. -->
+          </div>
+          <div class="af-caption" id="af-caption">
+            get new idea
+          </div>
         </div>
 
       </div>
@@ -1160,6 +1282,8 @@
 </aside>
 <p>The flowchart is a two-state animation. State one is the meme everyone with an ADHD diagnosis has seen forty times: get new idea → start new project → tell everyone → loop, with &ldquo;finish project&rdquo; floating off to the side, disconnected. State two is my actual flowchart now: get new idea → recognise it&rsquo;s connected to three previous ideas → hand the boring bits to a swarm of agents → stay at the connection level → actually finish. The original loop is preserved, because that bit didn&rsquo;t go away and I don&rsquo;t want to pretend it did. What&rsquo;s new is the connection to the AI swarm that does the boring grind, and the connection from that swarm back to &ldquo;finish project,&rdquo; now a green node instead of an orphan.</p>
 <p>The brain doesn&rsquo;t get fixed. It gets supplemented. I&rsquo;m not going to extend that into self-help — half the internet is doing that already — but I need it on record for what comes next, because the configuration the meds enabled is the configuration the rest of this post is about.</p>
+<aside class="ti-pullquote">The brain doesn&rsquo;t get fixed. It gets supplemented.</aside>
+
 <h2>The configuration</h2>
 <p>The current AI configuration that works for me, in 2026, is one person with cross-domain taste running a swarm of fast cheap specialists.</p>
 <figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-cartoon-orchestrator-figcap">
@@ -1198,6 +1322,8 @@
 <p>Use the previous article as the worked example. I told the LLM about Plotly, Paradigm, Postgres, Thread. It saw the surface pattern (refusing to flatten data) early and confidently. It did not see the deeper one (topology as first-class) until I named it. We had four beats fitted into a &ldquo;data richness&rdquo; frame before I noticed the frame was wrong.</p>
 <p>Asked afterwards why it missed it, the LLM gave me a useful answer: almost no one is a specialist in two of those communities at once. DAGs in software engineering, graphs in OR, network topology in telecoms, provenance in databases and archaeology — same mathematical object, different folklore. The cross-walk papers don&rsquo;t get written, because the people who&rsquo;d write them are too busy doing the cross-walks.</p>
 <p>Even a model that has read more about graph theory and CFD provenance than I ever will didn&rsquo;t bridge them, because the bridge isn&rsquo;t in the corpus. The bridge was in my head. <strong>The bridges live in the heads of generalists</strong> and there isn&rsquo;t currently a substitute, which is fragile, and which, for now, is rare and valuable.</p>
+<aside class="ti-pullquote">The bridges live in the heads of generalists.</aside>
+
 <p>I want to be careful not to oversell that. AI may develop something taste-shaped — something that holds problem shape across communities and notices when their vocabularies are pointing at the same underlying thing. If it does, the orchestrator role compresses, possibly hard. The honest version: <em>right now, in 2026, this configuration is real and rare. The window depends on how fast taste-shaped AI arrives, and I don&rsquo;t know how fast that is.</em></p>
 <p>What I&rsquo;ll say with more confidence is that the configuration didn&rsquo;t exist before. Now the same wiring that used to be a tax is the bit the orchestrator role rewards, because the swarm picks up the grind tax that used to compound on you alone. Unfinished projects are something the swarm finishes. Scattered interests are something the swarm follows up on. The connection-noticing — the bit I was always actually doing, even when I didn&rsquo;t know it — is the bit no specialist in the swarm can do for me, because the connection requires having been all of those specialists, badly, at once.</p>
 <h2>How this article got made</h2>
@@ -1228,7 +1354,7 @@
   </div>
   <figcaption id="ti-video-orchestrator-day-figcap" class="ti-figcap">The brain that was a tax is now an asset.</figcaption>
 </figure>
-<p>The brain that was a tax is now an asset.</p>
+<p class="ti-final">The brain that was a tax is now an asset.</p>
   </main>
 
   <footer class="ti-foot ti-narrow" role="contentinfo">
@@ -1281,41 +1407,19 @@
 </script>
 <script></script>
 <script>/* =========================================================
-       ADHD flowchart — animated, hand-drawn, scroll-driven.
-       Wrapped in IIFE under window.AdhdFlowchart for safety.
+       ADHD flowchart — per-step scrolly, hand-drawn (rough.js).
 
-       Beats / states:
-         step 1 — meme intact. idea → start → tell → idea (diagonal).
-                  finish grey & orphaned in BL. AI hidden.
-                  caption: "the original flowchart isn't mine but it
-                  bloody rings true".
-         step 2 — same picture, caption names the orphan: "finish
-                  project, sitting in the corner — the joke is that
-                  it never gets connected."
-         step 3 — the SUBSTITUTION + back-and-forth. "tell everyone"
-                  and its two bypass edges (start→tell, tell→idea)
-                  fade OUT. AI nodes fade IN (80ms stagger).
-                  Delegation edges (start → AI, downward) draw at
-                  +370ms; report-back edges (AI → start, upward) draw
-                  at +520ms — the 150ms stagger reads as "send work
-                  down, get answers back". idea + start are kept.
-                  caption: "the loop didn't get fixed. it got
-                  supplemented — a swarm to send work to, and answers
-                  coming back."
-         step 4 — the closer. start → finish edge draws diagonally
-                  down-left across the square (~300ms). finish flips
-                  grey → green with 1.10x scale pulse. NO AI→finish
-                  edge: the work has already cycled back through
-                  start (Harry), and Harry is the one who closes.
-                  caption (must contain the verbatim line):
-                  "PhD supervisor energy. The swarm reports up; I
-                  close the loop. The brain that was a tax is now an
-                  asset."
+       Eight steps, two phases:
+         meme:   1 idea, 2 start, 3 tell (loop closes), 4 orphan reveal
+         sub:    5 recognise connection, 6 hand to swarm,
+                 7 stay at connection level, 8 actually finish
 
-       The animation is idempotent and seekable: jumping straight to
-       4 sets the settled state instantly; jumping back to 1 restores
-       the meme (tell + bypass edges visible, AI hidden, all step-2
-       edges undrawn, finish grey).
+       Auto-advance ~3s per step; hover-to-pause on the figure;
+       click any step-bar segment to jump. Reduced-motion holds
+       step 1 statically.
+
+       The rough.js drawing aesthetic is preserved across redraws.
+       Theme-change flips re-build geometry with new colours.
        ========================================================= */
     window.AdhdFlowchart = (function () {
       'use strict';
@@ -1325,68 +1429,59 @@
       const CAPTION = document.getElementById('af-caption');
       const REPLAY  = document.getElementById('af-replay');
       const FIGURE  = document.getElementById('af-figure');
-      const STAGE   = document.getElementById('af-scrolly-stage');
+      const STAGE   = document.getElementById('af-stage');
+      const PHASE   = document.getElementById('af-phase');
+      const COUNTER = document.getElementById('af-counter-now');
+      const HINT    = document.getElementById('af-hint');
+      const STEPBAR = document.getElementById('af-stepbar');
+      const CARTOON_STACK = document.getElementById('af-cartoon-stack');
 
       const NS = 'http://www.w3.org/2000/svg';
+      const TOTAL_STEPS = 8;
+      const DWELL_MS = 3000;
 
-      // --- Layout (in viewBox coordinates) -----------------------
-      // The original meme nodes form a SQUARE — idea (top-left), start
-      // (top-right), tell (bottom-right), finish (bottom-left). The
-      // meme loop bypasses finish: tell → idea cuts diagonally up-left
-      // across the square, leaving finish orphaned. That's the joke.
+      // ---- Layout (in viewBox 600 x 520) -----------------------
+      // Meme half lives in the top half (y < 260):
+      //   idea  (TL)   --->   start (TR)
+      //                          |
+      //                          v
+      //   finish (BL, faded) <-- tell (BR)   ... loop tell -> idea
       //
-      //   ┌─ idea (TL) ──→ start (TR) ─┐
-      //   │     ↖                    │
-      //   │       ╲                  │  loop: idea→start→tell→idea
-      //   │         ╲                ↓
-      //   └─ finish (BL)        tell (BR) ─┘
-      //                           ↑ the diagonal goes back to idea
+      // Subversion half lives in the bottom half (y >= 260),
+      // a horizontal chain that links to "idea" at the top:
+      //   recognise -> hand-to-swarm -> stay-at-level -> finish (green)
       //
-      // In state 2 (steps 3+4) the SUBSTITUTION happens: "tell everyone"
-      // and its two edges (start→tell, tell→idea) fade OUT, and the AI
-      // agent layer fades IN. Crucially the work flow is now a
-      // BACK-AND-FORTH between Harry (start) and the swarm:
-      //
-      //   - Delegation edges: start → each AI (downward, paired-left)
-      //   - Report-back edges: each AI → start (upward,  paired-right)
-      //   - Closer edge:      start → finish (diagonal, drawn at step 4)
-      //
-      // The swarm reports up; Harry closes the loop to finish. There is
-      // NO direct AI→finish edge — that was the wrong semantics. idea +
-      // start are preserved at the top — same brain pattern, different
-      // downstream.
+      // The orphaned "finish project" node sits at BL of the meme;
+      // the subversion's final node "actually finish" is its echo,
+      // colour-flipped to green.
       const NODES = {
-        idea:    { x: 120, y:  80, w: 200, h: 60, label: 'Get new idea' },      // top-left
-        start:   { x: 480, y:  80, w: 200, h: 60, label: 'Start new project' }, // top-right
-        tell:    { x: 480, y: 240, w: 200, h: 60, label: 'Tell everyone' },     // bottom-right (fades out in state 2)
-        finish:  { x: 120, y: 240, w: 200, h: 60, label: 'Finish project' },    // bottom-left
-        // AI agent nodes — pale blue, fade in across the bottom centre
-        // when "tell everyone" recedes. Spanning x≈60..720 so they read
-        // as the new downstream layer between start (top-right) and
-        // finish (bottom-left).
-        ai1:     { x:  60, y: 380, w: 150, h: 50, label: 'boilerplate' },
-        ai2:     { x: 230, y: 380, w: 150, h: 50, label: 'tests' },
-        ai3:     { x: 400, y: 380, w: 150, h: 50, label: 'data cleaning' },
-        ai4:     { x: 570, y: 380, w: 150, h: 50, label: 'lit review' },
+        // ----- meme (top half) -----
+        idea:    { x:  60, y:  60, w: 200, h: 56, label: 'Get new idea' },
+        start:   { x: 340, y:  60, w: 200, h: 56, label: 'Start new project' },
+        tell:    { x: 340, y: 180, w: 200, h: 56, label: 'Tell everyone' },
+        orphan:  { x:  60, y: 180, w: 200, h: 56, label: 'Finish project' },
+
+        // ----- subversion (bottom half) -----
+        recognise: { x:  20, y: 320, w: 170, h: 60, label: 'Recognise the connection' },
+        swarm:     { x: 215, y: 320, w: 170, h: 60, label: 'Hand to a swarm' },
+        stay:      { x: 410, y: 320, w: 170, h: 60, label: 'Stay at connection level' },
+        finish:    { x: 215, y: 430, w: 170, h: 60, label: 'Actually finish' },
       };
 
-      function centre(n) { return { x: n.x + n.w/2, y: n.y + n.h/2 }; }
-
-      // Compute attach point on a box edge along the line to a target point.
-      function attach(node, targetX, targetY, inset) {
+      function attach(node, targetX, targetY) {
         const cx = node.x + node.w/2;
         const cy = node.y + node.h/2;
         const dx = targetX - cx;
         const dy = targetY - cy;
-        const halfW = node.w/2 + (inset || 0);
-        const halfH = node.h/2 + (inset || 0);
+        const halfW = node.w/2 + 2;
+        const halfH = node.h/2 + 2;
         const sx = dx === 0 ? Infinity : Math.abs(halfW / dx);
         const sy = dy === 0 ? Infinity : Math.abs(halfH / dy);
         const s = Math.min(sx, sy);
         return { x: cx + dx * s, y: cy + dy * s };
       }
 
-      // --- rough.js setup ---------------------------------------
+      // ---- rough.js setup --------------------------------------
       let rc = null;
 
       function readVar(name) {
@@ -1397,12 +1492,12 @@
         return {
           fg:           readVar('--af-fg'),
           muted:        readVar('--af-muted'),
-          loopFill:     readVar('--af-loop-fill'),
-          loopStroke:   readVar('--af-loop-stroke'),
-          aiFill:       readVar('--af-ai-fill'),
-          aiStroke:     readVar('--af-ai-stroke'),
-          greyFill:     readVar('--af-finish-grey-fill'),
-          greyStroke:   readVar('--af-finish-grey-stroke'),
+          memeFill:     readVar('--af-meme-fill'),
+          memeStroke:   readVar('--af-meme-stroke'),
+          subFill:      readVar('--af-sub-fill'),
+          subStroke:    readVar('--af-sub-stroke'),
+          orphanFill:   readVar('--af-orphan-fill'),
+          orphanStroke: readVar('--af-orphan-stroke'),
           greenFill:    readVar('--af-finish-green-fill'),
           greenStroke:  readVar('--af-finish-green-stroke'),
           edge:         readVar('--af-edge'),
@@ -1414,10 +1509,10 @@
         return {
           fill: fill,
           fillStyle: 'hachure',
-          fillWeight: 1.4,
+          fillWeight: 1.2,
           hachureGap: 6,
           stroke: stroke,
-          strokeWidth: 2,
+          strokeWidth: 1.8,
           roughness: 1.5,
           bowing: 1,
           seed: 7,
@@ -1426,12 +1521,46 @@
       function edgeOpts(stroke, opts) {
         return Object.assign({
           stroke: stroke,
-          strokeWidth: 2,
+          strokeWidth: 1.8,
           roughness: 1.5,
           bowing: 1.5,
           seed: 11,
           fill: 'none',
         }, opts || {});
+      }
+
+      // Wrap label text into <= 2 lines using a soft heuristic.
+      function wrapLabel(parent, n, labelClass, lines) {
+        const t = document.createElementNS(NS, 'text');
+        t.setAttribute('class', 'af-label' + (labelClass ? ' ' + labelClass : ''));
+        t.setAttribute('x', n.x + n.w/2);
+        t.setAttribute('y', n.y + n.h/2);
+        const lh = 15;
+        const start = -((lines.length - 1) * lh) / 2;
+        lines.forEach((ln, i) => {
+          const ts = document.createElementNS(NS, 'tspan');
+          ts.setAttribute('x', n.x + n.w/2);
+          ts.setAttribute('dy', i === 0 ? start + 'px' : lh + 'px');
+          ts.textContent = ln;
+          t.appendChild(ts);
+        });
+        parent.appendChild(t);
+        return t;
+      }
+
+      function splitLabel(label) {
+        if (label.length <= 18) return [label];
+        // Try to split on the most central space.
+        const words = label.split(/\s+/);
+        if (words.length === 1) return [label];
+        let best = 0, bestDelta = Infinity;
+        for (let i = 1; i < words.length; i++) {
+          const left  = words.slice(0, i).join(' ');
+          const right = words.slice(i).join(' ');
+          const d = Math.abs(left.length - right.length);
+          if (d < bestDelta) { bestDelta = d; best = i; }
+        }
+        return [words.slice(0, best).join(' '), words.slice(best).join(' ')];
       }
 
       function drawNode(parent, n, opts, labelClass) {
@@ -1450,15 +1579,8 @@
           ' Z';
         const node = rc.path(d, opts);
         parent.appendChild(node);
-
-        const t = document.createElementNS(NS, 'text');
-        t.setAttribute('class', 'af-label' + (labelClass ? ' ' + labelClass : ''));
-        t.setAttribute('x', n.x + n.w/2);
-        t.setAttribute('y', n.y + n.h/2 + 1);
-        t.textContent = n.label;
-        parent.appendChild(t);
-
-        return { box: node, label: t };
+        wrapLabel(parent, n, labelClass, splitLabel(n.label));
+        return node;
       }
 
       function drawArrow(parent, from, to, opts) {
@@ -1469,7 +1591,7 @@
         const len = Math.hypot(dx, dy) || 1;
         const nx = -dy / len;
         const ny =  dx / len;
-        const curve = (opts && opts.curve != null) ? opts.curve : 14;
+        const curve = (opts && opts.curve != null) ? opts.curve : 10;
         const cx = mx + nx * curve;
         const cy = my + ny * curve;
 
@@ -1479,15 +1601,15 @@
         const path = rc.path(
           'M ' + from.x + ' ' + from.y +
           ' Q ' + cx + ' ' + cy + ' ' + to.x + ' ' + to.y,
-          edgeOpts(opts.stroke, { strokeWidth: opts.strokeWidth || 2 })
+          edgeOpts(opts.stroke, { strokeWidth: opts.strokeWidth || 1.8 })
         );
         g.appendChild(path);
 
         const tdx = to.x - cx, tdy = to.y - cy;
         const tlen = Math.hypot(tdx, tdy) || 1;
         const ux = tdx / tlen, uy = tdy / tlen;
-        const ah = 10;
-        const aw = 6;
+        const ah = 9;
+        const aw = 5;
         const baseX = to.x - ux * ah;
         const baseY = to.y - uy * ah;
         const px = -uy, py = ux;
@@ -1496,15 +1618,13 @@
 
         const head = rc.path(
           'M ' + a1x + ' ' + a1y + ' L ' + to.x + ' ' + to.y + ' L ' + a2x + ' ' + a2y,
-          edgeOpts(opts.stroke, { strokeWidth: opts.strokeWidth || 2 })
+          edgeOpts(opts.stroke, { strokeWidth: opts.strokeWidth || 1.8 })
         );
         g.appendChild(head);
 
-        return { group: g, path: path, head: head };
+        return g;
       }
 
-      // Make a rough.js path element animatable as a draw-on:
-      // collect every <path> inside, set up dasharray = total length.
       function prepareDrawOn(group) {
         const paths = group.querySelectorAll('path');
         const records = [];
@@ -1521,435 +1641,412 @@
         return records;
       }
 
-      // --- Build / rebuild the whole figure ---------------------
-      let groups = {};   // group references for animation
-      let timers = [];   // setTimeout handles for cancellation
-
-      function clearTimers() {
-        timers.forEach(t => clearTimeout(t));
-        timers = [];
-      }
-
       function svgGroup(cls) {
         const g = document.createElementNS(NS, 'g');
         g.setAttribute('class', cls);
         return g;
       }
 
+      // ---- Build the whole figure ------------------------------
+      // We pre-build EVERY node + edge as an animatable group,
+      // then per-step toggle visibility / draw-on. This keeps the
+      // animation idempotent + seekable.
+
+      let nodes = {};   // id -> { group: <g> (af-node-group) }
+      let edges = {};   // id -> { group: <g>, records: [...] }
+
       function build() {
         while (ROOT.firstChild) ROOT.removeChild(ROOT.firstChild);
         rc = rough.svg(SVG);
         const c = themeColours();
+        nodes = {};
+        edges = {};
 
-        // Layered groups, drawn in this z-order:
-        //   gLoopEdgesKept   — idea→start (always visible)
-        //   gLoopEdgesBypass — start→tell + tell→idea (fade out in state 2)
-        //   gLoopNodesKept   — idea + start (always visible)
-        //   gTell            — tell node (fades out in state 2)
-        //   gAi              — AI agent layer (fades in in state 2)
-        //   gDelegate        — start → AI edges, downward (draw at step 3)
-        //   gReport          — AI → start edges, upward (draw at step 3,
-        //                      ~150ms after delegation so the eye reads
-        //                      "send work down, get answers back")
-        //   gCloser          — start → finish edge, the closer move that
-        //                      Harry himself makes (draws at step 4 —
-        //                      THIS replaces the old AI→finish edges)
-        //   gFinish          — finish (grey/green stacked)
-        const gLoopEdgesKept   = svgGroup('af-loop-edges-kept');
-        const gLoopEdgesBypass = svgGroup('af-loop-edges-bypass');
-        const gLoopNodesKept   = svgGroup('af-loop-nodes-kept');
-        const gTell            = svgGroup('af-tell-group');
-        const gAi              = svgGroup('af-ai-group');
-        const gDelegate        = svgGroup('af-delegate-edges');
-        const gReport          = svgGroup('af-report-edges');
-        const gCloser          = svgGroup('af-closer-edge');
-        const gFinish          = svgGroup('af-finish-group');
+        // Layered groups for z-order.
+        const gMemeEdges = svgGroup('af-meme-edges-layer');
+        const gSubEdges  = svgGroup('af-sub-edges-layer');
+        const gMemeNodes = svgGroup('af-meme-nodes-layer');
+        const gSubNodes  = svgGroup('af-sub-nodes-layer');
 
-        ROOT.appendChild(gLoopEdgesKept);
-        ROOT.appendChild(gLoopEdgesBypass);
-        ROOT.appendChild(gLoopNodesKept);
-        ROOT.appendChild(gTell);
-        ROOT.appendChild(gAi);
-        ROOT.appendChild(gDelegate);
-        ROOT.appendChild(gReport);
-        ROOT.appendChild(gCloser);
-        ROOT.appendChild(gFinish);
+        ROOT.appendChild(gMemeEdges);
+        ROOT.appendChild(gSubEdges);
+        ROOT.appendChild(gMemeNodes);
+        ROOT.appendChild(gSubNodes);
 
-        // 1. Kept loop edge: idea → start (always visible).
-        drawArrow(
-          gLoopEdgesKept,
+        // ----- Meme nodes -----
+        function makeNode(parent, key, n, opts, labelClass) {
+          const g = svgGroup('af-node-group');
+          parent.appendChild(g);
+          drawNode(g, n, opts, labelClass);
+          nodes[key] = { group: g };
+        }
+
+        makeNode(gMemeNodes, 'idea',    NODES.idea,    nodeOpts(c.memeFill, c.memeStroke));
+        makeNode(gMemeNodes, 'start',   NODES.start,   nodeOpts(c.memeFill, c.memeStroke));
+        makeNode(gMemeNodes, 'tell',    NODES.tell,    nodeOpts(c.memeFill, c.memeStroke));
+        makeNode(gMemeNodes, 'orphan',  NODES.orphan,  nodeOpts(c.orphanFill, c.orphanStroke), 'af-label-orphan');
+
+        // ----- Subversion nodes -----
+        // recognise + swarm + stay all use the same teal-tinted style
+        // ("connection level" colour). finish flips green when reached.
+        makeNode(gSubNodes, 'recognise', NODES.recognise, nodeOpts(c.subFill, c.subStroke));
+        makeNode(gSubNodes, 'swarm',     NODES.swarm,     nodeOpts(c.subFill, c.subStroke));
+        makeNode(gSubNodes, 'stay',      NODES.stay,      nodeOpts(c.subFill, c.subStroke));
+        makeNode(gSubNodes, 'finish',    NODES.finish,    nodeOpts(c.greenFill, c.greenStroke), 'af-label-finish-green');
+
+        // ----- Meme edges -----
+        // idea -> start (top, l-r), start -> tell (right, top-down),
+        // tell -> idea (long diagonal, bottom-right -> top-left, the
+        // skip-the-orphan loop).
+        function makeEdge(parent, key, from, to, opts) {
+          const g = svgGroup('af-edge-group');
+          parent.appendChild(g);
+          drawArrow(g, from, to, opts);
+          const records = prepareDrawOn(g);
+          edges[key] = { group: g, records: records };
+        }
+
+        makeEdge(gMemeEdges, 'idea_start',
           attach(NODES.idea, NODES.start.x + NODES.start.w/2, NODES.start.y + NODES.start.h/2),
           attach(NODES.start, NODES.idea.x + NODES.idea.w/2, NODES.idea.y + NODES.idea.h/2),
-          { stroke: c.edge, curve: -10 }
-        );
+          { stroke: c.edge, curve: -8 });
 
-        // 2. Bypass loop edges: start → tell, and tell → idea (fade out
-        //    in state 2 along with the tell node itself).
-        drawArrow(
-          gLoopEdgesBypass,
+        makeEdge(gMemeEdges, 'start_tell',
           attach(NODES.start, NODES.tell.x + NODES.tell.w/2, NODES.tell.y + NODES.tell.h/2),
           attach(NODES.tell, NODES.start.x + NODES.start.w/2, NODES.start.y + NODES.start.h/2),
-          { stroke: c.edge, curve: -12 }
-        );
-        drawArrow(
-          gLoopEdgesBypass,
+          { stroke: c.edge, curve: 8 });
+
+        // tell -> idea: the diagonal loop closer.
+        makeEdge(gMemeEdges, 'tell_idea',
           attach(NODES.tell, NODES.idea.x + NODES.idea.w/2, NODES.idea.y + NODES.idea.h/2),
           attach(NODES.idea, NODES.tell.x + NODES.tell.w/2, NODES.tell.y + NODES.tell.h/2),
-          { stroke: c.edge, curve: 14 }
-        );
+          { stroke: c.edge, curve: 14 });
 
-        // 3. Kept loop nodes: idea + start (always visible).
-        drawNode(gLoopNodesKept, NODES.idea,  nodeOpts(c.loopFill, c.loopStroke));
-        drawNode(gLoopNodesKept, NODES.start, nodeOpts(c.loopFill, c.loopStroke));
+        // ----- Subversion edges -----
+        // idea -> recognise: bridge from the meme's idea node DOWN into
+        // the subversion. This lights up at step 5.
+        makeEdge(gSubEdges, 'idea_recognise',
+          attach(NODES.idea, NODES.recognise.x + NODES.recognise.w/2, NODES.recognise.y + NODES.recognise.h/2),
+          attach(NODES.recognise, NODES.idea.x + NODES.idea.w/2, NODES.idea.y + NODES.idea.h/2),
+          { stroke: c.subStroke, curve: -10, strokeWidth: 2 });
 
-        // 4. Tell node — fades out in state 2.
-        drawNode(gTell, NODES.tell, nodeOpts(c.loopFill, c.loopStroke));
+        // recognise -> swarm
+        makeEdge(gSubEdges, 'recognise_swarm',
+          attach(NODES.recognise, NODES.swarm.x + NODES.swarm.w/2, NODES.swarm.y + NODES.swarm.h/2),
+          attach(NODES.swarm, NODES.recognise.x + NODES.recognise.w/2, NODES.recognise.y + NODES.recognise.h/2),
+          { stroke: c.edgeSoft, curve: 0 });
 
-        // 5. AI agent nodes (built but invisible until reveal).
-        drawNode(gAi, NODES.ai1, nodeOpts(c.aiFill, c.aiStroke));
-        drawNode(gAi, NODES.ai2, nodeOpts(c.aiFill, c.aiStroke));
-        drawNode(gAi, NODES.ai3, nodeOpts(c.aiFill, c.aiStroke));
-        drawNode(gAi, NODES.ai4, nodeOpts(c.aiFill, c.aiStroke));
+        // swarm -> stay
+        makeEdge(gSubEdges, 'swarm_stay',
+          attach(NODES.swarm, NODES.stay.x + NODES.stay.w/2, NODES.stay.y + NODES.stay.h/2),
+          attach(NODES.stay, NODES.swarm.x + NODES.swarm.w/2, NODES.swarm.y + NODES.swarm.h/2),
+          { stroke: c.edgeSoft, curve: 0 });
 
-        // 6. Delegation edges (start -> each AI), downward.
-        //    Offset slightly to the LEFT of each AI's centre so the
-        //    paired report-back edge can sit to the right and the two
-        //    parallel arrows read as a back-and-forth, not as one
-        //    line drawn twice. Inset of ±14px on the AI top edge.
-        const aiNodes = [NODES.ai1, NODES.ai2, NODES.ai3, NODES.ai4];
-        const PAIR_OFFSET = 14;  // px on the start/AI box edges
-        aiNodes.forEach(ai => {
-          // Attach point on start's bottom edge, shifted LEFT.
-          const startCx = NODES.start.x + NODES.start.w/2 - PAIR_OFFSET;
-          const startCy = NODES.start.y + NODES.start.h;
-          // Attach point on AI's top edge, shifted LEFT.
-          const aiCx = ai.x + ai.w/2 - PAIR_OFFSET;
-          const aiCy = ai.y;
-          drawArrow(
-            gDelegate,
-            { x: startCx, y: startCy },
-            { x: aiCx,    y: aiCy },
-            { stroke: c.edgeSoft, curve: 6 }
-          );
-        });
-        const delegateRecords = prepareDrawOn(gDelegate);
-
-        // 7. Report-back edges (each AI -> start), upward.
-        //    Paired with the delegation arrows above, but offset to the
-        //    RIGHT so the two arrows sit side-by-side. This is the
-        //    "answers coming back" half of the back-and-forth.
-        aiNodes.forEach(ai => {
-          const startCx = NODES.start.x + NODES.start.w/2 + PAIR_OFFSET;
-          const startCy = NODES.start.y + NODES.start.h;
-          const aiCx = ai.x + ai.w/2 + PAIR_OFFSET;
-          const aiCy = ai.y;
-          drawArrow(
-            gReport,
-            { x: aiCx,    y: aiCy },
-            { x: startCx, y: startCy },
-            { stroke: c.edgeSoft, curve: 6 }
-          );
-        });
-        const reportRecords = prepareDrawOn(gReport);
-
-        // 8. Closer edge (start -> finish), diagonal down-left across
-        //    the square. THIS is the move Harry makes — the AI swarm
-        //    reports up, Harry closes the loop. Draws at step 4.
-        drawArrow(
-          gCloser,
-          attach(NODES.start, NODES.finish.x + NODES.finish.w/2, NODES.finish.y + NODES.finish.h/2),
-          attach(NODES.finish, NODES.start.x + NODES.start.w/2, NODES.start.y + NODES.start.h/2),
-          // Stronger stroke (use the primary edge colour, not the soft
-          // grey of the AI back-and-forth) — this is the load-bearing
-          // arrow of the new state. Slight curve so it doesn't run
-          // straight through the AI row.
-          { stroke: c.edge, curve: -22, strokeWidth: 2.5 }
-        );
-        const closerRecords = prepareDrawOn(gCloser);
-
-        // 9. Finish project, two stacked variants (grey + green).
-        const greyG = svgGroup('af-finish-grey');
-        const greenG = svgGroup('af-finish-green');
-        gFinish.appendChild(greyG);
-        gFinish.appendChild(greenG);
-        drawNode(greyG, NODES.finish, nodeOpts(c.greyFill, c.greyStroke), 'af-label-finish-grey');
-        drawNode(greenG, NODES.finish, nodeOpts(c.greenFill, c.greenStroke), 'af-label-finish-green');
-
-        groups = {
-          gTell: gTell,
-          gBypass: gLoopEdgesBypass,
-          gAi: gAi,
-          gFinish: gFinish,
-          delegateRecords: delegateRecords,
-          reportRecords: reportRecords,
-          closerRecords: closerRecords,
-        };
+        // stay -> finish: the closer.
+        makeEdge(gSubEdges, 'stay_finish',
+          attach(NODES.stay, NODES.finish.x + NODES.finish.w/2, NODES.finish.y + NODES.finish.h/2),
+          attach(NODES.finish, NODES.stay.x + NODES.stay.w/2, NODES.stay.y + NODES.stay.h/2),
+          { stroke: c.greenStroke, curve: 14, strokeWidth: 2.2 });
       }
 
-      // --- Captions per beat ------------------------------------
-      const CAPTIONS = {
-        1: "the original flowchart isn’t mine but it bloody rings true",
-        2: "finish project, sitting in the corner — the joke is that it never gets connected.",
-        3: "the loop didn’t get fixed. it got supplemented — a swarm to send work to, and answers coming back.",
-        4: "PhD supervisor energy. The swarm reports up; I close the loop. The brain that was a tax is now an asset.",
-      };
+      // ---- Per-step state ---------------------------------------
+      // For each step n we declare which nodes + edges should be
+      // visible (drawn) by the END of that step, and which node
+      // gets the highlight pulse.
+      //
+      // n=1 idea (highlight)
+      // n=2 idea + start + idea->start edge (start highlight)
+      // n=3 idea + start + tell + start->tell + tell->idea (tell highlight)
+      // n=4 + orphan revealed (orphan highlight)
+      // n=5 + recognise + idea->recognise (recognise highlight)
+      // n=6 + swarm + recognise->swarm (swarm highlight)
+      // n=7 + stay + swarm->stay (stay highlight)
+      // n=8 + finish + stay->finish (finish highlight)
+      const STEP_NODES = [
+        [],                                                       // step 0 (off)
+        ['idea'],                                                 // 1
+        ['idea', 'start'],                                        // 2
+        ['idea', 'start', 'tell'],                                // 3
+        ['idea', 'start', 'tell', 'orphan'],                      // 4
+        ['idea', 'start', 'tell', 'orphan', 'recognise'],         // 5
+        ['idea', 'start', 'tell', 'orphan', 'recognise', 'swarm'],// 6
+        ['idea', 'start', 'tell', 'orphan', 'recognise', 'swarm', 'stay'],          // 7
+        ['idea', 'start', 'tell', 'orphan', 'recognise', 'swarm', 'stay', 'finish'],// 8
+      ];
+      const STEP_EDGES = [
+        [],
+        [],
+        ['idea_start'],
+        ['idea_start', 'start_tell', 'tell_idea'],
+        ['idea_start', 'start_tell', 'tell_idea'],
+        ['idea_start', 'start_tell', 'tell_idea', 'idea_recognise'],
+        ['idea_start', 'start_tell', 'tell_idea', 'idea_recognise', 'recognise_swarm'],
+        ['idea_start', 'start_tell', 'tell_idea', 'idea_recognise', 'recognise_swarm', 'swarm_stay'],
+        ['idea_start', 'start_tell', 'tell_idea', 'idea_recognise', 'recognise_swarm', 'swarm_stay', 'stay_finish'],
+      ];
+      const STEP_HIGHLIGHT = [
+        null, 'idea', 'start', 'tell', 'orphan', 'recognise', 'swarm', 'stay', 'finish'
+      ];
 
-      function setCaption(text, immediate) {
-        if (immediate) {
-          CAPTION.textContent = text;
-          CAPTION.style.opacity = '1';
-          return;
+      const CAPTIONS = [
+        '',
+        'get new idea',
+        'start new project',
+        'tell everyone &mdash; loop closes, the meme runs',
+        'finish project, sitting in the corner &mdash; never connected',
+        'recognise it&rsquo;s connected to three previous ideas',
+        'hand the boring bits to a swarm of agents',
+        'stay at the connection level',
+        'actually finish &mdash; the brain that was a tax is now an asset',
+      ];
+
+      const PHASE_LABEL = [
+        '', 'the meme', 'the meme', 'the meme', 'the orphan',
+        'the subversion', 'the subversion', 'the subversion', 'the subversion',
+      ];
+
+      // Cartoon mapping. null = no cartoon panel (show empty state).
+      const CARTOON_FOR_STEP = [
+        null,
+        'figures/cartoon-get-idea.png',          // 1
+        'figures/cartoon-start-project.png',     // 2
+        'figures/cartoon-tell-everyone.png',     // 3
+        null,                                    // 4 — orphan reveal, no cartoon (the gag)
+        'figures/cartoon-orchestrator.png',      // 5 — recognise the connection (reuses orchestrator)
+        'figures/cartoon-orchestrator.png',      // 6 — hand to swarm (orchestrator again, fits exactly)
+        'figures/cartoon-normal-things.png',     // 7 — stay at connection level (talk normal things)
+        'figures/cartoon-actually-finish.png',   // 8 — actually finish
+      ];
+      // When the figure is integrated into the article at root level,
+      // the figures/ prefix is correct. The standalone preview at
+      // figures/adhd-flowchart-animated.html wants the bare filename.
+      // We try the prefixed path first; if the standalone preview is in
+      // use we'll detect the URL and strip it.
+      function resolveCartoonSrc(src) {
+        if (!src) return null;
+        // Standalone preview lives in /figures/ — strip the prefix so
+        // images load from the same dir.
+        const here = (window.location.pathname || '');
+        if (here.indexOf('/figures/') !== -1) {
+          return src.replace(/^figures\//, '');
         }
-        // Brief opacity dip for a softer swap.
-        CAPTION.style.opacity = '0';
-        setTimeout(() => {
-          CAPTION.textContent = text;
-          CAPTION.style.opacity = '1';
-        }, 140);
+        return src;
       }
 
-      // -----------------------------------------------------------
-      // State helpers — set the figure to a specific step's state
-      // either with animation (when the user just scrolled into that
-      // beat) or instantly (when seeking, e.g. cold-load on step 4 or
-      // jumping back from 4 to 1).
-      // -----------------------------------------------------------
-      // Fade out (or back in) the meme bypass: "tell everyone" + the
-      // two edges (start→tell and tell→idea). When animated=false we
-      // suppress the CSS transition so seeking is instant.
-      function setMemeBypassVisible(visible, animated) {
-        const els = [groups.gTell, groups.gBypass];
-        els.forEach(el => {
-          if (!el) return;
-          if (animated) {
-            el.style.transition = '';
-          } else {
-            el.style.transition = 'none';
-          }
-          el.classList.toggle('af-faded', !visible);
+      // Build cartoon frame elements lazily.
+      const cartoonFrames = {};
+      function getCartoonFrame(srcKey) {
+        if (!srcKey) return null;
+        if (cartoonFrames[srcKey]) return cartoonFrames[srcKey];
+        const wrap = document.createElement('div');
+        wrap.className = 'af-cartoon-frame';
+        const img = document.createElement('img');
+        img.src = resolveCartoonSrc(srcKey);
+        img.alt = '';
+        img.loading = 'lazy';
+        // If the image fails to load, hide the frame and let the empty-
+        // state copy show instead.
+        img.addEventListener('error', () => {
+          wrap.dataset.broken = 'true';
         });
-        if (!animated) {
-          // Force layout flush so the no-transition style applies before
-          // we restore the default transition on the next frame.
-          requestAnimationFrame(() => {
-            els.forEach(el => { if (el) el.style.transition = ''; });
-          });
-        }
+        wrap.appendChild(img);
+        CARTOON_STACK.appendChild(wrap);
+        cartoonFrames[srcKey] = wrap;
+        return wrap;
       }
 
-      function setAiVisible(visible, animated) {
-        const children = groups.gAi.children;
-        if (visible) {
-          if (animated) {
-            for (let i = 0; i < children.length; i++) {
-              children[i].style.transition = 'opacity 320ms ease ' + (i * 80) + 'ms';
-              children[i].style.opacity = '1';
-            }
-          } else {
-            for (let i = 0; i < children.length; i++) {
-              children[i].style.transition = 'none';
-              children[i].style.opacity = '1';
-            }
-          }
-          groups.gAi.classList.add('af-visible');
+      // ---- Apply state for step n ------------------------------
+      function setNodeVisible(g, visible, animated) {
+        if (!g) return;
+        if (animated) {
+          g.classList.toggle('af-visible', visible);
         } else {
-          for (let i = 0; i < children.length; i++) {
-            children[i].style.transition = 'none';
-            children[i].style.opacity = '0';
-          }
-          groups.gAi.classList.remove('af-visible');
+          // Snap with no transition.
+          const prev = g.style.transition;
+          g.style.transition = 'none';
+          g.classList.toggle('af-visible', visible);
+          // Force reflow then restore.
+          // eslint-disable-next-line no-unused-expressions
+          g.getBoundingClientRect();
+          requestAnimationFrame(() => { g.style.transition = prev || ''; });
         }
       }
 
-      function setEdgesDrawn(records, drawn, animated, durationMs) {
-        records.forEach(r => {
+      function setEdgeDrawn(rec, drawn, animated, durationMs) {
+        rec.records.forEach(r => {
           if (drawn) {
             if (animated) {
-              r.p.style.transitionDuration = (durationMs || 420) + 'ms';
-              // Force layout flush so the transition triggers.
+              r.p.style.transitionDuration = (durationMs || 460) + 'ms';
               // eslint-disable-next-line no-unused-expressions
               r.p.getBoundingClientRect();
               r.p.setAttribute('stroke-dashoffset', '0');
+              rec.group.style.opacity = '1';
             } else {
               r.p.style.transitionDuration = '0ms';
               r.p.setAttribute('stroke-dashoffset', '0');
+              rec.group.style.opacity = '1';
             }
           } else {
             r.p.style.transitionDuration = '0ms';
             r.p.setAttribute('stroke-dashoffset', r.len);
+            rec.group.style.opacity = '0';
           }
         });
       }
 
-      function setFinished(finished, animated) {
-        if (finished) {
-          if (!animated) {
-            // Suppress the pulse animation when seeking instantly.
-            const greenEls = groups.gFinish.querySelectorAll('.af-finish-green');
-            greenEls.forEach(el => {
-              el.style.animation = 'none';
-            });
-            // Force reflow then restore so subsequent animated finishes still pulse.
-            requestAnimationFrame(() => {
-              greenEls.forEach(el => { el.style.animation = ''; });
-            });
-          }
-          groups.gFinish.classList.add('af-finished');
-        } else {
-          groups.gFinish.classList.remove('af-finished');
-        }
+      function highlight(key) {
+        // Clear previous pulses.
+        Object.values(nodes).forEach(rec => {
+          if (rec && rec.group) rec.group.classList.remove('af-highlight');
+        });
+        if (!key) return;
+        const rec = nodes[key];
+        if (!rec) return;
+        // Re-add the class on the next frame so the CSS animation re-runs.
+        requestAnimationFrame(() => {
+          rec.group.classList.add('af-highlight');
+        });
       }
 
-      // -----------------------------------------------------------
-      // goToStep(n, animated)
-      //   Idempotent + seekable. n in {1,2,3,4}.
-      //   animated=true uses the original timeline-ish transitions
-      //   (slightly compressed for scroll-driven cadence). false
-      //   sets the settled state for that step instantly.
-      // -----------------------------------------------------------
-      let currentStep = 0;
+      function setCartoon(srcKey) {
+        // Hide any currently-shown frame, show the new one.
+        Object.values(cartoonFrames).forEach(f => f.classList.remove('af-show'));
+        if (!srcKey) return;
+        const f = getCartoonFrame(srcKey);
+        if (f) f.classList.add('af-show');
+      }
 
+      function setCaption(html) {
+        CAPTION.innerHTML = html;
+      }
+
+      function setStepBar(n) {
+        const items = STEPBAR.querySelectorAll('li');
+        items.forEach((li, i) => {
+          li.classList.remove('af-step-active', 'af-step-done');
+          if (i + 1 === n) li.classList.add('af-step-active');
+          else if (i + 1 < n) li.classList.add('af-step-done');
+        });
+      }
+
+      // ---- goToStep(n, animated) -------------------------------
+      let currentStep = 0;
       function goToStep(n, animated) {
-        clearTimers();
+        if (n < 1 || n > TOTAL_STEPS) return;
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduced) animated = false;
 
-        // Always update the stage's data-step (handy for any CSS hooks).
+        const wantNodes = new Set(STEP_NODES[n]);
+        const wantEdges = new Set(STEP_EDGES[n]);
+
+        // Nodes: visible iff in wantNodes.
+        Object.keys(nodes).forEach(k => {
+          setNodeVisible(nodes[k].group, wantNodes.has(k), animated && (n > currentStep));
+        });
+        // Edges: drawn iff in wantEdges.
+        Object.keys(edges).forEach(k => {
+          setEdgeDrawn(edges[k], wantEdges.has(k), animated && (n > currentStep));
+        });
+        // Highlight pulse on the node that just appeared.
+        if (animated && n > currentStep) {
+          // Tiny delay so the appear-fade has time to start before pulse.
+          setTimeout(() => highlight(STEP_HIGHLIGHT[n]), 120);
+        } else {
+          // Seeking: snap with no pulse.
+          highlight(null);
+        }
+
+        setCaption(CAPTIONS[n]);
+        setCartoon(CARTOON_FOR_STEP[n]);
+        if (PHASE) PHASE.textContent = PHASE_LABEL[n];
+        if (COUNTER) COUNTER.textContent = String(n);
+        setStepBar(n);
         if (STAGE) STAGE.dataset.step = String(n);
-
-        // Step 1 & 2 — full meme intact. tell visible + bypass edges
-        // visible, AI hidden, delegation/report/closer undrawn, finish
-        // grey. The picture is identical between 1 and 2; only the
-        // caption changes (beat 2 names the orphan).
-        if (n === 1 || n === 2) {
-          setMemeBypassVisible(true, false);
-          setAiVisible(false, false);
-          setEdgesDrawn(groups.delegateRecords, false, false);
-          setEdgesDrawn(groups.reportRecords, false, false);
-          setEdgesDrawn(groups.closerRecords, false, false);
-          setFinished(false, false);
-          setCaption(CAPTIONS[n], !animated);
-          currentStep = n;
-          return;
-        }
-
-        // Step 3 — the substitution + the back-and-forth.
-        // "tell everyone" + its two edges fade OUT; AI nodes fade IN
-        // with the 80ms stagger; delegation (down) and report-back
-        // (up) edges both draw — paired arrows, staggered by ~150ms
-        // so the eye reads "send work down, get answers back".
-        if (n === 3) {
-          // Reset downstream state (in case we're scrolling backward from 4).
-          setEdgesDrawn(groups.closerRecords, false, false);
-          setFinished(false, false);
-
-          if (animated) {
-            // Start from the meme-intact state, then run the substitution.
-            setMemeBypassVisible(true, false);
-            setAiVisible(false, false);
-            setEdgesDrawn(groups.delegateRecords, false, false);
-            setEdgesDrawn(groups.reportRecords, false, false);
-            // Layout flush, then animate.
-            requestAnimationFrame(() => {
-              // Fade tell + bypass edges OUT.
-              setMemeBypassVisible(false, true);
-              // ~120ms in, fade AI nodes IN (overlapping for a clean swap).
-              timers.push(setTimeout(() => {
-                setAiVisible(true, true);
-              }, 120));
-              // ~370ms after kickoff, draw delegation edges (down).
-              timers.push(setTimeout(() => {
-                setEdgesDrawn(groups.delegateRecords, true, true, 400);
-              }, 370));
-              // ~150ms later, draw the report-back edges (up). The
-              // stagger reads as "send work down, get answers back".
-              timers.push(setTimeout(() => {
-                setEdgesDrawn(groups.reportRecords, true, true, 400);
-              }, 520));
-            });
-            setCaption(CAPTIONS[3], false);
-          } else {
-            setMemeBypassVisible(false, false);
-            setAiVisible(true, false);
-            setEdgesDrawn(groups.delegateRecords, true, false);
-            setEdgesDrawn(groups.reportRecords, true, false);
-            setCaption(CAPTIONS[3], true);
-          }
-          currentStep = n;
-          return;
-        }
-
-        // Step 4 — the closer. start → finish edge draws across the
-        // square (~300ms), then finish flips grey → green with the
-        // 1.10x scale pulse. No AI→finish edges in this version: the
-        // work has already cycled back through start (Harry), and
-        // Harry is the one who closes.
-        if (n === 4) {
-          if (animated) {
-            // Ensure prerequisites are set instantly (tell faded, AI in,
-            // back-and-forth drawn) so step 4's motion reads cleanly.
-            setMemeBypassVisible(false, false);
-            setAiVisible(true, false);
-            setEdgesDrawn(groups.delegateRecords, true, false);
-            setEdgesDrawn(groups.reportRecords, true, false);
-            setEdgesDrawn(groups.closerRecords, false, false);
-            requestAnimationFrame(() => {
-              setEdgesDrawn(groups.closerRecords, true, true, 300);
-              // ~200ms after closer starts, pulse green.
-              timers.push(setTimeout(() => {
-                setFinished(true, true);
-              }, 200));
-            });
-            setCaption(CAPTIONS[4], false);
-          } else {
-            setMemeBypassVisible(false, false);
-            setAiVisible(true, false);
-            setEdgesDrawn(groups.delegateRecords, true, false);
-            setEdgesDrawn(groups.reportRecords, true, false);
-            setEdgesDrawn(groups.closerRecords, true, false);
-            setFinished(true, false);
-            setCaption(CAPTIONS[4], true);
-          }
-          currentStep = n;
-          return;
-        }
+        currentStep = n;
       }
 
-      // --- Wire it up -------------------------------------------
+      // ---- Auto-advance + hover-pause + click-jump ------------
+      let autoTimer = null;
+      let isPaused = false;
+      let isFinished = false;
+
+      function clearAutoTimer() {
+        if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+      }
+      function scheduleNext() {
+        clearAutoTimer();
+        if (isPaused || isFinished) return;
+        autoTimer = setTimeout(() => {
+          if (currentStep >= TOTAL_STEPS) {
+            isFinished = true;
+            if (HINT) HINT.textContent = 'click replay to run again';
+            return;
+          }
+          goToStep(currentStep + 1, true);
+          scheduleNext();
+        }, DWELL_MS);
+      }
+
+      function pause() {
+        if (isPaused) return;
+        isPaused = true;
+        clearAutoTimer();
+        if (HINT && !isFinished) HINT.textContent = 'paused &middot; move away to resume';
+      }
+      function resume() {
+        if (!isPaused) return;
+        isPaused = false;
+        if (HINT && !isFinished) HINT.innerHTML = 'auto-advancing &middot; hover to pause';
+        scheduleNext();
+      }
+
       function init() {
         build();
 
-        // Initial state: step 1, instant (no animation on cold load).
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduced) {
-          // Reduced motion: render settled state immediately.
-          goToStep(4, false);
-        } else {
+          // Hold step 1 statically per the brief.
           goToStep(1, false);
+          if (HINT) HINT.textContent = 'reduced motion';
+          // Mark all step-bar items neutral.
+          return;
         }
 
-        // Replay button — reset to step 1; scroll re-drives the rest.
-        REPLAY.addEventListener('click', () => {
-          goToStep(1, false);
-          // If the active beat is past 1, advance with animation to it.
-          const activeBeat = document.querySelector('.af-scrolly-beat.af-active');
-          if (activeBeat) {
-            const step = parseInt(activeBeat.dataset.step, 10);
-            if (step > 1) {
-              // Walk forward through animated steps so each beat's
-              // entrance still reads.
-              let s = 2;
-              const tick = () => {
-                if (s > step) return;
-                goToStep(s, true);
-                if (s < step) {
-                  timers.push(setTimeout(tick, 700));
-                }
-                s++;
-              };
-              timers.push(setTimeout(tick, 200));
-            }
+        // Cold load: go to step 1 instantly, schedule the rest.
+        goToStep(1, false);
+        scheduleNext();
+
+        // Hover-to-pause on the figure.
+        FIGURE.addEventListener('mouseenter', pause);
+        FIGURE.addEventListener('mouseleave', resume);
+        FIGURE.addEventListener('focusin', pause);
+        FIGURE.addEventListener('focusout', resume);
+
+        // Click any step-bar segment to jump there.
+        STEPBAR.addEventListener('click', e => {
+          const li = e.target.closest('li[data-step]');
+          if (!li) return;
+          const n = parseInt(li.dataset.step, 10);
+          if (!n) return;
+          isFinished = (n >= TOTAL_STEPS);
+          // Animate forward, snap backward.
+          goToStep(n, n > currentStep);
+          if (isFinished) {
+            if (HINT) HINT.textContent = 'click replay to run again';
+            clearAutoTimer();
+          } else {
+            // If we just jumped into the middle, keep auto-advancing
+            // unless the figure is currently hovered.
+            if (!isPaused) scheduleNext();
           }
+        });
+
+        // Replay button.
+        REPLAY.addEventListener('click', () => {
+          isFinished = false;
+          goToStep(1, false);
+          if (HINT) HINT.innerHTML = 'auto-advancing &middot; hover to pause';
+          if (!isPaused) scheduleNext();
         });
 
         // Theme change: rebuild geometry with new colours, restore state.
@@ -1957,52 +2054,14 @@
         const onSchemeChange = () => {
           const remembered = currentStep || 1;
           build();
+          // Clear cached cartoon frames? They're DOM nodes inside the
+          // pane and the pane isn't rebuilt — fine to leave.
           goToStep(remembered, false);
         };
         if (mq.addEventListener) mq.addEventListener('change', onSchemeChange);
         else if (mq.addListener) mq.addListener(onSchemeChange);
-
-        // --- Scrolly observer ----------------------------------
-        // Each beat advances the figure to its data-step when it crosses
-        // the centre 20vh band. Same trick as flat-view.html.
-        if (reduced) {
-          // Reduced motion: skip scroll-driven progression. Render settled
-          // state and mark all beats as visible/active for readability.
-          document.querySelectorAll('.af-scrolly-beat').forEach(b => b.classList.add('af-active'));
-          return;
-        }
-
-        const beats = Array.from(document.querySelectorAll('.af-scrolly-beat'));
-        if (beats.length === 0) return;
-
-        function activateBeat(beat) {
-          beats.forEach(b => b.classList.toggle('af-active', b === beat));
-          if (!beat) return;
-          const step = parseInt(beat.dataset.step, 10);
-          if (!step) return;
-          // If we're advancing, animate; if we're going back, snap.
-          const animated = step > currentStep;
-          goToStep(step, animated);
-        }
-
-        // First beat active by default.
-        activateBeat(beats[0]);
-
-        if ('IntersectionObserver' in window) {
-          const io = new IntersectionObserver((entries) => {
-            const inView = entries.filter(e => e.isIntersecting).map(e => e.target);
-            if (inView.length === 0) return;
-            // Pick the last in-view beat in document order — the most
-            // recent the reader has scrolled INTO.
-            inView.sort((a, b) => beats.indexOf(a) - beats.indexOf(b));
-            activateBeat(inView[inView.length - 1]);
-          }, { threshold: 0, rootMargin: "-40% 0px -40% 0px" });
-          beats.forEach(b => io.observe(b));
-        }
       }
 
-      // Wait for both rough and the DOM (script is at end of body, but
-      // rough.js loads from CDN so it might not be ready yet).
       function ready(fn) {
         if (window.rough) fn();
         else window.addEventListener('load', fn, { once: true });

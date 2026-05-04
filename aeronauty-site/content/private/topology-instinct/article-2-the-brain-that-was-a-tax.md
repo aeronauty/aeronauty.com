@@ -22,6 +22,8 @@ The flowchart is a two-state animation. State one is the meme everyone with an A
 
 The brain doesn't get fixed. It gets supplemented. I'm not going to extend that into self-help — half the internet is doing that already — but I need it on record for what comes next, because the configuration the meds enabled is the configuration the rest of this post is about.
 
+<aside class="ti-pullquote">The brain doesn&rsquo;t get fixed. It gets supplemented.</aside>
+
 ## The configuration
 
 The current AI configuration that works for me, in 2026, is one person with cross-domain taste running a swarm of fast cheap specialists.
@@ -66,6 +68,8 @@ Asked afterwards why it missed it, the LLM gave me a useful answer: almost no on
 
 Even a model that has read more about graph theory and CFD provenance than I ever will didn't bridge them, because the bridge isn't in the corpus. The bridge was in my head. **The bridges live in the heads of generalists** and there isn't currently a substitute, which is fragile, and which, for now, is rare and valuable.
 
+<aside class="ti-pullquote">The bridges live in the heads of generalists.</aside>
+
 I want to be careful not to oversell that. AI may develop something taste-shaped — something that holds problem shape across communities and notices when their vocabularies are pointing at the same underlying thing. If it does, the orchestrator role compresses, possibly hard. The honest version: *right now, in 2026, this configuration is real and rare. The window depends on how fast taste-shaped AI arrives, and I don't know how fast that is.*
 
 What I'll say with more confidence is that the configuration didn't exist before. Now the same wiring that used to be a tax is the bit the orchestrator role rewards, because the swarm picks up the grind tax that used to compound on you alone. Unfinished projects are something the swarm finishes. Scattered interests are something the swarm follows up on. The connection-noticing — the bit I was always actually doing, even when I didn't know it — is the bit no specialist in the swarm can do for me, because the connection requires having been all of those specialists, badly, at once.
@@ -92,4 +96,4 @@ Maybe AI compresses that role later. I don't know. In 2026, it is real.
 
 [VIDEO: orchestrator-day]
 
-The brain that was a tax is now an asset.
+<p class="ti-final">The brain that was a tax is now an asset.</p>

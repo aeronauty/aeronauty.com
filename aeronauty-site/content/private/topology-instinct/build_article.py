@@ -614,6 +614,25 @@ def substitute_cartoon_storage_migrations(html: str) -> str:
     )
 
 
+def substitute_jeppesen_award_cartoon(html: str) -> str:
+    block = (
+        '<figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-jeppesen-award-figcap">\n'
+        '  <img src="figures/jeppesen-no-bull-award-cartoon.png" '
+        'alt="Editorial cartoon of two workshop attendees shaking hands while one presents a blue No-Bull Prize package at a Jeppesen Crew and Fleet Optimisation Workshop" '
+        'loading="lazy" />\n'
+        '  <figcaption id="ti-jeppesen-award-figcap" class="ti-figcap">'
+        "The No-Bull Prize: funny name, real signal. The work made economic sense to the people who understood the network."
+        "</figcaption>\n"
+        "</figure>"
+    )
+    return re.sub(
+        r"<p>\[FIGURE:\s*jeppesen-no-bull-award\]</p>",
+        block,
+        html,
+        count=1,
+    )
+
+
 def substitute_harry_plot_video(html: str) -> str:
     # "Where did that plot come from?" — Harry's video version of the same
     # argument. Embedded with the same youtube-nocookie privacy treatment as
@@ -811,11 +830,19 @@ ARTICLE_CSS = r"""
      the prose around them stays at reading width. */
   .ti-prose .ti-flat-view,
   .ti-prose .ti-ask-the-plot,
-  .ti-prose .ti-data-black-market {
+  .ti-prose .ti-data-black-market,
+  .ti-prose .ti-what-changed {
     margin-left: calc(50% - 50vw + 8px);
     margin-right: calc(50% - 50vw + 8px);
     max-width: 1240px;
     margin-inline: auto;
+  }
+  .ti-prose .ti-what-changed {
+    width: calc(100vw - 32px);
+    max-width: 1180px;
+    margin-left: calc(50% - min(50vw - 16px, 590px));
+    margin-right: auto;
+    transform: none;
   }
   @media (min-width: 1100px) {
     .ti-prose .ti-flat-view,
@@ -825,11 +852,28 @@ ARTICLE_CSS = r"""
       margin-left: 50%;
       transform: translateX(-50%);
     }
+    .ti-prose .ti-what-changed {
+      width: calc(100vw - 64px);
+      max-width: 1180px;
+      margin-left: calc(50% - min(50vw - 32px, 590px));
+      margin-right: auto;
+      transform: none;
+    }
+  }
+  @media (min-width: 760px) and (max-width: 1099px) {
+    .ti-prose .ti-what-changed {
+      width: calc(100vw - 32px);
+      max-width: 980px;
+      margin-left: calc(50% - min(50vw - 16px, 490px));
+      margin-right: auto;
+      transform: none;
+    }
   }
   @media (max-width: 720px) {
     .ti-prose .ti-flat-view,
     .ti-prose .ti-ask-the-plot,
-    .ti-prose .ti-data-black-market {
+    .ti-prose .ti-data-black-market,
+    .ti-prose .ti-what-changed {
       margin-left: 0;
       margin-right: 0;
       width: 100%;
@@ -1063,6 +1107,63 @@ ARTICLE_CSS = r"""
     font-size: 18px;
     line-height: 1.55;
   }
+
+  /* ---- pull-quote (Guardian/NYT-style breakout) ----
+     A single-sentence emphasis lifted out of the prose. Generous
+     vertical whitespace, larger type, hairline rules above and below.
+     Wired in via inline <aside class="ti-pullquote"> in the markdown. */
+  .ti-prose .ti-pullquote {
+    display: block;
+    margin: 56px auto;
+    padding: 22px 0 24px;
+    max-width: 30ch;
+    border-top: 1px solid var(--ti-rule);
+    border-bottom: 1px solid var(--ti-rule);
+    text-align: center;
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: clamp(22px, 2.6vw, 28px);
+    line-height: 1.32;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-pullquote {
+      margin: 36px auto;
+      padding: 16px 0 18px;
+      font-size: 21px;
+      max-width: 24ch;
+    }
+  }
+
+  /* ---- final line (closing emphasis) ----
+     The last line of the essay: larger, italic, generous whitespace
+     above. Wired via <p class="ti-final"> in the markdown. */
+  .ti-prose .ti-final {
+    margin: 72px 0 16px;
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: clamp(22px, 2.4vw, 27px);
+    line-height: 1.3;
+    text-align: center;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-final {
+      margin: 48px 0 8px;
+      font-size: 21px;
+    }
+  }
+  /* Ensure drop-cap stays visible on mobile (some browsers shrink it). */
+  @media (max-width: 480px) {
+    .ti-prose > p:first-of-type::first-letter {
+      font-size: 3.6em;
+      padding: 4px 8px 0 0;
+    }
+  }
   .ti-prose a {
     color: var(--ti-link);
     text-decoration: underline;
@@ -1258,7 +1359,8 @@ ARTICLE_CSS = r"""
   .ti-demo,
   .ti-flat-view,
   .ti-ask-the-plot,
-  .ti-data-black-market {
+  .ti-data-black-market,
+  .ti-what-changed {
     transition: opacity 520ms ease, transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
   }
   html.ti-js .ti-reveal {
@@ -1770,6 +1872,7 @@ def main() -> None:
     prose_html = substitute_cartoon_ip_printer(prose_html)
     prose_html = substitute_cartoon_orchestrator(prose_html)
     prose_html = substitute_cartoon_storage_migrations(prose_html)
+    prose_html = substitute_jeppesen_award_cartoon(prose_html)
     prose_html = substitute_harry_plot_video(prose_html)
     if needs["milp"]:
         prose_html = substitute_milp_equations(prose_html)
