@@ -3316,14 +3316,19 @@ ARTICLE_CSS = r"""
     }
     .af-scroll-beat {
       min-height: 100svh;
-      padding: 8svh 0 0;
+      padding: 5svh 0 0;
       opacity: 1;
+    }
+    .af-scroll-beat p {
+      font-size: clamp(17px, 5vw, 20px);
+      line-height: 1.34;
+      max-width: none;
     }
     .af-mobile-stage-slot {
       display: grid;
       grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
       gap: 10px;
-      height: 52svh;
+      height: 46svh;
       margin-top: 18px;
       overflow: hidden;
     }
@@ -3384,18 +3389,31 @@ ARTICLE_CSS = r"""
     .ti-orch-stage {
       position: relative;
       top: auto;
-      height: 52svh;
+      height: 46svh;
       margin: 18px 0 0;
     }
     .ti-orch-stage .ti-orch-figure {
       height: 100%;
       display: flex;
+      flex-direction: column;
+      justify-content: center;
       align-items: center;
+      overflow: hidden;
+      padding: 10px;
     }
+    .ti-orch-stage .ti-orch-figure img {
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .ti-orch-stage .ti-orch-figure .ti-figcap { display: none; }
     .ti-orch-beat {
       min-height: 100svh;
-      padding: 8svh 0 0;
+      padding: 5svh 0 0;
       opacity: 1;
+    }
+    .ti-orch-beat p {
+      font-size: clamp(18px, 5.2vw, 21px);
+      line-height: 1.42;
     }
     .ti-orch-mobile-stage-slot:empty { display: none; }
   }
