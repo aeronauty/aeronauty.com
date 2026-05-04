@@ -3486,8 +3486,8 @@ main { max-width: 1200px; margin: 0 auto; }
   // ---- readouts + caption + fallback ---------------------------------------
   function updateReadouts() {
     const sol = getSolution();
-    const k = sol ? sol.upgraded_airports.length : state.budget;
-    document.getElementById("tg-budget-readout").textContent = `K = ${k} airports`;
+    const stagedK = sol ? sol.upgraded_airports.length : state.budget;
+    document.getElementById("tg-budget-readout").textContent = `${stagedK} / ${state.budget} airports`;
     document.getElementById("tg-year-readout").textContent = `Year: ${state.year}`;
     document.getElementById("tg-comparison-year").textContent = `Year ${state.year}`;
   }
@@ -3504,8 +3504,10 @@ main { max-width: 1200px; margin: 0 auto; }
     const milp = sol.co2_captured_tonnes;
     const dTraf = traf.co2_captured_tonnes ? (milp / traf.co2_captured_tonnes - 1) * 100 : 0;
     const dCit  = cities.co2_captured_tonnes ? (milp / cities.co2_captured_tonnes - 1) * 100 : 0;
+    const stagedK = sol.upgraded_airports.length;
     cap.innerHTML =
-      `At <span class="tg-caption-num">K = ${state.budget}</span> airports upgraded in ` +
+      `With a <span class="tg-caption-num">${state.budget}</span>-airport 2050 plan, ` +
+      `<span class="tg-caption-num">${stagedK}</span> airports are upgraded by ` +
       `<span class="tg-caption-num">${state.year}</span>, the optimiser captures ` +
       `<span class="tg-caption-num">${fmtPct(dTraf)}</span> vs. the greedy algorithm and ` +
       `<span class="tg-caption-num">${fmtPct(dCit)}</span> vs. picking biggest cities first.`;

@@ -1422,8 +1422,8 @@ def main() -> None:
         prose_html,
         marker="plotly-vs-powerpoint-morph",
         mp4_filename="plotly-vs-powerpoint-morph.mp4",
-        aria_label="A static slide-deck chart that, on cursor click, fluidly unfolds into an interactive Plotly figure with spinning axes and live points",
-        caption="The dead version is what shipped. The alive version is what you actually had.",
+        aria_label="An old-timey photographer with a magnesium flash captures a complex evolving 3D wireframe of meshes, wind-tunnel readings, post-process versions and design revisions; the printed photo lands on a table while the lattice keeps changing behind it",
+        caption="A PNG is a snapshot. The data was already moving by the time the flash went off.",
     )
     prose_html = substitute_runway_video(
         prose_html,

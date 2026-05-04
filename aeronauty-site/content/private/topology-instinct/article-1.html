@@ -3062,9 +3062,9 @@ main { max-width: 1200px; margin: 0 auto; }
 </aside>
 <figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-plotly-vs-powerpoint-morph-figcap">
   <div class="ti-video-wrap">
-    <video src="figures/plotly-vs-powerpoint-morph.mp4" autoplay muted loop playsinline preload="metadata" aria-label="A static slide-deck chart that, on cursor click, fluidly unfolds into an interactive Plotly figure with spinning axes and live points"></video>
+    <video src="figures/plotly-vs-powerpoint-morph.mp4" autoplay muted loop playsinline preload="metadata" aria-label="An old-timey photographer with a magnesium flash captures a complex evolving 3D wireframe of meshes, wind-tunnel readings, post-process versions and design revisions; the printed photo lands on a table while the lattice keeps changing behind it"></video>
   </div>
-  <figcaption id="ti-video-plotly-vs-powerpoint-morph-figcap" class="ti-figcap">The dead version is what shipped. The alive version is what you actually had.</figcaption>
+  <figcaption id="ti-video-plotly-vs-powerpoint-morph-figcap" class="ti-figcap">A PNG is a snapshot. The data was already moving by the time the flash went off.</figcaption>
 </figure>
 <p>This is the first instance of a pattern that&rsquo;s about to keep happening: the topology-shaped output is the better way to keep data alive and the rectilinear-shaped output is the one that most systems can absorb.</p>
 <p>That gap between them and what it loses is the whole post.</p>
@@ -3102,7 +3102,7 @@ $$
 <div class="tg-root">
 
   <h2 class="tg-title">Sequencing the upgrade — MILP vs. three baselines</h2>
-  <p class="tg-subtitle">Pick a strategy, a budget, and a year. The arcs are the routes that get the new aircraft because <em>both</em> endpoints have been upgraded.</p>
+  <p class="tg-subtitle">Pick a strategy, a final 2050 budget, and a year. The arcs are the routes that get the new aircraft because <em>both</em> endpoints have been upgraded.</p>
 
   <div class="tg-stage" id="tg-stage">
     <div class="tg-globe" id="tg-globe" role="img" aria-label="Interactive globe showing upgraded airports and routes"></div>
@@ -3118,10 +3118,10 @@ $$
       </div>
 
       <div class="tg-control-group">
-        <label class="tg-control-label" for="tg-budget">Budget</label>
+        <label class="tg-control-label" for="tg-budget">2050 budget</label>
         <div class="tg-slider-row">
           <input id="tg-budget" type="range" min="0" max="0" step="1" value="0"
-                 aria-label="Budget — number of upgraded airports" />
+                 aria-label="Final 2050 budget — number of upgraded airports" />
           <span class="tg-slider-readout" id="tg-budget-readout">K = —</span>
         </div>
       </div>
@@ -4051,8 +4051,8 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   // ---- readouts + caption + fallback ---------------------------------------
   function updateReadouts() {
     const sol = getSolution();
-    const k = sol ? sol.upgraded_airports.length : state.budget;
-    document.getElementById("tg-budget-readout").textContent = `K = ${k} airports`;
+    const stagedK = sol ? sol.upgraded_airports.length : state.budget;
+    document.getElementById("tg-budget-readout").textContent = `${stagedK} / ${state.budget} airports`;
     document.getElementById("tg-year-readout").textContent = `Year: ${state.year}`;
     document.getElementById("tg-comparison-year").textContent = `Year ${state.year}`;
   }
@@ -4069,8 +4069,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     const milp = sol.co2_captured_tonnes;
     const dTraf = traf.co2_captured_tonnes ? (milp / traf.co2_captured_tonnes - 1) * 100 : 0;
     const dCit  = cities.co2_captured_tonnes ? (milp / cities.co2_captured_tonnes - 1) * 100 : 0;
+    const stagedK = sol.upgraded_airports.length;
     cap.innerHTML =
-      `At <span class="tg-caption-num">K = ${state.budget}</span> airports upgraded in ` +
+      `With a <span class="tg-caption-num">${state.budget}</span>-airport 2050 plan, ` +
+      `<span class="tg-caption-num">${stagedK}</span> airports are upgraded by ` +
       `<span class="tg-caption-num">${state.year}</span>, the optimiser captures ` +
       `<span class="tg-caption-num">${fmtPct(dTraf)}</span> vs. the greedy algorithm and ` +
       `<span class="tg-caption-num">${fmtPct(dCit)}</span> vs. picking biggest cities first.`;
