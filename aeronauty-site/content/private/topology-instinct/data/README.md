@@ -4,6 +4,22 @@ This folder contains the precomputed inputs and MILP solutions used by the
 interactive globe in the "topology-instinct" article. None of these numbers
 should be quoted as forecasts. They are a teaching proxy.
 
+## 2026-05-04 update — year slider now shows staged rollout
+
+The globe's budget slider now means the final **2050** airport budget.
+Intermediate year snapshots use staged caps:
+
+  K_2030 = ceil(K / 3)
+  K_2040 = ceil(2K / 3)
+  K_2050 = K
+
+The emitted airport sets are therefore true monotonic rollout prefixes:
+2030 ⊆ 2040 ⊆ 2050. The previous 2026-05-01 build used the same airport
+set in every year and only scaled the captured CO2 by the year growth
+factor. That was mathematically defensible under uniform route growth, but
+visually wrong for a sequencing demo: moving the year slider changed the
+numbers, not the network.
+
 ## 2026-05-01 update — dense K grid + simplified strategy roster
 
 Three changes were made on 2026-05-01:
@@ -50,9 +66,8 @@ Three changes were made on 2026-05-01:
      the pipeline correct a previously-bad marginal-add when later
      additions reveal a better local complement, without ever dropping
      a locked pick (so K-monotonicity survives).
-   - Replicate across years (under uniform growth this is provably the
-     joint optimum: A^t same set at every t trivially satisfies the
-     monotonicity constraint A^(t+1) >= A^t).
+   - Emit staged prefixes across years: the full chain is the 2050 plan,
+     2030 gets the first third, and 2040 gets the first two thirds.
    - Floor: CO2 captured at (K, t) is always >= max of the three
      baselines at the same (K, t). The chained tail-swap guarantees
      improvement over greedy_marginal so this rarely binds, but is
@@ -131,7 +146,7 @@ For each budget K and each year stage t:
 
   R_ij^t ≤ A_i^t         (paired form, NOT averaged)
   R_ij^t ≤ A_j^t
-  Σ_i A_i^t ≤ K          (per-stage budget; same K applies at every t)
+  Σ_i A_i^t ≤ K_t        (staged budget cap for year t)
   A_i^(t+1) ≥ A_i^t      (monotonic — no un-upgrading an airport)
 
   max  Σ_t Σ_ij  CO2_ij(t) · R_ij^t
@@ -151,15 +166,16 @@ on.
 
 ## Baselines (output JSON)
 
-- **greedy_traffic**: pick top-K airports by `route_count`, same set across
-  every year. The "obvious" rollout: upgrade the busiest hubs first. The
+- **greedy_traffic**: rank airports by `route_count`, then reveal the staged
+  prefix for each year. The "obvious" rollout: upgrade the busiest hubs first. The
   demo UI labels this strategy "Greedy algorithm" but the JSON key remains
   `greedy_traffic` so downstream code is unchanged.
-- **biggest_cities**: top-K by `route_count × country_weight`, where the
-  weight is 1.0 by default with hand-set tweaks: US 0.9, GB 0.95, DE 0.95,
-  CN 1.5, IN 1.4. This is a stand-in for "what a politically-driven rollout
-  might pick" — biased toward populous developing-economy cities. It is
-  cartoonishly crude on purpose; do not read policy into it.
+- **biggest_cities**: rank by `route_count × country_weight`, then reveal the
+  staged prefix for each year. The weight is 1.0 by default with hand-set
+  tweaks: US 0.9, GB 0.95, DE 0.95, CN 1.5, IN 1.4. This is a stand-in for
+  "what a politically-driven rollout might pick" — biased toward populous
+  developing-economy cities. It is cartoonishly crude on purpose; do not
+  read policy into it.
 
 (There is also an internal-only `greedy_myopic` — strict per-year
 marginal-add — used as one of the joint-MILP warm-start seeds. It is not

@@ -172,6 +172,27 @@ main { max-width: 1200px; margin: 0 auto; }
   border-radius: 3px;
   pointer-events: none;
 }
+@media (max-width: 480px) {
+  .atp-plot-host {
+    overflow: visible;
+    min-height: 0;
+  }
+  .atp-qr {
+    right: 8px;
+    bottom: 8px;
+    width: 46px;
+    height: 46px;
+  }
+  .atp-qr svg {
+    width: 36px;
+    height: 36px;
+  }
+  .atp-qr-label {
+    right: 8px;
+    bottom: 58px;
+    font-size: 8px;
+  }
+}
 .atp-qr-scan {
   position: absolute;
   inset: 0;
@@ -250,6 +271,17 @@ main { max-width: 1200px; margin: 0 auto; }
   transform: translate(0, 0) scale(0.97);
   transform-origin: top left;
   transition: opacity 180ms ease, transform 180ms ease;
+}
+@media (max-width: 480px) {
+  .atp-ctxmenu {
+    left: 10px !important;
+    right: 10px;
+    bottom: 10px;
+    top: auto !important;
+    min-width: 0;
+    max-width: none;
+    transform: none;
+  }
 }
 .atp-ctxmenu.atp-show {
   opacity: 1;

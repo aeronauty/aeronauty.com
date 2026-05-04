@@ -1,5 +1,36 @@
 # Runway prompts — topology-instinct articles
 
+## Article 1 CFD handoff pair — `figures/cfd-handoff-manual.mp4` and `figures/cfd-handoff-api.mp4`
+
+Replacement for the old storage-migrations cartoon plus `data-drift.mp4` full-screen video. The point is concrete CFD admin, not abstract data drift: `.dat`/post-processing/export/email/CSV/PowerPoint, then the same handoff as direct request/response against one source of truth.
+
+- **Generated:** 2026-05-04 via Runway API image-to-video.
+- **Models:** `gen4.5` for `cfd-handoff-manual.mp4`; `gen4_turbo` for `cfd-handoff-api.mp4` after the second `gen4.5` job was throttled.
+- **Duration:** 5 seconds each.
+- **Aspect ratio:** `1280:720`.
+- **Start frames:** `figures/cfd-handoff-manual-start.png` and `figures/cfd-handoff-api-start.png`, rendered from `figures/cfd-handoff-mockups.html`.
+- **Text strategy:** any explanatory wording belongs in article captions/HTML. The prompts ask Runway not to invent labels.
+
+**Manual prompt:**
+> Use the provided clean editorial diagram as the first frame and preserve its cream paper, black ink, restrained cyan accent style. Five second calm explainer video. Show a CFD file handoff chain without readable words: an engineer loads a simulation result file into a post-processing viewer, exports a generic file card, another workstation receives a spreadsheet-like attachment via email, then a person copies chart fragments into a slide deck. The central person visibly becomes the manual join between tools, moving small cards from one side to the other. File icons drift along dashed paths; screens glow subtly; no legible text, no logos, no letters, no numbers, no UI labels. Motion is quiet and precise, not comedic, not frantic.
+
+**API prompt:**
+> Use the provided clean editorial diagram as the first frame and preserve its cream paper, black ink, restrained green and cyan accent style. Five second calm explainer video. Show the same CFD workflow done properly: workstations and a slide view stay connected to one central data store by small glowing request pulses. The faded human in the middle no longer carries file cards; the request tokens move directly between tools and the shared source of truth. The database cylinder gently pulses, relationship lines light up in sequence, and all screens update from the same source. No legible text, no logos, no letters, no numbers, no UI labels. Minimal camera movement, no sci-fi interface, editorial technical illustration.
+
+## Article 2 hero — `figures/desk-becoming-navigable.mp4`
+
+Interior counterpart to article 1's globe/network hero: the same cluttered brain/desk becomes traversable without becoming magically tidy.
+
+- **Generated:** 2026-05-04 via Runway API text-to-video, regenerated once to remove pseudo-text, cropped slightly from the left edge, then trimmed to ~5.8s before final export so the late text artefact never appears.
+- **Model:** `gen4.5`
+- **Duration:** 8 seconds
+- **Aspect ratio:** 16:9
+
+**Prompt:**
+> 16:9 cinematic editorial web hero, 8s. Messy engineering/writing desk at dawn: pale wood, blank papers, blank sticky notes, unlabeled folders, blank dark laptop screen, coffee rings, notebooks, simple aircraft outline, abstract plots made only of clean curves/dots, database boxes connected by lines. Slow top-down or shallow oblique dolly. Clutter starts overwhelming; restrained cyan-teal connection lines and small light pulses appear between objects, forming one calm navigable path. Desk stays messy, not cleaned. Warm humane watercolor/ink texture, not glossy AI, not cyberpunk. ZERO TEXT ANYWHERE: no letters, numbers, words, labels, logos, handwriting, fake writing, pseudo-writing, glyphs, UI text, keyboard letters, or scribbles. Surfaces may contain only blank areas or pure geometric lines, curves, dots, arrows. No faces, robots, globe, planet, route map, or magic tidying. Leave calm negative space for title overlay.
+
+---
+
 Six short videos that the article wires up automatically once each MP4 lands at the named path. Drop the rendered file into the package, run `python3 build_article.py --all`, and the build swaps in the video. If the MP4 is missing, the build either keeps the still cartoon (beats 3 + 8) or shows a small "Video pending" placeholder where the video will go (the four new ones). Nothing breaks before the videos are ready.
 
 **Recommended model:** Runway Gen-4.5 (Pro) for all six. Use **image-to-video** wherever a start frame is named, **text-to-video** otherwise. **Aspect ratio:** 16:9 for everything.

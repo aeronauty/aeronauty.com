@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CFD handoff mockups</title>
+<style>
+  :root {
+    --paper: #f7f4ee;
+    --ink: #20242b;
+    --muted: #6d7480;
+    --rule: #d8dce2;
+    --cyan: #0387a8;
+    --green: #00643c;
+    --amber: #b77519;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .stage {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 16% 18%, rgba(3, 135, 168, 0.08), transparent 28%),
+      linear-gradient(180deg, #fbfaf7, var(--paper));
+  }
+  .stage + .stage { margin-top: 32px; }
+  .title {
+    position: absolute;
+    left: 58px;
+    top: 42px;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+  .desk {
+    position: absolute;
+    width: 235px;
+    height: 168px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.72);
+    box-shadow: 0 18px 45px rgba(22, 26, 32, 0.08);
+  }
+  .desk::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: 20px;
+    width: 146px;
+    height: 86px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, rgba(3,135,168,0.18) 0 12%, transparent 12%),
+      repeating-linear-gradient(180deg, rgba(32,36,43,0.18) 0 2px, transparent 2px 15px),
+      #fff;
+  }
+  .desk::after {
+    content: "";
+    position: absolute;
+    left: 70px;
+    bottom: 24px;
+    width: 74px;
+    height: 12px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: #fff;
+  }
+  .person {
+    position: absolute;
+    right: 20px;
+    top: 34px;
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: #fff;
+  }
+  .person::after {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 35px;
+    width: 54px;
+    height: 62px;
+    border: 2px solid var(--ink);
+    border-radius: 22px 22px 10px 10px;
+    background: #fff;
+  }
+  .desk.one { left: 74px; top: 188px; }
+  .desk.two { left: 382px; top: 104px; }
+  .desk.three { left: 700px; top: 214px; }
+  .deck {
+    position: absolute;
+    right: 76px;
+    top: 152px;
+    width: 238px;
+    height: 176px;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 18px 45px rgba(22, 26, 32, 0.08);
+  }
+  .deck::before {
+    content: "";
+    position: absolute;
+    inset: 18px;
+    border: 2px solid var(--rule);
+    border-radius: 6px;
+    background:
+      linear-gradient(145deg, transparent 48%, rgba(183,117,25,0.35) 49% 51%, transparent 52%),
+      linear-gradient(30deg, transparent 45%, rgba(3,135,168,0.45) 46% 48%, transparent 49%);
+  }
+  .deck::after {
+    content: "";
+    position: absolute;
+    left: 30px;
+    bottom: 28px;
+    width: 86px;
+    height: 18px;
+    border-radius: 999px;
+    background: repeating-linear-gradient(90deg, var(--rule) 0 12px, transparent 12px 18px);
+  }
+  .file {
+    position: absolute;
+    width: 74px;
+    height: 50px;
+    border: 2px solid var(--ink);
+    border-radius: 7px;
+    background: #fff;
+    box-shadow: 0 8px 16px rgba(22, 26, 32, 0.08);
+  }
+  .file::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: -10px;
+    width: 30px;
+    height: 12px;
+    border: 2px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 5px 5px 0 0;
+    background: #fff;
+  }
+  .file.dat { left: 305px; top: 210px; transform: rotate(-8deg); border-color: var(--amber); }
+  .file.export { left: 616px; top: 150px; transform: rotate(7deg); border-color: var(--cyan); }
+  .file.csv { left: 995px; top: 352px; transform: rotate(-4deg); }
+  .mail {
+    position: absolute;
+    left: 862px;
+    top: 328px;
+    width: 92px;
+    height: 62px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fff;
+  }
+  .mail::before,
+  .mail::after {
+    content: "";
+    position: absolute;
+    top: 11px;
+    width: 64px;
+    height: 2px;
+    background: var(--ink);
+    transform-origin: 0 50%;
+  }
+  .mail::before { left: 12px; transform: rotate(26deg); }
+  .mail::after { right: 12px; transform: rotate(154deg); }
+  svg.wires {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .flow {
+    fill: none;
+    stroke: rgba(3, 135, 168, 0.42);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 8 10;
+  }
+  .human-join {
+    position: absolute;
+    left: 525px;
+    top: 414px;
+    width: 230px;
+    height: 190px;
+  }
+  .human-join .head {
+    position: absolute;
+    left: 91px;
+    top: 0;
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    background: #fff;
+  }
+  .human-join .body {
+    position: absolute;
+    left: 64px;
+    top: 49px;
+    width: 102px;
+    height: 104px;
+    border: 3px solid var(--ink);
+    border-radius: 36px 36px 14px 14px;
+    background: #fff;
+  }
+  .human-join .arm {
+    position: absolute;
+    top: 72px;
+    width: 74px;
+    height: 22px;
+    border: 3px solid var(--ink);
+    background: #fff;
+  }
+  .human-join .arm.left { left: 5px; transform: rotate(-16deg); }
+  .human-join .arm.right { right: 2px; transform: rotate(16deg); }
+  .small-card {
+    position: absolute;
+    border: 2px solid var(--ink);
+    border-radius: 7px;
+    background: #fff;
+  }
+  .human-join .small-card.a { left: 0; top: 120px; width: 68px; height: 42px; transform: rotate(9deg); }
+  .human-join .small-card.b { right: 0; top: 120px; width: 68px; height: 42px; transform: rotate(-7deg); }
+  .api-db {
+    position: absolute;
+    left: 478px;
+    top: 218px;
+    width: 314px;
+    height: 204px;
+  }
+  .cylinder {
+    position: absolute;
+    inset: 0;
+    border: 3px solid var(--green);
+    border-radius: 50% / 16%;
+    background:
+      radial-gradient(ellipse at 50% 8%, rgba(0,100,60,0.12), transparent 50%),
+      rgba(255,255,255,0.88);
+  }
+  .cylinder::before,
+  .cylinder::after {
+    content: "";
+    position: absolute;
+    left: -3px;
+    width: calc(100% + 6px);
+    height: 34px;
+    border: 3px solid var(--green);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+  }
+  .cylinder::before { top: -3px; }
+  .cylinder::after { bottom: -3px; }
+  .api-token {
+    position: absolute;
+    width: 112px;
+    height: 42px;
+    border: 2px solid var(--cyan);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(3,135,168,0.11);
+  }
+  .api-token::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    width: 76px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--cyan);
+  }
+  .api-token.a { left: 278px; top: 218px; transform: rotate(5deg); }
+  .api-token.b { left: 846px; top: 150px; transform: rotate(-6deg); }
+  .api-token.c { left: 842px; top: 426px; transform: rotate(3deg); }
+  .api-token.d { left: 282px; top: 432px; transform: rotate(-4deg); }
+  .api .desk.one { left: 76px; top: 116px; }
+  .api .desk.two { left: 920px; top: 100px; }
+  .api .desk.three { left: 914px; top: 392px; }
+  .api .deck { left: 75px; top: 420px; }
+  .request-flow {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 2 13;
+    opacity: 0.72;
+  }
+  .muted-person {
+    position: absolute;
+    left: 594px;
+    top: 492px;
+    width: 86px;
+    height: 106px;
+    opacity: 0.32;
+  }
+  .muted-person::before {
+    content: "";
+    position: absolute;
+    left: 27px;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--muted);
+    border-radius: 999px;
+    background: #fff;
+  }
+  .muted-person::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: 34px;
+    width: 62px;
+    height: 66px;
+    border: 2px solid var(--muted);
+    border-radius: 24px 24px 12px 12px;
+    background: #fff;
+  }
+  .subtle-lines {
+    position: absolute;
+    width: 120px;
+    height: 50px;
+    border-top: 2px solid var(--rule);
+    border-bottom: 2px solid var(--rule);
+    opacity: 0.75;
+  }
+  .manual .subtle-lines { right: 92px; bottom: 94px; }
+  .api .subtle-lines { left: 582px; top: 289px; border-color: rgba(0,100,60,0.22); }
+</style>
+</head>
+<body>
+  <section class="stage manual" data-shot="manual" aria-label="Manual CFD file transfer">
+    <div class="title">Manual CFD handoff</div>
+    <svg class="wires" viewBox="0 0 1280 720" aria-hidden="true">
+      <path class="flow" d="M250 250 C310 176 354 180 427 184" />
+      <path class="flow" d="M604 178 C674 178 717 226 762 274" />
+      <path class="flow" d="M880 302 C930 308 966 324 1000 356" />
+      <path class="flow" d="M650 410 C740 374 816 352 892 348" />
+      <path class="flow" d="M602 414 C524 338 446 270 354 244" />
+    </svg>
+    <div class="desk one"><span class="person"></span></div>
+    <div class="desk two"><span class="person"></span></div>
+    <div class="desk three"><span class="person"></span></div>
+    <div class="deck"></div>
+    <span class="file dat"></span>
+    <span class="file export"></span>
+    <span class="mail"></span>
+    <span class="file csv"></span>
+    <div class="human-join" aria-hidden="true">
+      <span class="head"></span>
+      <span class="body"></span>
+      <span class="arm left"></span>
+      <span class="arm right"></span>
+      <span class="small-card a"></span>
+      <span class="small-card b"></span>
+    </div>
+    <div class="subtle-lines"></div>
+  </section>
+
+  <section class="stage api" data-shot="api" aria-label="CFD API request transfer">
+    <div class="title">Same work, stored as requests</div>
+    <svg class="wires" viewBox="0 0 1280 720" aria-hidden="true">
+      <path class="request-flow" d="M314 204 C390 178 462 210 512 252" />
+      <path class="request-flow" d="M850 188 C778 177 737 196 704 247" />
+      <path class="request-flow" d="M848 486 C780 516 723 492 690 422" />
+      <path class="request-flow" d="M315 498 C392 524 456 486 512 420" />
+    </svg>
+    <div class="desk one"><span class="person"></span></div>
+    <div class="desk two"><span class="person"></span></div>
+    <div class="desk three"><span class="person"></span></div>
+    <div class="deck"></div>
+    <div class="api-db"><span class="cylinder"></span></div>
+    <span class="api-token a"></span>
+    <span class="api-token b"></span>
+    <span class="api-token c"></span>
+    <span class="api-token d"></span>
+    <div class="muted-person"></div>
+    <div class="subtle-lines"></div>
+  </section>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">No-Bull Prize cartoon</title>
+  <desc id="desc">Editorial cartoon of two workshop attendees shaking hands while one presents a blue wrapped No-Bull Prize package at a Jeppesen Crew and Fleet Optimisation Workshop.</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff4cf"/>
+      <stop offset="1" stop-color="#f6ddad"/>
+    </linearGradient>
+    <linearGradient id="blueWrap" x1="0" x2="1">
+      <stop offset="0" stop-color="#0f4fd8"/>
+      <stop offset="0.55" stop-color="#1d7cff"/>
+      <stop offset="1" stop-color="#0935a4"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#1f2937" flood-opacity="0.18"/>
+    </filter>
+    <filter id="paper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="7"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.08"/>
+      </feComponentTransfer>
+      <feBlend mode="multiply" in2="SourceGraphic"/>
+    </filter>
+    <style>
+      .ink{stroke:#1f2937;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+      .thin{stroke:#1f2937;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+      .soft{stroke:#415064;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.55}
+      .label{font-family:Georgia,serif;font-weight:700;fill:#1f2937}
+      .small{font-family:Inter,Arial,sans-serif;font-weight:700;letter-spacing:.06em;fill:#334155}
+    </style>
+  </defs>
+
+  <rect width="1200" height="760" rx="26" fill="url(#wall)"/>
+  <g opacity=".25">
+    <path d="M0 650h1200M42 684h1116M120 718h920" class="soft"/>
+    <path d="M28 95h1144M62 195h1080M50 310h1084" class="soft"/>
+  </g>
+
+  <g transform="translate(58 48)">
+    <rect x="0" y="0" width="1084" height="504" rx="18" fill="#fff8df" opacity=".64"/>
+    <g opacity=".9">
+      <rect x="24" y="34" width="214" height="112" rx="12" fill="#caa56c" class="thin"/>
+      <rect x="272" y="28" width="154" height="122" rx="10" fill="#d8bd83" class="thin"/>
+      <rect x="470" y="34" width="248" height="112" rx="12" fill="#e9cf94" class="thin"/>
+      <rect x="758" y="22" width="250" height="132" rx="16" fill="#c9975a" class="thin"/>
+      <rect x="46" y="206" width="180" height="122" rx="12" fill="#e1c588" class="thin"/>
+      <rect x="270" y="206" width="206" height="122" rx="12" fill="#d4a464" class="thin"/>
+      <rect x="528" y="196" width="190" height="132" rx="14" fill="#ead6a3" class="thin"/>
+      <rect x="774" y="196" width="216" height="132" rx="13" fill="#dbc08a" class="thin"/>
+    </g>
+    <path d="M28 166h1030M28 350h1030" class="thin" opacity=".5"/>
+  </g>
+
+  <g transform="translate(460 72)" filter="url(#softShadow)">
+    <path d="M70 0h340a18 18 0 0 1 18 18v102a18 18 0 0 1-18 18H70a18 18 0 0 1-18-18V18A18 18 0 0 1 70 0z" fill="#fffdf5" class="ink"/>
+    <text x="240" y="42" text-anchor="middle" class="small" font-size="19">JEPPESEN CREW &amp; FLEET</text>
+    <text x="240" y="76" text-anchor="middle" class="label" font-size="34">Optimisation Workshop</text>
+    <path d="M118 104h244" class="thin" opacity=".45"/>
+    <text x="240" y="124" text-anchor="middle" class="small" font-size="14">2025</text>
+  </g>
+
+  <g transform="translate(120 180)">
+    <path d="M166 116c-42 6-78 42-86 88l-18 122 70 8 20-104 20 320h154l20-324 24 108 70-12-28-126c-12-52-56-84-110-82z" fill="#145a96" class="ink"/>
+    <path d="M146 548l-18 94h68l36-94zM280 548l34 94h70l-22-94z" fill="#c78b55" class="ink"/>
+    <path d="M178 36c48-44 132-8 120 58-10 54-74 76-118 42-34-26-32-72-2-100z" fill="#f2c39a" class="ink"/>
+    <path d="M174 54c32-34 92-40 126 0-16-42-82-54-126 0z" fill="#56321f" class="ink"/>
+    <circle cx="204" cy="92" r="5" fill="#1f2937"/>
+    <path d="M240 92q20 12 40 0M214 126q24 22 60 3" class="thin" fill="none"/>
+    <path d="M318 214c60 24 106 64 154 106" class="ink" fill="none"/>
+    <path d="M462 314c22-4 44 5 60 22" class="ink" fill="none"/>
+  </g>
+
+  <g transform="translate(684 184)">
+    <path d="M168 120c48 4 88 38 98 92l26 138-78 10-18-102-26 322H20l24-326-22 108-78-12 30-140c12-56 60-92 118-90z" fill="#e9eef6" class="ink"/>
+    <path d="M48 578l-22 92h72l34-92zM154 578l38 92h74l-22-92z" fill="#1f2937" class="ink"/>
+    <path d="M68 32c42-48 128-28 134 36 5 54-48 88-98 68-42-16-58-68-36-104z" fill="#f2c39a" class="ink"/>
+    <path d="M54 72c36-72 132-58 158-8-32-20-76-16-112-3-22 8-36 14-46 11z" fill="#d8a444" class="ink"/>
+    <circle cx="104" cy="90" r="5" fill="#1f2937"/>
+    <path d="M130 92q18 12 34 0M104 126q22 20 56 4" class="thin" fill="none"/>
+    <path d="M22 222c-54 20-94 58-140 98" class="ink" fill="none"/>
+    <path d="M-110 314c-22-2-44 8-58 26" class="ink" fill="none"/>
+    <rect x="82" y="168" width="86" height="54" rx="5" fill="#ffffff" class="thin"/>
+    <path d="M94 184h60M94 200h46" class="soft"/>
+  </g>
+
+  <g transform="translate(432 438)">
+    <path d="M0 0c28-18 68-16 94 6 26-18 64-16 90 4" class="ink" fill="none"/>
+    <path d="M54 10c22 14 48 14 72 0" class="ink" fill="none"/>
+  </g>
+
+  <g transform="translate(470 456)" filter="url(#softShadow)">
+    <path d="M46 38l220-34 72 66-228 42z" fill="url(#blueWrap)" class="ink"/>
+    <path d="M110 112L46 38v124l64 74z" fill="#0b47c8" class="ink"/>
+    <path d="M110 112l228-42v126l-228 40z" fill="#0f5be8" class="ink"/>
+    <path d="M52 102l278-48M138 30l56 62 4 118" class="thin" stroke="#ffe86a"/>
+    <rect x="142" y="118" width="128" height="62" rx="8" fill="#fff8ce" class="thin"/>
+    <text x="206" y="143" text-anchor="middle" class="small" font-size="15">NO-BULL</text>
+    <text x="206" y="166" text-anchor="middle" class="label" font-size="22">PRIZE</text>
+  </g>
+
+  <g transform="translate(100 614)">
+    <path d="M0 40c160 40 342 52 518 34s354-30 578 8" class="soft" fill="none"/>
+    <ellipse cx="568" cy="78" rx="360" ry="22" fill="#1f2937" opacity=".11"/>
+  </g>
+  <rect width="1200" height="760" rx="26" fill="transparent" filter="url(#paper)"/>
+</svg>

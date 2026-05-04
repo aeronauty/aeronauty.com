@@ -578,6 +578,8 @@ main { max-width: 980px; margin: 0 auto; }
     opacity: 1;
     pointer-events: auto;
     padding: 16px 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .fv-panel:not(.fv-panel-active) { display: none; }
 }
@@ -648,6 +650,15 @@ main { max-width: 980px; margin: 0 auto; }
 .fv-panel .fv-mislead-table th,
 .fv-panel .fv-mislead-table td {
   padding: 6px 9px;
+}
+@media (max-width: 520px) {
+  .fv-panel .fv-mislead-table {
+    min-width: 560px;
+    font-size: 11.5px;
+  }
+  .fv-panel .fv-mislead-table th {
+    font-size: 11px;
+  }
 }
 
 /* Pandas-specific: code block preamble */
@@ -1189,10 +1200,11 @@ window.FlatView = (function () {
   const RANS_X    = [430, 490, 550, 610, 670]; // α-RANS artifacts (per row, separate copies — same condition different consumer)
   const RANS_OPX  = [430, 490, 550, 610, 670];
   const RANS_ARTX = [430, 490, 550, 610, 670];
+  const GRAPH_ROWS = ROWS.slice(0, AVL_X.length);
 
   // For each row, we also need a per-row α artifact in the AVL lane and another in the RANS lane.
   // (They share the conceptual α value but each consumer has its own input artifact.)
-  ROWS.forEach((r, i) => {
+  GRAPH_ROWS.forEach((r, i) => {
     const rid = String(i);
     nodes.push(art('fv-a-avl-' + rid,  AVL_X[i],  ALPHA_Y, 'α', r.alpha + '°', 'art'));
     nodes.push(art('fv-a-rans-' + rid, RANS_X[i], ALPHA_Y, 'α', r.alpha + '°', 'art'));
@@ -1207,7 +1219,7 @@ window.FlatView = (function () {
   });
 
   // edges: AVL side
-  ROWS.forEach((r, i) => {
+  GRAPH_ROWS.forEach((r, i) => {
     const rid = String(i);
     if (r.avl_cla != null) {
       // α(AVL) -> AVL_op

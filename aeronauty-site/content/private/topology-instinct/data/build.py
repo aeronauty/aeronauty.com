@@ -53,6 +53,10 @@ BUDGETS = list(range(1, 101))
 YEARS = [2030, 2040, 2050]
 GROWTH = {2030: 1.10, 2040: 1.30, 2050: 1.50}
 
+# The UI budget slider is the final 2050 rollout size. Intermediate years
+# show the staged deployment that leads to that final network.
+STAGE_FRACTIONS = {2030: 1 / 3, 2040: 2 / 3, 2050: 1.0}
+
 # Wall-clock budget for the optimal MILP loop. Hard-cap so an upstream
 # slow CBC solve cannot blow past this. See `solve_optimal_for_K`.
 TOTAL_OPT_WALLCLOCK_S = 30 * 60  # 30 minutes
@@ -455,10 +459,11 @@ def co2_captured_for_set(
 def baseline_greedy_traffic(
     top: pd.DataFrame, routes_df: pd.DataFrame, K: int, years: List[int]
 ) -> Dict[int, Dict]:
-    """Top-K airports by route_count, same set across all years."""
-    selected = top.nlargest(K, "route_count")["iata"].tolist()
+    """Top airports by route_count, staged up to final budget K by 2050."""
+    ranked = top.nlargest(K, "route_count")["iata"].tolist()
     out: Dict[int, Dict] = {}
     for t in years:
+        selected = ranked[:stage_budget(K, t)]
         rids, cap = co2_captured_for_set(selected, routes_df, GROWTH[t])
         out[t] = {
             "upgraded_airports": sorted(selected),
@@ -471,13 +476,14 @@ def baseline_greedy_traffic(
 def baseline_biggest_cities(
     top: pd.DataFrame, routes_df: pd.DataFrame, K: int, years: List[int]
 ) -> Dict[int, Dict]:
-    """Top-K by route_count * country_weight; same set across all years."""
+    """Top airports by route_count * country_weight, staged to final K."""
     weights = top["country"].map(lambda c: COUNTRY_WEIGHTS.get(c, COUNTRY_WEIGHT_DEFAULT))
     score = top["route_count"] * weights
     df = top.assign(_score=score).sort_values("_score", ascending=False)
-    selected = df.head(K)["iata"].tolist()
+    ranked = df.head(K)["iata"].tolist()
     out: Dict[int, Dict] = {}
     for t in years:
+        selected = ranked[:stage_budget(K, t)]
         rids, cap = co2_captured_for_set(selected, routes_df, GROWTH[t])
         out[t] = {
             "upgraded_airports": sorted(selected),
@@ -545,8 +551,7 @@ def baseline_greedy_myopic(
     top: pd.DataFrame, routes_df: pd.DataFrame, K: int, years: List[int]
 ) -> Dict[int, Dict]:
     """
-    Per-year greedy marginal-add, then enforce monotonicity by carrying
-    earlier picks forward and greedy-filling remaining slots.
+    Greedy marginal-add sequence, emitted as staged prefixes up to final K.
 
     NOTE 2026-05-01: this is strictly marginal-add. No 1-swap or local-
     search improvement step is applied. That's deliberate -- the demo's
@@ -554,12 +559,10 @@ def baseline_greedy_myopic(
     a strict greedy gets stuck below. See README "2026-05-01 update".
     """
     candidates = top["iata"].tolist()
+    ranked = greedy_marginal(candidates, [], K, routes_df)
     out: Dict[int, Dict] = {}
-    carry: List[str] = []
     for t in years:
-        # greedy from prior carry
-        picks = greedy_marginal(candidates, carry, K, routes_df)
-        carry = picks  # next year must include these
+        picks = ranked[:stage_budget(K, t)]
         rids, cap = co2_captured_for_set(picks, routes_df, GROWTH[t])
         out[t] = {
             "upgraded_airports": sorted(picks),
@@ -843,6 +846,18 @@ def _budget_time_limit(K: int) -> int:
     return 12
 
 
+def stage_budget(final_K: int, year: int) -> int:
+    """
+    Number of airports available by a given year for a plan whose final
+    2050 budget is final_K. Keeps the demo visually sequential: the year
+    slider now reveals the rollout, not just a scalar growth factor.
+    """
+    frac = STAGE_FRACTIONS.get(year)
+    if frac is None:
+        raise KeyError(f"No staged budget fraction configured for year {year}")
+    return max(1, min(final_K, int(math.ceil(final_K * frac))))
+
+
 def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -937,8 +952,8 @@ def main():
     #      the pipeline correct a previously-bad marginal-add when later
     #      airports reveal a better local complement, without violating
     #      K-monotonicity (the K-1 anchor is never touched).
-    #   4) Replicate across years (uniform growth -> same set; trivially
-    #      satisfies A^(t+1) >= A^t).
+    #   4) Emit staged prefixes across years: K means the final 2050 rollout
+    #      size, with 2030 and 2040 showing 1/3 and 2/3 of that sequence.
     #
     # The K-monotonicity constraint is strictly stronger than what an
     # unconstrained joint MILP would produce, so this is by definition
@@ -1028,11 +1043,15 @@ def main():
         picks_chain.append(K_picks)
         locked = K_picks
 
-        # Emit per-year solutions (replicate; uniform growth)
+        # Emit per-year solutions as staged prefixes of the K-chain. The
+        # selected set changes with year, which is the point of the sequence
+        # view in the interactive globe.
         for t in YEARS:
-            rids, cap = co2_captured_for_set(K_picks, rt, GROWTH[t])
+            tK = stage_budget(K, t)
+            t_picks = picks_chain[tK]
+            rids, cap = co2_captured_for_set(t_picks, rt, GROWTH[t])
             solutions["optimal"][str(t)][str(K)] = {
-                "upgraded_airports": sorted(K_picks),
+                "upgraded_airports": sorted(t_picks),
                 "upgraded_route_ids": rids,
                 "co2_captured_tonnes": cap,
             }
@@ -1115,8 +1134,11 @@ def main():
                 "2040": "1.30× 2023 traffic",
                 "2050": "1.50× 2023 traffic",
             },
-            "milp_formulation": "max sum_ij R_ij * CO2_ij  s.t.  R_ij <= A_i,  R_ij <= A_j,  sum_i A_i <= K (per stage),  A_i^(t+1) >= A_i^(t) (monotonic).",
-            "solver": "K-monotonic chained marginal-add with tail-swap local search (CBC tried but repeatedly returned worse-than-warmstart incumbents on this problem; see README 2026-05-01 update).",
+            "growth_factors": {str(k): v for k, v in GROWTH.items()},
+            "stage_fractions": {str(k): v for k, v in STAGE_FRACTIONS.items()},
+            "stage_budget_policy": "K is the final 2050 airport budget; staged caps are ceil(K/3) in 2030, ceil(2K/3) in 2040, and K in 2050.",
+            "milp_formulation": "max sum_ij R_ij * CO2_ij  s.t.  R_ij <= A_i,  R_ij <= A_j,  sum_i A_i^t <= K_t where K_t is the staged year cap,  A_i^(t+1) >= A_i^(t) (monotonic).",
+            "solver": "K-monotonic chained marginal-add with tail-swap local search, emitted as staged prefixes across years (CBC tried but repeatedly returned worse-than-warmstart incumbents on this problem; see README 2026-05-01/2026-05-04 updates).",
             "subset": {
                 "top_airports_n": TOP_AIRPORTS_N,
                 "n_airports": len(airports_json),
@@ -1282,21 +1304,23 @@ def write_validation_report(final: dict, path: Path):
                      "for every (t, K=1..99). Slider transitions will be smooth.\n")
 
     # 4) budget compliance
-    lines.append("\n## 4. Budget compliance\n")
+    lines.append("\n## 4. Staged budget compliance\n")
     bad_budget = []
     for strat, by_t in sols.items():
         for t_str, by_K in by_t.items():
             for K_str, sol in by_K.items():
                 K = int(K_str)
+                cap = stage_budget(K, int(t_str))
                 n = len(sol["upgraded_airports"])
-                if n > K:
-                    bad_budget.append((strat, t_str, K, n))
+                if n > cap:
+                    bad_budget.append((strat, t_str, K, cap, n))
     if bad_budget:
         lines.append(f"FAILURES ({len(bad_budget)}):\n")
-        for strat, t, K, n in bad_budget[:5]:
-            lines.append(f"- {strat} t={t} K={K} -> {n} airports\n")
+        for strat, t, K, cap, n in bad_budget[:5]:
+            lines.append(f"- {strat} t={t} K={K} cap={cap} -> {n} airports\n")
     else:
-        lines.append("PASS: every solution respects |upgraded_airports| <= K.\n")
+        lines.append("PASS: every solution respects the staged year cap "
+                     "(ceil(K/3), ceil(2K/3), K).\n")
 
     # 5) route eligibility
     lines.append("\n## 5. Route endpoint eligibility\n")
@@ -1348,6 +1372,22 @@ This folder contains the precomputed inputs and MILP solutions used by the
 interactive globe in the "topology-instinct" article. None of these numbers
 should be quoted as forecasts. They are a teaching proxy.
 
+## 2026-05-04 update — year slider now shows staged rollout
+
+The globe's budget slider now means the final **2050** airport budget.
+Intermediate year snapshots use staged caps:
+
+  K_2030 = ceil(K / 3)
+  K_2040 = ceil(2K / 3)
+  K_2050 = K
+
+The emitted airport sets are therefore true monotonic rollout prefixes:
+2030 ⊆ 2040 ⊆ 2050. The previous 2026-05-01 build used the same airport
+set in every year and only scaled the captured CO2 by the year growth
+factor. That was mathematically defensible under uniform route growth, but
+visually wrong for a sequencing demo: moving the year slider changed the
+numbers, not the network.
+
 ## 2026-05-01 update — dense K grid + simplified strategy roster
 
 Three changes were made on 2026-05-01:
@@ -1394,9 +1434,8 @@ Three changes were made on 2026-05-01:
      the pipeline correct a previously-bad marginal-add when later
      additions reveal a better local complement, without ever dropping
      a locked pick (so K-monotonicity survives).
-   - Replicate across years (under uniform growth this is provably the
-     joint optimum: A^t same set at every t trivially satisfies the
-     monotonicity constraint A^(t+1) >= A^t).
+   - Emit staged prefixes across years: the full chain is the 2050 plan,
+     2030 gets the first third, and 2040 gets the first two thirds.
    - Floor: CO2 captured at (K, t) is always >= max of the three
      baselines at the same (K, t). The chained tail-swap guarantees
      improvement over greedy_marginal so this rarely binds, but is
@@ -1475,7 +1514,7 @@ For each budget K and each year stage t:
 
   R_ij^t ≤ A_i^t         (paired form, NOT averaged)
   R_ij^t ≤ A_j^t
-  Σ_i A_i^t ≤ K          (per-stage budget; same K applies at every t)
+  Σ_i A_i^t ≤ K_t        (staged budget cap for year t)
   A_i^(t+1) ≥ A_i^t      (monotonic — no un-upgrading an airport)
 
   max  Σ_t Σ_ij  CO2_ij(t) · R_ij^t
@@ -1495,15 +1534,16 @@ on.
 
 ## Baselines (output JSON)
 
-- **greedy_traffic**: pick top-K airports by `route_count`, same set across
-  every year. The "obvious" rollout: upgrade the busiest hubs first. The
+- **greedy_traffic**: rank airports by `route_count`, then reveal the staged
+  prefix for each year. The "obvious" rollout: upgrade the busiest hubs first. The
   demo UI labels this strategy "Greedy algorithm" but the JSON key remains
   `greedy_traffic` so downstream code is unchanged.
-- **biggest_cities**: top-K by `route_count × country_weight`, where the
-  weight is 1.0 by default with hand-set tweaks: US 0.9, GB 0.95, DE 0.95,
-  CN 1.5, IN 1.4. This is a stand-in for "what a politically-driven rollout
-  might pick" — biased toward populous developing-economy cities. It is
-  cartoonishly crude on purpose; do not read policy into it.
+- **biggest_cities**: rank by `route_count × country_weight`, then reveal the
+  staged prefix for each year. The weight is 1.0 by default with hand-set
+  tweaks: US 0.9, GB 0.95, DE 0.95, CN 1.5, IN 1.4. This is a stand-in for
+  "what a politically-driven rollout might pick" — biased toward populous
+  developing-economy cities. It is cartoonishly crude on purpose; do not
+  read policy into it.
 
 (There is also an internal-only `greedy_myopic` — strict per-year
 marginal-add — used as one of the joint-MILP warm-start seeds. It is not

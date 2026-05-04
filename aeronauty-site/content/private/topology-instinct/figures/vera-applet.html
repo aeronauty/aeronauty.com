@@ -151,7 +151,13 @@ main { max-width: 980px; margin: 0 auto; }
   touch-action: none;
 }
 @media (max-width: 480px) {
-  .va-stage-wrap { min-height: 240px; }
+  .va-stage-wrap {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    touch-action: pan-y;
+  }
   .va-frame { padding: 12px 12px 10px; }
   .va-title { font-size: 15px; }
 }

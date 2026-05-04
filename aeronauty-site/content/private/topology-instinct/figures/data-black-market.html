@@ -46,7 +46,7 @@ main { max-width: 1160px; margin: 0 auto; }
 
 .dbm-board {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--dbm-border);
   border-radius: 14px;
   background:
@@ -133,14 +133,15 @@ main { max-width: 1160px; margin: 0 auto; }
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(280px, 0.86fr) minmax(420px, 1.14fr);
-  gap: 22px;
-  padding: 24px 28px 28px;
+  gap: clamp(24px, 4vw, 54px);
+  align-items: start;
+  padding: 24px 28px 36px;
 }
 
 .dbm-trail {
   position: relative;
   display: grid;
-  gap: 12px;
+  gap: 0;
   align-content: start;
   margin: 0;
   padding: 0 0 0 24px;
@@ -160,6 +161,9 @@ main { max-width: 1160px; margin: 0 auto; }
 
 .dbm-step {
   position: relative;
+  min-height: max(520px, 72svh);
+  display: flex;
+  align-items: center;
   margin: 0;
 }
 
@@ -190,11 +194,11 @@ main { max-width: 1160px; margin: 0 auto; }
 .dbm-trigger {
   display: block;
   width: 100%;
-  min-height: 116px;
-  padding: 14px 15px 13px;
+  min-height: 0;
+  padding: 20px 18px 18px;
   border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -259,14 +263,17 @@ main { max-width: 1160px; margin: 0 auto; }
 }
 
 .dbm-stage {
-  position: relative;
-  min-height: 458px;
+  position: sticky;
+  top: clamp(18px, 8svh, 86px);
+  height: min(70svh, 720px);
+  min-height: 500px;
   border: 1px solid var(--dbm-border);
-  border-radius: 12px;
+  border-radius: 18px;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.04), transparent 26%),
     rgba(8, 13, 24, 0.72);
   overflow: hidden;
+  box-shadow: 0 28px 80px rgba(3, 7, 18, 0.26);
 }
 
 .dbm-image-stack {
@@ -280,7 +287,7 @@ main { max-width: 1160px; margin: 0 auto; }
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   opacity: 0;
-  transform: translateY(8px) scale(0.985);
+  transform: translateY(18px) scale(0.985);
   pointer-events: none;
   transition: opacity 260ms ease, transform 260ms ease;
 }
@@ -295,25 +302,28 @@ main { max-width: 1160px; margin: 0 auto; }
   display: grid;
   place-items: center;
   min-height: 0;
-  padding: 22px 22px 12px;
+  padding: 0;
+  overflow: hidden;
 }
 
 .dbm-panel img {
   display: block;
-  max-width: 100%;
-  max-height: 342px;
-  width: auto;
-  height: auto;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.09);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 0;
+  border: 0;
   background: #0b1020;
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.34);
+  box-shadow: none;
 }
 
 .dbm-panel-note {
   margin: 0;
-  padding: 14px 18px 16px;
+  padding: 16px 20px 18px;
   border-top: 1px solid var(--dbm-rule);
+  background: rgba(8, 13, 24, 0.84);
   color: var(--dbm-muted);
   font-size: 13px;
   line-height: 1.48;
@@ -323,11 +333,37 @@ main { max-width: 1160px; margin: 0 auto; }
   color: var(--dbm-fg);
 }
 
+.dbm-ai-note {
+  margin: 0;
+  padding: 10px 20px 13px;
+  border-top: 1px solid var(--dbm-rule);
+  background:
+    linear-gradient(90deg, rgba(34, 211, 238, 0.08), transparent 72%),
+    rgba(8, 13, 24, 0.58);
+  color: var(--dbm-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.dbm-ai-note strong {
+  color: var(--dbm-cyan);
+  font-family: var(--dbm-font, inherit);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
 .dbm-progress {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 18px;
+  right: 18px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  padding: 0 18px 18px;
+  padding: 0;
 }
 
 .dbm-progress button {
@@ -393,6 +429,14 @@ main { max-width: 1160px; margin: 0 auto; }
   .dbm-stage {
     background: rgba(255, 255, 255, 0.74);
   }
+  .dbm-panel-note {
+    background: rgba(248, 250, 252, 0.90);
+  }
+  .dbm-ai-note {
+    background:
+      linear-gradient(90deg, rgba(14, 116, 144, 0.08), transparent 72%),
+      rgba(241, 245, 249, 0.88);
+  }
 }
 
 @media (max-width: 900px) {
@@ -406,8 +450,21 @@ main { max-width: 1160px; margin: 0 auto; }
   .dbm-grid {
     grid-template-columns: 1fr;
   }
+  .dbm-trail {
+    order: 2;
+  }
   .dbm-stage {
-    min-height: 438px;
+    position: relative;
+    top: auto;
+    order: 1;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 11;
+    margin-bottom: 6px;
+  }
+  .dbm-step {
+    min-height: 0;
+    padding: 8px 0;
   }
 }
 
@@ -428,13 +485,13 @@ main { max-width: 1160px; margin: 0 auto; }
     min-height: 0;
   }
   .dbm-stage {
-    min-height: 390px;
+    aspect-ratio: 16 / 12;
   }
   .dbm-panel-img-wrap {
-    padding: 14px 14px 10px;
+    padding: 0;
   }
   .dbm-panel img {
-    max-height: 250px;
+    max-height: none;
   }
   .dbm-query {
     white-space: normal;
@@ -466,7 +523,7 @@ main { max-width: 1160px; margin: 0 auto; }
         <div>
           <p class="dbm-eyebrow">A straightforward traceability question</p>
           <h3 class="dbm-title">One plot, four artefacts, no proof.</h3>
-          <p class="dbm-subtitle">The slide sequence worked because it showed the failure as a chain, not a mood board. Each click below advances the same small disaster: the answer exists, but the connection to it has been flattened away.</p>
+          <p class="dbm-subtitle">The failure is a chain, not a mood board. Scroll through the same small disaster: the answer exists, but the connection to it has been flattened away.</p>
         </div>
         <div class="dbm-status" aria-live="polite">
           <span class="dbm-status-label">Current state</span>
@@ -510,27 +567,29 @@ main { max-width: 1160px; margin: 0 auto; }
           <div class="dbm-image-stack">
             <figure class="dbm-panel dbm-active" data-dbm-panel="1">
               <div class="dbm-panel-img-wrap">
-                <img src="data-black-market/01-der-question.png" alt="A cert engineer asks whether a hinge-moment plot is still valid after the latest configuration change." />
+                <img src="data-black-market/01-question-harry-frustrated.png" alt="Harry looks frustrated as a cert engineer asks whether a hinge-moment plot is still valid after the latest configuration change." />
               </div>
               <figcaption class="dbm-panel-note"><strong>The failure starts innocently:</strong> a plot that looked good in a deck is suddenly asked to remember where it came from.</figcaption>
+              <p class="dbm-ai-note"><strong>AI casting note.</strong> This was generated by handing an image model a photo of me, apparently from my LinkedIn somehow, plus a pile of descriptions. It has made me better-looking than I am.</p>
             </figure>
             <figure class="dbm-panel" data-dbm-panel="2">
               <div class="dbm-panel-img-wrap">
-                <img src="data-black-market/02-slide-just-a-png.png" alt="The plot is only a PNG in a design review slide, with no metadata or provenance." />
+                <img src="data-black-market/02-png-found-harry-frustrated.png" alt="Harry finds the plot pasted into a slide as a flat PNG, with no metadata or provenance attached." />
               </div>
               <figcaption class="dbm-panel-note"><strong>The artefact survived the meeting.</strong> The relationship between plot, run, mesh, configuration, and script did not.</figcaption>
             </figure>
             <figure class="dbm-panel" data-dbm-panel="3">
               <div class="dbm-panel-img-wrap">
-                <img src="data-black-market/03-script-found.png" alt="A script is found, but its data path points to an old configuration directory." />
+                <img src="data-black-market/03-script-search-harry-frustrated.png" alt="Harry searches clustered engineering files for the script that probably made the plot." />
               </div>
               <figcaption class="dbm-panel-note"><strong>This is the expensive bit:</strong> reconstructing context by reading file paths, commit dates, folder names, and people’s memories.</figcaption>
             </figure>
             <figure class="dbm-panel" data-dbm-panel="4">
               <div class="dbm-panel-img-wrap">
-                <img src="data-black-market/04-archaeology.png" alt="Two engineers spend a week reconstructing provenance and discover the answer was for the wrong configuration." />
+                <img src="data-black-market/04-archaeology-harry-frustrated.png" alt="Harry and another engineer reconstruct provenance from printouts and discover the result was for the wrong configuration." />
               </div>
               <figcaption class="dbm-panel-note"><strong>Nothing here is corrupt.</strong> It is worse than that. Every individual file is plausible, and the missing thing is the chain between them.</figcaption>
+              <p class="dbm-ai-note"><strong>AI casting note.</strong> I have no idea why it made Luigi Mangione my colleague. For clarity, he was never part of my training set.</p>
             </figure>
           </div>
           <div class="dbm-progress" aria-label="Figure steps">
@@ -562,9 +621,8 @@ window.DataBlackMarket = (function () {
   const jumps = Array.from(figure.querySelectorAll('[data-dbm-jump]'));
   const status = figure.querySelector('[data-dbm-status]');
   let active = 1;
-  let timer = null;
 
-  function show(index, userInitiated) {
+  function show(index) {
     active = Math.max(1, Math.min(4, Number(index) || 1));
 
     steps.forEach((step) => {
@@ -584,35 +642,40 @@ window.DataBlackMarket = (function () {
       jump.classList.toggle('dbm-active', isActive);
       jump.setAttribute('aria-current', isActive ? 'step' : 'false');
     });
-
-    if (userInitiated) stopAutoplay();
-  }
-
-  function stopAutoplay() {
-    if (timer) {
-      window.clearInterval(timer);
-      timer = null;
-    }
   }
 
   steps.forEach((step) => {
     const trigger = step.querySelector('.dbm-trigger');
     if (!trigger) return;
-    trigger.addEventListener('click', () => show(step.dataset.dbmStep, true));
-    trigger.addEventListener('mouseenter', () => show(step.dataset.dbmStep, true));
+    trigger.addEventListener('click', () => {
+      step.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      show(step.dataset.dbmStep);
+    });
   });
 
   jumps.forEach((jump) => {
-    jump.addEventListener('click', () => show(jump.dataset.dbmJump, true));
+    jump.addEventListener('click', () => {
+      const target = steps.find((step) => step.dataset.dbmStep === jump.dataset.dbmJump);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      show(jump.dataset.dbmJump);
+    });
   });
 
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    timer = window.setInterval(() => show(active === 4 ? 1 : active + 1, false), 4200);
-    figure.addEventListener('focusin', stopAutoplay);
-    figure.addEventListener('pointerdown', stopAutoplay);
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => {
+          const aDistance = Math.abs(a.boundingClientRect.top + a.boundingClientRect.height / 2 - window.innerHeight / 2);
+          const bDistance = Math.abs(b.boundingClientRect.top + b.boundingClientRect.height / 2 - window.innerHeight / 2);
+          return aDistance - bDistance;
+        });
+      if (visible[0]) show(visible[0].target.dataset.dbmStep);
+    }, { threshold: [0.25, 0.55, 0.8], rootMargin: '-18% 0px -24% 0px' });
+    steps.forEach((step) => observer.observe(step));
   }
 
-  show(1, false);
+  show(1);
 
   return { show };
 })();

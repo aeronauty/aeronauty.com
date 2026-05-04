@@ -136,6 +136,17 @@
     max-width: clamp(1240px, 92vw, 1520px);   /* fluid cap — uses available width on big monitors */
     margin-inline: auto;
   }
+  .ti-prose .ti-flowchart-scrolly {
+    position: relative;
+    left: 50%;
+    width: min(1520px, calc(100vw - 56px));
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    transform: translateX(-50%);
+  }
+  .ti-prose .ti-flat-view,
+  .ti-prose .ti-ask-the-plot,
   .ti-prose .ti-what-changed {
     position: relative;
     left: 50%;
@@ -162,9 +173,6 @@
     .ti-prose .ti-flat-view,
     .ti-prose .ti-ask-the-plot {
       width: min(1180px, calc(100vw - 64px));
-      max-width: none;
-      margin-left: 50%;
-      transform: translateX(-50%);
     }
     .ti-prose .ti-what-changed {
       width: min(1180px, calc(100vw - 64px));
@@ -567,8 +575,9 @@
   }
   @media (min-width: 1320px) {
     .ti-prose .ti-epiquote {
+      --ti-epiquote-stack-offset: 0px;
       position: sticky;
-      top: 112px;
+      top: calc(112px + var(--ti-epiquote-stack-offset, 0px));
       float: right;
       clear: right;
       width: min(300px, var(--ti-side-w));
@@ -816,12 +825,17 @@
     pointer-events: none;
     transition: opacity 140ms ease;
   }
-  .ti-aside:hover .ti-aside-content,
-  .ti-aside:focus-within .ti-aside-content {
-    display: block;
-    opacity: 1;
-    pointer-events: auto;
-  }
+	  .ti-aside:hover .ti-aside-content,
+	  .ti-aside:focus-within .ti-aside-content {
+	    display: block;
+	    opacity: 1;
+	    pointer-events: auto;
+	  }
+	  html.ti-asides-dismissed .ti-aside-content {
+	    display: none !important;
+	    opacity: 0 !important;
+	    pointer-events: none !important;
+	  }
   .ti-aside-content::after {
     content: "";
     position: absolute;
@@ -979,6 +993,18 @@
   html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
     transform: translateX(-50%) translateY(-10px) scale(0.996);
   }
+  html.ti-js .ti-flat-view.ti-reveal,
+  html.ti-js .ti-ask-the-plot.ti-reveal {
+    transform: translateX(-50%) translateY(28px) scale(0.992);
+  }
+  html.ti-js .ti-flat-view.ti-reveal.ti-inview,
+  html.ti-js .ti-ask-the-plot.ti-reveal.ti-inview {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  html.ti-js .ti-flat-view.ti-reveal.ti-dimmed,
+  html.ti-js .ti-ask-the-plot.ti-reveal.ti-dimmed {
+    transform: translateX(-50%) translateY(-10px) scale(0.996);
+  }
   html.ti-js .ti-figure-fullbleed.ti-reveal {
     transform: translateX(-50%) translateY(28px) scale(0.992);
   }
@@ -1053,11 +1079,13 @@
 
   /* ---- flat-view + adhd-flowchart asides — also break out wide so the
      scrolly grid has enough room for the table + DAG panel ---- */
-  .ti-flat-view, .ti-flowchart {
+  .ti-flat-view,
+  .ti-ask-the-plot,
+  .ti-flowchart {
     margin: 72px 0;
   }
   @media (min-width: 1000px) {
-    .ti-flat-view, .ti-flowchart {
+    .ti-flowchart {
       width: min(100vw - 32px, var(--ti-wide-w));
       margin-left: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
       margin-right: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
@@ -1340,123 +1368,184 @@
     border: 0;
   }
 
-  /* ---- cinematic "Thread" logotype (article 1, section 5) ----
-     A thin line draws across the page from left to right, spawning each
-     letter as it passes; the line then loops down and settles as a
-     hairline rule beneath the word. End state is a clean black-on-white
-     wordmark. */
+  /* ---- Thread cinematic T-mark (article 1, section 5) ----
+     Adapted from the canonical presentation closing-logo iframe in
+     Flex/thread-api/app/presentations/_common/thread-t-mark-animation-cinematic.html,
+     with the final lockup tuned for the article's light page. */
   .ti-thread-logo {
-    display: block;
-    margin: 4px 0 22px;
-    color: var(--ti-fg);   /* drives currentColor for the SVG strokes */
-    line-height: 0;        /* no extra baseline gap below the SVG */
+    --thread-logo-ink: #1f2329;
+    --thread-logo-green: #00643C;
+    display: flex;
+    align-items: center;
+    margin: 0 0 26px;
+    min-height: clamp(130px, 22vw, 206px);
+    color: var(--thread-logo-ink);
   }
-  .ti-thread-logo svg {
-    display: block;
-    width: 100%;
-    max-width: 420px;
+  .ti-thread-cinematic {
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(18px, 3vw, 32px);
+    isolation: isolate;
+  }
+  .ti-thread-cinematic-mark {
+    width: clamp(150px, 24vw, 227px);
     height: auto;
+    flex: 0 0 auto;
     overflow: visible;
+    transform-origin: 50% 50%;
   }
-  /* Letter glyphs: drawn-on stroke that fills in once the thread has
-     passed. Idle state (off-viewport) hides them; the .play class
-     animates them in. */
-  .ti-thread-logo .ti-thread-letter {
-    fill: transparent;
-    stroke: currentColor;
-    stroke-width: 1.4;
+  .ti-thread-wire,
+  .ti-thread-glow-wire,
+  .ti-thread-t-wire {
+    fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-dasharray: var(--len, 600);
-    stroke-dashoffset: var(--len, 600);
-    opacity: 0;
-  }
-  .ti-thread-logo .ti-thread-line {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.4;
-    stroke-linecap: round;
     stroke-dasharray: var(--line-len, 1200);
     stroke-dashoffset: var(--line-len, 1200);
   }
-  .ti-thread-logo .ti-thread-rule {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1;
-    stroke-linecap: round;
-    stroke-dasharray: var(--rule-len, 360);
-    stroke-dashoffset: var(--rule-len, 360);
+  .ti-thread-wire {
+    stroke: url(#ti-thread-gr);
+    stroke-width: 1.8;
+  }
+  .ti-thread-glow-wire {
+    stroke: url(#ti-thread-gr);
+    stroke-width: 5;
+  }
+  .ti-thread-t-wire {
+    stroke: url(#ti-thread-tg);
+    stroke-width: 2.5;
+  }
+  .ti-thread-node,
+  .ti-thread-scan,
+  .ti-thread-solid-mark,
+  .ti-thread-wordmark .letter {
     opacity: 0;
   }
-
-  /* The thread sweeps across (0 -> ~70% of duration); each letter starts
-     drawing as the thread crosses its centre, then fills to solid; the
-     thread continues, loops down, and the underline rule settles last. */
-  .ti-thread-logo.ti-thread-logo-play .ti-thread-line {
-    animation: ti-thread-draw 1500ms cubic-bezier(.65,.05,.36,1) forwards;
+  .ti-thread-wordmark {
+    display: inline-flex;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    font-family: "TWK Everett", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 700;
+    font-size: clamp(38px, 7.2vw, 80px);
+    line-height: 1;
+    letter-spacing: 0.14em;
+    color: var(--thread-logo-ink);
   }
-  .ti-thread-logo.ti-thread-logo-play .ti-thread-letter {
-    animation:
-      ti-thread-letter-draw 700ms cubic-bezier(.55,.08,.32,1) forwards,
-      ti-thread-letter-fill 320ms ease-out forwards;
-    /* per-letter delays are set inline by JS via --d-draw / --d-fill */
-    animation-delay: var(--d-draw, 0ms), var(--d-fill, 700ms);
+  .ti-thread-wordmark .letter {
+    display: inline-block;
+    transform: translateY(16px) scale(0.92);
   }
-  .ti-thread-logo.ti-thread-logo-play .ti-thread-rule {
-    animation: ti-thread-rule-draw 520ms cubic-bezier(.45,.05,.2,1) 1480ms forwards;
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-node {
+    animation: ti-thread-node-in 620ms cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(var(--i, 0) * 42ms);
   }
-
-  /* End state — once the play class has run, the styles above leave the
-     animations in their forwards state. We also set this when reduced
-     motion or post-replay so the wordmark renders intact even if the
-     element re-mounts mid-paint. */
-  .ti-thread-logo.ti-thread-logo-rest .ti-thread-letter {
-    fill: currentColor;
-    stroke-width: 0;
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-scan {
+    animation: ti-thread-scan 900ms cubic-bezier(.65,0,.35,1) 900ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-wire,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-glow-wire,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-t-wire {
+    animation: ti-thread-wire-draw 1600ms cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(1180ms + var(--group, 0) * 210ms);
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-solid-mark {
+    animation: ti-thread-mark-in 980ms cubic-bezier(.22,1,.36,1) 3100ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-wires-group,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-glow-group,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-highlight-group {
+    animation: ti-thread-network-out 1000ms ease 3600ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-cinematic-mark {
+    animation: ti-thread-mark-settle 1600ms cubic-bezier(.4,0,.2,1) 3500ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-wordmark .letter {
+    animation: ti-thread-word-in 420ms cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(4380ms + var(--i, 0) * 70ms);
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-cinematic-mark {
+    width: clamp(88px, 13vw, 149px);
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-wire,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-glow-wire,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-t-wire {
     stroke-dashoffset: 0;
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-wires-group,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-glow-group,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-highlight-group,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-scan,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-node {
+    opacity: 0 !important;
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-solid-mark,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-wordmark .letter {
     opacity: 1;
     animation: none;
+    transform: none;
   }
-  .ti-thread-logo.ti-thread-logo-rest .ti-thread-line {
-    opacity: 0;
-    animation: none;
+  @keyframes ti-thread-node-in {
+    0% { opacity: 0; transform: scale(0.2); }
+    70% { opacity: 1; transform: scale(1.25); }
+    100% { opacity: 1; transform: scale(1); }
   }
-  .ti-thread-logo.ti-thread-logo-rest .ti-thread-rule {
-    stroke-dashoffset: 0;
-    opacity: 1;
-    animation: none;
+  @keyframes ti-thread-scan {
+    0% { opacity: 0; transform: translateY(-10%); }
+    15% { opacity: .55; }
+    85% { opacity: .55; }
+    100% { opacity: 0; transform: translateY(96%); }
   }
-
-  @keyframes ti-thread-draw {
-    0%   { stroke-dashoffset: var(--line-len, 1200); opacity: 1; }
-    72%  { stroke-dashoffset: 0; opacity: 1; }
-    100% { stroke-dashoffset: 0; opacity: 0; }
-  }
-  @keyframes ti-thread-letter-draw {
-    0%   { opacity: 1; stroke-dashoffset: var(--len, 600); fill: transparent; }
-    100% { opacity: 1; stroke-dashoffset: 0; fill: transparent; }
-  }
-  @keyframes ti-thread-letter-fill {
-    0%   { fill: transparent; }
-    100% { fill: currentColor; stroke-width: 0; }
-  }
-  @keyframes ti-thread-rule-draw {
-    0%   { stroke-dashoffset: var(--rule-len, 360); opacity: 1; }
+  @keyframes ti-thread-wire-draw {
+    0% { stroke-dashoffset: var(--line-len, 1200); opacity: 1; }
     100% { stroke-dashoffset: 0; opacity: 1; }
   }
-
+  @keyframes ti-thread-mark-in {
+    0% { opacity: 0; transform: scale(.985); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes ti-thread-network-out {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes ti-thread-mark-settle {
+    0% { width: clamp(150px, 24vw, 227px); }
+    100% { width: clamp(88px, 13vw, 149px); }
+  }
+  @keyframes ti-thread-word-in {
+    0% { opacity: 0; transform: translateY(16px) scale(.92); }
+    100% { opacity: 1; transform: none; }
+  }
   @media (max-width: 520px) {
-    .ti-thread-logo svg { max-width: 300px; }
+    .ti-thread-logo { min-height: 116px; }
+    .ti-thread-cinematic { gap: 14px; }
+    .ti-thread-wordmark {
+      font-size: clamp(30px, 12vw, 44px);
+      letter-spacing: 0.11em;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
-    .ti-thread-logo .ti-thread-letter,
-    .ti-thread-logo .ti-thread-rule {
+    .ti-thread-logo *,
+    .ti-thread-logo *::before,
+    .ti-thread-logo *::after {
       animation: none !important;
-      opacity: 1 !important;
-      stroke-dashoffset: 0 !important;
+      transition: none !important;
     }
-    .ti-thread-logo .ti-thread-letter { fill: currentColor !important; stroke-width: 0 !important; }
-    .ti-thread-logo .ti-thread-line { display: none; }
+    .ti-thread-logo .ti-thread-cinematic-mark { width: clamp(88px, 13vw, 149px); }
+    .ti-thread-logo .ti-thread-wire,
+    .ti-thread-logo .ti-thread-glow-wire,
+    .ti-thread-logo .ti-thread-t-wire { stroke-dashoffset: 0; }
+    .ti-thread-logo .ti-thread-wires-group,
+    .ti-thread-logo .ti-thread-glow-group,
+    .ti-thread-logo .ti-thread-highlight-group,
+    .ti-thread-logo .ti-thread-scan,
+    .ti-thread-logo .ti-thread-node { opacity: 0 !important; }
+    .ti-thread-logo .ti-thread-solid-mark,
+    .ti-thread-logo .ti-thread-wordmark .letter {
+      opacity: 1 !important;
+      transform: none !important;
+    }
   }
 
   .ti-section-pin {
@@ -1484,6 +1573,11 @@
     .ti-section-pin[data-visible="true"] {
       opacity: 1;
       transform: translateY(0);
+    }
+    .ti-section-pin[data-blocked="true"] {
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
     }
     .ti-section-pin[data-intro="true"] {
       color: #1f2329;
@@ -1673,15 +1767,20 @@
     /* Three-column layout: graph rail (left) | prose (middle) | cartoon rail (right).
        Both rails are sticky and host the figure's panes after JS re-parents them.
        The figure itself is hidden in-place — only the panes are visible, in the rails. */
-    grid-template-columns: minmax(280px, 0.32fr) minmax(0, 0.4fr) minmax(280px, 0.32fr);
-    gap: 32px;
+    grid-template-columns:
+      minmax(260px, 0.8fr)
+      minmax(380px, 1.1fr)
+      minmax(360px, 1fr);
+    gap: clamp(28px, 3vw, 52px);
     align-items: start;
     max-width: 100%;
   }
   @media (min-width: 1200px) {
     .af-scroll {
-      grid-template-columns: minmax(320px, 0.34fr) minmax(0, 0.36fr) minmax(320px, 0.34fr);
-      gap: 48px;
+      grid-template-columns:
+        minmax(300px, 0.78fr)
+        minmax(440px, 1.12fr)
+        minmax(420px, 1fr);
     }
   }
   .af-graph-rail,
@@ -1727,6 +1826,18 @@
   .af-cartoon-rail .af-cartoon-frame img {
     object-fit: contain;
   }
+  .af-cartoon-rail .af-cartoon-frame {
+    transform: scale(0.985);
+    filter: saturate(0.88);
+    transition:
+      opacity 560ms ease,
+      transform 620ms cubic-bezier(.2,.8,.2,1),
+      filter 620ms ease;
+  }
+  .af-cartoon-rail .af-cartoon-frame.af-show {
+    transform: scale(1);
+    filter: saturate(1);
+  }
   /* Hide the figure's auto-advance hint, replay button, caption — scroll drives state. */
   .ti-flowchart-scrolly .af-controls { display: none; }
   .af-graph-rail .af-controls,
@@ -1763,10 +1874,10 @@
     margin: 0;
     font-family: var(--ti-font-serif);
     font-style: italic;
-    font-size: 19px;
-    line-height: 1.55;
+    font-size: clamp(21px, 1.45vw, 28px);
+    line-height: 1.38;
     color: var(--ti-fg);
-    max-width: 36ch;
+    max-width: 48ch;
   }
   /* The figure's own .af-stage container is kept in the DOM (so the IIFE
      keeps working) but rendered invisibly — its child panes have been moved
@@ -1784,6 +1895,13 @@
   .ti-flowchart-scrolly .af-stepbar { display: none; }
   .ti-flowchart-scrolly .af-figure { padding: 0; margin: 0; }
   @media (max-width: 880px) {
+    .ti-prose .ti-flowchart-scrolly {
+      left: auto;
+      width: 100%;
+      transform: none;
+      margin: 48px 0;
+      padding: 0;
+    }
     .af-scroll {
       grid-template-columns: 1fr;
       gap: 0;
@@ -2872,6 +2990,27 @@ main { max-width: 1160px; margin: 0 auto; }
   color: var(--dbm-fg);
 }
 
+.dbm-ai-note {
+  margin: 0;
+  padding: 10px 20px 13px;
+  border-top: 1px solid var(--dbm-rule);
+  background:
+    linear-gradient(90deg, rgba(34, 211, 238, 0.08), transparent 72%),
+    rgba(8, 13, 24, 0.58);
+  color: var(--dbm-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.dbm-ai-note strong {
+  color: var(--dbm-cyan);
+  font-family: var(--dbm-font, inherit);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
 .dbm-progress {
   position: absolute;
   z-index: 4;
@@ -2949,6 +3088,11 @@ main { max-width: 1160px; margin: 0 auto; }
   }
   .dbm-panel-note {
     background: rgba(248, 250, 252, 0.90);
+  }
+  .dbm-ai-note {
+    background:
+      linear-gradient(90deg, rgba(14, 116, 144, 0.08), transparent 72%),
+      rgba(241, 245, 249, 0.88);
   }
 }
 
@@ -5523,15 +5667,15 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q72.2,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q73.6,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,90 Q63.8,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q63.8,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
     <path class="ti-map-edge" d="M31,150 Q50.8,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q68.0,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q57.39999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q53.599999999999994,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q65.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q70.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q69.4,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q70.8,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,210 Q60.199999999999996,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q52.199999999999996,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q65.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q63.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q72.2,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -5552,7 +5696,7 @@ main { max-width: 1280px; margin: 0 auto; }
       <circle cx="28" cy="210" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
       <circle cx="28" cy="210" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
     </g>
-    <g class="ti-map-node" data-node-id="vera" tabindex="0" role="link" aria-label="Vera: Two organisations with different filters, looking at the same instinct.">
+    <g class="ti-map-node" data-node-id="flexcompute" tabindex="0" role="link" aria-label="Flexcompute: The place where the same instinct finally looked like product infrastructure.">
       <circle cx="28" cy="270" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="270" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
       <circle cx="28" cy="270" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
@@ -5570,7 +5714,7 @@ main { max-width: 1280px; margin: 0 auto; }
   </svg>
   <div class="ti-map-tooltip" role="tooltip" aria-hidden="true"><span class="ti-map-tooltip-title"></span><span class="ti-map-tooltip-summary"></span></div>
   <script type="application/json" class="ti-map-data">{
-"intro":{"title":"Ice cream van","summary":"Cold open: the personal trigger for noticing the through-line."},"plot-form":{"title":"The instinct in plot form","summary":"Refusing PowerPoint: a flat projection loses what makes data rich."},"paradigm":{"title":"Paradigm","summary":"Coupling the fleet and the network it flies on, jointly, as one MILP."},"join":{"title":"Twenty years of migrations","summary":"Pickles → HDF5 → SQL → Postgres: refusing to be the human join operation."},"vera":{"title":"Vera","summary":"Two organisations with different filters, looking at the same instinct."},"thread":{"title":"Thread","summary":"Thread: store the topology, project the flat view, keep the connections live."},"thread-close":{"title":"The thread","summary":"Closer: it’s one thing, really. I don’t like data entry."}
+"intro":{"title":"Ice cream van","summary":"Cold open: the personal trigger for noticing the through-line."},"plot-form":{"title":"The instinct in plot form","summary":"Refusing PowerPoint: a flat projection loses what makes data rich."},"paradigm":{"title":"Paradigm","summary":"Coupling the fleet and the network it flies on, jointly, as one MILP."},"join":{"title":"Twenty years of migrations","summary":"Pickles → HDF5 → SQL → Postgres: refusing to be the human join operation."},"flexcompute":{"title":"Flexcompute","summary":"The place where the same instinct finally looked like product infrastructure."},"thread":{"title":"Thread","summary":"Thread: store the topology, project the flat view, keep the connections live."},"thread-close":{"title":"The thread","summary":"Closer: it’s one thing, really. I don’t like data entry."}
   }</script>
 </aside>
 <aside class="ti-section-pin" aria-hidden="true">
@@ -5604,9 +5748,14 @@ main { max-width: 1280px; margin: 0 auto; }
 
   <main id="ti-main" class="ti-prose ti-narrow" role="main">
     <span id="intro" class="ti-anchor" data-node-id="intro" aria-hidden="true"></span>
-<p>I&rsquo;ve put on a bit of weight over the last couple of years despite eating less and working out more <span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-1">*</sup><span class="ti-aside-content" id="ti-aside-1" role="tooltip">Yes, I&rsquo;m 39. It happens - but I&rsquo;ve legitimately run marathons, deadlift &gt; 2x my increasing bodyweight, and eat clean and healthy. Something is wrong in the calculus of my waistline.</span></span>, which my wife had the epiphany that it&rsquo;s probably the anti-anxiety meds I&rsquo;ve been on for&hellip;about two years. Cut to me on the phone to my GP<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-2">*</sup><span class="ti-aside-content" id="ti-aside-2" role="tooltip">PCM for Americans</span></span> about it on a Friday afternoon, headphones in on the call, single-crewed with our son Arthur on a sunny day. Arthur grabs my hand and drags me out the front door because the ice cream van has just turned up. (The ice cream van comes every day, and negotiations about getting ice cream happen every day.)</p>
-<p>I&rsquo;m telling the doctor my diet is genuinely excellent and I do exercise, and she&rsquo;s listening patiently<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-3">*</sup><span class="ti-aside-content" id="ti-aside-3" role="tooltip">whilst I have the unfounded suspicion that she doubts me</span></span>. The ice cream van starts pulling away before we get to it and I bellow, at the top of my lungs, COME BACK MR ICE CREAM VAN MAN. Then I get back on the phone and carry on telling the doctor my diet is excellent.</p>
-<p>I&rsquo;m sharing this partly because it&rsquo;s about to be load-bearing, and mostly because it&rsquo;s a genuinely funny story that I know I need to share.</p>
+<p>I&rsquo;ve put on a bit of weight over the last couple of years despite eating less and working out more <span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-1">*</sup><span class="ti-aside-content" id="ti-aside-1" role="tooltip">Yes, I&rsquo;m 39. It happens - but I&rsquo;ve legitimately run marathons, deadlift &gt; 2x my increasing bodyweight, and eat clean and healthy. Something is wrong in the calculus of my waistline.</span></span>. My wife (who is an NP) had the epiphany that it&rsquo;s probably the anti-anxiety meds I&rsquo;ve been on for&hellip;about two years. Cut to me on the phone to my GP<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-2">*</sup><span class="ti-aside-content" id="ti-aside-2" role="tooltip">PCM for Americans</span></span> about it on a Friday afternoon, on the call with headphones in, single-crewed-parenting our son Arthur on a sunny day.</p>
+<p>Arthur grabs my hand and drags me out the front door because the ice cream van has just turned up. (The ice cream van comes every day, and negotiations about getting ice cream happen every day.)</p>
+<p>I&rsquo;m midway through telling the doctor my diet is genuinely excellent and I do exercise, and she&rsquo;s listening patiently<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-3">*</sup><span class="ti-aside-content" id="ti-aside-3" role="tooltip">whilst I have the unfounded suspicion that she doubts me</span></span>. The ice cream van starts pulling away before we get to it and I bellow, at the top of my lungs, &ldquo;COME BACK MR ICE CREAM VAN MAN.&rdquo; Then I get back on the phone and carry on telling the doctor my diet is excellent.</p>
+<aside class="ti-epiquote" role="doc-epigraph">
+  <p class="ti-epiquote-text">COME BACK MR ICE CREAM VAN MAN.</p>
+</aside>
+
+<p>I&rsquo;m sharing this partly because it&rsquo;s about to be load-bearing and is the life even that precipitated everything that follows coming together, but mostly because it&rsquo;s a genuinely funny story that I know I need to share.</p>
 <figure class="ti-figure ti-figure-homer" aria-labelledby="ti-homer-figcap">
   <div class="ti-video-wrap">
     <iframe
@@ -5620,22 +5769,22 @@ main { max-width: 1280px; margin: 0 auto; }
   </div>
   <figcaption id="ti-homer-figcap" class="ti-figcap">For the record.</figcaption>
 </figure>
-<p>We figured out that the anti-anxiety meds were probably treating the wrong condition; what I had looked more like ADHD showing up as anxiety. The reason it matters here is because being forced to understand how my brain works and doesn&rsquo;t, and seeing the effect of Adderall has made it easier to notice the pattern and thread of work that I&rsquo;ve been solving in my subconscious for the last decade in various forms - and how it lead to Flexcompute Thread.</p>
-<p>Fundamentally, I&rsquo;ve realised that my career has included one long attempt to avoid pointless data entry. Not because I&rsquo;m above it, but because <strong>data entry is boring, humans are error-prone, and there&rsquo;s almost always a better way.</strong> I love Autofill on my iPhone - especially because we move loads as a military family and I&rsquo;ve had three zip codes with 6&rsquo;s, 0&rsquo;s, and 1&rsquo;s. </p>
-<p>In engineering systems, it&rsquo;s annoying because data and its relationship to other data has a shape. That shape got lost somewhere between two tools, or two teams, or two formats, and a human got handed the reconstruction job and lost the shape and context at the same time. That&rsquo;s almost always what&rsquo;s going on when you find yourself typing the same thing into a second box, or hard coding a constant, or exporting to file and re-importing into another tool.</p>
-<p>There&rsquo;s a smaller, more personal version of this realisation that I had years before any of it got technical. I&rsquo;ve always tried to automate tasks that I knew didn&rsquo;t interest me — because boredom produces errors, and because the <em>challenge</em> of figuring out an automation is <em>fun</em>. Data entry is the worst case: both boring and error-prone. Richer data<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-4">*</sup><span class="ti-aside-content" id="ti-aside-4" role="tooltip">by which I mean data that contains more information than you see in any particular view</span></span> is the opposite. Richer data is <em>more interesting</em>, and when there&rsquo;s structure, wrong answers feel wrong, because they break the structure - which you can <em>only</em> do when you have the ability to observe all data together. Contrastingly, if you typo a number into a CSV or an Excel spreadsheet, the mutated data is just as happy as it would have been with the right number<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-5">*</sup><span class="ti-aside-content" id="ti-aside-5" role="tooltip">not to mention that the manual transfer makes it out of date the moment you do it</span></span>. </p>
-<p>My ADHD diagnosis didn&rsquo;t tell me that. It just made it obvious to me: avoiding boring error-prone work hadn&rsquo;t been laziness<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-6">*</sup><span class="ti-aside-content" id="ti-aside-6" role="tooltip">why copy some numbers into a spreadsheet when I can spend twice as long automating it?</span></span>, it had been my brain&rsquo;s natural response to a class of work that uses none of the things my brain is good at.</p>
-<p>This is a post about that pattern, and my personal realisation. It ends, for now, at a thing called Flexcompute Thread - and I give a glimpse at why it&rsquo;s magical.</p>
-<p>I am also aware that this writing is long and not everyone<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-7">*</sup><span class="ti-aside-content" id="ti-aside-7" role="tooltip">or anyone</span></span> will read it in full. The act of writing this and publishing it is really for me.</p>
+<p>We (me, wife, doctor) figured out that the anti-anxiety meds were probably treating the wrong condition; what I had looked more like ADHD showing up as anxiety. The reason it matters here is because it forced me to understand how my brain works, and how it doesn&rsquo;t. Seeing the effect of Adderall has made it easier to notice the pattern and thread of work that I&rsquo;ve been solving in my subconscious for the last decade in various forms - and how it led to Flexcompute Thread.</p>
+<p>Fundamentally, I&rsquo;ve realised that my career has included one long attempt to avoid pointless data entry. Not because I&rsquo;m above it, but because <strong>data entry is boring, humans are error-prone, and there&rsquo;s almost always a better way.</strong> I love Autofill on my iPhone - especially because we move a lot as a military family and I&rsquo;ve had four zip codes with 6&rsquo;s, 0&rsquo;s, and 1&rsquo;s and I find it hard to remember which one was which on forms.</p>
+<p>In engineering systems, it&rsquo;s annoying because data and its relationship to other data has a shape<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-4">*</sup><span class="ti-aside-content" id="ti-aside-4" role="tooltip">that should be datums and relationship to other datums, perhaps. I don&rsquo;t know, I&rsquo;m not a dictionary.</span></span>. That shape got lost somewhere between two tools, or two teams, or two formats, and a human got handed the reconstruction job and lost the shape and context at the same time. This is what&rsquo;s going on when you find yourself typing the same thing into a second box, or hard coding a constant, or exporting to file and re-importing into another tool, or filling your name and telephone number back out on a repeat visit to the doctor.</p>
+<p>There&rsquo;s a smaller, more personal version of this realisation that I had years before any of it got technical. I&rsquo;ve always tried to automate tasks that I knew didn&rsquo;t interest me — because boredom produces errors, and because the <em>challenge</em> of figuring out an automation is <em>fun</em>. Data entry is the worst case: both boring and error-prone. Richer data<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-5">*</sup><span class="ti-aside-content" id="ti-aside-5" role="tooltip">by which I mean data that contains more information than you see in any particular view</span></span> is the opposite. Richer data is <em>more interesting</em>, and when there&rsquo;s structure, wrong answers look and feel wrong, because they break the structure - which you can <em>only</em> do when you have the ability to observe all data together. Contrastingly, if you typo a number into a CSV or an Excel spreadsheet, the mutated data is just as happy as it would have been with the right number<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-6">*</sup><span class="ti-aside-content" id="ti-aside-6" role="tooltip">not to mention that the manual transfer makes it out of date the moment you do it</span></span>.</p>
+<p>My ADHD diagnosis didn&rsquo;t tell me that. It just made it obvious to me: avoiding boring error-prone work hadn&rsquo;t been laziness<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-7">*</sup><span class="ti-aside-content" id="ti-aside-7" role="tooltip">why copy some numbers into a spreadsheet when I can spend twice as long automating it?</span></span>, it had been my brain&rsquo;s natural response to a class of work that uses none of the things my brain is good at.</p>
+<p>This is a post about that pattern, and my personal realisation. It ends, for now, at a thing called Flexcompute Thread - and I give a glimpse at why it&rsquo;s magical. There&rsquo;s also a <a href="/lab/articles/the-brain-that-was-a-tax">Part 2/sister article about why AI agents are ideal for generalists</a>.</p>
+<p>I am also aware that this writing is long and not everyone<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-8">*</sup><span class="ti-aside-content" id="ti-aside-8" role="tooltip">or anyone, barring my father (thanks, Dad)</span></span> will read it in full. The act of writing this and publishing it is really for me, because it&rsquo;s helping me to get my thoughts out and forcing me to structure them.</p>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="plot-form" data-node-id="plot-form">
 <span class="ti-section-numeral" aria-hidden="true">01</span>
 <h2 class="ti-section-h2">The instinct in plot form</h2>
 <p class="ti-section-stand">Why I sent the dashboard, not the deck.</p>
 </section>
-<p>I was annoyed during my PhD at having to embed PNG figures into a PDF, and my small act of rebellion to that fact was to spend <em>weeks</em> learning how to use PDF_TEX and LaTeX to ensure that typography matched the rest of the document. At ARA<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-8">*</sup><span class="ti-aside-content" id="ti-aside-8" role="tooltip">where there&rsquo;s actually a <em>wonderful</em> data graphing system for live data written in Fortran, from the 1980&rsquo;s</span></span>, I battled the CTO<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-9">*</sup><span class="ti-aside-content" id="ti-aside-9" role="tooltip">We&rsquo;re friends now, thanks Peter.</span></span> about why I had to use Microsoft Word when it&rsquo;s clearly the wrong tool. At IIT, I wrote and proselytised with scripts to automate grade submission to the Senate<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-10">*</sup><span class="ti-aside-content" id="ti-aside-10" role="tooltip">in lieu of hand-submitting via a form</span></span>. At Aurora, I authored flight-dynamics studies and was expected to put the results into PowerPoint. I refused. Not dramatically; I just kept building Plotly + Dash dashboards and sending those round when people asked for the slides. They could interrogate the data without using <em>me</em> as an intermediary. </p>
+<p>I was annoyed during my PhD at having to embed PNG figures into a PDF, and my small act of &lsquo;rebellion&rsquo; to that fact was to spend <em>weeks</em> learning how to use PDF_TEX and LaTeX to ensure that typography matched the rest of the document, and that captions and annotations in figures were text-searchable<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-9">*</sup><span class="ti-aside-content" id="ti-aside-9" role="tooltip">Me: <em>Why wouldn&rsquo;t this be a good use of my time?</em></span></span>. At ARA<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-10">*</sup><span class="ti-aside-content" id="ti-aside-10" role="tooltip">where there&rsquo;s actually a <em>wonderful</em> data graphing system for live data written in Fortran, from the 1980s</span></span>, I battled the CTO<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-11">*</sup><span class="ti-aside-content" id="ti-aside-11" role="tooltip">We&rsquo;re friends now, thanks <a href="https://uk.linkedin.com/in/blucad">Peter</a>.</span></span> about why I had to use Microsoft Word when it&rsquo;s clearly the wrong tool for engineering reports. At IIT, I wrote and proselytised with scripts to automate grade submission to the Senate<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-12">*</sup><span class="ti-aside-content" id="ti-aside-12" role="tooltip">in lieu of hand-submitting via a form, which every other faculty member was happy with</span></span>. At Aurora, I authored flight-dynamics studies and was expected to put the results into PowerPoint. I refused. Not dramatically; I just kept building Plotly + Dash dashboards and sending those round when people asked for the slides. They could interrogate the data without using <em>me</em> as an intermediary.</p>
 <p>I&rsquo;d send both. The deck got circulated; the dashboard got bookmarked by three people and forgotten.</p>
-<p>I realise now, that my recalcitrant objection was philosophical and topological<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-11">*</sup><span class="ti-aside-content" id="ti-aside-11" role="tooltip">Not sure I have to phrase it like such a wanker, though</span></span>. Data has a shape — a graph of relationships between inputs, outputs, regimes, edge cases — and a PowerPoint slide is a flat projection that loses everything that makes data <em>rich</em>. You can project any data onto rectilinear axes the same way you can project a globe onto a flat map. You cannot reverse this projection.</p>
+<p>I realise now, that my recalcitrant objection was philosophical and topological<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-13">*</sup><span class="ti-aside-content" id="ti-aside-13" role="tooltip">Not sure I have to phrase it like such a wanker, though</span></span>. Data has a shape — a graph of relationships between inputs, outputs, regimes, edge cases — and a PowerPoint slide is a flat projection that loses everything that makes data <em>rich</em>. You can project any data onto rectilinear axes the same way you can project a globe onto a flat map. You cannot reverse this projection, and you cannot recover what is lost.</p>
 <aside class="ti-plotly-vs-pp" aria-label="Same dataset shown as a PowerPoint slide and as an interactive Plotly chart">
 <div class="pv-figure" id="pv-figure">
     <p class="pv-eyebrow">A plot is a slice. The data is a volume.</p>
@@ -5654,32 +5803,37 @@ main { max-width: 1280px; margin: 0 auto; }
   </div>
   <figcaption id="ti-video-plotly-vs-powerpoint-morph-figcap" class="ti-figcap">A PNG is a snapshot. The data was already moving by the time the flash went off.</figcaption>
 </figure>
-<p>This is the first instance of a pattern that&rsquo;s about to keep happening: the topology-shaped output is the better way to keep data alive and the rectilinear-shaped output is the one that most systems can absorb.</p>
-<p>That gap between them and what it loses is the whole post.</p>
+<p>This is the first instance of a pattern that&rsquo;s about to keep happening: the topologically-guided output is the better way to keep data alive and the rectilinear-shaped output is the one that most systems can absorb, including human beings.</p>
+<p>That gap between them and what a crude transfer throws away is the whole post.</p>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="paradigm" data-node-id="paradigm">
 <span class="ti-section-numeral" aria-hidden="true">02</span>
 <h2 class="ti-section-h2">Paradigm</h2>
 <p class="ti-section-stand">Two coupled systems, one model — and a prize that didn’t move the system.</p>
 </section>
-<p>The bigger version of this, the one that mattered most professionally, was a project called Paradigm. I had been at Aurora for a couple of years and got seconded to Boeing&rsquo;s Sustainability and Future Mobility team, working on Future Aircraft Conceptual Design. I was brought in to do Stability and Control and finished that quickly, but questioned &ldquo;how do we know our requirements are right for design?&rdquo;</p>
-<p>Boeing has a tool called Cascade, built by the sister team of mine. Mathematically clean, built by people who knew what they were doing, and it lets you ask things like <em>if we replaced this fleet of 737s with this hypothetical hydrogen aircraft, what happens to global aviation emissions?</em> — over real flight data, at planetary scale. What it does, mathematically, is swap aircraft on routes and recompute. Hand it a fleet plan, get the emissions consequence. Answers that question well, and answer that people understand.</p>
+<p>The bigger version of this, the one that mattered most professionally, was a project called Paradigm<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-14">*</sup><span class="ti-aside-content" id="ti-aside-14" role="tooltip">I tried to shoehorn a backronym for Predicting Aviation Routes and Decision Intelligence for Global Mobility, but even I had to accept that it was contrived and that I just wanted the cool name of Paradigm</span></span>. I had been at Aurora for a couple of years and got seconded to Boeing&rsquo;s Sustainability and Future Mobility team, working on Future Aircraft Conceptual Design. I was brought in to do Stability and Control Estimates<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-15">*</sup><span class="ti-aside-content" id="ti-aside-15" role="tooltip">I actually think/know that Dom wanted me to be there to do whatever it is I&rsquo;m good at&hellip;which at the time he called Data Storytelling.</span></span> and finished that quickly, but questioned &ldquo;how do we know our requirements are right for design of something that&rsquo;s never been designed before and doesn&rsquo;t fit into the niches currently there for aviation?&rdquo;</p>
+<aside class="ti-epiquote" role="doc-epigraph">
+  <p class="ti-epiquote-text">How do we know our requirements are right for design of something that's never been designed before and doesn't fit into the niches currently there for aviation?</p>
+</aside>
+
+<p>Boeing has a tool called <a href="https://boeing.mediaroom.com/2023-05-17-Boeing-Publicly-Launches-Cascade-to-Support-Aviations-Net-Zero-Goal">Cascade</a>, built by the sister team of the one I was on. Mathematically clean, built by people who knew what they were doing, and it lets you ask things like <em>if we replaced this fleet of 737s with this hypothetical hydrogen aircraft, what happens to global aviation emissions?</em> — over real flight data, at planetary scale. What it does, mathematically, is swap aircraft on routes and recompute. Hand it a fleet plan, get the emissions consequence. Answers that question well, and provides as answer that people understand.</p>
 <p>The question I kept getting stuck on, which Cascade didn&rsquo;t, was the one underneath: <em>which aircraft can fly from which airports?</em> A hydrogen 737 can&rsquo;t land where there&rsquo;s no liquid hydrogen. A battery-electric regional can&rsquo;t operate without charging. These factors affect the design requirements of next-gen aircraft in a way that they do not for Kerosene-powered aircraft. The bottleneck on aviation decarbonisation isn&rsquo;t only fleet renewal; it&rsquo;s the discrete, capital-constrained, sequenced problem of upgrading the <em>network</em> the fleet flies on.</p>
+<p>My conjecture was that the sequence in which airports were upgraded would change the impact that new aircraft could make on emissions, and accordingly, the most efficacious upgrade sequence would determine the best design requirements for future aircraft.</p>
 <p>So I built Paradigm. The reframe was small in words and large in consequence.</p>
 <aside class="ti-epiquote" role="doc-epigraph">
-  <p class="ti-epiquote-text">Stop optimising the fleet in isolation. Optimise the network the fleet flies on, and the fleet that network can support, jointly.</p>
+  <p class="ti-epiquote-text">Stop optimising the fleet in isolation. Optimise the network the new fleet will fly on, and the fleet that network can support, jointly.</p>
   <p class="ti-epiquote-attr">The Paradigm reframe</p>
 </aside>
 
 <p>Optimise aircraft alone, you get plans that depend on infrastructure that doesn&rsquo;t exist. Optimise infrastructure alone, you get upgrade lists with no connection to which aircraft will benefit. Coupled, the problem becomes: given a budget, a timeline, a fleet roadmap — <em>which airports do you upgrade, in which order, to maximise CO2 reduction?</em></p>
-<p>Which is to say: it&rsquo;s a problem well-suited for MILP. Mixed-integer linear programming. Decades-old, well-understood by the OR<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-12">*</sup><span class="ti-aside-content" id="ti-aside-12" role="tooltip">Operations Research</span></span> community, solvable to optimality with off-the-shelf solvers if you formulate it sensibly - these solvers were originally designed to solve things like <em>The Travelling Salesman Problem</em><insert a link ot the wiki page for this, as an asterisk with a preview>. Binary variables for whether each airport is upgraded; binary variables for whether each route is eligible (a route is eligible only if both endpoints are upgraded); a budget cap; an objective that maximises CO2 decarbonised across all eligible routes, using actual annual per-route CO2 from real flight data, not a great-circle proxy. Sequencing makes it interesting — you upgrade in stages, each with its own budget, and once an airport is upgraded it stays upgraded — so the stages chain into one combined MILP rather than a greedy step-by-step. Greedy is the obvious wrong answer; it&rsquo;ll happily spend stage one on the highest-CO2 airport in isolation and miss that stage two wanted that airport&rsquo;s neighbour first.</p>
+<p>Which is to say: it&rsquo;s a problem well-suited for MILP. Mixed-integer linear programming. Decades-old, well-understood by the OR<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-16">*</sup><span class="ti-aside-content" id="ti-aside-16" role="tooltip">Operations Research</span></span> community, solvable to optimality with off-the-shelf solvers if you formulate it sensibly - these solvers were originally designed to solve things like <em>The Travelling Salesman Problem</em><span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-17">*</sup><span class="ti-aside-content" id="ti-aside-17" role="tooltip">The canonical combinatorial optimisation chestnut: <a href="https://en.wikipedia.org/wiki/Travelling_salesman_problem">given a list of cities and distances, find the shortest possible tour that visits each once and returns home</a>.</span></span>. Binary variables for whether each airport is upgraded; binary variables for whether each route is eligible (a route is eligible only if both endpoints are upgraded); a budget cap; an objective that maximises CO2 decarbonised across all eligible routes, using actual annual per-route CO2 from real flight data, not a great-circle proxy. Sequencing makes it interesting — you upgrade in stages, each with its own budget, and once an airport is upgraded it stays upgraded — so the stages chain into one combined MILP rather than a greedy step-by-step. Greedy is the obvious wrong answer; it&rsquo;ll happily spend stage one on the highest-CO2 airport in isolation and miss that stage two wanted that airport&rsquo;s neighbour first.</p>
 <aside class="ti-callout ti-callout-asterisk" aria-label="MILP formulation aside">
   <div class="ti-callout-mark" aria-hidden="true">*</div>
   <div class="ti-callout-body">
     <p><strong>Formulation note.</strong> I originally wrote the endpoint constraint as <code>R_ij ≤ (A_i + A_j)/2</code>, the averaged form. Both are correct for binary variables; the paired form gives a tighter LP relaxation and the solver prunes faster. An LLM pointed that out while I was drafting this article. Standard OR practice I picked up incompletely, because I came at MILP from engineering rather than optimisation. Hub location with phasing is a standard OR formulation, decades old; DLR, MIT and NASA have published on hydrogen infrastructure rollout. Paradigm sat in a gap — coupling aircraft to network with engineering-derived costs — without inventing the technique.</p>
   </div>
 </aside>
-<p>I later than, under advisement from a specialist smarter than me<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-13">*</sup><span class="ti-aside-content" id="ti-aside-13" role="tooltip">Thanks Jeremy Harris<link to his LinkedIn></span></span> moved to CP-SAT, which enabled a LOT more that I won&rsquo;t bore you with.</p>
+<p>Later on, under advisement from a specialist smarter than me<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-18">*</sup><span class="ti-aside-content" id="ti-aside-18" role="tooltip">Thanks <a href="https://www.linkedin.com/in/jeremy-harris1">Jeremy Harris</a>.</span></span> moved to CP-SAT, which enabled a LOT more that I won&rsquo;t bore you with.</p>
 <figure class="ti-figure ti-figure-milp" aria-labelledby="ti-milp-figcap">
   <div class="ti-milp-eq">
 $$
@@ -5792,17 +5946,33 @@ $$
   </p>
 </div>
 </aside>
-<p>The <em>really</em> fun thing<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-14">*</sup><span class="ti-aside-content" id="ti-aside-14" role="tooltip">if you&rsquo;re a massive nerd like me</span></span> is in coupling the aircraft problem and the infrastructure problem. Aircraft payload and range determine which routes a hypothetical aircraft can fly, which determines which airports matter to upgrade, which determines which aircraft designs make sense to develop. Run the loop both directions, jointly, and you get answers neither half gives alone. How this fed Boeing&rsquo;s aircraft strategy is left as an exercise for the reader<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-15">*</sup><span class="ti-aside-content" id="ti-aside-15" role="tooltip">I have presented the method in detail publicly, at academic lectures, but I don&rsquo;t want to spell out how to do all this in one place</span></span>.</p>
-<p>The cost predictors weren&rsquo;t a constant per airport either<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-16">*</sup><span class="ti-aside-content" id="ti-aside-16" role="tooltip">after the proof of concept</span></span>. The infrastructure cost was a complex set of models based on distance to existing infrastructure, water availability, renewables proximity — engineering-derived predictors from public data, turned into per-airport upgrade-cost estimates. Honestly, this was a whole load of fun - solving problems using geospatial algorithms, routing (for land and air vehicles), and large-scale search trees. </p>
-<p>Paradigm formed the backbone of my Associate Technical Fellow (ATF)<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-17">*</sup><span class="ti-aside-content" id="ti-aside-17" role="tooltip">Not Alcohol, Tobacco, and Firearms - though that would be cool.</span></span><insert a real picture of ATF looking cool> application for Boeing. I had accomplishments in traditional engineering fields at Aurora and from previous employers, but Paradigm really <em>felt</em> like something powerful - if you <em>got it</em> then you understood that it could change how we picked which aircraft to build. The tagline could be summarised as &ldquo;stop drawing pictures of cool-looking future aircraft&hellip;start figuring out what sort of aircraft we <em>should</em> draw pictures of.&rdquo;</p>
-<p>Paradigm needed an organisation that could reward and acknowledge cross-domain work, and Boeing&rsquo;s structure whilst great at building aircraft, was not set up to celebrate that at the time. Paradigm won the No-Bull Prize at the international Crew and Fleet Optimisation Workshop<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-18">*</sup><span class="ti-aside-content" id="ti-aside-18" role="tooltip">CoW Workshop&hellip;COW, No-Bull, Nobel&hellip;geddit? <em>Sigh</em>.</span></span> hosted by Jeppesen in 2025, credited as the work presented that was &ldquo;most economically valuable to Boeing.&rdquo; A mock reviewer in the rehearsal panel for my Associate Technical Fellow interview called it &ldquo;revolutionary,&rdquo; and told me I was a shoe-in for ATF. </p>
+<p>The <em>really</em> fun thing<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-19">*</sup><span class="ti-aside-content" id="ti-aside-19" role="tooltip">if you&rsquo;re a massive nerd like me</span></span> is that it proved the conjecture I had. Aircraft payload and range determine which routes a hypothetical aircraft can fly, which determines which airports matter to upgrade, which determines which aircraft designs make sense to develop. Run the loop both directions, jointly, and you get answers neither half gives alone. How this fed Boeing&rsquo;s aircraft strategy is left as an exercise for the reader<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-20">*</sup><span class="ti-aside-content" id="ti-aside-20" role="tooltip">I have presented the method in detail publicly, at academic lectures, but I don&rsquo;t want to spell out how to do all this in one place - but my still-unproven thesis is that there&rsquo;s a danger a company introduces a new aircraft that requires international infrastructure that inadvertently allows a competitor to flourish using design requirements optimal for that airport set.</span></span>.</p>
+<p>The cost predictors weren&rsquo;t a constant per airport either<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-21">*</sup><span class="ti-aside-content" id="ti-aside-21" role="tooltip">after the proof of concept</span></span>. The infrastructure cost was a complex set of models based on distance to existing infrastructure, water availability, renewables proximity — engineering-derived predictors from public data, turned into per-airport upgrade-cost estimates. Honestly, this was a whole load of fun - solving problems using geospatial algorithms, routing (for land and air vehicles), and large-scale search trees.</p>
+<p>Paradigm formed the backbone of my Associate Technical Fellow (ATF)<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-22">*</sup><span class="ti-aside-content" id="ti-aside-22" role="tooltip">Not Alcohol, Tobacco, and Firearms - though that would be cool.</span></span> application for Boeing. I had accomplishments in traditional engineering fields at Aurora and from previous employers, but Paradigm really <em>felt</em> like something powerful - if you <em>got it</em> then you understood that it could change how we picked which aircraft to build. The tagline could be summarised as &ldquo;stop drawing pictures of cool-looking future aircraft&hellip;start figuring out what sort of aircraft we <em>should</em> draw pictures of.&rdquo;</p>
+<figure class="ti-figure" aria-labelledby="ti-atf-photo-figcap">
+  <img src="figures/atf-special-response-team-search.jpg" alt="ATF Special Response Team members searching wooded terrain in tactical gear" loading="lazy" />
+  <figcaption id="ti-atf-photo-figcap" class="ti-figcap">Not that ATF. Though, admittedly, also a strong look. <a href="https://www.dvidshub.net/image/1606620/atf-special-response-team-search">Public domain photo via DVIDS / ATF</a>.</figcaption>
+</figure>
+<aside class="ti-epiquote" role="doc-epigraph">
+  <p class="ti-epiquote-text">Stop drawing pictures of cool-looking future aircraft. Start figuring out what sort of aircraft we should draw pictures of.</p>
+</aside>
+
+<p>Paradigm needed an organisation that could reward and acknowledge cross-domain work, and Boeing&rsquo;s structure whilst great at building aircraft, was not set up to celebrate that at the time. Paradigm won the No-Bull Prize at the international Crew and Fleet Optimisation Workshop<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-23">*</sup><span class="ti-aside-content" id="ti-aside-23" role="tooltip">CoW Workshop&hellip;COW, No-Bull, Nobel&hellip;geddit? <em>Sigh</em>.</span></span> hosted by Jeppesen in 2025, credited as the work presented that was &ldquo;most economically valuable to Boeing.&rdquo; A mock reviewer in the rehearsal panel for my Associate Technical Fellow interview called it &ldquo;revolutionary,&rdquo; and told me I was a shoo-in for ATF.</p>
+<aside class="ti-epiquote" role="doc-epigraph">
+  <p class="ti-epiquote-text">Most economically valuable to Boeing.</p>
+  <p class="ti-epiquote-attr">No-Bull Prize citation</p>
+</aside>
+
 <figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-jeppesen-award-figcap">
   <img src="figures/jeppesen-no-bull-award-cartoon.png" alt="Editorial cartoon of Harry shaking hands with a judge while receiving a blue No-Bull Prize package at a Jeppesen Crew and Fleet Optimisation Workshop" loading="lazy" />
   <figcaption id="ti-jeppesen-award-figcap" class="ti-figcap">The No-Bull Prize: funny name, real signal. The work made economic sense to the people who understood the network.</figcaption>
 </figure>
-<p>The ATF panel didn&rsquo;t see demonstrable impact to Boeing, and around the same time the project got dropped<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-19">*</sup><span class="ti-aside-content" id="ti-aside-19" role="tooltip">My manager, Dom Barone, always saw the value and gave me aircover, for which I am eternally thankful - but it could only last so long.</span></span>. I was furious and heartbroken. It took me a while to realise the system, not the work, was the problem.</p>
-<p>The bit I want you to take from Paradigm isn&rsquo;t the equation. It&rsquo;s the same complaint as the PowerPoint deck and the doctor&rsquo;s-office form, scaled up. Two coupled systems — aircraft and airports — were being analysed separately, and someone was meant to manually reconcile the results. The MILP just put the coupling in the model so a human didn&rsquo;t have to - and that, compared to a solver for that purpose, a human is laughably shit at. </p>
-<p><em>These two seemingly-separate things have to be solved as one big thing, and here&rsquo;s how.</em> <turn this into a dramatic big quote></p>
+<p>The ATF panel didn&rsquo;t see demonstrable impact to Boeing and gave me a &ldquo;sorry, no&rdquo;, and around the same time the project got dropped<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-24">*</sup><span class="ti-aside-content" id="ti-aside-24" role="tooltip">My manager, Dom Barone, always saw the value and gave me aircover, for which I am eternally thankful - but it could only last so long.</span></span>. I was furious and heartbroken. It took me a while to realise the system, not the work, was the problem - and it was hard not to take this as a personal failure.</p>
+<p>The bit I want you to take from Paradigm isn&rsquo;t the equation. It&rsquo;s the same complaint as the PowerPoint deck and the doctor&rsquo;s-office form, scaled up. Two coupled systems — aircraft and airports — were being analysed separately, and someone was meant to manually reconcile the results. The MILP just put the coupling in the model so a human didn&rsquo;t have to - and that, compared to a solver built for that purpose, a human is laughably shit at.</p>
+<aside class="ti-epiquote" role="doc-epigraph">
+  <p class="ti-epiquote-text">These two seemingly-separate things have to be solved as one big thing, and here's how.</p>
+</aside>
+
 <p>That sentence is the whole project.</p>
 <aside class="ti-bridge-link">
   <p class="ti-bridge-eyebrow">The personal version</p>
@@ -5817,21 +5987,21 @@ $$
 <p class="ti-section-stand">Trying, mildly annoyed, to put graph-shaped data somewhere a bit less wrong.</p>
 </section>
 <p>The plot stuff and Paradigm are the visible bits. Most of the work was invisible.</p>
-<p>Twenty years of disciplined infrastructure work, no moments of insight, just one migration after another to find a less-wrong place to put graph-shaped data. Pickles, then HDF5, then SQL, then Postgres with proper foreign keys and recursive CTEs for the genuinely graph-shaped queries. None of it was a bright idea. It was being mildly annoyed at the current storage layer for not being shaped like the data was, and migrating to the next thing that was a bit less wrong. <span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-20">*</sup><span class="ti-aside-content" id="ti-aside-20" role="tooltip">Thanks Jeremy Harris for explaining, calmly, that pickles weren&rsquo;t a database and never had been. &ldquo;You&rsquo;re abusing pickles&rdquo; was the phrase that without context is hilarious.</span></span></p>
-<figure class="ti-figure ti-figure-video" aria-labelledby="ti-cartoon-storage-figcap">
+<p>Twenty years of disciplined infrastructure work, no moments of insight, just one migration after another to find a less-wrong place to put graph-shaped data. Pickles, then HDF5, then SQL, then Postgres with proper foreign keys and recursive CTEs for the genuinely graph-shaped queries. None of it was a bright idea. It was being mildly annoyed at the current storage layer for not being shaped like the data was, and migrating to the next thing that was a bit less wrong. <span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-25">*</sup><span class="ti-aside-content" id="ti-aside-25" role="tooltip">Thanks Jeremy Harris for explaining, calmly, that pickles weren&rsquo;t a database and never had been. &ldquo;You&rsquo;re abusing pickles&rdquo; was the phrase that without context is hilarious.</span></span></p>
+<figure class="ti-figure ti-figure-video" aria-labelledby="ti-cfd-handoff-manual-figcap">
   <div class="ti-video-wrap">
-    <video src="figures/cartoon-storage-migrations.mp4" autoplay muted loop playsinline preload="metadata" poster="figures/cartoon-storage-migrations.png" aria-label="Three engineers at separate workstations — Paraview, Excel, Simulink — exchange a chaotic flock of file-format icons (.csv, .xlsx, .png, .mat, .dat) by hand, while a single clean database on the right answers GET and POST and tracks versioning"></video>
+    <video src="figures/cfd-handoff-manual.mp4" autoplay muted loop playsinline preload="metadata" poster="figures/cfd-handoff-manual-start.png" aria-label="A short editorial animation of CFD data moving by hand: one engineer loads a result in ParaView, another exports a file, a CSV arrives by email, and chart fragments are copied into a PowerPoint-style slide while a person acts as the join."></video>
   </div>
-  <figcaption id="ti-cartoon-storage-figcap" class="ti-figcap">Three tools, five formats, and someone manually re-typing the metrics. Or one database that holds the relationships, versions everything, and answers GET / POST.</figcaption>
+  <figcaption id="ti-cfd-handoff-manual-figcap" class="ti-figcap">The ordinary CFD handoff: load the result, export a file, email a CSV, paste a chart. The person in the middle is the integration layer.</figcaption>
 </figure>
-<figure class="ti-figure ti-figure-video ti-figure-fullbleed ti-data-drift" aria-labelledby="ti-data-drift-figcap" data-ti-restart-on-view="1">
+<figure class="ti-figure ti-figure-video ti-cfd-handoff-api" aria-labelledby="ti-cfd-handoff-api-figcap">
   <div class="ti-video-wrap">
-    <video src="figures/data-drift.mp4" autoplay muted loop playsinline preload="metadata" poster="figures/data-drift/05-final-row.png" aria-label="A 15-second short film: a CFD lift-coefficient value Cl = 0.413 is copied into a spreadsheet cell, a slide PNG, an email quote, and a Teams chat. The four copies freeze at 0.413 while the live source ticks on to 0.421, 0.428, and 0.435. The final composition is a row of frozen 0.413 cards behind a single live 0.435 card — the visual gap is the cost."></video>
+    <video src="figures/cfd-handoff-api.mp4" autoplay muted loop playsinline preload="metadata" poster="figures/cfd-handoff-api-start.png" aria-label="A short editorial animation of the same CFD workflow represented as direct request pulses between tools and one shared data store; the human join fades out because the relationships are carried by the system."></video>
   </div>
-  <figcaption id="ti-data-drift-figcap" class="ti-figcap">Each handoff freezes a moment. Then the moment moves on.</figcaption>
+  <figcaption id="ti-cfd-handoff-api-figcap" class="ti-figcap">The same shape done properly: tools GET what they need, POST what changed, and no one has to be the join between formats.</figcaption>
 </figure>
-<p>I&rsquo;m spelling it out at all is that I don&rsquo;t want anyone reading the rest of this post to think I&rsquo;m claiming exceptionalism. My understanding of infrastructure caught up to my instinct slowly, and I had many wrong steps along the way. The instinct was visible all along; the supporting tooling was the bit that took the years.</p>
-<p>If I had to put the through-line on a t-shirt: I have spent over a decade trying not to become the join<make join a true-type font so it looks like code>. The join between two formats. The join between a database and a paper form. The join between a fleet model and an airport model. The join between an analysis tool and a slide deck. Every time the system can&rsquo;t connect two things itself, a person has to. That person is an engineer who usually has to do this in lieu of their actual job, and it&rsquo;s the mundane bullshit that you&rsquo;re not taught in an actual engineering degree<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-21">*</sup><span class="ti-aside-content" id="ti-aside-21" role="tooltip">Case-in-point, my most watched YouTube video is &ldquo;How to loop over files in a directory using Python&rdquo;<Put this link along with the quote: https://www.youtube.com/watch?v=uhz_RKgCqe4></span></span>.</p>
+<p>The reason I&rsquo;m spelling it out at all is that I don&rsquo;t want anyone reading the rest of this post to think I&rsquo;m claiming exceptionalism - quite the opposite. My understanding of infrastructure caught up to my instinct slowly, and I had many wrong steps along the way. The instinct was visible all along; the supporting tooling was the bit that took the years.</p>
+<p>If I had to put the through-line on a t-shirt: I have spent over a decade trying not to become the <code>join</code>. The join between two formats. The join between a database and a paper form. The join between a fleet model and an airport model. The join between an analysis tool and a slide deck. Every time the system can&rsquo;t connect two things itself, a person has to. That person is an engineer who usually has to do this in lieu of their actual job, and it&rsquo;s the mundane bullshit that you&rsquo;re not taught in an actual engineering degree<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-26">*</sup><span class="ti-aside-content" id="ti-aside-26" role="tooltip">Case-in-point, my most watched YouTube video is <a href="https://www.youtube.com/watch?v=uhz_RKgCqe4">&ldquo;How to loop over files in a directory using Python&rdquo;</a>.</span></span>&hellip;because it&rsquo;s not engineering, it&rsquo;s administration.</p>
 <aside class="ti-twenty-years" aria-label="Twenty years of being the join — five short scenes of the same loop, blending across as you scroll">
 <div class="ty-figure" id="ty-figure">
     <div class="ty-frame">
@@ -5901,7 +6071,9 @@ $$
 <p>The frustrating bit is that the tooling for not-being-the-join existed for most of those twenty years. Foreign keys are not new. Graph databases are not new. Provenance tracking is not new. What was missing wasn&rsquo;t the technology; it was anyone willing to sit in the gap between the engineers who had the data and the database people who knew how to store it properly. The OR community had MILP. The CFD community had file formats. Neither group routinely picked up the other one&rsquo;s tools, so the engineer in the middle ended up doing the picking up — which is, again, the same complaint. Two systems that should be coupled aren&rsquo;t, and a human ends up holding the coupling. Every time I migrated a storage layer, it was because nobody else had decided that the engineering data deserved the database treatment that the rest of the world had been using for decades. It wasn&rsquo;t a frontier. It was just a gap nobody had stepped into.</p>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="flexcompute" data-node-id="flexcompute">
+<span class="ti-section-numeral" aria-hidden="true">04</span>
 <h2 class="ti-section-h2">Flexcompute</h2>
+<p class="ti-section-stand">Where the instinct stopped being a private objection and became the brief.</p>
 </section>
 <p><a href="https://www.linkedin.com/in/vera-yang-54767959/">Vera Yang</a> is the president of Flexcompute. She somehow found me through one of my interactive flight-dynamics explainers — the Plotly-not-PowerPoint instinct, in a <a href="https://www.linkedin.com/posts/smithharry_flightdynamics-aislop-cursor-activity-7376916528644026368-kM7c">LinkedIn post</a> — and decided I should be at her company.</p>
 <aside class="ti-figure-vera" aria-label="Interactive rotation rig — drag to rotate, sliders for roll/pitch/yaw">
@@ -5951,7 +6123,7 @@ $$
     </div>
   </div>
 </aside>
-<p>Two organisations with different filters, looking at the same instinct in me, seeing different things. One graded the work on whether it could be priced into a deliverables list; the other graded it on whether it looked like the kind of thinking they wanted more of. This isn&rsquo;t a sleight on Boeing - they&rsquo;re a big and successful company for a reason.</p>
+<p>Two organisations with different filters, looking at the same instinct in me, seeing different things. One graded the work on whether it could be priced into a deliverables list; the other graded it on whether it looked like the kind of thinking they wanted more of. This isn&rsquo;t a slight on Boeing - they&rsquo;re a big and successful company for a reason.</p>
 <p>So - thank you, <a href="https://www.linkedin.com/in/vera-yang-54767959/">Vera</a>. And thank you, <a href="https://www.linkedin.com/in/dominicbarone/">Dom</a> - for keeping the project alive when the system around it wasn&rsquo;t built to reward that kind of work.</p>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="thread" data-node-id="thread">
@@ -5962,8 +6134,12 @@ $$
 </section>
 <p>Here&rsquo;s the bit I didn&rsquo;t see for a long time. The answer was in my subconscious the whole time — the network structure, the database theory, the data richness all come together. I just didn&rsquo;t have the framing to name it until I was sitting in the middle of building the next thing.</p>
 <p>Thread is what I work on now. The technical pitch is three lines.</p>
-<p>Simulation and modelling data is connected. Every result depends on inputs, which depend on prior results, which depend on prior inputs, all the way back to the original geometry and meshing decisions. The connections aren&rsquo;t an analogy — they&rsquo;re literal. This number came from <em>that</em> run, which consumed <em>those</em> settings, which themselves were the output of some earlier step. Each link is specific and recoverable, in principle.</p>
-<p>The problem is that almost no one stores it that way. Excel and pandas and CSVs and folders-of-PNGs give you the <em>illusion</em> of connectivity — the artefacts look related, share filenames — but the actual relationships live in someone&rsquo;s head, or in a spreadsheet so complex it verges on AGI<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-22">*</sup><span class="ti-aside-content" id="ti-aside-22" role="tooltip">The <em>Pricing Spreadsheet</em> at ARA had so many compounded formulas that it would look like a train station clackerboard when you did <em>anything</em>.</span></span>, and walk out the door at six o&rsquo;clock.</p>
+<ol>
+<li>Simulation and modelling data is connected.</li>
+<li>Every result depends on inputs, which depend on prior results, which depend on prior inputs, all the way back to the original geometry and meshing decisions. The connections aren&rsquo;t an analogy — they&rsquo;re literal. This number came from <em>that</em> run, which consumed <em>those</em> settings, which themselves were the output of some earlier step.</li>
+<li>Each link is specific and recoverable, in principle.</li>
+</ol>
+<p>The problem is that almost no one stores it that way. Excel and pandas and CSVs and folders-of-PNGs give you the <em>illusion</em> of connectivity — the artefacts look related, share filenames — but the actual relationships live in someone&rsquo;s head, or in a spreadsheet so complex it verges on AGI<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-27">*</sup><span class="ti-aside-content" id="ti-aside-27" role="tooltip">The <em>Pricing Spreadsheet</em> at ARA had so many compounded formulas that it would look like a train station clackerboard when you did <em>anything</em>.</span></span>, and walk out the door at six o&rsquo;clock.</p>
 <figure class="ti-figure ti-figure-video ti-figure-solari" aria-labelledby="ti-solari-figcap">
   <div class="ti-video-wrap">
     <video src="figures/excel-solari.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Excel spreadsheet recalculating in Solari split-flap style after one cell change"></video>
@@ -6025,6 +6201,7 @@ $$
                 <img src="figures/data-black-market/01-question-harry-frustrated.png" alt="Harry looks frustrated as a cert engineer asks whether a hinge-moment plot is still valid after the latest configuration change." />
               </div>
               <figcaption class="dbm-panel-note"><strong>The failure starts innocently:</strong> a plot that looked good in a deck is suddenly asked to remember where it came from.</figcaption>
+              <p class="dbm-ai-note"><strong>AI casting note.</strong> This was generated by handing an image model a photo of me, apparently from my LinkedIn somehow, plus a pile of descriptions. It has made me better-looking than I am.</p>
             </figure>
             <figure class="dbm-panel" data-dbm-panel="2">
               <div class="dbm-panel-img-wrap">
@@ -6043,6 +6220,7 @@ $$
                 <img src="figures/data-black-market/04-archaeology-harry-frustrated.png" alt="Harry and another engineer reconstruct provenance from printouts and discover the result was for the wrong configuration." />
               </div>
               <figcaption class="dbm-panel-note"><strong>Nothing here is corrupt.</strong> It is worse than that. Every individual file is plausible, and the missing thing is the chain between them.</figcaption>
+              <p class="dbm-ai-note"><strong>AI casting note.</strong> I have no idea why it made Luigi Mangione my colleague. For clarity, he was never part of my training set.</p>
             </figure>
           </div>
           <div class="dbm-progress" aria-label="Figure steps">
@@ -6061,16 +6239,10 @@ $$
     </section>
   </div>
 </aside>
-<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-folder-tabs-cascade-figcap">
-  <div class="ti-video-wrap">
-    <video src="figures/folder-tabs-cascade.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Slow dolly along a drawer of crammed, illegibly-labelled folder tabs, accelerating into a blur and resolving on a single cyan-teal tab"></video>
-  </div>
-  <figcaption id="ti-video-folder-tabs-cascade-figcap" class="ti-figcap">The data black market, viewed from inside the cabinet.</figcaption>
-</figure>
 <p>You get engineering archaeology. Someone digs through three project folders, finds a spreadsheet from a previous version, opens a screenshot whose filename references a deleted directory, and reconstructs — by hand, badly — what should have been a single query. The reconstruction job is the data-entry job. The structure was there once. It got lost in the flatten, and data became <em>stale</em>, immediately.</p>
 <p>The clean version of the failure looks like this. An engineer has a pandas DataFrame open. The columns are run IDs, lift coefficients, drag coefficients, a comment column, maybe a timestamp. Someone in another meeting asks where one row came from — what mesh, what solver settings, what geometry version, what upstream study fed it. The DataFrame doesn&rsquo;t know.</p>
-<p>If you do manage to pull all of that information into a spreadsheet or Excel, and you&rsquo;re using those to compare different simulation models, then you can end up with accidental misalignment - where an excel lookup or a Pandas where tells you that your panel method has a mesh, your CFD results have an AIC, and your data row was produced by one person where it may have been many. This may seem like a trite <em>not-really-a-problem</em> problem, but if you don&rsquo;t do these things properly (and no-one really does), then you end up in the mess that resonated when I spelled it out a couple of months ago. <link to the CFD stuck in the file era></p>
-<p>Stored properly — rather than scattered across a directory of files with a naming convention nobody can quite remember — you get provenance and associativity for free. <em>Where did this number come from</em> and <em>what else came from the same source</em> both become single queries instead of three days of detective work. The flat table view people actually want to read still works. You can see, at a glance, which cells in a row are genuinely comparable, and which are sitting next to each other only because they share a row label.</p>
+<p>If you do manage to pull all of that information into a spreadsheet or Excel, and you&rsquo;re using those to compare different simulation models, then you can end up with accidental misalignment - where an Excel lookup or a Pandas <code>where</code> tells you that your panel method has a mesh, your CFD results have an AIC, and your data row was produced by one person where it may have been many. This may seem like a trite <em>not-really-a-problem</em> problem, but if you don&rsquo;t do these things properly (and no-one really does), then you end up in the mess that resonated when I spelled it out a couple of months ago in <a href="https://hs.flexcompute.com/blog/why-cfd-is-stuck-in-the-file-era-and-what-comes-next">Why CFD is Stuck in the File Era</a>.</p>
+<p>Stored properly — rather than scattered across a directory of files with a naming convention nobody can quite remember — you get provenance and associativity for free. <em>Where did this number come from</em> and <em>what else came from the same source</em> both become single queries instead of three days of detective work. The flat table view people actually want to read still works. You can see, at a glance, which cells in a row are genuinely related, and which are sitting next to each other only because they share a row label and are thus comparable in the view you&rsquo;ve chosen to see.</p>
 <aside class="ti-flat-view" aria-label="The flat view doesn't invent provenance — hover any cell to see what it connects to">
 <div class="fv-figure" id="fv-figure">
     <div class="fv-frame">
@@ -6361,7 +6533,11 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 </aside>
 <p>That frees the user from the rectilinear constraints of pandas, polars, Excel, CSV. The original sin of computational workflows: the format you ship results in is the format you end up thinking about results in, and CSV in particular has been quietly limiting what people are willing to ask of their own data for thirty years.</p>
 <p>There&rsquo;s a second thing this buys you, harder to demonstrate in a screenshot but the bit users notice after a week of using it. <em>What changed</em> becomes a real question with a real answer. Two runs differ — and instead of squinting at numbers and filenames to guess why, you get <em>why</em> directly. That kind of query was technically possible before, in the same way that recovering the structure manually from a stack of CSVs is technically possible — but the cost per question was too high. Drop the cost per question and people start asking better questions, and that&rsquo;s most of the value.</p>
-<p>The bit that lands harder than the question, though, is the inverse: when something upstream changes, <em>every plot that depends on it gets flagged stale, automatically, in every place it&rsquo;s been used.</em> The structural group reinforces a wing spar; the inertia tensor moves; some short-period-frequency plot from three weeks ago, sitting in two slide decks and a memo, is now answering the wrong question. With Thread holding the connections, that&rsquo;s not &ldquo;did anyone notice&rdquo; — that&rsquo;s a notification, before the next review.</p>
+<aside class="ti-epiquote" role="doc-epigraph">
+  <p class="ti-epiquote-text">Drop the cost per question and people start asking better questions.</p>
+</aside>
+
+<p>The bit that lands harder than the question, though, is the inverse: when something upstream changes, <em>every plot that depends on it gets flagged stale, automatically, in every place it&rsquo;s been used.</em> The structures group reinforces a wing spar; the inertia tensor moves; some short-period-frequency plot from three weeks ago, sitting in two slide decks and a memo, is now answering the wrong question. With Thread holding the connections, that&rsquo;s not &ldquo;did anyone notice&rdquo; — that&rsquo;s a notification, before the next review, on the plot itself.</p>
 <aside class="ti-what-changed" aria-label="Walk through a real change cascade — a CG shift triggers stale flags on three downstream artefacts and pings the plot owners">
 <div class="wc-figure" id="wc-figure">
     <div class="wc-scroll">
@@ -6605,13 +6781,13 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 </section>
 <p>A short note before the close. The reason I could finally see all of this as one thing rather than as twenty separate annoyances is that I got an ADHD diagnosis and started medication a few months ago. I&rsquo;ll write about that properly in the next post — there&rsquo;s more to say than fits here. The relevant bit for this article is small: the diagnosis made the through-line legible, and the meds made it easier to finish the project rather than abandon it at the same point I always did before. The instinct didn&rsquo;t change. The visibility did.</p>
 <p>So.</p>
-<p>I used to think these were separate stories. Getting annoyed at filling in my name and phone number on <em>every visit to the GP</em>, the PowerPoint decks, Paradigm, the database migrations, Thread. They sat in different folders in my head — one for engineering, one for software, one for personal grievance — and I treated them like unrelated things<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-23">*</sup><span class="ti-aside-content" id="ti-aside-23" role="tooltip">I use the word &lsquo;thing&rsquo; a lot, and I like it - even if it sounds inelegant.</span></span> I happened to have opinions about.</p>
+<p>I used to think these were separate stories. Getting annoyed at filling in my name and phone number on <em>every visit to the GP</em>, the PowerPoint decks, Paradigm, the database migrations, Thread. They sat in different folders in my head — one for engineering, one for software, one for personal grievance — and I treated them like unrelated things<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-28">*</sup><span class="ti-aside-content" id="ti-aside-28" role="tooltip">I use the word &lsquo;thing&rsquo; a lot, and I like it - even if it sounds inelegant.</span></span> I happened to have opinions about.</p>
 <p>They are one thing, really.</p>
 <p>The thing is not &ldquo;I like topology,&rdquo; though eventually that became the technical language. The thing is simpler and more embarrassing: I don&rsquo;t like data entry.</p>
-<p>Not because I&rsquo;m above it. Because data entry is usually a symptom. It means the system had structure, lost it somewhere, and handed the reconstruction job to a person. The PowerPoint deck flattens a graph and asks the audience to imagine the connections back. The paper form ignores a database and asks the new patient to retype it. The Cascade-shaped fleet model and the airport-shaped infrastructure model sit in different rooms and ask a strategist to hold the coupling in their head. The CSV strips the provenance and asks an engineer to reconstruct it from filenames three months later. Different systems, same move. <em>Drop the structure. Make a human put it back.</em></p>
+<p>Not because I&rsquo;m above it. Because data entry is usually a symptom. It means the system had structure, lost it somewhere, and handed the reconstruction job to a person. The PowerPoint deck flattens a graph and asks the audience to imagine the connections back. The paper form ignores a database and asks the new patient to retype it. The Cascade-shaped fleet model and the airport-shaped infrastructure model sit in different rooms and ask a strategist to hold the coupling in their head. The CSV strips the provenance and asks an engineer to reconstruct it from filenames three months later. Different systems, same move. <em>Drop the structure. Make a human put it back, if it&rsquo;s done all.</em></p>
 <p>Thread is the latest and most literal version of that refusal. Store the shape. Preserve the provenance. Let the flat view be a view, not the truth. Stop making humans re-enter structure the system should have kept.</p>
-<p>I don&rsquo;t think this is a particularly profound observation. It is, if anything, the opposite — most of the people I admire technically have an instinctive version of the same complaint, and the tooling response (databases, type systems, dependency graphs, build tools, even the version-control history of a file) is largely the same response across very different fields. The bit that took me two decades wasn&rsquo;t <em>having</em> the instinct. It was finding the right place to put it down. Plot dashboards were a place to put it down for a project. Paradigm was a place to put it down for a year. Postgres was a place to put it down with decent structure. Thread is, I think, the right place to put it down for the work I want to spend the rest of my career on.</p>
-<p class="ti-final">That is the thread. It was there the whole time.</p>
+<p>I don&rsquo;t think this is a particularly profound observation. It is, if anything, the opposite — most of the people I admire technically have an instinctive version of the same complaint, and the tooling response (databases, type systems, dependency graphs, build tools, even the version-control history of a file) is largely the same response across very different fields. The bit that took me two decades wasn&rsquo;t <em>having</em> the instinct. It was finding the right place to put it down. Plot dashboards were a place to put it down for a project. Paradigm was a place to put it down for a year. Postgres was a place to put it down with decent structure. Thread is, I think, the right place to put it down for the work I want to spend the next chunk of my career on.</p>
+<p>That is the thread. It was there the whole time, and I&rsquo;d love to talk to you about it.</p>
 <aside class="ti-sister-link">
   <p class="ti-sister-eyebrow">Companion piece</p>
   <p class="ti-sister-title"><a href="/lab/articles/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
@@ -6637,11 +6813,35 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     const r = Math.max(0, Math.min(1, h.scrollTop / max));
     bar.style.transform = 'scaleX(' + r + ')';
   }
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update);
-  update();
+	  window.addEventListener('scroll', update, { passive: true });
+	  window.addEventListener('resize', update);
+	  update();
 
-  const revealTargets = [
+	  const asideMarks = Array.from(document.querySelectorAll('.ti-aside-mark'));
+	  if (asideMarks.length) {
+	    let lastAsideScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+	    const clearAsideDismissal = () => {
+	      document.documentElement.classList.remove('ti-asides-dismissed');
+	    };
+	    const dismissAsides = () => {
+	      const y = window.scrollY || document.documentElement.scrollTop || 0;
+	      if (Math.abs(y - lastAsideScrollY) < 4) return;
+	      lastAsideScrollY = y;
+	      document.documentElement.classList.add('ti-asides-dismissed');
+	      const active = document.activeElement;
+	      if (active && active.classList && active.classList.contains('ti-aside-mark')) {
+	        active.blur();
+	      }
+	    };
+	    asideMarks.forEach(mark => {
+	      mark.addEventListener('pointerdown', clearAsideDismissal, { passive: true });
+	      mark.addEventListener('mouseenter', clearAsideDismissal);
+	      mark.addEventListener('focus', clearAsideDismissal);
+	    });
+	    window.addEventListener('scroll', dismissAsides, { passive: true });
+	  }
+
+	  const revealTargets = [
     ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market, .ti-twenty-years')
   ];
   revealTargets.forEach(el => el.classList.add('ti-reveal'));
@@ -6690,20 +6890,41 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 
     const updateEpiquotes = () => {
       const wide = window.matchMedia('(min-width: 1320px)').matches;
+      const stickyTop = 112;
+      const stackGap = 22;
+      const viewportBottom = window.innerHeight - 24;
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const activeQuotes = [];
       epiquotes.forEach(quote => {
+        quote.style.setProperty('--ti-epiquote-stack-offset', '0px');
         if (!wide) {
           quote.classList.remove('ti-epiquote-suppressed');
           return;
         }
         const nextVisual = getNext(quote, visualSelector);
         const nextDivider = getNext(quote, '.ti-divider');
-        const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
         const quoteStart = quote.offsetTop - 126;
         const visualLead = Math.min(480, Math.max(340, window.innerHeight * 0.52));
         const visualStop = nextVisual ? nextVisual.offsetTop - visualLead : Infinity;
         const sectionStop = nextDivider ? nextDivider.offsetTop - 220 : Infinity;
         const stop = Math.min(visualStop, sectionStop);
-        quote.classList.toggle('ti-epiquote-suppressed', scrollY > stop && scrollY > quoteStart);
+        const suppressed = scrollY > stop && scrollY > quoteStart;
+        quote.classList.toggle('ti-epiquote-suppressed', suppressed);
+        if (!suppressed) activeQuotes.push(quote);
+      });
+
+      // Wide-screen epiquotes live in the same sticky side rail. When nearby
+      // quotes are active together, reserve the occupied rail space in
+      // document order and pin later quotes under the current rail bottom.
+      let stackBottom = stickyTop;
+      activeQuotes.forEach(quote => {
+        const height = quote.getBoundingClientRect().height || quote.offsetHeight || 0;
+        const naturalTop = quote.offsetTop - scrollY;
+        const pinnedTop = Math.max(naturalTop, stackBottom);
+        quote.style.setProperty('--ti-epiquote-stack-offset', `${Math.max(0, stackBottom - stickyTop)}px`);
+        if (pinnedTop < viewportBottom && pinnedTop + height > stickyTop) {
+          stackBottom = pinnedTop + height + stackGap;
+        }
       });
     };
     window.addEventListener('scroll', updateEpiquotes, { passive: true });
@@ -6759,165 +6980,100 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 })();
 
 // ---------------------------------------------------------------------------
-// Cinematic "Thread" logotype (article 1, section 5).
+// Thread cinematic T-mark (article 1, section 5).
 //
-// Builds an inline SVG inside #ti-thread-logo that draws the word "Thread"
-// letter-by-letter as a thin black thread sweeps across the page from left
-// to right. After the letters fill in, the thread loops down and settles as
-// a hairline rule under the word — the final state is a clean black-on-white
-// wordmark that persists.
-//
-// Triggered ONCE per viewport-entry via IntersectionObserver (threshold 0.4).
-// prefers-reduced-motion users get the final state directly, no animation.
+// Adapted from Flex/thread-api/app/presentations/_common/
+// thread-t-mark-animation-cinematic.html. Same network-to-T build, ending as
+// a light-page lockup rather than the presentation's white-on-black version.
 // ---------------------------------------------------------------------------
 (function () {
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-  const WORD = 'Thread';
+  const PATH_D = 'M 24.154178,91.432627 68.428669,21.741339 106.55535,21.756919 99.232728,33.346004 76.157969,33.464499 39.397767,91.445213 24.154181,91.432603 Z M 13.848206,75.227321 40.344233,33.492622 15.039021,33.459892 22.449877,21.716223 47.902188,21.690723 50.457494,17.588168 5.3424901,17.517908 12.680339,5.8254864 96.58386,5.8213064 89.196118,17.565173 H 65.624707 l -36.64469,57.681621 -15.131811,-0.01948 z';
 
   function buildLogo(host) {
     if (!host || host.dataset.threadLogoBuilt === '1') return;
     host.dataset.threadLogoBuilt = '1';
+    host.setAttribute('role', 'img');
+    host.setAttribute('aria-label', 'Thread');
 
-    // Reduced-motion: skip the build animation, paint the rest state.
-    const reduced = window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    host.innerHTML = `
+      <div class="ti-thread-cinematic" aria-hidden="true">
+        <svg class="ti-thread-cinematic-mark" viewBox="0 0 227 206" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ti-thread-gr" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00643C"/>
+              <stop offset="50%" stop-color="#61B29C"/>
+              <stop offset="100%" stop-color="#6DB5DD"/>
+            </linearGradient>
+            <radialGradient id="ti-thread-ng">
+              <stop offset="0%" stop-color="#7BBDF0"/>
+              <stop offset="100%" stop-color="#00643C"/>
+            </radialGradient>
+            <linearGradient id="ti-thread-sg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#61B29C" stop-opacity="0"/>
+              <stop offset="50%" stop-color="#61B29C" stop-opacity=".2"/>
+              <stop offset="100%" stop-color="#61B29C" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="ti-thread-tg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#61B29C"/>
+              <stop offset="50%" stop-color="#7BBDF0"/>
+              <stop offset="100%" stop-color="#6DB5DD"/>
+            </linearGradient>
+          </defs>
+          <rect class="ti-thread-scan" x="3" y="0" width="221" height="6" rx="1" fill="url(#ti-thread-sg)"/>
+          <path class="ti-thread-solid-mark" transform="translate(6.819,20.865) scale(1.8)" fill="#00643C" d="${PATH_D}"/>
+          <g class="ti-thread-wires-group">
+            <path class="ti-thread-wire" data-p="s1" d="M 17,53 L 30,31 L 181,31 L 168,53"/>
+            <path class="ti-thread-wire" data-p="s2" d="M 17,53 L 98,53 L 93,60 L 47,60 L 34,81 L 80,81"/>
+            <path class="ti-thread-wire" data-p="s3" d="M 168,53 L 125,53 L 59,156 L 32,156 L 80,81"/>
+            <path class="ti-thread-wire" data-p="s4" d="M 130,60 L 199,60 L 186,81 L 144,81"/>
+            <path class="ti-thread-wire" data-p="s5" d="M 144,81 L 78,186 L 50,186 L 130,60"/>
+            <path class="ti-thread-wire" data-p="p1" d="M 3,14 L 41,14 L 30,31"/>
+            <path class="ti-thread-wire" data-p="p2" d="M 181,31 L 198,3 L 222,3"/>
+            <path class="ti-thread-wire" data-p="p4" d="M 199,60 L 214,60 L 201,81 L 186,81"/>
+            <path class="ti-thread-wire" data-p="p5" d="M 6,202 L 40,202 L 50,186 L 78,186 L 72,194 L 223,195"/>
+          </g>
+          <g class="ti-thread-glow-group" opacity=".2">
+            <path class="ti-thread-glow-wire" data-p="s1" d="M 17,53 L 30,31 L 181,31 L 168,53"/>
+            <path class="ti-thread-glow-wire" data-p="s2" d="M 17,53 L 98,53 L 93,60 L 47,60 L 34,81 L 80,81"/>
+            <path class="ti-thread-glow-wire" data-p="s3" d="M 168,53 L 125,53 L 59,156 L 32,156 L 80,81"/>
+            <path class="ti-thread-glow-wire" data-p="s4" d="M 130,60 L 199,60 L 186,81 L 144,81"/>
+            <path class="ti-thread-glow-wire" data-p="s5" d="M 144,81 L 78,186 L 50,186 L 130,60"/>
+            <path class="ti-thread-glow-wire" data-p="p1" d="M 3,14 L 41,14 L 30,31"/>
+            <path class="ti-thread-glow-wire" data-p="p2" d="M 181,31 L 198,3 L 222,3"/>
+            <path class="ti-thread-glow-wire" data-p="p4" d="M 199,60 L 214,60 L 201,81 L 186,81"/>
+            <path class="ti-thread-glow-wire" data-p="p5" d="M 6,202 L 40,202 L 50,186 L 78,186 L 72,194 L 223,195"/>
+          </g>
+          <g class="ti-thread-highlight-group" opacity=".6">
+            <path class="ti-thread-t-wire" data-p="t1" d="M 17,53 L 30,31 L 181,31 L 168,53"/>
+            <path class="ti-thread-t-wire" data-p="t2" d="M 80,81 L 32,156 L 59,156"/>
+          </g>
+          ${[
+            [50,186,3],[130,60,3],[199,60,3],[186,81,3],[144,81,3],[78,186,3],[32,156,3],[80,81,3],
+            [34,81,3],[47,60,2.5],[93,60,2.5],[98,53,2.5],[17,53,3],[30,31,3.5],[181,31,3.5],
+            [168,53,3],[125,53,3],[59,156,3],[41,14,2.5],[198,3,2.5],[214,60,2.5],[201,81,2.5],
+            [40,202,2.5],[72,194,2.5],[3,14,2.5],[222,3,2.5],[6,202,2.5],[223,195,2.5]
+          ].map((n, i) => `<circle class="ti-thread-node" style="--i:${i}" cx="${n[0]}" cy="${n[1]}" r="${n[2]}" fill="url(#ti-thread-ng)"/>`).join('')}
+        </svg>
+        <span class="ti-thread-wordmark">${'THREAD'.split('').map((letter, i) => `<span class="letter" style="--i:${i}">${letter}</span>`).join('')}</span>
+      </div>`;
 
-    // viewBox is wide so the thread has room to enter from the left and
-    // loop under the word on exit. Y baseline at 105 leaves headroom for
-    // the swept-line preamble and a comfortable underline below.
-    const VB_W = 600;
-    const VB_H = 200;
-    const BASELINE = 122;
-    const FONT_SIZE = 96; // px in viewBox space — display weight
-
-    const svg = document.createElementNS(SVG_NS, 'svg');
-    svg.setAttribute('viewBox', '0 0 ' + VB_W + ' ' + VB_H);
-    svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', 'Thread');
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-
-    // Hidden measuring text — we use getComputedTextLength on a single full
-    // word render to find each letter's x-position. We then create one
-    // <text> element per letter for independent dash/delay animation.
-    const probe = document.createElementNS(SVG_NS, 'text');
-    probe.setAttribute('x', '0');
-    probe.setAttribute('y', BASELINE);
-    probe.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
-    probe.setAttribute('font-size', FONT_SIZE);
-    probe.setAttribute('font-weight', '600');
-    probe.setAttribute('letter-spacing', '0');
-    probe.setAttribute('fill', 'transparent');
-    probe.setAttribute('visibility', 'hidden');
-    probe.textContent = WORD;
-    svg.appendChild(probe);
-
-    // Append SVG to host so getComputedTextLength works (needs layout).
-    host.appendChild(svg);
-
-    // Measure cumulative widths of each prefix to find letter centres.
-    const prefixWidths = [0];
-    for (let i = 1; i <= WORD.length; i++) {
-      const p = document.createElementNS(SVG_NS, 'text');
-      p.setAttribute('x', '0');
-      p.setAttribute('y', BASELINE);
-      p.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
-      p.setAttribute('font-size', FONT_SIZE);
-      p.setAttribute('font-weight', '600');
-      p.setAttribute('fill', 'transparent');
-      p.setAttribute('visibility', 'hidden');
-      p.textContent = WORD.substring(0, i);
-      svg.appendChild(p);
-      prefixWidths.push(p.getComputedTextLength());
-      svg.removeChild(p);
-    }
-    const totalW = prefixWidths[prefixWidths.length - 1];
-
-    // Centre the word in the viewBox.
-    const xStart = (VB_W - totalW) / 2;
-
-    // The sweeping thread path: enters left, gentle dip down, climbs to the
-    // baseline midline, exits right, then a second segment that loops down
-    // and becomes the underline rule. We separate them for control: one
-    // <path> for the sweep, one <line> for the persistent rule.
-    const lineY = BASELINE - FONT_SIZE * 0.42; // approx mid-x-height
-    const sweep = document.createElementNS(SVG_NS, 'path');
-    const dipY = lineY + 6;
-    const sweepD = [
-      'M', -20, dipY,
-      'C', xStart * 0.4, dipY - 4, xStart * 0.7, lineY, xStart - 8, lineY,
-      'L', xStart + totalW + 8, lineY,
-      'C', VB_W - xStart * 0.5, lineY, VB_W - xStart * 0.3, dipY - 6, VB_W + 20, dipY
-    ].join(' ');
-    sweep.setAttribute('d', sweepD);
-    sweep.setAttribute('class', 'ti-thread-line');
-    svg.appendChild(sweep);
-    const sweepLen = Math.ceil(sweep.getTotalLength());
-    sweep.style.setProperty('--line-len', sweepLen);
-
-    // Per-letter <text> elements. Each starts as a stroked outline (drawn
-    // via dashoffset) then fills to currentColor.
-    const ruleY = BASELINE + 18;
-    const totalSweepMs = 1500;
-    const letterEls = [];
-    for (let i = 0; i < WORD.length; i++) {
-      const t = document.createElementNS(SVG_NS, 'text');
-      t.setAttribute('x', xStart + prefixWidths[i]);
-      t.setAttribute('y', BASELINE);
-      t.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
-      t.setAttribute('font-size', FONT_SIZE);
-      t.setAttribute('font-weight', '600');
-      t.setAttribute('class', 'ti-thread-letter');
-      t.textContent = WORD[i];
-      svg.appendChild(t);
-      // Heuristic dash length; serif glyphs at 96px settle around 320-520.
-      const dashLen = Math.max(320, Math.ceil(FONT_SIZE * 4.2));
-      t.style.setProperty('--len', dashLen);
-      // Per-letter delay synced to where the thread crosses each letter's
-      // centre. The sweep goes 0 -> 72% over totalSweepMs, then fades.
-      const letterCentre = xStart + (prefixWidths[i] + prefixWidths[i + 1]) / 2;
-      const sweepProgress = Math.min(1, Math.max(0, (letterCentre + 20) / (VB_W + 40)));
-      const drawDelay = Math.round(sweepProgress * totalSweepMs * 0.72);
-      const fillDelay = drawDelay + 580; // letter starts to fill ~near end of its draw
-      t.style.setProperty('--d-draw', drawDelay + 'ms');
-      t.style.setProperty('--d-fill', fillDelay + 'ms');
-      letterEls.push(t);
-    }
-
-    // Persistent underline rule (a thin hairline that draws last and stays).
-    const rule = document.createElementNS(SVG_NS, 'line');
-    rule.setAttribute('x1', xStart - 4);
-    rule.setAttribute('y1', ruleY);
-    rule.setAttribute('x2', xStart + totalW + 4);
-    rule.setAttribute('y2', ruleY);
-    rule.setAttribute('class', 'ti-thread-rule');
-    const ruleLen = Math.ceil(totalW + 8);
-    rule.style.setProperty('--rule-len', ruleLen);
-    svg.appendChild(rule);
-
-    // Remove probe — done with it.
-    if (probe.parentNode) probe.parentNode.removeChild(probe);
-
-    if (reduced) {
-      host.classList.add('ti-thread-logo-rest');
-      return host;
-    }
-
-    return host;
+    host.querySelectorAll('.ti-thread-wire,.ti-thread-glow-wire,.ti-thread-t-wire').forEach((path, i) => {
+      const len = Math.ceil(path.getTotalLength());
+      path.style.setProperty('--line-len', len);
+      path.style.setProperty('--group', Math.floor(i % 9 / 2));
+    });
   }
 
   function play(host) {
     if (!host) return;
     host.classList.remove('ti-thread-logo-rest');
-    // Reset animations by force-reflow.
     host.classList.remove('ti-thread-logo-play');
     void host.offsetWidth;
     host.classList.add('ti-thread-logo-play');
-    // After the full cycle, lock to rest state so it persists cleanly even
-    // if styles re-evaluate.
-    const totalMs = 2050;
-    window.setTimeout(function () {
+    window.clearTimeout(host._threadLogoTimer);
+    host._threadLogoTimer = window.setTimeout(function () {
       host.classList.add('ti-thread-logo-rest');
-    }, totalMs);
+    }, 5200);
   }
 
   function init() {
@@ -6935,17 +7091,16 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     let inView = false;
     const io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
           if (!inView) {
             inView = true;
             play(host);
           }
         } else if (entry.intersectionRatio < 0.05) {
-          // Once the section is fully out of view, arm for replay.
           inView = false;
         }
       });
-    }, { threshold: [0, 0.05, 0.4, 0.6] });
+    }, { threshold: [0, 0.05, 0.35, 0.6] });
     io.observe(host);
   }
 
@@ -10051,7 +10206,7 @@ window.PlotlyVsPP = (function () {
     // or its text — that races with the FLIP morph.
     const wide = isWideLocator();
     const info = getSectionInfo(activeId);
-    const visible = wide && info && sectionPin.dataset.visible === 'true';
+    const visible = wide && info && sectionPin.dataset.visible === 'true' && sectionPin.dataset.blocked !== 'true';
     linkLine.dataset.visible = visible ? 'true' : 'false';
     map.dataset.pinActive = visible ? 'true' : 'false';
     if (!visible) return;
@@ -10174,8 +10329,30 @@ window.PlotlyVsPP = (function () {
   let pinnedSection = null;
   let introPinned = false;
   let lastClone = null;
+  let transitionToken = 0;
 
   function isWide() { return wideMQ.matches; }
+
+  function visualBlocksPin() {
+    if (!isWide()) return false;
+    const blockers = document.querySelectorAll([
+      '.ti-flat-view',
+      '.ti-ask-the-plot',
+      '.ti-data-black-market',
+      '.ti-what-changed',
+      '.ti-twenty-years',
+      '.ti-demo',
+      '.ti-figure-fullbleed'
+    ].join(', '));
+    return Array.from(blockers).some(el => {
+      const r = el.getBoundingClientRect();
+      return r.top < window.innerHeight * 0.78 && r.bottom > 86;
+    });
+  }
+
+  function updatePinBlocking() {
+    pin.dataset.blocked = visualBlocksPin() ? 'true' : 'false';
+  }
 
   function pickSourceParts(section) {
     // Defensive: if Agent B has replaced the H2 with .ti-thread-logo,
@@ -10411,6 +10588,7 @@ window.PlotlyVsPP = (function () {
       pin.removeAttribute('data-flipping');
       if (finishMode === 'show-pin') pin.dataset.visible = 'true';
       if (finishMode === 'hide-pin') pin.dataset.visible = 'false';
+      updatePinBlocking();
       if (clone.parentNode) clone.parentNode.removeChild(clone);
       if (lastClone === clone) lastClone = null;
       if (afterFinish) afterFinish();
@@ -10459,6 +10637,7 @@ window.PlotlyVsPP = (function () {
     pin.removeAttribute('data-flipping');
     pin.dataset.intro = 'true';
     pin.dataset.visible = isWide() ? 'true' : 'false';
+    updatePinBlocking();
     introPinned = isWide();
   }
 
@@ -10467,6 +10646,7 @@ window.PlotlyVsPP = (function () {
     applyPinInfo(introInfo());
     pin.dataset.intro = 'true';
     pin.dataset.visible = 'true';
+    updatePinBlocking();
     if (hero) hero.dataset.pinSource = 'true';
     introPinned = true;
     animateWords(heroParts(), pinParts(), 'show-pin');
@@ -10482,6 +10662,74 @@ window.PlotlyVsPP = (function () {
     });
   }
 
+  function sectionIndex(section) {
+    return section ? sections.indexOf(section) : -1;
+  }
+
+  function animatePinUpAndOff(afterFinish) {
+    if (reduceMotion || !isWide()) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+
+    const sourceWords = [
+      ...measuredWords(pinParts().numeral, 'numeral'),
+      ...measuredWords(pinParts().h2, 'title'),
+      ...measuredWords(pinParts().stand, 'stand'),
+    ];
+    if (!sourceWords.length) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+
+    pin.dataset.flipping = 'true';
+    const layer = document.createElement('div');
+    layer.className = 'ti-section-morph';
+    sourceWords.forEach((source, i) => {
+      const word = document.createElement('span');
+      word.className = 'ti-section-morph-word';
+      word.style.left = source.left + 'px';
+      word.style.top = source.top + 'px';
+      word.style.fontFamily = source.fontFamily;
+      word.style.fontSize = source.fontSize;
+      word.style.fontWeight = source.fontWeight;
+      word.style.fontStyle = source.fontStyle;
+      word.style.letterSpacing = source.letterSpacing;
+      word.style.lineHeight = source.lineHeight;
+      word.style.color = source.color;
+      word.style.transitionDelay = Math.min(90, i * 8) + 'ms';
+      word.textContent = source.text;
+      layer.appendChild(word);
+    });
+    document.body.appendChild(layer);
+    if (lastClone && lastClone !== layer && lastClone.parentNode) {
+      lastClone.parentNode.removeChild(lastClone);
+    }
+    lastClone = layer;
+
+    void layer.offsetWidth;
+    requestAnimationFrame(() => {
+      layer.querySelectorAll('.ti-section-morph-word').forEach((word, i) => {
+        word.style.transform = `translate(${Math.min(18, i * 2)}px, -86px)`;
+        word.style.opacity = '0';
+      });
+    });
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      pin.removeAttribute('data-flipping');
+      if (layer.parentNode) layer.parentNode.removeChild(layer);
+      if (lastClone === layer) lastClone = null;
+      if (afterFinish) afterFinish();
+    };
+    layer.addEventListener('transitionend', e => {
+      if (e.target && e.target.classList && e.target.classList.contains('ti-section-morph-word')) finish();
+    }, { once: true });
+    setTimeout(finish, 900);
+  }
+
   function updateIntroFromScroll() {
     if (pinnedSection) return;
     if ((window.scrollY || document.documentElement.scrollTop || 0) > 8) {
@@ -10494,10 +10742,24 @@ window.PlotlyVsPP = (function () {
   function setPinnedSection(section) {
     if (section === pinnedSection) return;
     const previous = pinnedSection;
+    const previousIndex = sectionIndex(previous);
+    const nextIndex = sectionIndex(section);
+    const token = ++transitionToken;
     pinnedSection = section;
+
+    const settleSection = () => {
+      if (token !== transitionToken) return;
+      if (hero) hero.removeAttribute('data-pin-source');
+      introPinned = false;
+      pin.removeAttribute('data-intro');
+      section.dataset.pinSource = 'true';
+      morph(section);
+    };
+
     if (!section) {
       if (previous) {
         morphBackToSection(previous, () => {
+          if (token !== transitionToken) return;
           previous.removeAttribute('data-pin-source');
           showIntroPin();
           updateIntroFromScroll();
@@ -10507,24 +10769,77 @@ window.PlotlyVsPP = (function () {
       }
       return;
     }
+
+    if (previous && previous !== section && nextIndex < previousIndex) {
+      morphBackToSection(previous, () => {
+        if (token !== transitionToken) return;
+        previous.removeAttribute('data-pin-source');
+        settleSection();
+      });
+      return;
+    }
+
+    if (previous && previous !== section && nextIndex > previousIndex) {
+      animatePinUpAndOff(() => {
+        if (token !== transitionToken) return;
+        previous.removeAttribute('data-pin-source');
+        settleSection();
+      });
+      return;
+    }
+
     if (previous && previous !== section) previous.removeAttribute('data-pin-source');
-    if (hero) hero.removeAttribute('data-pin-source');
-    introPinned = false;
-    pin.removeAttribute('data-intro');
-    section.dataset.pinSource = 'true';
-    morph(section);
+    settleSection();
   }
 
   function currentPinnedFromScroll() {
-    // The "pinned" section is the last .ti-section whose top has crossed
-    // the viewport top. If none have, no rail.
+    // The "pinned" section is the last .ti-section whose opener has crossed
+    // the reader's upper focus band. Using a small band instead of the exact
+    // top pixel makes refresh/scroll restoration match what the reader sees.
+    const focusY = Math.min(520, Math.max(160, window.innerHeight * 0.52));
     let candidate = null;
     for (let i = 0; i < sections.length; i++) {
       const r = sections[i].getBoundingClientRect();
-      if (r.top <= 4) candidate = sections[i];
+      if (r.top <= focusY) candidate = sections[i];
       else break;
     }
     return candidate;
+  }
+
+  function settleFromScrollPosition() {
+    transitionToken++;
+    const next = currentPinnedFromScroll();
+    sections.forEach(section => {
+      if (section !== next) section.removeAttribute('data-pin-source');
+    });
+    if (hero) hero.removeAttribute('data-pin-source');
+    pin.removeAttribute('data-flipping');
+
+    pinnedSection = next;
+    if (next) {
+      next.dataset.pinSource = 'true';
+      introPinned = false;
+      pin.removeAttribute('data-intro');
+      applyPinContent(next);
+      pin.dataset.visible = isWide() ? 'true' : 'false';
+      updatePinBlocking();
+    } else {
+      pin.dataset.visible = 'false';
+      updatePinBlocking();
+      pin.removeAttribute('data-intro');
+      introPinned = false;
+      updateIntroFromScroll();
+    }
+  }
+
+  function reconcileAfterScrollRestore() {
+    // Browser refresh/back-forward restoration can apply scroll position
+    // just after this script's first paint. Re-sample a few times and
+    // settle instantly so the left rail matches the article location.
+    requestAnimationFrame(settleFromScrollPosition);
+    window.setTimeout(settleFromScrollPosition, 80);
+    window.setTimeout(settleFromScrollPosition, 320);
+    window.setTimeout(settleFromScrollPosition, 1000);
   }
 
   // IntersectionObserver: rootMargin -100% bottom => fires the moment a
@@ -10537,39 +10852,29 @@ window.PlotlyVsPP = (function () {
     sections.forEach(s => io.observe(s));
   }
 
+  let pinScrollRaf = 0;
+  window.addEventListener('scroll', () => {
+    if (pinScrollRaf) return;
+    pinScrollRaf = requestAnimationFrame(() => {
+      pinScrollRaf = 0;
+      const next = currentPinnedFromScroll();
+      if (next !== pinnedSection) setPinnedSection(next);
+      updatePinBlocking();
+    });
+  }, { passive: true });
+
   window.addEventListener('resize', () => {
-    const next = currentPinnedFromScroll();
-    if (next === pinnedSection) return;
-    if (pinnedSection) pinnedSection.removeAttribute('data-pin-source');
-    pinnedSection = next;
-    if (next) {
-      next.dataset.pinSource = 'true';
-      applyPinContent(next);
-    }
-    if (next) {
-      introPinned = false;
-      pin.dataset.visible = isWide() ? 'true' : 'false';
-    } else {
-      pin.dataset.visible = 'false';
-      introPinned = false;
-      if (hero) hero.removeAttribute('data-pin-source');
-      updateIntroFromScroll();
-    }
+    settleFromScrollPosition();
+    updatePinBlocking();
   });
 
   // First paint: if the user lands mid-article, settle the pin without
   // animating; otherwise leave the hero title as the opening rail source.
-  const initial = currentPinnedFromScroll();
-  if (initial) {
-    pinnedSection = initial;
-    initial.dataset.pinSource = 'true';
-    applyPinContent(initial);
-    if (isWide()) pin.dataset.visible = 'true';
-  } else {
-    pin.dataset.visible = 'false';
-    pin.removeAttribute('data-intro');
-    updateIntroFromScroll();
-  }
+  settleFromScrollPosition();
+  updatePinBlocking();
+  reconcileAfterScrollRestore();
+  window.addEventListener('pageshow', reconcileAfterScrollRestore);
+  window.addEventListener('load', reconcileAfterScrollRestore);
 
   window.addEventListener('scroll', updateIntroFromScroll, { passive: true });
 })();

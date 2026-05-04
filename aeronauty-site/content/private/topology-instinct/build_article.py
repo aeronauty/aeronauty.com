@@ -34,10 +34,14 @@ ARTICLES = {
     1: {
         "md":  ROOT / "article-1-i-dont-like-data-entry.md",
         "out": ROOT / "article-1.html",
+        "hero_video": "paradigm-globe-pan.mp4",
+        "hero_kicker": "A story about refusing to flatten engineering work into screenshots, spreadsheets, and human memory.",
     },
     2: {
         "md":  ROOT / "article-2-the-brain-that-was-a-tax.md",
         "out": ROOT / "article-2.html",
+        "hero_video": "desk-becoming-navigable.mp4",
+        "hero_kicker": "A story about ADHD, agents, unfinished loops, and making the same mess navigable.",
     },
 }
 
@@ -104,9 +108,9 @@ ARTICLE_MAPS: dict[int, dict] = {
             {"id": "join",       "title": "Twenty years of migrations",
              "summary": "Pickles → HDF5 → SQL → Postgres: refusing to be the human join operation.",
              "numeral": "03", "stand": "Trying, mildly annoyed, to put graph-shaped data somewhere a bit less wrong."},
-            {"id": "vera",       "title": "Vera",
-             "summary": "Two organisations with different filters, looking at the same instinct.",
-             "numeral": "04", "stand": "One filter graded the work; the other graded the thinking."},
+            {"id": "flexcompute","title": "Flexcompute",
+             "summary": "The place where the same instinct finally looked like product infrastructure.",
+             "numeral": "04", "stand": "Where the instinct stopped being a private objection and became the brief."},
             {"id": "thread",     "title": "Thread",
              "summary": "Thread: store the topology, project the flat view, keep the connections live.",
              "numeral": "05", "stand": "The view is a projection. The connections are the truth."},
@@ -123,8 +127,8 @@ ARTICLE_MAPS: dict[int, dict] = {
             ("paradigm",   "join"),         # two coupled systems, a human as the join
             ("paradigm",   "thread"),       # coupling-as-model: the same move scaled
             ("join",       "thread"),       # storage caught up to instinct
-            ("vera",       "thread"),       # two filters; one of them named Thread
-            ("vera",       "paradigm"),     # external valuation of the same work
+            ("flexcompute","thread"),       # the place where the instinct becomes Thread
+            ("flexcompute","paradigm"),     # external valuation of the same work
             ("intro",      "thread-close"), # personal bookend
             ("intro",      "join"),         # avoiding boring work = avoiding being the join
         ],
@@ -195,7 +199,7 @@ H2_TO_NODE_ID: dict[int, dict[str, str]] = {
         "the-instinct-in-plot-form":              "plot-form",
         "paradigm":                                "paradigm",
         "twenty-years-of-trying-not-to-be-the-human-join-operation": "join",
-        "vera":                                    "vera",
+        "flexcompute":                             "flexcompute",
         "thread":                                  "thread",
         "the-thread":                              "thread-close",
     },
@@ -888,7 +892,7 @@ def substitute_cartoon_normal_things(html: str) -> str:
         'alt="A cartoon of Harry by an alpine river with his small son sitting on his shoulders, both smiling. Mountains in the distance. A phone clipped to his belt shows a charge indicator at the end of the day." '
         'loading="lazy" />\n'
         '  <figcaption id="ti-cartoon-normal-figcap" class="ti-figcap">'
-        "Present with people. Phone with charge at the end of the day &mdash; hitherto unknown. The cyan accent is on the battery indicator for a reason."
+        "Present with people. Phone with charge at the end of the day &mdash; hitherto unknown."
         "</figcaption>\n"
         "</figure>"
     )
@@ -989,32 +993,31 @@ def substitute_cartoon_orchestrator(html: str) -> str:
 
 
 def substitute_cartoon_storage_migrations(html: str) -> str:
-    """Replace the storage-migrations figure with a video when the mp4 is
-    present, otherwise fall back to the still cartoon. Mirrors the pattern
-    in ``substitute_runway_video`` so the same poster/autoplay/loop
-    behaviour applies here.
+    """Replace the old storage-migrations cartoon with the CFD handoff clip.
+
+    This is intentionally a normal inline video, not full-bleed: it is a
+    small, concrete example of the manual file relay the prose is naming.
     """
-    fig_id = "ti-cartoon-storage-figcap"
+    fig_id = "ti-cfd-handoff-manual-figcap"
     alt = (
-        "Three engineers at separate workstations — Paraview, Excel, "
-        "Simulink — exchange a chaotic flock of file-format icons "
-        "(.csv, .xlsx, .png, .mat, .dat) by hand, while a single "
-        "clean database on the right answers GET and POST and "
-        "tracks versioning"
+        "A short editorial animation of CFD data moving by hand: one "
+        "engineer loads a result in ParaView, another exports a file, "
+        "a CSV arrives by email, and chart fragments are copied into "
+        "a PowerPoint-style slide while a person acts as the join."
     )
     caption = (
-        "Three tools, five formats, and someone manually re-typing "
-        "the metrics. Or one database that holds the relationships, "
-        "versions everything, and answers GET / POST."
+        "The ordinary CFD handoff: load the result, export a file, email "
+        "a CSV, paste a chart. The person in the middle is the integration "
+        "layer."
     )
-    mp4_path = ROOT / "figures" / "cartoon-storage-migrations.mp4"
-    png_name = "cartoon-storage-migrations.png"
+    mp4_path = ROOT / "figures" / "cfd-handoff-manual.mp4"
+    png_name = "cfd-handoff-manual-start.png"
 
     if mp4_path.exists():
         block = (
             f'<figure class="ti-figure ti-figure-video" aria-labelledby="{fig_id}">\n'
             f'  <div class="ti-video-wrap">\n'
-            f'    <video src="figures/cartoon-storage-migrations.mp4" '
+            f'    <video src="figures/cfd-handoff-manual.mp4" '
             f'autoplay muted loop playsinline preload="metadata" '
             f'poster="figures/{png_name}" '
             f'aria-label="{alt}"></video>\n'
@@ -1039,32 +1042,20 @@ def substitute_cartoon_storage_migrations(html: str) -> str:
 
 
 def substitute_data_drift_video(html: str) -> str:
-    """Replace `[VIDEO: data-drift]` with a fullbleed 100vh video figure.
-
-    The video is a 15s short film: a CFD value (Cl = 0.413) is copied
-    out into four downstream containers, the source ticks on, and the
-    copies stay frozen. The visual gap between the live source and the
-    frozen copies is the cost of every handoff.
-
-    Reuses `.ti-figure-fullbleed` (the same breakout class used by
-    paradigm-globe-pan, plotly-vs-powerpoint-morph, connections-by-hand).
-    A small JS hook (DATA_DRIFT_JS) restarts the video from
-    currentTime=0 each time the figure enters the viewport.
-    """
-    fig_id = "ti-data-drift-figcap"
+    """Replace `[VIDEO: data-drift]` with the paired API handoff clip."""
+    fig_id = "ti-cfd-handoff-api-figcap"
     alt = (
-        "A 15-second short film: a CFD lift-coefficient value Cl = "
-        "0.413 is copied into a spreadsheet cell, a slide PNG, an "
-        "email quote, and a Teams chat. The four copies freeze at "
-        "0.413 while the live source ticks on to 0.421, 0.428, and "
-        "0.435. The final composition is a row of frozen 0.413 cards "
-        "behind a single live 0.435 card — the visual gap is the cost."
+        "A short editorial animation of the same CFD workflow represented "
+        "as direct request pulses between tools and one shared data store; "
+        "the human join fades out because the relationships are carried "
+        "by the system."
     )
     caption = (
-        "Each handoff freezes a moment. Then the moment moves on."
+        "The same shape done properly: tools GET what they need, POST what "
+        "changed, and no one has to be the join between formats."
     )
-    mp4_path = ROOT / "figures" / "data-drift.mp4"
-    poster_name = "data-drift/05-final-row.png"
+    mp4_path = ROOT / "figures" / "cfd-handoff-api.mp4"
+    poster_name = "cfd-handoff-api-start.png"
     poster_path = ROOT / "figures" / poster_name
 
     if mp4_path.exists():
@@ -1073,10 +1064,10 @@ def substitute_data_drift_video(html: str) -> str:
             if poster_path.exists() else ""
         )
         block = (
-            f'<figure class="ti-figure ti-figure-video ti-figure-fullbleed ti-data-drift" '
-            f'aria-labelledby="{fig_id}" data-ti-restart-on-view="1">\n'
+            f'<figure class="ti-figure ti-figure-video ti-cfd-handoff-api" '
+            f'aria-labelledby="{fig_id}">\n'
             f'  <div class="ti-video-wrap">\n'
-            f'    <video src="figures/data-drift.mp4" '
+            f'    <video src="figures/cfd-handoff-api.mp4" '
             f'autoplay muted loop playsinline preload="metadata"'
             f'{poster_attr} '
             f'aria-label="{alt}"></video>\n'
@@ -1086,7 +1077,7 @@ def substitute_data_drift_video(html: str) -> str:
         )
     elif poster_path.exists():
         block = (
-            f'<figure class="ti-figure ti-figure-cartoon ti-figure-fullbleed ti-data-drift" '
+            f'<figure class="ti-figure ti-figure-cartoon ti-cfd-handoff-api" '
             f'aria-labelledby="{fig_id}">\n'
             f'  <img src="figures/{poster_name}" alt="{alt}" loading="lazy" />\n'
             f'  <figcaption id="{fig_id}" class="ti-figcap">{caption}</figcaption>\n'
@@ -1094,10 +1085,10 @@ def substitute_data_drift_video(html: str) -> str:
         )
     else:
         block = (
-            f'<figure class="ti-figure ti-figure-video-pending ti-figure-fullbleed ti-data-drift" '
+            f'<figure class="ti-figure ti-figure-video-pending ti-cfd-handoff-api" '
             f'aria-labelledby="{fig_id}">\n'
             f'  <div class="ti-video-pending-box" role="img" aria-label="{alt}">\n'
-            f'    <span class="ti-video-pending-label">Video pending &middot; data-drift</span>\n'
+            f'    <span class="ti-video-pending-label">Video pending &middot; CFD handoff API</span>\n'
             f'  </div>\n'
             f'  <figcaption id="{fig_id}" class="ti-figcap">{caption}</figcaption>\n'
             f'</figure>'
@@ -1124,6 +1115,26 @@ def substitute_jeppesen_award_cartoon(html: str) -> str:
     )
     return re.sub(
         r"<p>\[FIGURE:\s*jeppesen-no-bull-award\]</p>",
+        block,
+        html,
+        count=1,
+    )
+
+
+def substitute_atf_photo(html: str) -> str:
+    block = (
+        '<figure class="ti-figure" aria-labelledby="ti-atf-photo-figcap">\n'
+        '  <img src="figures/atf-special-response-team-search.jpg" '
+        'alt="ATF Special Response Team members searching wooded terrain in tactical gear" '
+        'loading="lazy" />\n'
+        '  <figcaption id="ti-atf-photo-figcap" class="ti-figcap">'
+        'Not that ATF. Though, admittedly, also a strong look. '
+        '<a href="https://www.dvidshub.net/image/1606620/atf-special-response-team-search">Public domain photo via DVIDS / ATF</a>.'
+        '</figcaption>\n'
+        '</figure>'
+    )
+    return re.sub(
+        r"<p>\[FIGURE:\s*atf-looking-cool\]</p>",
         block,
         html,
         count=1,
@@ -1504,6 +1515,17 @@ ARTICLE_CSS = r"""
     max-width: clamp(1240px, 92vw, 1520px);   /* fluid cap — uses available width on big monitors */
     margin-inline: auto;
   }
+  .ti-prose .ti-flowchart-scrolly {
+    position: relative;
+    left: 50%;
+    width: min(1520px, calc(100vw - 56px));
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    transform: translateX(-50%);
+  }
+  .ti-prose .ti-flat-view,
+  .ti-prose .ti-ask-the-plot,
   .ti-prose .ti-what-changed {
     position: relative;
     left: 50%;
@@ -1530,9 +1552,6 @@ ARTICLE_CSS = r"""
     .ti-prose .ti-flat-view,
     .ti-prose .ti-ask-the-plot {
       width: min(1180px, calc(100vw - 64px));
-      max-width: none;
-      margin-left: 50%;
-      transform: translateX(-50%);
     }
     .ti-prose .ti-what-changed {
       width: min(1180px, calc(100vw - 64px));
@@ -1935,8 +1954,9 @@ ARTICLE_CSS = r"""
   }
   @media (min-width: 1320px) {
     .ti-prose .ti-epiquote {
+      --ti-epiquote-stack-offset: 0px;
       position: sticky;
-      top: 112px;
+      top: calc(112px + var(--ti-epiquote-stack-offset, 0px));
       float: right;
       clear: right;
       width: min(300px, var(--ti-side-w));
@@ -2184,12 +2204,17 @@ ARTICLE_CSS = r"""
     pointer-events: none;
     transition: opacity 140ms ease;
   }
-  .ti-aside:hover .ti-aside-content,
-  .ti-aside:focus-within .ti-aside-content {
-    display: block;
-    opacity: 1;
-    pointer-events: auto;
-  }
+	  .ti-aside:hover .ti-aside-content,
+	  .ti-aside:focus-within .ti-aside-content {
+	    display: block;
+	    opacity: 1;
+	    pointer-events: auto;
+	  }
+	  html.ti-asides-dismissed .ti-aside-content {
+	    display: none !important;
+	    opacity: 0 !important;
+	    pointer-events: none !important;
+	  }
   .ti-aside-content::after {
     content: "";
     position: absolute;
@@ -2347,6 +2372,18 @@ ARTICLE_CSS = r"""
   html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
     transform: translateX(-50%) translateY(-10px) scale(0.996);
   }
+  html.ti-js .ti-flat-view.ti-reveal,
+  html.ti-js .ti-ask-the-plot.ti-reveal {
+    transform: translateX(-50%) translateY(28px) scale(0.992);
+  }
+  html.ti-js .ti-flat-view.ti-reveal.ti-inview,
+  html.ti-js .ti-ask-the-plot.ti-reveal.ti-inview {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  html.ti-js .ti-flat-view.ti-reveal.ti-dimmed,
+  html.ti-js .ti-ask-the-plot.ti-reveal.ti-dimmed {
+    transform: translateX(-50%) translateY(-10px) scale(0.996);
+  }
   html.ti-js .ti-figure-fullbleed.ti-reveal {
     transform: translateX(-50%) translateY(28px) scale(0.992);
   }
@@ -2421,11 +2458,13 @@ ARTICLE_CSS = r"""
 
   /* ---- flat-view + adhd-flowchart asides — also break out wide so the
      scrolly grid has enough room for the table + DAG panel ---- */
-  .ti-flat-view, .ti-flowchart {
+  .ti-flat-view,
+  .ti-ask-the-plot,
+  .ti-flowchart {
     margin: 72px 0;
   }
   @media (min-width: 1000px) {
-    .ti-flat-view, .ti-flowchart {
+    .ti-flowchart {
       width: min(100vw - 32px, var(--ti-wide-w));
       margin-left: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
       margin-right: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
@@ -2708,123 +2747,184 @@ ARTICLE_CSS = r"""
     border: 0;
   }
 
-  /* ---- cinematic "Thread" logotype (article 1, section 5) ----
-     A thin line draws across the page from left to right, spawning each
-     letter as it passes; the line then loops down and settles as a
-     hairline rule beneath the word. End state is a clean black-on-white
-     wordmark. */
+  /* ---- Thread cinematic T-mark (article 1, section 5) ----
+     Adapted from the canonical presentation closing-logo iframe in
+     Flex/thread-api/app/presentations/_common/thread-t-mark-animation-cinematic.html,
+     with the final lockup tuned for the article's light page. */
   .ti-thread-logo {
-    display: block;
-    margin: 4px 0 22px;
-    color: var(--ti-fg);   /* drives currentColor for the SVG strokes */
-    line-height: 0;        /* no extra baseline gap below the SVG */
+    --thread-logo-ink: #1f2329;
+    --thread-logo-green: #00643C;
+    display: flex;
+    align-items: center;
+    margin: 0 0 26px;
+    min-height: clamp(130px, 22vw, 206px);
+    color: var(--thread-logo-ink);
   }
-  .ti-thread-logo svg {
-    display: block;
-    width: 100%;
-    max-width: 420px;
+  .ti-thread-cinematic {
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(18px, 3vw, 32px);
+    isolation: isolate;
+  }
+  .ti-thread-cinematic-mark {
+    width: clamp(150px, 24vw, 227px);
     height: auto;
+    flex: 0 0 auto;
     overflow: visible;
+    transform-origin: 50% 50%;
   }
-  /* Letter glyphs: drawn-on stroke that fills in once the thread has
-     passed. Idle state (off-viewport) hides them; the .play class
-     animates them in. */
-  .ti-thread-logo .ti-thread-letter {
-    fill: transparent;
-    stroke: currentColor;
-    stroke-width: 1.4;
+  .ti-thread-wire,
+  .ti-thread-glow-wire,
+  .ti-thread-t-wire {
+    fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-dasharray: var(--len, 600);
-    stroke-dashoffset: var(--len, 600);
-    opacity: 0;
-  }
-  .ti-thread-logo .ti-thread-line {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.4;
-    stroke-linecap: round;
     stroke-dasharray: var(--line-len, 1200);
     stroke-dashoffset: var(--line-len, 1200);
   }
-  .ti-thread-logo .ti-thread-rule {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1;
-    stroke-linecap: round;
-    stroke-dasharray: var(--rule-len, 360);
-    stroke-dashoffset: var(--rule-len, 360);
+  .ti-thread-wire {
+    stroke: url(#ti-thread-gr);
+    stroke-width: 1.8;
+  }
+  .ti-thread-glow-wire {
+    stroke: url(#ti-thread-gr);
+    stroke-width: 5;
+  }
+  .ti-thread-t-wire {
+    stroke: url(#ti-thread-tg);
+    stroke-width: 2.5;
+  }
+  .ti-thread-node,
+  .ti-thread-scan,
+  .ti-thread-solid-mark,
+  .ti-thread-wordmark .letter {
     opacity: 0;
   }
-
-  /* The thread sweeps across (0 -> ~70% of duration); each letter starts
-     drawing as the thread crosses its centre, then fills to solid; the
-     thread continues, loops down, and the underline rule settles last. */
-  .ti-thread-logo.ti-thread-logo-play .ti-thread-line {
-    animation: ti-thread-draw 1500ms cubic-bezier(.65,.05,.36,1) forwards;
+  .ti-thread-wordmark {
+    display: inline-flex;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    font-family: "TWK Everett", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 700;
+    font-size: clamp(38px, 7.2vw, 80px);
+    line-height: 1;
+    letter-spacing: 0.14em;
+    color: var(--thread-logo-ink);
   }
-  .ti-thread-logo.ti-thread-logo-play .ti-thread-letter {
-    animation:
-      ti-thread-letter-draw 700ms cubic-bezier(.55,.08,.32,1) forwards,
-      ti-thread-letter-fill 320ms ease-out forwards;
-    /* per-letter delays are set inline by JS via --d-draw / --d-fill */
-    animation-delay: var(--d-draw, 0ms), var(--d-fill, 700ms);
+  .ti-thread-wordmark .letter {
+    display: inline-block;
+    transform: translateY(16px) scale(0.92);
   }
-  .ti-thread-logo.ti-thread-logo-play .ti-thread-rule {
-    animation: ti-thread-rule-draw 520ms cubic-bezier(.45,.05,.2,1) 1480ms forwards;
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-node {
+    animation: ti-thread-node-in 620ms cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(var(--i, 0) * 42ms);
   }
-
-  /* End state — once the play class has run, the styles above leave the
-     animations in their forwards state. We also set this when reduced
-     motion or post-replay so the wordmark renders intact even if the
-     element re-mounts mid-paint. */
-  .ti-thread-logo.ti-thread-logo-rest .ti-thread-letter {
-    fill: currentColor;
-    stroke-width: 0;
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-scan {
+    animation: ti-thread-scan 900ms cubic-bezier(.65,0,.35,1) 900ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-wire,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-glow-wire,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-t-wire {
+    animation: ti-thread-wire-draw 1600ms cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(1180ms + var(--group, 0) * 210ms);
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-solid-mark {
+    animation: ti-thread-mark-in 980ms cubic-bezier(.22,1,.36,1) 3100ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-wires-group,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-glow-group,
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-highlight-group {
+    animation: ti-thread-network-out 1000ms ease 3600ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-cinematic-mark {
+    animation: ti-thread-mark-settle 1600ms cubic-bezier(.4,0,.2,1) 3500ms forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-wordmark .letter {
+    animation: ti-thread-word-in 420ms cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(4380ms + var(--i, 0) * 70ms);
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-cinematic-mark {
+    width: clamp(88px, 13vw, 149px);
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-wire,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-glow-wire,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-t-wire {
     stroke-dashoffset: 0;
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-wires-group,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-glow-group,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-highlight-group,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-scan,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-node {
+    opacity: 0 !important;
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-solid-mark,
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-wordmark .letter {
     opacity: 1;
     animation: none;
+    transform: none;
   }
-  .ti-thread-logo.ti-thread-logo-rest .ti-thread-line {
-    opacity: 0;
-    animation: none;
+  @keyframes ti-thread-node-in {
+    0% { opacity: 0; transform: scale(0.2); }
+    70% { opacity: 1; transform: scale(1.25); }
+    100% { opacity: 1; transform: scale(1); }
   }
-  .ti-thread-logo.ti-thread-logo-rest .ti-thread-rule {
-    stroke-dashoffset: 0;
-    opacity: 1;
-    animation: none;
+  @keyframes ti-thread-scan {
+    0% { opacity: 0; transform: translateY(-10%); }
+    15% { opacity: .55; }
+    85% { opacity: .55; }
+    100% { opacity: 0; transform: translateY(96%); }
   }
-
-  @keyframes ti-thread-draw {
-    0%   { stroke-dashoffset: var(--line-len, 1200); opacity: 1; }
-    72%  { stroke-dashoffset: 0; opacity: 1; }
-    100% { stroke-dashoffset: 0; opacity: 0; }
-  }
-  @keyframes ti-thread-letter-draw {
-    0%   { opacity: 1; stroke-dashoffset: var(--len, 600); fill: transparent; }
-    100% { opacity: 1; stroke-dashoffset: 0; fill: transparent; }
-  }
-  @keyframes ti-thread-letter-fill {
-    0%   { fill: transparent; }
-    100% { fill: currentColor; stroke-width: 0; }
-  }
-  @keyframes ti-thread-rule-draw {
-    0%   { stroke-dashoffset: var(--rule-len, 360); opacity: 1; }
+  @keyframes ti-thread-wire-draw {
+    0% { stroke-dashoffset: var(--line-len, 1200); opacity: 1; }
     100% { stroke-dashoffset: 0; opacity: 1; }
   }
-
+  @keyframes ti-thread-mark-in {
+    0% { opacity: 0; transform: scale(.985); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes ti-thread-network-out {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes ti-thread-mark-settle {
+    0% { width: clamp(150px, 24vw, 227px); }
+    100% { width: clamp(88px, 13vw, 149px); }
+  }
+  @keyframes ti-thread-word-in {
+    0% { opacity: 0; transform: translateY(16px) scale(.92); }
+    100% { opacity: 1; transform: none; }
+  }
   @media (max-width: 520px) {
-    .ti-thread-logo svg { max-width: 300px; }
+    .ti-thread-logo { min-height: 116px; }
+    .ti-thread-cinematic { gap: 14px; }
+    .ti-thread-wordmark {
+      font-size: clamp(30px, 12vw, 44px);
+      letter-spacing: 0.11em;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
-    .ti-thread-logo .ti-thread-letter,
-    .ti-thread-logo .ti-thread-rule {
+    .ti-thread-logo *,
+    .ti-thread-logo *::before,
+    .ti-thread-logo *::after {
       animation: none !important;
-      opacity: 1 !important;
-      stroke-dashoffset: 0 !important;
+      transition: none !important;
     }
-    .ti-thread-logo .ti-thread-letter { fill: currentColor !important; stroke-width: 0 !important; }
-    .ti-thread-logo .ti-thread-line { display: none; }
+    .ti-thread-logo .ti-thread-cinematic-mark { width: clamp(88px, 13vw, 149px); }
+    .ti-thread-logo .ti-thread-wire,
+    .ti-thread-logo .ti-thread-glow-wire,
+    .ti-thread-logo .ti-thread-t-wire { stroke-dashoffset: 0; }
+    .ti-thread-logo .ti-thread-wires-group,
+    .ti-thread-logo .ti-thread-glow-group,
+    .ti-thread-logo .ti-thread-highlight-group,
+    .ti-thread-logo .ti-thread-scan,
+    .ti-thread-logo .ti-thread-node { opacity: 0 !important; }
+    .ti-thread-logo .ti-thread-solid-mark,
+    .ti-thread-logo .ti-thread-wordmark .letter {
+      opacity: 1 !important;
+      transform: none !important;
+    }
   }
 
   .ti-section-pin {
@@ -2852,6 +2952,11 @@ ARTICLE_CSS = r"""
     .ti-section-pin[data-visible="true"] {
       opacity: 1;
       transform: translateY(0);
+    }
+    .ti-section-pin[data-blocked="true"] {
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
     }
     .ti-section-pin[data-intro="true"] {
       color: #1f2329;
@@ -3041,15 +3146,20 @@ ARTICLE_CSS = r"""
     /* Three-column layout: graph rail (left) | prose (middle) | cartoon rail (right).
        Both rails are sticky and host the figure's panes after JS re-parents them.
        The figure itself is hidden in-place — only the panes are visible, in the rails. */
-    grid-template-columns: minmax(280px, 0.32fr) minmax(0, 0.4fr) minmax(280px, 0.32fr);
-    gap: 32px;
+    grid-template-columns:
+      minmax(260px, 0.8fr)
+      minmax(380px, 1.1fr)
+      minmax(360px, 1fr);
+    gap: clamp(28px, 3vw, 52px);
     align-items: start;
     max-width: 100%;
   }
   @media (min-width: 1200px) {
     .af-scroll {
-      grid-template-columns: minmax(320px, 0.34fr) minmax(0, 0.36fr) minmax(320px, 0.34fr);
-      gap: 48px;
+      grid-template-columns:
+        minmax(300px, 0.78fr)
+        minmax(440px, 1.12fr)
+        minmax(420px, 1fr);
     }
   }
   .af-graph-rail,
@@ -3095,6 +3205,18 @@ ARTICLE_CSS = r"""
   .af-cartoon-rail .af-cartoon-frame img {
     object-fit: contain;
   }
+  .af-cartoon-rail .af-cartoon-frame {
+    transform: scale(0.985);
+    filter: saturate(0.88);
+    transition:
+      opacity 560ms ease,
+      transform 620ms cubic-bezier(.2,.8,.2,1),
+      filter 620ms ease;
+  }
+  .af-cartoon-rail .af-cartoon-frame.af-show {
+    transform: scale(1);
+    filter: saturate(1);
+  }
   /* Hide the figure's auto-advance hint, replay button, caption — scroll drives state. */
   .ti-flowchart-scrolly .af-controls { display: none; }
   .af-graph-rail .af-controls,
@@ -3131,10 +3253,10 @@ ARTICLE_CSS = r"""
     margin: 0;
     font-family: var(--ti-font-serif);
     font-style: italic;
-    font-size: 19px;
-    line-height: 1.55;
+    font-size: clamp(21px, 1.45vw, 28px);
+    line-height: 1.38;
     color: var(--ti-fg);
-    max-width: 36ch;
+    max-width: 48ch;
   }
   /* The figure's own .af-stage container is kept in the DOM (so the IIFE
      keeps working) but rendered invisibly — its child panes have been moved
@@ -3152,6 +3274,13 @@ ARTICLE_CSS = r"""
   .ti-flowchart-scrolly .af-stepbar { display: none; }
   .ti-flowchart-scrolly .af-figure { padding: 0; margin: 0; }
   @media (max-width: 880px) {
+    .ti-prose .ti-flowchart-scrolly {
+      left: auto;
+      width: 100%;
+      transform: none;
+      margin: 48px 0;
+      padding: 0;
+    }
     .af-scroll {
       grid-template-columns: 1fr;
       gap: 0;
@@ -3469,7 +3598,7 @@ MAP_JS = r"""
     // or its text — that races with the FLIP morph.
     const wide = isWideLocator();
     const info = getSectionInfo(activeId);
-    const visible = wide && info && sectionPin.dataset.visible === 'true';
+    const visible = wide && info && sectionPin.dataset.visible === 'true' && sectionPin.dataset.blocked !== 'true';
     linkLine.dataset.visible = visible ? 'true' : 'false';
     map.dataset.pinActive = visible ? 'true' : 'false';
     if (!visible) return;
@@ -3594,8 +3723,30 @@ SECTION_FLIP_JS = r"""
   let pinnedSection = null;
   let introPinned = false;
   let lastClone = null;
+  let transitionToken = 0;
 
   function isWide() { return wideMQ.matches; }
+
+  function visualBlocksPin() {
+    if (!isWide()) return false;
+    const blockers = document.querySelectorAll([
+      '.ti-flat-view',
+      '.ti-ask-the-plot',
+      '.ti-data-black-market',
+      '.ti-what-changed',
+      '.ti-twenty-years',
+      '.ti-demo',
+      '.ti-figure-fullbleed'
+    ].join(', '));
+    return Array.from(blockers).some(el => {
+      const r = el.getBoundingClientRect();
+      return r.top < window.innerHeight * 0.78 && r.bottom > 86;
+    });
+  }
+
+  function updatePinBlocking() {
+    pin.dataset.blocked = visualBlocksPin() ? 'true' : 'false';
+  }
 
   function pickSourceParts(section) {
     // Defensive: if Agent B has replaced the H2 with .ti-thread-logo,
@@ -3831,6 +3982,7 @@ SECTION_FLIP_JS = r"""
       pin.removeAttribute('data-flipping');
       if (finishMode === 'show-pin') pin.dataset.visible = 'true';
       if (finishMode === 'hide-pin') pin.dataset.visible = 'false';
+      updatePinBlocking();
       if (clone.parentNode) clone.parentNode.removeChild(clone);
       if (lastClone === clone) lastClone = null;
       if (afterFinish) afterFinish();
@@ -3879,6 +4031,7 @@ SECTION_FLIP_JS = r"""
     pin.removeAttribute('data-flipping');
     pin.dataset.intro = 'true';
     pin.dataset.visible = isWide() ? 'true' : 'false';
+    updatePinBlocking();
     introPinned = isWide();
   }
 
@@ -3887,6 +4040,7 @@ SECTION_FLIP_JS = r"""
     applyPinInfo(introInfo());
     pin.dataset.intro = 'true';
     pin.dataset.visible = 'true';
+    updatePinBlocking();
     if (hero) hero.dataset.pinSource = 'true';
     introPinned = true;
     animateWords(heroParts(), pinParts(), 'show-pin');
@@ -3902,6 +4056,74 @@ SECTION_FLIP_JS = r"""
     });
   }
 
+  function sectionIndex(section) {
+    return section ? sections.indexOf(section) : -1;
+  }
+
+  function animatePinUpAndOff(afterFinish) {
+    if (reduceMotion || !isWide()) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+
+    const sourceWords = [
+      ...measuredWords(pinParts().numeral, 'numeral'),
+      ...measuredWords(pinParts().h2, 'title'),
+      ...measuredWords(pinParts().stand, 'stand'),
+    ];
+    if (!sourceWords.length) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+
+    pin.dataset.flipping = 'true';
+    const layer = document.createElement('div');
+    layer.className = 'ti-section-morph';
+    sourceWords.forEach((source, i) => {
+      const word = document.createElement('span');
+      word.className = 'ti-section-morph-word';
+      word.style.left = source.left + 'px';
+      word.style.top = source.top + 'px';
+      word.style.fontFamily = source.fontFamily;
+      word.style.fontSize = source.fontSize;
+      word.style.fontWeight = source.fontWeight;
+      word.style.fontStyle = source.fontStyle;
+      word.style.letterSpacing = source.letterSpacing;
+      word.style.lineHeight = source.lineHeight;
+      word.style.color = source.color;
+      word.style.transitionDelay = Math.min(90, i * 8) + 'ms';
+      word.textContent = source.text;
+      layer.appendChild(word);
+    });
+    document.body.appendChild(layer);
+    if (lastClone && lastClone !== layer && lastClone.parentNode) {
+      lastClone.parentNode.removeChild(lastClone);
+    }
+    lastClone = layer;
+
+    void layer.offsetWidth;
+    requestAnimationFrame(() => {
+      layer.querySelectorAll('.ti-section-morph-word').forEach((word, i) => {
+        word.style.transform = `translate(${Math.min(18, i * 2)}px, -86px)`;
+        word.style.opacity = '0';
+      });
+    });
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      pin.removeAttribute('data-flipping');
+      if (layer.parentNode) layer.parentNode.removeChild(layer);
+      if (lastClone === layer) lastClone = null;
+      if (afterFinish) afterFinish();
+    };
+    layer.addEventListener('transitionend', e => {
+      if (e.target && e.target.classList && e.target.classList.contains('ti-section-morph-word')) finish();
+    }, { once: true });
+    setTimeout(finish, 900);
+  }
+
   function updateIntroFromScroll() {
     if (pinnedSection) return;
     if ((window.scrollY || document.documentElement.scrollTop || 0) > 8) {
@@ -3914,10 +4136,24 @@ SECTION_FLIP_JS = r"""
   function setPinnedSection(section) {
     if (section === pinnedSection) return;
     const previous = pinnedSection;
+    const previousIndex = sectionIndex(previous);
+    const nextIndex = sectionIndex(section);
+    const token = ++transitionToken;
     pinnedSection = section;
+
+    const settleSection = () => {
+      if (token !== transitionToken) return;
+      if (hero) hero.removeAttribute('data-pin-source');
+      introPinned = false;
+      pin.removeAttribute('data-intro');
+      section.dataset.pinSource = 'true';
+      morph(section);
+    };
+
     if (!section) {
       if (previous) {
         morphBackToSection(previous, () => {
+          if (token !== transitionToken) return;
           previous.removeAttribute('data-pin-source');
           showIntroPin();
           updateIntroFromScroll();
@@ -3927,24 +4163,77 @@ SECTION_FLIP_JS = r"""
       }
       return;
     }
+
+    if (previous && previous !== section && nextIndex < previousIndex) {
+      morphBackToSection(previous, () => {
+        if (token !== transitionToken) return;
+        previous.removeAttribute('data-pin-source');
+        settleSection();
+      });
+      return;
+    }
+
+    if (previous && previous !== section && nextIndex > previousIndex) {
+      animatePinUpAndOff(() => {
+        if (token !== transitionToken) return;
+        previous.removeAttribute('data-pin-source');
+        settleSection();
+      });
+      return;
+    }
+
     if (previous && previous !== section) previous.removeAttribute('data-pin-source');
-    if (hero) hero.removeAttribute('data-pin-source');
-    introPinned = false;
-    pin.removeAttribute('data-intro');
-    section.dataset.pinSource = 'true';
-    morph(section);
+    settleSection();
   }
 
   function currentPinnedFromScroll() {
-    // The "pinned" section is the last .ti-section whose top has crossed
-    // the viewport top. If none have, no rail.
+    // The "pinned" section is the last .ti-section whose opener has crossed
+    // the reader's upper focus band. Using a small band instead of the exact
+    // top pixel makes refresh/scroll restoration match what the reader sees.
+    const focusY = Math.min(520, Math.max(160, window.innerHeight * 0.52));
     let candidate = null;
     for (let i = 0; i < sections.length; i++) {
       const r = sections[i].getBoundingClientRect();
-      if (r.top <= 4) candidate = sections[i];
+      if (r.top <= focusY) candidate = sections[i];
       else break;
     }
     return candidate;
+  }
+
+  function settleFromScrollPosition() {
+    transitionToken++;
+    const next = currentPinnedFromScroll();
+    sections.forEach(section => {
+      if (section !== next) section.removeAttribute('data-pin-source');
+    });
+    if (hero) hero.removeAttribute('data-pin-source');
+    pin.removeAttribute('data-flipping');
+
+    pinnedSection = next;
+    if (next) {
+      next.dataset.pinSource = 'true';
+      introPinned = false;
+      pin.removeAttribute('data-intro');
+      applyPinContent(next);
+      pin.dataset.visible = isWide() ? 'true' : 'false';
+      updatePinBlocking();
+    } else {
+      pin.dataset.visible = 'false';
+      updatePinBlocking();
+      pin.removeAttribute('data-intro');
+      introPinned = false;
+      updateIntroFromScroll();
+    }
+  }
+
+  function reconcileAfterScrollRestore() {
+    // Browser refresh/back-forward restoration can apply scroll position
+    // just after this script's first paint. Re-sample a few times and
+    // settle instantly so the left rail matches the article location.
+    requestAnimationFrame(settleFromScrollPosition);
+    window.setTimeout(settleFromScrollPosition, 80);
+    window.setTimeout(settleFromScrollPosition, 320);
+    window.setTimeout(settleFromScrollPosition, 1000);
   }
 
   // IntersectionObserver: rootMargin -100% bottom => fires the moment a
@@ -3957,39 +4246,29 @@ SECTION_FLIP_JS = r"""
     sections.forEach(s => io.observe(s));
   }
 
+  let pinScrollRaf = 0;
+  window.addEventListener('scroll', () => {
+    if (pinScrollRaf) return;
+    pinScrollRaf = requestAnimationFrame(() => {
+      pinScrollRaf = 0;
+      const next = currentPinnedFromScroll();
+      if (next !== pinnedSection) setPinnedSection(next);
+      updatePinBlocking();
+    });
+  }, { passive: true });
+
   window.addEventListener('resize', () => {
-    const next = currentPinnedFromScroll();
-    if (next === pinnedSection) return;
-    if (pinnedSection) pinnedSection.removeAttribute('data-pin-source');
-    pinnedSection = next;
-    if (next) {
-      next.dataset.pinSource = 'true';
-      applyPinContent(next);
-    }
-    if (next) {
-      introPinned = false;
-      pin.dataset.visible = isWide() ? 'true' : 'false';
-    } else {
-      pin.dataset.visible = 'false';
-      introPinned = false;
-      if (hero) hero.removeAttribute('data-pin-source');
-      updateIntroFromScroll();
-    }
+    settleFromScrollPosition();
+    updatePinBlocking();
   });
 
   // First paint: if the user lands mid-article, settle the pin without
   // animating; otherwise leave the hero title as the opening rail source.
-  const initial = currentPinnedFromScroll();
-  if (initial) {
-    pinnedSection = initial;
-    initial.dataset.pinSource = 'true';
-    applyPinContent(initial);
-    if (isWide()) pin.dataset.visible = 'true';
-  } else {
-    pin.dataset.visible = 'false';
-    pin.removeAttribute('data-intro');
-    updateIntroFromScroll();
-  }
+  settleFromScrollPosition();
+  updatePinBlocking();
+  reconcileAfterScrollRestore();
+  window.addEventListener('pageshow', reconcileAfterScrollRestore);
+  window.addEventListener('load', reconcileAfterScrollRestore);
 
   window.addEventListener('scroll', updateIntroFromScroll, { passive: true });
 })();
@@ -4119,11 +4398,35 @@ PROGRESS_JS = r"""
     const r = Math.max(0, Math.min(1, h.scrollTop / max));
     bar.style.transform = 'scaleX(' + r + ')';
   }
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update);
-  update();
+	  window.addEventListener('scroll', update, { passive: true });
+	  window.addEventListener('resize', update);
+	  update();
 
-  const revealTargets = [
+	  const asideMarks = Array.from(document.querySelectorAll('.ti-aside-mark'));
+	  if (asideMarks.length) {
+	    let lastAsideScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+	    const clearAsideDismissal = () => {
+	      document.documentElement.classList.remove('ti-asides-dismissed');
+	    };
+	    const dismissAsides = () => {
+	      const y = window.scrollY || document.documentElement.scrollTop || 0;
+	      if (Math.abs(y - lastAsideScrollY) < 4) return;
+	      lastAsideScrollY = y;
+	      document.documentElement.classList.add('ti-asides-dismissed');
+	      const active = document.activeElement;
+	      if (active && active.classList && active.classList.contains('ti-aside-mark')) {
+	        active.blur();
+	      }
+	    };
+	    asideMarks.forEach(mark => {
+	      mark.addEventListener('pointerdown', clearAsideDismissal, { passive: true });
+	      mark.addEventListener('mouseenter', clearAsideDismissal);
+	      mark.addEventListener('focus', clearAsideDismissal);
+	    });
+	    window.addEventListener('scroll', dismissAsides, { passive: true });
+	  }
+
+	  const revealTargets = [
     ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market, .ti-twenty-years')
   ];
   revealTargets.forEach(el => el.classList.add('ti-reveal'));
@@ -4172,20 +4475,41 @@ PROGRESS_JS = r"""
 
     const updateEpiquotes = () => {
       const wide = window.matchMedia('(min-width: 1320px)').matches;
+      const stickyTop = 112;
+      const stackGap = 22;
+      const viewportBottom = window.innerHeight - 24;
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const activeQuotes = [];
       epiquotes.forEach(quote => {
+        quote.style.setProperty('--ti-epiquote-stack-offset', '0px');
         if (!wide) {
           quote.classList.remove('ti-epiquote-suppressed');
           return;
         }
         const nextVisual = getNext(quote, visualSelector);
         const nextDivider = getNext(quote, '.ti-divider');
-        const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
         const quoteStart = quote.offsetTop - 126;
         const visualLead = Math.min(480, Math.max(340, window.innerHeight * 0.52));
         const visualStop = nextVisual ? nextVisual.offsetTop - visualLead : Infinity;
         const sectionStop = nextDivider ? nextDivider.offsetTop - 220 : Infinity;
         const stop = Math.min(visualStop, sectionStop);
-        quote.classList.toggle('ti-epiquote-suppressed', scrollY > stop && scrollY > quoteStart);
+        const suppressed = scrollY > stop && scrollY > quoteStart;
+        quote.classList.toggle('ti-epiquote-suppressed', suppressed);
+        if (!suppressed) activeQuotes.push(quote);
+      });
+
+      // Wide-screen epiquotes live in the same sticky side rail. When nearby
+      // quotes are active together, reserve the occupied rail space in
+      // document order and pin later quotes under the current rail bottom.
+      let stackBottom = stickyTop;
+      activeQuotes.forEach(quote => {
+        const height = quote.getBoundingClientRect().height || quote.offsetHeight || 0;
+        const naturalTop = quote.offsetTop - scrollY;
+        const pinnedTop = Math.max(naturalTop, stackBottom);
+        quote.style.setProperty('--ti-epiquote-stack-offset', `${Math.max(0, stackBottom - stickyTop)}px`);
+        if (pinnedTop < viewportBottom && pinnedTop + height > stickyTop) {
+          stackBottom = pinnedTop + height + stackGap;
+        }
       });
     };
     window.addEventListener('scroll', updateEpiquotes, { passive: true });
@@ -4241,165 +4565,100 @@ PROGRESS_JS = r"""
 })();
 
 // ---------------------------------------------------------------------------
-// Cinematic "Thread" logotype (article 1, section 5).
+// Thread cinematic T-mark (article 1, section 5).
 //
-// Builds an inline SVG inside #ti-thread-logo that draws the word "Thread"
-// letter-by-letter as a thin black thread sweeps across the page from left
-// to right. After the letters fill in, the thread loops down and settles as
-// a hairline rule under the word — the final state is a clean black-on-white
-// wordmark that persists.
-//
-// Triggered ONCE per viewport-entry via IntersectionObserver (threshold 0.4).
-// prefers-reduced-motion users get the final state directly, no animation.
+// Adapted from Flex/thread-api/app/presentations/_common/
+// thread-t-mark-animation-cinematic.html. Same network-to-T build, ending as
+// a light-page lockup rather than the presentation's white-on-black version.
 // ---------------------------------------------------------------------------
 (function () {
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-  const WORD = 'Thread';
+  const PATH_D = 'M 24.154178,91.432627 68.428669,21.741339 106.55535,21.756919 99.232728,33.346004 76.157969,33.464499 39.397767,91.445213 24.154181,91.432603 Z M 13.848206,75.227321 40.344233,33.492622 15.039021,33.459892 22.449877,21.716223 47.902188,21.690723 50.457494,17.588168 5.3424901,17.517908 12.680339,5.8254864 96.58386,5.8213064 89.196118,17.565173 H 65.624707 l -36.64469,57.681621 -15.131811,-0.01948 z';
 
   function buildLogo(host) {
     if (!host || host.dataset.threadLogoBuilt === '1') return;
     host.dataset.threadLogoBuilt = '1';
+    host.setAttribute('role', 'img');
+    host.setAttribute('aria-label', 'Thread');
 
-    // Reduced-motion: skip the build animation, paint the rest state.
-    const reduced = window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    host.innerHTML = `
+      <div class="ti-thread-cinematic" aria-hidden="true">
+        <svg class="ti-thread-cinematic-mark" viewBox="0 0 227 206" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ti-thread-gr" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00643C"/>
+              <stop offset="50%" stop-color="#61B29C"/>
+              <stop offset="100%" stop-color="#6DB5DD"/>
+            </linearGradient>
+            <radialGradient id="ti-thread-ng">
+              <stop offset="0%" stop-color="#7BBDF0"/>
+              <stop offset="100%" stop-color="#00643C"/>
+            </radialGradient>
+            <linearGradient id="ti-thread-sg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#61B29C" stop-opacity="0"/>
+              <stop offset="50%" stop-color="#61B29C" stop-opacity=".2"/>
+              <stop offset="100%" stop-color="#61B29C" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="ti-thread-tg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#61B29C"/>
+              <stop offset="50%" stop-color="#7BBDF0"/>
+              <stop offset="100%" stop-color="#6DB5DD"/>
+            </linearGradient>
+          </defs>
+          <rect class="ti-thread-scan" x="3" y="0" width="221" height="6" rx="1" fill="url(#ti-thread-sg)"/>
+          <path class="ti-thread-solid-mark" transform="translate(6.819,20.865) scale(1.8)" fill="#00643C" d="${PATH_D}"/>
+          <g class="ti-thread-wires-group">
+            <path class="ti-thread-wire" data-p="s1" d="M 17,53 L 30,31 L 181,31 L 168,53"/>
+            <path class="ti-thread-wire" data-p="s2" d="M 17,53 L 98,53 L 93,60 L 47,60 L 34,81 L 80,81"/>
+            <path class="ti-thread-wire" data-p="s3" d="M 168,53 L 125,53 L 59,156 L 32,156 L 80,81"/>
+            <path class="ti-thread-wire" data-p="s4" d="M 130,60 L 199,60 L 186,81 L 144,81"/>
+            <path class="ti-thread-wire" data-p="s5" d="M 144,81 L 78,186 L 50,186 L 130,60"/>
+            <path class="ti-thread-wire" data-p="p1" d="M 3,14 L 41,14 L 30,31"/>
+            <path class="ti-thread-wire" data-p="p2" d="M 181,31 L 198,3 L 222,3"/>
+            <path class="ti-thread-wire" data-p="p4" d="M 199,60 L 214,60 L 201,81 L 186,81"/>
+            <path class="ti-thread-wire" data-p="p5" d="M 6,202 L 40,202 L 50,186 L 78,186 L 72,194 L 223,195"/>
+          </g>
+          <g class="ti-thread-glow-group" opacity=".2">
+            <path class="ti-thread-glow-wire" data-p="s1" d="M 17,53 L 30,31 L 181,31 L 168,53"/>
+            <path class="ti-thread-glow-wire" data-p="s2" d="M 17,53 L 98,53 L 93,60 L 47,60 L 34,81 L 80,81"/>
+            <path class="ti-thread-glow-wire" data-p="s3" d="M 168,53 L 125,53 L 59,156 L 32,156 L 80,81"/>
+            <path class="ti-thread-glow-wire" data-p="s4" d="M 130,60 L 199,60 L 186,81 L 144,81"/>
+            <path class="ti-thread-glow-wire" data-p="s5" d="M 144,81 L 78,186 L 50,186 L 130,60"/>
+            <path class="ti-thread-glow-wire" data-p="p1" d="M 3,14 L 41,14 L 30,31"/>
+            <path class="ti-thread-glow-wire" data-p="p2" d="M 181,31 L 198,3 L 222,3"/>
+            <path class="ti-thread-glow-wire" data-p="p4" d="M 199,60 L 214,60 L 201,81 L 186,81"/>
+            <path class="ti-thread-glow-wire" data-p="p5" d="M 6,202 L 40,202 L 50,186 L 78,186 L 72,194 L 223,195"/>
+          </g>
+          <g class="ti-thread-highlight-group" opacity=".6">
+            <path class="ti-thread-t-wire" data-p="t1" d="M 17,53 L 30,31 L 181,31 L 168,53"/>
+            <path class="ti-thread-t-wire" data-p="t2" d="M 80,81 L 32,156 L 59,156"/>
+          </g>
+          ${[
+            [50,186,3],[130,60,3],[199,60,3],[186,81,3],[144,81,3],[78,186,3],[32,156,3],[80,81,3],
+            [34,81,3],[47,60,2.5],[93,60,2.5],[98,53,2.5],[17,53,3],[30,31,3.5],[181,31,3.5],
+            [168,53,3],[125,53,3],[59,156,3],[41,14,2.5],[198,3,2.5],[214,60,2.5],[201,81,2.5],
+            [40,202,2.5],[72,194,2.5],[3,14,2.5],[222,3,2.5],[6,202,2.5],[223,195,2.5]
+          ].map((n, i) => `<circle class="ti-thread-node" style="--i:${i}" cx="${n[0]}" cy="${n[1]}" r="${n[2]}" fill="url(#ti-thread-ng)"/>`).join('')}
+        </svg>
+        <span class="ti-thread-wordmark">${'THREAD'.split('').map((letter, i) => `<span class="letter" style="--i:${i}">${letter}</span>`).join('')}</span>
+      </div>`;
 
-    // viewBox is wide so the thread has room to enter from the left and
-    // loop under the word on exit. Y baseline at 105 leaves headroom for
-    // the swept-line preamble and a comfortable underline below.
-    const VB_W = 600;
-    const VB_H = 200;
-    const BASELINE = 122;
-    const FONT_SIZE = 96; // px in viewBox space — display weight
-
-    const svg = document.createElementNS(SVG_NS, 'svg');
-    svg.setAttribute('viewBox', '0 0 ' + VB_W + ' ' + VB_H);
-    svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', 'Thread');
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-
-    // Hidden measuring text — we use getComputedTextLength on a single full
-    // word render to find each letter's x-position. We then create one
-    // <text> element per letter for independent dash/delay animation.
-    const probe = document.createElementNS(SVG_NS, 'text');
-    probe.setAttribute('x', '0');
-    probe.setAttribute('y', BASELINE);
-    probe.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
-    probe.setAttribute('font-size', FONT_SIZE);
-    probe.setAttribute('font-weight', '600');
-    probe.setAttribute('letter-spacing', '0');
-    probe.setAttribute('fill', 'transparent');
-    probe.setAttribute('visibility', 'hidden');
-    probe.textContent = WORD;
-    svg.appendChild(probe);
-
-    // Append SVG to host so getComputedTextLength works (needs layout).
-    host.appendChild(svg);
-
-    // Measure cumulative widths of each prefix to find letter centres.
-    const prefixWidths = [0];
-    for (let i = 1; i <= WORD.length; i++) {
-      const p = document.createElementNS(SVG_NS, 'text');
-      p.setAttribute('x', '0');
-      p.setAttribute('y', BASELINE);
-      p.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
-      p.setAttribute('font-size', FONT_SIZE);
-      p.setAttribute('font-weight', '600');
-      p.setAttribute('fill', 'transparent');
-      p.setAttribute('visibility', 'hidden');
-      p.textContent = WORD.substring(0, i);
-      svg.appendChild(p);
-      prefixWidths.push(p.getComputedTextLength());
-      svg.removeChild(p);
-    }
-    const totalW = prefixWidths[prefixWidths.length - 1];
-
-    // Centre the word in the viewBox.
-    const xStart = (VB_W - totalW) / 2;
-
-    // The sweeping thread path: enters left, gentle dip down, climbs to the
-    // baseline midline, exits right, then a second segment that loops down
-    // and becomes the underline rule. We separate them for control: one
-    // <path> for the sweep, one <line> for the persistent rule.
-    const lineY = BASELINE - FONT_SIZE * 0.42; // approx mid-x-height
-    const sweep = document.createElementNS(SVG_NS, 'path');
-    const dipY = lineY + 6;
-    const sweepD = [
-      'M', -20, dipY,
-      'C', xStart * 0.4, dipY - 4, xStart * 0.7, lineY, xStart - 8, lineY,
-      'L', xStart + totalW + 8, lineY,
-      'C', VB_W - xStart * 0.5, lineY, VB_W - xStart * 0.3, dipY - 6, VB_W + 20, dipY
-    ].join(' ');
-    sweep.setAttribute('d', sweepD);
-    sweep.setAttribute('class', 'ti-thread-line');
-    svg.appendChild(sweep);
-    const sweepLen = Math.ceil(sweep.getTotalLength());
-    sweep.style.setProperty('--line-len', sweepLen);
-
-    // Per-letter <text> elements. Each starts as a stroked outline (drawn
-    // via dashoffset) then fills to currentColor.
-    const ruleY = BASELINE + 18;
-    const totalSweepMs = 1500;
-    const letterEls = [];
-    for (let i = 0; i < WORD.length; i++) {
-      const t = document.createElementNS(SVG_NS, 'text');
-      t.setAttribute('x', xStart + prefixWidths[i]);
-      t.setAttribute('y', BASELINE);
-      t.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
-      t.setAttribute('font-size', FONT_SIZE);
-      t.setAttribute('font-weight', '600');
-      t.setAttribute('class', 'ti-thread-letter');
-      t.textContent = WORD[i];
-      svg.appendChild(t);
-      // Heuristic dash length; serif glyphs at 96px settle around 320-520.
-      const dashLen = Math.max(320, Math.ceil(FONT_SIZE * 4.2));
-      t.style.setProperty('--len', dashLen);
-      // Per-letter delay synced to where the thread crosses each letter's
-      // centre. The sweep goes 0 -> 72% over totalSweepMs, then fades.
-      const letterCentre = xStart + (prefixWidths[i] + prefixWidths[i + 1]) / 2;
-      const sweepProgress = Math.min(1, Math.max(0, (letterCentre + 20) / (VB_W + 40)));
-      const drawDelay = Math.round(sweepProgress * totalSweepMs * 0.72);
-      const fillDelay = drawDelay + 580; // letter starts to fill ~near end of its draw
-      t.style.setProperty('--d-draw', drawDelay + 'ms');
-      t.style.setProperty('--d-fill', fillDelay + 'ms');
-      letterEls.push(t);
-    }
-
-    // Persistent underline rule (a thin hairline that draws last and stays).
-    const rule = document.createElementNS(SVG_NS, 'line');
-    rule.setAttribute('x1', xStart - 4);
-    rule.setAttribute('y1', ruleY);
-    rule.setAttribute('x2', xStart + totalW + 4);
-    rule.setAttribute('y2', ruleY);
-    rule.setAttribute('class', 'ti-thread-rule');
-    const ruleLen = Math.ceil(totalW + 8);
-    rule.style.setProperty('--rule-len', ruleLen);
-    svg.appendChild(rule);
-
-    // Remove probe — done with it.
-    if (probe.parentNode) probe.parentNode.removeChild(probe);
-
-    if (reduced) {
-      host.classList.add('ti-thread-logo-rest');
-      return host;
-    }
-
-    return host;
+    host.querySelectorAll('.ti-thread-wire,.ti-thread-glow-wire,.ti-thread-t-wire').forEach((path, i) => {
+      const len = Math.ceil(path.getTotalLength());
+      path.style.setProperty('--line-len', len);
+      path.style.setProperty('--group', Math.floor(i % 9 / 2));
+    });
   }
 
   function play(host) {
     if (!host) return;
     host.classList.remove('ti-thread-logo-rest');
-    // Reset animations by force-reflow.
     host.classList.remove('ti-thread-logo-play');
     void host.offsetWidth;
     host.classList.add('ti-thread-logo-play');
-    // After the full cycle, lock to rest state so it persists cleanly even
-    // if styles re-evaluate.
-    const totalMs = 2050;
-    window.setTimeout(function () {
+    window.clearTimeout(host._threadLogoTimer);
+    host._threadLogoTimer = window.setTimeout(function () {
       host.classList.add('ti-thread-logo-rest');
-    }, totalMs);
+    }, 5200);
   }
 
   function init() {
@@ -4417,17 +4676,16 @@ PROGRESS_JS = r"""
     let inView = false;
     const io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
           if (!inView) {
             inView = true;
             play(host);
           }
         } else if (entry.intersectionRatio < 0.05) {
-          // Once the section is fully out of view, arm for replay.
           inView = false;
         }
       });
-    }, { threshold: [0, 0.05, 0.4, 0.6] });
+    }, { threshold: [0, 0.05, 0.35, 0.6] });
     io.observe(host);
   }
 
@@ -4490,13 +4748,13 @@ HTML_TEMPLATE = """<!doctype html>
 
   <section class="ti-hero ti-hero-cinematic" aria-labelledby="ti-title">
     <div class="ti-hero-media" aria-hidden="true">
-      <video src="figures/paradigm-globe-pan.mp4" autoplay muted loop playsinline preload="metadata"></video>
+      <video src="figures/{hero_video}" autoplay muted loop playsinline preload="metadata"></video>
     </div>
     <div class="ti-hero-shade" aria-hidden="true"></div>
     <div class="ti-hero-copy">
       <p class="ti-hero-eyebrow">Aeronauty &middot; Harry Smith</p>
       <h1 id="ti-title">{title}</h1>
-      <p class="ti-hero-kicker">A story about refusing to flatten engineering work into screenshots, spreadsheets, and human memory.</p>
+      <p class="ti-hero-kicker">{hero_kicker}</p>
     </div>
     <div class="ti-scroll-cue" aria-hidden="true">Scroll</div>
   </section>
@@ -4665,6 +4923,7 @@ def main() -> None:
     prose_html = substitute_cartoon_storage_migrations(prose_html)
     prose_html = substitute_data_drift_video(prose_html)
     prose_html = substitute_jeppesen_award_cartoon(prose_html)
+    prose_html = substitute_atf_photo(prose_html)
     prose_html = substitute_harry_plot_video(prose_html)
     if needs["milp"]:
         prose_html = substitute_milp_equations(prose_html)
@@ -4738,6 +4997,8 @@ def main() -> None:
     article_map_html = render_article_map(CURRENT_ARTICLE_ID)
     out = HTML_TEMPLATE.format(
         title=page_title,
+        hero_video=ARTICLES[CURRENT_ARTICLE_ID]["hero_video"],
+        hero_kicker=ARTICLES[CURRENT_ARTICLE_ID]["hero_kicker"],
         library_tags=required_library_tags(needs),
         article_css=ARTICLE_CSS,
         globe_css=globe_css,
