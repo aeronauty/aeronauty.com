@@ -23,6 +23,11 @@ type PathSummary = {
   visitors: number;
 };
 
+type TrackerStatus = {
+  recorded?: boolean;
+  reason?: string;
+} | null;
+
 function getVisitorKey(event: ActivityEvent): string {
   return event.email ?? event.clientIpHash ?? event.id;
 }
@@ -52,6 +57,7 @@ export default function LabActivityPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [storeConfigured, setStoreConfigured] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [trackerStatus, setTrackerStatus] = useState<TrackerStatus>(null);
 
   const visitorCount = new Set(events.map(getVisitorKey)).size;
   const publicPageViews = events.filter((event) => event.eventType === "page_view").length;
@@ -78,8 +84,13 @@ export default function LabActivityPage() {
   useEffect(() => {
     loadRecentActivity();
 
-    window.addEventListener("aeronauty:lab-activity-recorded", loadRecentActivity);
-    return () => window.removeEventListener("aeronauty:lab-activity-recorded", loadRecentActivity);
+    function handleActivityRecorded(event: Event) {
+      setTrackerStatus(event instanceof CustomEvent ? event.detail : null);
+      loadRecentActivity();
+    }
+
+    window.addEventListener("aeronauty:lab-activity-recorded", handleActivityRecorded);
+    return () => window.removeEventListener("aeronauty:lab-activity-recorded", handleActivityRecorded);
   }, [loadRecentActivity]);
 
   return (
@@ -135,6 +146,13 @@ export default function LabActivityPage() {
             and
             <code className="mx-1 rounded bg-amber-100 px-1 py-0.5">UPSTASH_REDIS_REST_TOKEN</code>
             , or the equivalent Vercel KV REST variables, then redeploy.
+          </div>
+        )}
+
+        {trackerStatus?.recorded === false && (
+          <div className="mt-8 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+            This browser reached the activity tracker, but the current page access was not recorded:
+            <code className="ml-1 rounded bg-amber-100 px-1 py-0.5">{trackerStatus.reason ?? "unknown"}</code>
           </div>
         )}
 
