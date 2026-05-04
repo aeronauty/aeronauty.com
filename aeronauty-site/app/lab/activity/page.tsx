@@ -53,16 +53,21 @@ function summarizePaths(events: ActivityEvent[]): PathSummary[] {
     .slice(0, 8);
 }
 
+function isDashboardSelfEvent(event: ActivityEvent): boolean {
+  return event.path === "/lab/activity";
+}
+
 export default function LabActivityPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [storeConfigured, setStoreConfigured] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [trackerStatus, setTrackerStatus] = useState<TrackerStatus>(null);
 
-  const visitorCount = new Set(events.map(getVisitorKey)).size;
-  const publicPageViews = events.filter((event) => event.eventType === "page_view").length;
-  const labEvents = events.filter((event) => event.eventType === "lab_access" || event.eventType === "lab_login").length;
-  const topPaths = summarizePaths(events);
+  const visibleEvents = events.filter((event) => !isDashboardSelfEvent(event));
+  const visitorCount = new Set(visibleEvents.map(getVisitorKey)).size;
+  const publicPageViews = visibleEvents.filter((event) => event.eventType === "page_view").length;
+  const labEvents = visibleEvents.filter((event) => event.eventType === "lab_access" || event.eventType === "lab_login").length;
+  const topPaths = summarizePaths(visibleEvents);
 
   const loadRecentActivity = useCallback(() => {
     setLoading(true);
@@ -168,7 +173,7 @@ export default function LabActivityPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200">
-              {events.map((event) => (
+              {visibleEvents.map((event) => (
                 <tr key={event.id}>
                   <td className="whitespace-nowrap px-4 py-3 text-stone-500">
                     {new Date(event.createdAt).toLocaleString()}
@@ -181,21 +186,21 @@ export default function LabActivityPage() {
                   </td>
                 </tr>
               ))}
-              {events.length === 0 && loading && (
+              {visibleEvents.length === 0 && loading && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-stone-500">
                     Loading activity...
                   </td>
                 </tr>
               )}
-              {events.length === 0 && !loading && storeConfigured !== false && (
+              {visibleEvents.length === 0 && !loading && storeConfigured !== false && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-stone-500">
                     No activity recorded yet.
                   </td>
                 </tr>
               )}
-              {events.length === 0 && !loading && storeConfigured === false && (
+              {visibleEvents.length === 0 && !loading && storeConfigured === false && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-stone-500">
                     Activity storage is not configured.

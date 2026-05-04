@@ -30,6 +30,7 @@ export default function Analytics() {
 
   useEffect(() => {
     if (consent !== "accepted") return;
+    if (pathname === "/lab/activity") return;
 
     fetch("/api/activity/page-view", {
       method: "POST",
@@ -44,7 +45,7 @@ export default function Analytics() {
         },
       }),
     }).catch(() => {});
-  }, [consent, path]);
+  }, [consent, path, pathname]);
 
   function choose(next: Exclude<ConsentState, "unknown">) {
     window.localStorage.setItem(CONSENT_KEY, next);

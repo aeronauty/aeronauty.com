@@ -7,7 +7,7 @@ export default function LabAccessTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!pathname || pathname === "/lab/login") return;
+    if (!pathname || pathname === "/lab/login" || pathname === "/lab/activity") return;
 
     fetch("/api/activity/lab-access", {
       method: "POST",
