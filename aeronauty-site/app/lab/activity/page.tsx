@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type ActivityEvent = {
   id: string;
@@ -10,18 +10,57 @@ type ActivityEvent = {
   pageTitle: string | null;
   email: string | null;
   authMethod: string | null;
+  clientIpHash: string | null;
   country: string | null;
   region: string | null;
   city: string | null;
   createdAt: string;
 };
 
+type PathSummary = {
+  path: string;
+  views: number;
+  visitors: number;
+};
+
+function getVisitorKey(event: ActivityEvent): string {
+  return event.email ?? event.clientIpHash ?? event.id;
+}
+
+function summarizePaths(events: ActivityEvent[]): PathSummary[] {
+  const byPath = new Map<string, { views: number; visitors: Set<string> }>();
+
+  for (const event of events) {
+    const path = event.path ?? "(unknown)";
+    const summary = byPath.get(path) ?? { views: 0, visitors: new Set<string>() };
+    summary.views += 1;
+    summary.visitors.add(getVisitorKey(event));
+    byPath.set(path, summary);
+  }
+
+  return Array.from(byPath.entries())
+    .map(([path, summary]) => ({
+      path,
+      views: summary.views,
+      visitors: summary.visitors.size,
+    }))
+    .sort((a, b) => b.views - a.views || a.path.localeCompare(b.path))
+    .slice(0, 8);
+}
+
 export default function LabActivityPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [storeConfigured, setStoreConfigured] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/activity/recent?limit=200")
+  const visitorCount = new Set(events.map(getVisitorKey)).size;
+  const publicPageViews = events.filter((event) => event.eventType === "page_view").length;
+  const labEvents = events.filter((event) => event.eventType === "lab_access" || event.eventType === "lab_login").length;
+  const topPaths = summarizePaths(events);
+
+  const loadRecentActivity = useCallback(() => {
+    setLoading(true);
+    fetch("/api/activity/recent?limit=200", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : { events: [] }))
       .then((body) => {
         setEvents(body.events ?? []);
@@ -30,8 +69,18 @@ export default function LabActivityPage() {
       .catch(() => {
         setEvents([]);
         setStoreConfigured(null);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    loadRecentActivity();
+
+    window.addEventListener("aeronauty:lab-activity-recorded", loadRecentActivity);
+    return () => window.removeEventListener("aeronauty:lab-activity-recorded", loadRecentActivity);
+  }, [loadRecentActivity]);
 
   return (
     <main className="min-h-screen bg-[var(--paper)] text-stone-950">
@@ -48,6 +97,36 @@ export default function LabActivityPage() {
         <p className="eyebrow">Lab</p>
         <h1 className="mt-4 text-5xl font-semibold tracking-tight">Activity</h1>
         <p className="mt-4 text-stone-600">Recent first-party activity events.</p>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-md border border-stone-200 bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Recent visitors</p>
+            <p className="mt-3 text-4xl font-semibold">{loading ? "..." : visitorCount}</p>
+          </div>
+          <div className="rounded-md border border-stone-200 bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Public page views</p>
+            <p className="mt-3 text-4xl font-semibold">{loading ? "..." : publicPageViews}</p>
+          </div>
+          <div className="rounded-md border border-stone-200 bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Lab events</p>
+            <p className="mt-3 text-4xl font-semibold">{loading ? "..." : labEvents}</p>
+          </div>
+        </div>
+
+        {topPaths.length > 0 && (
+          <section className="mt-6 rounded-md border border-stone-200 bg-white p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Top paths</h2>
+            <div className="mt-4 divide-y divide-stone-200">
+              {topPaths.map((item) => (
+                <div key={item.path} className="grid gap-3 py-3 text-sm sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                  <span className="break-all font-medium text-stone-800">{item.path}</span>
+                  <span className="text-stone-500">{item.views} views</span>
+                  <span className="text-stone-500">{item.visitors} visitors</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {storeConfigured === false && (
           <div className="mt-8 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
@@ -84,14 +163,21 @@ export default function LabActivityPage() {
                   </td>
                 </tr>
               ))}
-              {events.length === 0 && storeConfigured !== false && (
+              {events.length === 0 && loading && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-stone-500">
+                    Loading activity...
+                  </td>
+                </tr>
+              )}
+              {events.length === 0 && !loading && storeConfigured !== false && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-stone-500">
                     No activity recorded yet.
                   </td>
                 </tr>
               )}
-              {events.length === 0 && storeConfigured === false && (
+              {events.length === 0 && !loading && storeConfigured === false && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-stone-500">
                     Activity storage is not configured.

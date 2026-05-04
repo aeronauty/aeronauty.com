@@ -20,7 +20,12 @@ export default function LabAccessTracker() {
           viewport: `${window.innerWidth}x${window.innerHeight}`,
         },
       }),
-    }).catch(() => {});
+    })
+      .then((response) => response.json().catch(() => ({})))
+      .then((detail) => {
+        window.dispatchEvent(new CustomEvent("aeronauty:lab-activity-recorded", { detail }));
+      })
+      .catch(() => {});
   }, [pathname]);
 
   return null;

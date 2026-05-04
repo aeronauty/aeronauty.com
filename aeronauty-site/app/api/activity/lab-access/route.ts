@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const user = await getKnownUser(req);
 
   if (!user.email) {
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, recorded: false, reason: "no-known-user" });
   }
 
   if (!hasActivityStore()) {
@@ -23,5 +23,5 @@ export async function POST(req: NextRequest) {
     console.debug("Activity logging failed:", error);
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, recorded: true });
 }
