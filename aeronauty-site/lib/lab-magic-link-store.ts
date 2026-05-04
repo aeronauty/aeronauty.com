@@ -1,4 +1,4 @@
-import { Redis } from "@upstash/redis";
+import { getRedisClient, hasRedisConfig } from "@/lib/redis-config";
 
 const MAGIC_LINK_TTL_SECONDS = 15 * 60;
 const MAGIC_LINK_MAX_CLICKS = 3;
@@ -13,23 +13,12 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function getRedis(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) return null;
-  return new Redis({ url, token });
-}
-
 export function hasMagicLinkStore(): boolean {
-  return Boolean(
-    (process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL) &&
-      (process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN)
-  );
+  return hasRedisConfig();
 }
 
 export async function storeMagicLink(id: string, email: string): Promise<void> {
-  const redis = getRedis();
+  const redis = getRedisClient();
   if (!redis) return;
 
   await redis.set(
@@ -44,7 +33,7 @@ export async function storeMagicLink(id: string, email: string): Promise<void> {
 }
 
 export async function consumeMagicLinkClick(id: string, email: string): Promise<boolean> {
-  const redis = getRedis();
+  const redis = getRedisClient();
   if (!redis) return true;
 
   const key = `lab:magic-link:${id}`;

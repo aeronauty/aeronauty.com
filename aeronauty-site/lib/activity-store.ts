@@ -1,7 +1,7 @@
 import crypto from "crypto";
-import { Redis } from "@upstash/redis";
 import { LAB_SESSION_COOKIE, verifyLabSessionToken } from "@/lib/lab-auth";
 import { auth } from "@/lib/auth";
+import { getRedisClient, hasRedisConfig } from "@/lib/redis-config";
 
 const ACTIVITY_KEY = "aeronauty:activity:v1";
 const MAX_ACTIVITY_EVENTS = 5000;
@@ -24,18 +24,8 @@ export type ActivityEvent = {
   createdAt: string;
 };
 
-function getRedis(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return null;
-  return new Redis({ url, token });
-}
-
 export function hasActivityStore(): boolean {
-  return Boolean(
-    (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) ||
-      (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
-  );
+  return hasRedisConfig();
 }
 
 function truncate(value: string | null, max: number): string | null {
@@ -95,7 +85,7 @@ export async function recordActivityEvent(
     metadata?: Record<string, unknown>;
   }
 ): Promise<void> {
-  const redis = getRedis();
+  const redis = getRedisClient();
   if (!redis) return;
 
   const user = await getKnownUser(req);
@@ -122,7 +112,7 @@ export async function recordActivityEvent(
 }
 
 export async function getRecentActivity(limit = 100): Promise<ActivityEvent[]> {
-  const redis = getRedis();
+  const redis = getRedisClient();
   if (!redis) return [];
 
   const safeLimit = Math.max(1, Math.min(limit, 500));

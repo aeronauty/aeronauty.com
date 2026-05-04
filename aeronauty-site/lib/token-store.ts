@@ -7,9 +7,10 @@
  *  2. Local JSON file — .data/google-tokens.json (dev only, survives hot reloads)
  */
 
-import { Redis } from "@upstash/redis";
+import type { Redis } from "@upstash/redis";
 import fs from "fs";
 import path from "path";
+import { getRedisClient, getRedisConfig } from "@/lib/redis-config";
 
 export interface GoogleTokens {
   email: string;
@@ -26,11 +27,9 @@ const LOCAL_FILE = path.join(process.cwd(), ".data", "google-tokens.json");
 // --- Storage backends ---
 
 function getRedis(): Redis | null {
-  // Try all known Upstash/Vercel env var naming conventions
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+  const config = getRedisConfig();
 
-  if (!url || !token) {
+  if (!config) {
     const relevant = Object.keys(process.env).filter(
       (k) => /redis|kv_|upstash/i.test(k)
     );
@@ -41,10 +40,9 @@ function getRedis(): Redis | null {
     return null;
   }
 
-  // KV_REST_API_URL is an HTTP REST URL (same format as UPSTASH_REDIS_REST_URL)
-  console.log("[token-store] Using Redis at:", url.substring(0, 30) + "...");
+  console.log("[token-store] Using Redis config:", config.source);
   try {
-    return new Redis({ url, token });
+    return getRedisClient();
   } catch (err) {
     console.error("[token-store] Redis init failed:", err);
     return null;
