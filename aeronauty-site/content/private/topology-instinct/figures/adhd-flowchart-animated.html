@@ -962,6 +962,18 @@
         scheduleNext();
       }
 
+      // External code (the article shell) can flip this to TRUE to
+      // disable the figure's internal auto-advance entirely — the
+      // article then drives goToStep() from prose-beat scroll triggers.
+      // Set BEFORE init() runs, or call disableAutoAdvance() afterwards.
+      let externalScrollDriver = (typeof window !== 'undefined' && window.AdhdFlowchartScrollDriver === true);
+
+      function disableAutoAdvance() {
+        externalScrollDriver = true;
+        clearAutoTimer();
+        if (HINT) HINT.textContent = 'scroll to advance';
+      }
+
       function init() {
         build();
 
@@ -974,15 +986,19 @@
           return;
         }
 
-        // Cold load: go to step 1 instantly, schedule the rest.
+        // Cold load: go to step 1 instantly. Auto-advance only if the
+        // article shell hasn't claimed scroll-control of this figure.
         goToStep(1, false);
-        scheduleNext();
-
-        // Hover-to-pause on the figure.
-        FIGURE.addEventListener('mouseenter', pause);
-        FIGURE.addEventListener('mouseleave', resume);
-        FIGURE.addEventListener('focusin', pause);
-        FIGURE.addEventListener('focusout', resume);
+        if (externalScrollDriver) {
+          if (HINT) HINT.textContent = 'scroll to advance';
+        } else {
+          scheduleNext();
+          // Hover-to-pause on the figure.
+          FIGURE.addEventListener('mouseenter', pause);
+          FIGURE.addEventListener('mouseleave', resume);
+          FIGURE.addEventListener('focusin', pause);
+          FIGURE.addEventListener('focusout', resume);
+        }
 
         // Click any step-bar segment to jump there.
         STEPBAR.addEventListener('click', e => {
@@ -993,7 +1009,10 @@
           isFinished = (n >= TOTAL_STEPS);
           // Animate forward, snap backward.
           goToStep(n, n > currentStep);
-          if (isFinished) {
+          if (externalScrollDriver) {
+            // Scroll-driven: do NOT reschedule.
+            clearAutoTimer();
+          } else if (isFinished) {
             if (HINT) HINT.textContent = 'click replay to run again';
             clearAutoTimer();
           } else {
@@ -1007,8 +1026,13 @@
         REPLAY.addEventListener('click', () => {
           isFinished = false;
           goToStep(1, false);
-          if (HINT) HINT.innerHTML = 'auto-advancing &middot; hover to pause';
-          if (!isPaused) scheduleNext();
+          if (externalScrollDriver) {
+            if (HINT) HINT.textContent = 'scroll to advance';
+            clearAutoTimer();
+          } else {
+            if (HINT) HINT.innerHTML = 'auto-advancing &middot; hover to pause';
+            if (!isPaused) scheduleNext();
+          }
         });
 
         // Theme change: rebuild geometry with new colours, restore state.
@@ -1030,7 +1054,7 @@
       }
       ready(init);
 
-      return { goToStep: goToStep };
+      return { goToStep: goToStep, disableAutoAdvance: disableAutoAdvance };
     })();
   </script>
 

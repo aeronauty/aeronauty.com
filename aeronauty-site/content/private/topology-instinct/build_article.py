@@ -385,6 +385,10 @@ def what_changed_assets() -> tuple[str, str, str]:
         'url("short-period-design-review-slide.png")',
         'url("figures/short-period-design-review-slide.png")',
     )
+    structure = structure.replace(
+        'src="old-timey-photographer-deck.png"',
+        'src="figures/old-timey-photographer-deck.png"',
+    )
     return css, iife, structure
 
 
@@ -823,10 +827,10 @@ def substitute_cartoon_normal_things(html: str) -> str:
     block = (
         '<figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-cartoon-normal-figcap">\n'
         '  <img src="figures/cartoon-normal-things.png" '
-        'alt="Two friends in casual conversation over coffee, while a phone on the table shows AI work happening separately" '
+        'alt="A cartoon of Harry by an alpine river with his small son sitting on his shoulders, both smiling. Mountains in the distance. A phone clipped to his belt shows a charge indicator at the end of the day." '
         'loading="lazy" />\n'
         '  <figcaption id="ti-cartoon-normal-figcap" class="ti-figcap">'
-        "Talking to humans about human things while the swarm works on the rest. The cyan accent is on the phone screen for a reason."
+        "Present with people. Phone with charge at the end of the day &mdash; hitherto unknown. The cyan accent is on the battery indicator for a reason."
         "</figcaption>\n"
         "</figure>"
     )
@@ -2760,11 +2764,13 @@ FLOWCHART_SCROLLY_JS = r"""
     setTimeout(() => whenReady(cb, (tries || 0) + 1), 60);
   }
 
-  // Disable the figure's hover-pause + auto-advance by clobbering its
-  // internal scheduler. The IIFE doesn't expose stop(), so the cheapest
-  // intervention is to clear the dwell timer by re-calling goToStep on
-  // every tick (no-op visually) and override the hint copy.
+  // The figure now exposes disableAutoAdvance() — call it the moment
+  // the API is ready so the internal timer is killed before the
+  // article scroll-driver takes over.
   whenReady(api => {
+    if (typeof api.disableAutoAdvance === 'function') {
+      api.disableAutoAdvance();
+    }
     const HINT = wrap.querySelector('#af-hint');
     if (HINT) HINT.textContent = 'scroll to advance';
 

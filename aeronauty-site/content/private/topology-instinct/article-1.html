@@ -4467,48 +4467,12 @@ main { max-width: 1280px; margin: 0 auto; }
   justify-items: center;
 }
 
-.wc-photo svg {
-  width: min(310px, 100%);
+.wc-photo-img {
+  display: block;
+  width: min(320px, 100%);
   height: auto;
-  filter: drop-shadow(0 16px 26px rgba(15,23,42,0.22));
-}
-
-.wc-photo-card {
-  position: absolute;
-  left: 9%;
-  right: 9%;
-  bottom: 7%;
-  transform: rotate(-3deg);
-  padding: 14px 15px;
-  border: 1px solid #b08968;
-  border-radius: 3px;
-  background:
-    radial-gradient(circle at 20% 12%, rgba(255,255,255,0.45), transparent 22%),
-    #f5e6c8;
-  color: #5c3b19;
-  font-family: Georgia, "Times New Roman", serif;
-  box-shadow:
-    0 18px 34px rgba(92,59,25,0.18),
-    inset 0 0 0 1px rgba(255,255,255,0.28);
-}
-
-.wc-photo-card strong {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 16px;
-}
-
-.wc-photo-card span {
-  display: block;
-  font-size: 13px;
-  line-height: 1.38;
-}
-
-.wc-photo .wc-bellows-fold {
-  fill: none;
-  stroke: #8b5e34;
-  stroke-width: 2.2;
-  opacity: 0.72;
+  border-radius: 12px;
+  filter: drop-shadow(0 18px 34px rgba(15,23,42,0.20));
 }
 
 .wc-caption {
@@ -4589,14 +4553,14 @@ main { max-width: 1280px; margin: 0 auto; }
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
     <path class="ti-map-edge" d="M31,90 Q70.8,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q63.8,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q46.599999999999994,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q70.8,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q58.8,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q49.4,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q66.6,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q55.0,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q72.2,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,210 Q60.199999999999996,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q50.8,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
     <path class="ti-map-edge" d="M31,270 Q62.99999999999999,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q70.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q72.2,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,30 Q72.2,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q63.8,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -5539,32 +5503,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
                 </div>
               </div>
               <div class="wc-photo" aria-hidden="true">
-                <svg viewBox="0 0 300 380">
-                  <ellipse cx="143" cy="332" rx="92" ry="13" fill="rgba(92,59,25,0.18)"/>
-                  <path d="M96 191 L55 335 M151 193 L147 338 M206 191 L249 335" stroke="#3f2d1f" stroke-width="8" stroke-linecap="round"/>
-                  <path d="M72 260 L226 260" stroke="#3f2d1f" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
-                  <rect x="69" y="118" width="80" height="68" rx="6" fill="#2f2418"/>
-                  <path d="M146 124 L198 104 L198 202 L146 182 Z" fill="#c49a6c" stroke="#6b4423" stroke-width="4"/>
-                  <path class="wc-bellows-fold" d="M156 121 L156 186 M167 117 L167 190 M178 113 L178 194 M189 109 L189 198"/>
-                  <rect x="194" y="96" width="56" height="112" rx="7" fill="#3b2818" stroke="#1f140c" stroke-width="4"/>
-                  <rect x="205" y="115" width="34" height="70" rx="4" fill="#111827"/>
-                  <circle cx="222" cy="150" r="24" fill="#374151"/>
-                  <circle cx="222" cy="150" r="13" fill="#020617"/>
-                  <rect x="91" y="98" width="39" height="22" rx="4" fill="#4b321f"/>
-                  <path d="M43 142 C63 118 95 109 122 117" fill="none" stroke="#2f2418" stroke-width="11" stroke-linecap="round"/>
-                  <circle cx="63" cy="93" r="21" fill="#e7c7a1"/>
-                  <path d="M36 89 C44 56 84 54 96 87 C76 80 57 82 36 89Z" fill="#2f2418"/>
-                  <path d="M42 115 C57 127 76 127 91 115 L98 183 L35 183 Z" fill="#334155"/>
-                  <path d="M43 132 L76 151" stroke="#e7c7a1" stroke-width="10" stroke-linecap="round"/>
-                  <path d="M91 132 L118 123" stroke="#e7c7a1" stroke-width="10" stroke-linecap="round"/>
-                  <path d="M31 181 L107 181 L96 258 L43 258 Z" fill="#1f2937"/>
-                  <path d="M47 258 L40 330 M86 258 L96 330" stroke="#1f2937" stroke-width="13" stroke-linecap="round"/>
-                  <path d="M36 178 C58 166 84 166 107 178 L100 207 C75 199 56 199 31 207 Z" fill="#111827" opacity="0.82"/>
-                </svg>
-                <div class="wc-photo-card">
-                  <strong>The deck is a photograph.</strong>
-                  <span>It captured something true at the moment of exposure. It cannot notice what changed afterwards.</span>
-                </div>
+                <img class="wc-photo-img" src="figures/old-timey-photographer-deck.png" alt="" loading="lazy" />
               </div>
             </div>
             <p class="wc-caption"><strong>Without Thread:</strong> the artefact sits in the deck. The stale conclusion remains dressed like evidence.</p>
@@ -8419,11 +8358,13 @@ window.PlotlyVsPP = (function () {
     setTimeout(() => whenReady(cb, (tries || 0) + 1), 60);
   }
 
-  // Disable the figure's hover-pause + auto-advance by clobbering its
-  // internal scheduler. The IIFE doesn't expose stop(), so the cheapest
-  // intervention is to clear the dwell timer by re-calling goToStep on
-  // every tick (no-op visually) and override the hint copy.
+  // The figure now exposes disableAutoAdvance() — call it the moment
+  // the API is ready so the internal timer is killed before the
+  // article scroll-driver takes over.
   whenReady(api => {
+    if (typeof api.disableAutoAdvance === 'function') {
+      api.disableAutoAdvance();
+    }
     const HINT = wrap.querySelector('#af-hint');
     if (HINT) HINT.textContent = 'scroll to advance';
 
