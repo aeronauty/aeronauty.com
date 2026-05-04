@@ -1038,11 +1038,84 @@ def substitute_cartoon_storage_migrations(html: str) -> str:
     )
 
 
+def substitute_data_drift_video(html: str) -> str:
+    """Replace `[VIDEO: data-drift]` with a fullbleed 100vh video figure.
+
+    The video is a 15s short film: a CFD value (Cl = 0.413) is copied
+    out into four downstream containers, the source ticks on, and the
+    copies stay frozen. The visual gap between the live source and the
+    frozen copies is the cost of every handoff.
+
+    Reuses `.ti-figure-fullbleed` (the same breakout class used by
+    paradigm-globe-pan, plotly-vs-powerpoint-morph, connections-by-hand).
+    A small JS hook (DATA_DRIFT_JS) restarts the video from
+    currentTime=0 each time the figure enters the viewport.
+    """
+    fig_id = "ti-data-drift-figcap"
+    alt = (
+        "A 15-second short film: a CFD lift-coefficient value Cl = "
+        "0.413 is copied into a spreadsheet cell, a slide PNG, an "
+        "email quote, and a Teams chat. The four copies freeze at "
+        "0.413 while the live source ticks on to 0.421, 0.428, and "
+        "0.435. The final composition is a row of frozen 0.413 cards "
+        "behind a single live 0.435 card — the visual gap is the cost."
+    )
+    caption = (
+        "Each handoff freezes a moment. Then the moment moves on."
+    )
+    mp4_path = ROOT / "figures" / "data-drift.mp4"
+    poster_name = "data-drift/05-final-row.png"
+    poster_path = ROOT / "figures" / poster_name
+
+    if mp4_path.exists():
+        poster_attr = (
+            f' poster="figures/{poster_name}"'
+            if poster_path.exists() else ""
+        )
+        block = (
+            f'<figure class="ti-figure ti-figure-video ti-figure-fullbleed ti-data-drift" '
+            f'aria-labelledby="{fig_id}" data-ti-restart-on-view="1">\n'
+            f'  <div class="ti-video-wrap">\n'
+            f'    <video src="figures/data-drift.mp4" '
+            f'autoplay muted loop playsinline preload="metadata"'
+            f'{poster_attr} '
+            f'aria-label="{alt}"></video>\n'
+            f'  </div>\n'
+            f'  <figcaption id="{fig_id}" class="ti-figcap">{caption}</figcaption>\n'
+            f'</figure>'
+        )
+    elif poster_path.exists():
+        block = (
+            f'<figure class="ti-figure ti-figure-cartoon ti-figure-fullbleed ti-data-drift" '
+            f'aria-labelledby="{fig_id}">\n'
+            f'  <img src="figures/{poster_name}" alt="{alt}" loading="lazy" />\n'
+            f'  <figcaption id="{fig_id}" class="ti-figcap">{caption}</figcaption>\n'
+            f'</figure>'
+        )
+    else:
+        block = (
+            f'<figure class="ti-figure ti-figure-video-pending ti-figure-fullbleed ti-data-drift" '
+            f'aria-labelledby="{fig_id}">\n'
+            f'  <div class="ti-video-pending-box" role="img" aria-label="{alt}">\n'
+            f'    <span class="ti-video-pending-label">Video pending &middot; data-drift</span>\n'
+            f'  </div>\n'
+            f'  <figcaption id="{fig_id}" class="ti-figcap">{caption}</figcaption>\n'
+            f'</figure>'
+        )
+
+    return re.sub(
+        r"<p>\[VIDEO:\s*data-drift\]</p>",
+        block,
+        html,
+        count=1,
+    )
+
+
 def substitute_jeppesen_award_cartoon(html: str) -> str:
     block = (
         '<figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-jeppesen-award-figcap">\n'
         '  <img src="figures/jeppesen-no-bull-award-cartoon.png" '
-        'alt="Editorial cartoon of two workshop attendees shaking hands while one presents a blue No-Bull Prize package at a Jeppesen Crew and Fleet Optimisation Workshop" '
+        'alt="Editorial cartoon of Harry shaking hands with a judge while receiving a blue No-Bull Prize package at a Jeppesen Crew and Fleet Optimisation Workshop" '
         'loading="lazy" />\n'
         '  <figcaption id="ti-jeppesen-award-figcap" class="ti-figcap">'
         "The No-Bull Prize: funny name, real signal. The work made economic sense to the people who understood the network."
@@ -1374,6 +1447,7 @@ ARTICLE_CSS = r"""
     font-family: var(--ti-font-sans);
     margin: 0;
     padding: 0;
+    overflow-x: clip;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -1398,13 +1472,23 @@ ARTICLE_CSS = r"""
   }
 
   /* ---- structural ---- */
-  .ti-page { padding: 28px 20px 96px; }
+  .ti-page { padding: 0 0 96px; }
   /* On phones, ease the side padding so prose has comfortable room
      (16 px each side at iPhone 13 Pro / 390 px viewport). */
   @media (max-width: 480px) {
-    .ti-page { padding: 20px 16px 72px; }
+    .ti-page { padding: 0 0 72px; }
   }
   .ti-narrow { max-width: var(--ti-content-w); margin: 0 auto; }
+  .ti-prose.ti-narrow,
+  .ti-foot.ti-narrow {
+    width: min(var(--ti-content-w), calc(100vw - 40px));
+  }
+  @media (max-width: 480px) {
+    .ti-prose.ti-narrow,
+    .ti-foot.ti-narrow {
+      width: calc(100vw - 32px);
+    }
+  }
   /* Cinematic figures break out wider than the prose column on desktop.
      The interactive demos (table, plot, scrolly) want room to breathe;
      the prose around them stays at reading width. */
@@ -1426,6 +1510,13 @@ ARTICLE_CSS = r"""
     width: min(1180px, calc(100vw - 40px));
     max-width: none;
     margin: 64px 0;
+    transform: translateX(-50%);
+  }
+  .ti-prose .ti-data-black-market {
+    position: relative;
+    width: min(1360px, calc(100vw - 40px));
+    max-width: none;
+    margin: 80px 0 80px 50%;
     transform: translateX(-50%);
   }
   .ti-prose .ti-what-changed .wc-scroll {
@@ -1473,11 +1564,17 @@ ARTICLE_CSS = r"""
 
   /* ---- masthead ---- */
   .ti-mast {
+    position: absolute;
+    top: 28px;
+    left: 50%;
+    z-index: 5;
+    width: min(var(--ti-content-w), calc(100vw - 40px));
+    transform: translateX(-50%);
     border-bottom: 1px solid var(--ti-rule);
     padding-bottom: 12px;
-    margin-bottom: 56px;
+    margin-bottom: 0;
     font-size: 13px;
-    color: var(--ti-fg-dim);
+    color: rgba(226,232,240,0.76);
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -1491,21 +1588,22 @@ ARTICLE_CSS = r"""
 
   /* ---- hero ---- */
   .ti-hero {
-    margin: 24px 0 80px;
+    margin: 0 0 80px;
   }
   .ti-hero-cinematic {
     position: relative;
-    width: calc(100vw - 40px);
-    max-width: 1440px;
-    min-height: min(820px, calc(100vh - 116px));
-    margin: 0 auto 88px;
+    width: 100vw;
+    max-width: none;
+    min-height: 100vh;
+    min-height: 100svh;
+    margin: 0 calc(50% - 50vw) 88px;
     display: grid;
     align-items: end;
     overflow: hidden;
-    border-radius: 18px;
+    border-radius: 0;
     background: #050914;
     isolation: isolate;
-    box-shadow: 0 28px 80px rgba(0,0,0,0.26);
+    box-shadow: none;
   }
   .ti-hero-media,
   .ti-hero-media video,
@@ -1617,10 +1715,15 @@ ARTICLE_CSS = r"""
     line-height: 1.55;
   }
   @media (max-width: 720px) {
+    .ti-mast {
+      top: 18px;
+      width: calc(100vw - 32px);
+    }
     .ti-hero-cinematic {
-      width: calc(100vw - 20px);
-      min-height: 76vh;
-      border-radius: 14px;
+      width: 100vw;
+      min-height: 100vh;
+      min-height: 100svh;
+      border-radius: 0;
       margin-bottom: 56px;
     }
     .ti-hero-copy {
@@ -2235,6 +2338,15 @@ ARTICLE_CSS = r"""
     opacity: 0.72;
     transform: translateY(-10px) scale(0.996);
   }
+  html.ti-js .ti-data-black-market.ti-reveal {
+    transform: translateX(-50%) translateY(28px) scale(0.992);
+  }
+  html.ti-js .ti-data-black-market.ti-reveal.ti-inview {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
+    transform: translateX(-50%) translateY(-10px) scale(0.996);
+  }
   html.ti-js .ti-figure-fullbleed.ti-reveal {
     transform: translateX(-50%) translateY(28px) scale(0.992);
   }
@@ -2431,6 +2543,15 @@ ARTICLE_CSS = r"""
       transform: translateY(0) scale(1);
     }
     html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+      transform: translateY(-8px) scale(0.996);
+    }
+    html.ti-js .ti-data-black-market.ti-reveal {
+      transform: translateY(24px) scale(0.992);
+    }
+    html.ti-js .ti-data-black-market.ti-reveal.ti-inview {
+      transform: translateY(0) scale(1);
+    }
+    html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
       transform: translateY(-8px) scale(0.996);
     }
     .ti-figure-fullbleed .ti-video-wrap,
@@ -2732,6 +2853,14 @@ ARTICLE_CSS = r"""
       opacity: 1;
       transform: translateY(0);
     }
+    .ti-section-pin[data-intro="true"] {
+      color: #1f2329;
+      border-left-color: color-mix(in srgb, var(--ti-accent) 72%, transparent);
+      text-shadow: none;
+    }
+    .ti-section-pin[data-intro="true"] .ti-section-pin-stand {
+      color: #5f6b7a;
+    }
     .ti-section-pin-numeral {
       display: block;
       margin: 0 0 8px;
@@ -2822,21 +2951,18 @@ ARTICLE_CSS = r"""
       font-size 760ms cubic-bezier(0.62, 0, 0.24, 1),
       font-weight 760ms cubic-bezier(0.62, 0, 0.24, 1);
   }
-  .ti-section-morph-word-source,
-  .ti-section-morph-word-target {
-    display: inline-block;
-    transition: opacity 380ms ease;
-  }
-  .ti-section-morph-word-target {
-    position: absolute;
-    inset: 0 auto auto 0;
-    opacity: 0;
-  }
-  .ti-section-morph-word[data-state="settling"] .ti-section-morph-word-source {
-    opacity: 0;
-  }
-  .ti-section-morph-word[data-state="settling"] .ti-section-morph-word-target {
-    opacity: 1;
+  @media (min-width: 1180px) {
+    .ti-prose .ti-section[data-pin-source="true"] .ti-section-numeral,
+    .ti-prose .ti-section[data-pin-source="true"] .ti-section-h2,
+    .ti-prose .ti-section[data-pin-source="true"] .ti-section-stand,
+    .ti-prose .ti-section[data-pin-source="true"] .ti-thread-logo {
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+    .ti-hero[data-pin-source="true"] .ti-hero-copy {
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
   }
   /* While a morph is in flight, mask the pin's snap-update by hiding
      its contents — the word layer is the visible thing during the flight. */
@@ -3459,10 +3585,14 @@ SECTION_FLIP_JS = r"""
   const pin = document.querySelector('.ti-section-pin');
   if (!sections.length || !pin) return;
 
+  const hero = document.querySelector('.ti-hero');
+  const heroTitle = document.querySelector('#ti-title');
+  const heroKicker = document.querySelector('.ti-hero-kicker');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wideMQ = window.matchMedia('(min-width: 1180px)');
 
   let pinnedSection = null;
+  let introPinned = false;
   let lastClone = null;
 
   function isWide() { return wideMQ.matches; }
@@ -3496,16 +3626,36 @@ SECTION_FLIP_JS = r"""
     return { top, left, width: right - left, height: bottom - top };
   }
 
-  function applyPinContent(section) {
+  function introInfo() {
+    return {
+      numeral: '00',
+      title: heroTitle ? heroTitle.textContent || "I Don't Like Data Entry" : "I Don't Like Data Entry",
+      stand: heroKicker ? heroKicker.textContent || '' : '',
+    };
+  }
+
+  function heroParts() {
+    return { numeral: null, h2: heroTitle, stand: heroKicker };
+  }
+
+  function applyPinInfo(info) {
     const numeralEl = pin.querySelector('.ti-section-pin-numeral');
     const titleEl   = pin.querySelector('.ti-section-pin-title');
     const standEl   = pin.querySelector('.ti-section-pin-stand');
+    if (numeralEl) numeralEl.textContent = info.numeral || '';
+    if (titleEl)   titleEl.textContent   = info.title || '';
+    if (standEl)   standEl.textContent   = info.stand || '';
+  }
+
+  function applyPinContent(section) {
     const num   = section.querySelector('.ti-section-numeral');
     const h2    = section.querySelector('.ti-section-h2');
     const stand = section.querySelector('.ti-section-stand');
-    if (numeralEl) numeralEl.textContent = num   ? num.textContent   : '';
-    if (titleEl)   titleEl.textContent   = h2    ? h2.textContent    : '';
-    if (standEl)   standEl.textContent   = stand ? stand.textContent : '';
+    applyPinInfo({
+      numeral: num ? num.textContent : '',
+      title: h2 ? h2.textContent : '',
+      stand: stand ? stand.textContent : '',
+    });
   }
 
   function measuredWords(el, group) {
@@ -3584,21 +3734,24 @@ SECTION_FLIP_JS = r"""
     return pairs.filter(pair => pair.source && pair.target);
   }
 
-  function buildWordLayer(parts) {
-    const pinParts = {
+  function pinParts() {
+    return {
       numeral: pin.querySelector('.ti-section-pin-numeral'),
       h2: pin.querySelector('.ti-section-pin-title'),
       stand: pin.querySelector('.ti-section-pin-stand'),
     };
+  }
+
+  function buildWordLayer(sourceParts, targetParts) {
     const sourceWords = [
-      ...measuredWords(parts.numeral, 'numeral'),
-      ...measuredWords(parts.h2, 'title'),
-      ...measuredWords(parts.stand, 'stand'),
+      ...measuredWords(sourceParts.numeral, 'numeral'),
+      ...measuredWords(sourceParts.h2, 'title'),
+      ...measuredWords(sourceParts.stand, 'stand'),
     ];
     const targetWords = [
-      ...measuredWords(pinParts.numeral, 'numeral'),
-      ...measuredWords(pinParts.h2, 'title'),
-      ...measuredWords(pinParts.stand, 'stand'),
+      ...measuredWords(targetParts.numeral, 'numeral'),
+      ...measuredWords(targetParts.h2, 'title'),
+      ...measuredWords(targetParts.stand, 'stand'),
     ];
     const pairs = pairWords(sourceWords, targetWords);
     if (!pairs.length) return null;
@@ -3609,8 +3762,6 @@ SECTION_FLIP_JS = r"""
       const source = pair.source;
       const target = pair.target;
       const word = document.createElement('span');
-      const sourceSpan = document.createElement('span');
-      const targetSpan = document.createElement('span');
       const dx = target.left - source.left;
       const dy = target.top - source.top;
 
@@ -3630,42 +3781,26 @@ SECTION_FLIP_JS = r"""
       word.dataset.targetFontSize = target.fontSize;
       word.dataset.targetFontWeight = target.fontWeight;
       word.dataset.targetColor = target.color;
+      word.dataset.targetText = target.text;
+      word.textContent = source.text;
 
-      sourceSpan.className = 'ti-section-morph-word-source';
-      sourceSpan.textContent = source.text;
-      targetSpan.className = 'ti-section-morph-word-target';
-      targetSpan.textContent = target.text;
-      word.appendChild(sourceSpan);
-      word.appendChild(targetSpan);
       layer.appendChild(word);
     });
     return layer;
   }
 
-  function morph(section) {
-    if (!isWide()) {
-      applyPinContent(section);
-      return;
-    }
-    const parts = pickSourceParts(section);
-    if (!parts) return; // Agent B's logo section: gracefully no-op.
-
-    pin.removeAttribute('data-flipping');
-    applyPinContent(section);
-    pin.dataset.visible = 'true';
-    const targetRect = pin.getBoundingClientRect();
-    if (targetRect.width === 0) return;
-
+  function animateWords(sourceParts, targetParts, finishMode, afterFinish) {
     if (reduceMotion) {
-      pin.dataset.visible = 'true';
+      if (afterFinish) afterFinish();
       return;
     }
 
     pin.dataset.flipping = 'true';
 
-    const clone = buildWordLayer(parts);
+    const clone = buildWordLayer(sourceParts, targetParts);
     if (!clone) {
       pin.removeAttribute('data-flipping');
+      if (afterFinish) afterFinish();
       return;
     }
     document.body.appendChild(clone);
@@ -3683,6 +3818,9 @@ SECTION_FLIP_JS = r"""
         word.style.fontSize = word.dataset.targetFontSize || word.style.fontSize;
         word.style.fontWeight = word.dataset.targetFontWeight || word.style.fontWeight;
         word.style.color = word.dataset.targetColor || word.style.color;
+        setTimeout(() => {
+          word.textContent = word.dataset.targetText || word.textContent;
+        }, 320);
       });
     });
 
@@ -3691,9 +3829,11 @@ SECTION_FLIP_JS = r"""
       if (done) return;
       done = true;
       pin.removeAttribute('data-flipping');
-      pin.dataset.visible = 'true';
+      if (finishMode === 'show-pin') pin.dataset.visible = 'true';
+      if (finishMode === 'hide-pin') pin.dataset.visible = 'false';
       if (clone.parentNode) clone.parentNode.removeChild(clone);
       if (lastClone === clone) lastClone = null;
+      if (afterFinish) afterFinish();
     };
     clone.addEventListener('transitionend', e => {
       if (e.target && e.target.classList && e.target.classList.contains('ti-section-morph-word')) {
@@ -3703,18 +3843,95 @@ SECTION_FLIP_JS = r"""
     setTimeout(finish, 1100);
   }
 
+  function morph(section) {
+    if (!isWide()) {
+      applyPinContent(section);
+      return;
+    }
+    const parts = pickSourceParts(section);
+    if (!parts) return; // Agent B's logo section: gracefully no-op.
+
+    pin.removeAttribute('data-flipping');
+    pin.removeAttribute('data-intro');
+    applyPinContent(section);
+    pin.dataset.visible = 'true';
+    const targetRect = pin.getBoundingClientRect();
+    if (targetRect.width === 0) return;
+
+    animateWords(parts, pinParts(), 'show-pin');
+  }
+
+  function morphBackToSection(section, afterFinish) {
+    if (!isWide()) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+    const targetParts = pickSourceParts(section);
+    if (!targetParts) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+    animateWords(pinParts(), targetParts, 'hide-pin', afterFinish);
+  }
+
+  function showIntroPin() {
+    applyPinInfo(introInfo());
+    pin.removeAttribute('data-flipping');
+    pin.dataset.intro = 'true';
+    pin.dataset.visible = isWide() ? 'true' : 'false';
+    introPinned = isWide();
+  }
+
+  function morphIntroToPin() {
+    if (!isWide() || introPinned || pinnedSection) return;
+    applyPinInfo(introInfo());
+    pin.dataset.intro = 'true';
+    pin.dataset.visible = 'true';
+    if (hero) hero.dataset.pinSource = 'true';
+    introPinned = true;
+    animateWords(heroParts(), pinParts(), 'show-pin');
+  }
+
+  function morphIntroBackToHero() {
+    if (!isWide() || !introPinned || pinnedSection) return;
+    if (hero) hero.dataset.pinSource = 'true';
+    animateWords(pinParts(), heroParts(), 'hide-pin', () => {
+      if (hero) hero.removeAttribute('data-pin-source');
+      pin.removeAttribute('data-intro');
+      introPinned = false;
+    });
+  }
+
+  function updateIntroFromScroll() {
+    if (pinnedSection) return;
+    if ((window.scrollY || document.documentElement.scrollTop || 0) > 8) {
+      morphIntroToPin();
+    } else {
+      morphIntroBackToHero();
+    }
+  }
+
   function setPinnedSection(section) {
     if (section === pinnedSection) return;
+    const previous = pinnedSection;
     pinnedSection = section;
     if (!section) {
-      pin.removeAttribute('data-flipping');
-      pin.dataset.visible = 'false';
-      if (lastClone && lastClone.parentNode) {
-        lastClone.parentNode.removeChild(lastClone);
-        lastClone = null;
+      if (previous) {
+        morphBackToSection(previous, () => {
+          previous.removeAttribute('data-pin-source');
+          showIntroPin();
+          updateIntroFromScroll();
+        });
+      } else {
+        updateIntroFromScroll();
       }
       return;
     }
+    if (previous && previous !== section) previous.removeAttribute('data-pin-source');
+    if (hero) hero.removeAttribute('data-pin-source');
+    introPinned = false;
+    pin.removeAttribute('data-intro');
+    section.dataset.pinSource = 'true';
     morph(section);
   }
 
@@ -3743,19 +3960,38 @@ SECTION_FLIP_JS = r"""
   window.addEventListener('resize', () => {
     const next = currentPinnedFromScroll();
     if (next === pinnedSection) return;
+    if (pinnedSection) pinnedSection.removeAttribute('data-pin-source');
     pinnedSection = next;
-    if (next) applyPinContent(next);
-    pin.dataset.visible = (isWide() && next) ? 'true' : 'false';
+    if (next) {
+      next.dataset.pinSource = 'true';
+      applyPinContent(next);
+    }
+    if (next) {
+      introPinned = false;
+      pin.dataset.visible = isWide() ? 'true' : 'false';
+    } else {
+      pin.dataset.visible = 'false';
+      introPinned = false;
+      if (hero) hero.removeAttribute('data-pin-source');
+      updateIntroFromScroll();
+    }
   });
 
   // First paint: if the user lands mid-article, settle the pin without
-  // animating.
+  // animating; otherwise leave the hero title as the opening rail source.
   const initial = currentPinnedFromScroll();
   if (initial) {
     pinnedSection = initial;
+    initial.dataset.pinSource = 'true';
     applyPinContent(initial);
     if (isWide()) pin.dataset.visible = 'true';
+  } else {
+    pin.dataset.visible = 'false';
+    pin.removeAttribute('data-intro');
+    updateIntroFromScroll();
   }
+
+  window.addEventListener('scroll', updateIntroFromScroll, { passive: true });
 })();
 """
 
@@ -3955,6 +4191,52 @@ PROGRESS_JS = r"""
     window.addEventListener('scroll', updateEpiquotes, { passive: true });
     window.addEventListener('resize', updateEpiquotes);
     updateEpiquotes();
+  }
+})();
+
+// ---------------------------------------------------------------------------
+// Data-drift: restart the fullbleed video from currentTime=0 each time the
+// figure scrolls back into view, so the 15-second beat-by-beat film plays
+// from the top — not wherever the loop happened to be when the reader
+// arrived. Uses an IntersectionObserver with a moderate threshold so we
+// don't fire while the video is only just peeking onto screen.
+// ---------------------------------------------------------------------------
+(function () {
+  if (!('IntersectionObserver' in window)) return;
+
+  function init() {
+    const figs = document.querySelectorAll('figure[data-ti-restart-on-view] video');
+    if (!figs.length) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const inView = new WeakSet();
+
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const v = entry.target;
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          if (inView.has(v)) return;
+          inView.add(v);
+          try {
+            v.currentTime = 0;
+            if (!reduce) {
+              const p = v.play();
+              if (p && typeof p.catch === 'function') p.catch(() => {});
+            }
+          } catch (e) { /* ignore */ }
+        } else if (entry.intersectionRatio < 0.05) {
+          inView.delete(v);
+        }
+      });
+    }, { threshold: [0, 0.05, 0.5, 0.8] });
+
+    figs.forEach(v => io.observe(v));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
 
@@ -4381,6 +4663,7 @@ def main() -> None:
     prose_html = substitute_cartoon_ip_printer(prose_html)
     prose_html = substitute_cartoon_orchestrator(prose_html)
     prose_html = substitute_cartoon_storage_migrations(prose_html)
+    prose_html = substitute_data_drift_video(prose_html)
     prose_html = substitute_jeppesen_award_cartoon(prose_html)
     prose_html = substitute_harry_plot_video(prose_html)
     if needs["milp"]:

@@ -79,6 +79,7 @@
     font-family: var(--ti-font-sans);
     margin: 0;
     padding: 0;
+    overflow-x: clip;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -103,13 +104,23 @@
   }
 
   /* ---- structural ---- */
-  .ti-page { padding: 28px 20px 96px; }
+  .ti-page { padding: 0 0 96px; }
   /* On phones, ease the side padding so prose has comfortable room
      (16 px each side at iPhone 13 Pro / 390 px viewport). */
   @media (max-width: 480px) {
-    .ti-page { padding: 20px 16px 72px; }
+    .ti-page { padding: 0 0 72px; }
   }
   .ti-narrow { max-width: var(--ti-content-w); margin: 0 auto; }
+  .ti-prose.ti-narrow,
+  .ti-foot.ti-narrow {
+    width: min(var(--ti-content-w), calc(100vw - 40px));
+  }
+  @media (max-width: 480px) {
+    .ti-prose.ti-narrow,
+    .ti-foot.ti-narrow {
+      width: calc(100vw - 32px);
+    }
+  }
   /* Cinematic figures break out wider than the prose column on desktop.
      The interactive demos (table, plot, scrolly) want room to breathe;
      the prose around them stays at reading width. */
@@ -131,6 +142,13 @@
     width: min(1180px, calc(100vw - 40px));
     max-width: none;
     margin: 64px 0;
+    transform: translateX(-50%);
+  }
+  .ti-prose .ti-data-black-market {
+    position: relative;
+    width: min(1360px, calc(100vw - 40px));
+    max-width: none;
+    margin: 80px 0 80px 50%;
     transform: translateX(-50%);
   }
   .ti-prose .ti-what-changed .wc-scroll {
@@ -178,11 +196,17 @@
 
   /* ---- masthead ---- */
   .ti-mast {
+    position: absolute;
+    top: 28px;
+    left: 50%;
+    z-index: 5;
+    width: min(var(--ti-content-w), calc(100vw - 40px));
+    transform: translateX(-50%);
     border-bottom: 1px solid var(--ti-rule);
     padding-bottom: 12px;
-    margin-bottom: 56px;
+    margin-bottom: 0;
     font-size: 13px;
-    color: var(--ti-fg-dim);
+    color: rgba(226,232,240,0.76);
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -196,21 +220,22 @@
 
   /* ---- hero ---- */
   .ti-hero {
-    margin: 24px 0 80px;
+    margin: 0 0 80px;
   }
   .ti-hero-cinematic {
     position: relative;
-    width: calc(100vw - 40px);
-    max-width: 1440px;
-    min-height: min(820px, calc(100vh - 116px));
-    margin: 0 auto 88px;
+    width: 100vw;
+    max-width: none;
+    min-height: 100vh;
+    min-height: 100svh;
+    margin: 0 calc(50% - 50vw) 88px;
     display: grid;
     align-items: end;
     overflow: hidden;
-    border-radius: 18px;
+    border-radius: 0;
     background: #050914;
     isolation: isolate;
-    box-shadow: 0 28px 80px rgba(0,0,0,0.26);
+    box-shadow: none;
   }
   .ti-hero-media,
   .ti-hero-media video,
@@ -322,10 +347,15 @@
     line-height: 1.55;
   }
   @media (max-width: 720px) {
+    .ti-mast {
+      top: 18px;
+      width: calc(100vw - 32px);
+    }
     .ti-hero-cinematic {
-      width: calc(100vw - 20px);
-      min-height: 76vh;
-      border-radius: 14px;
+      width: 100vw;
+      min-height: 100vh;
+      min-height: 100svh;
+      border-radius: 0;
       margin-bottom: 56px;
     }
     .ti-hero-copy {
@@ -940,6 +970,15 @@
     opacity: 0.72;
     transform: translateY(-10px) scale(0.996);
   }
+  html.ti-js .ti-data-black-market.ti-reveal {
+    transform: translateX(-50%) translateY(28px) scale(0.992);
+  }
+  html.ti-js .ti-data-black-market.ti-reveal.ti-inview {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
+    transform: translateX(-50%) translateY(-10px) scale(0.996);
+  }
   html.ti-js .ti-figure-fullbleed.ti-reveal {
     transform: translateX(-50%) translateY(28px) scale(0.992);
   }
@@ -1136,6 +1175,15 @@
       transform: translateY(0) scale(1);
     }
     html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+      transform: translateY(-8px) scale(0.996);
+    }
+    html.ti-js .ti-data-black-market.ti-reveal {
+      transform: translateY(24px) scale(0.992);
+    }
+    html.ti-js .ti-data-black-market.ti-reveal.ti-inview {
+      transform: translateY(0) scale(1);
+    }
+    html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
       transform: translateY(-8px) scale(0.996);
     }
     .ti-figure-fullbleed .ti-video-wrap,
@@ -1437,6 +1485,14 @@
       opacity: 1;
       transform: translateY(0);
     }
+    .ti-section-pin[data-intro="true"] {
+      color: #1f2329;
+      border-left-color: color-mix(in srgb, var(--ti-accent) 72%, transparent);
+      text-shadow: none;
+    }
+    .ti-section-pin[data-intro="true"] .ti-section-pin-stand {
+      color: #5f6b7a;
+    }
     .ti-section-pin-numeral {
       display: block;
       margin: 0 0 8px;
@@ -1527,27 +1583,15 @@
       font-size 760ms cubic-bezier(0.62, 0, 0.24, 1),
       font-weight 760ms cubic-bezier(0.62, 0, 0.24, 1);
   }
-  .ti-section-morph-word-source,
-  .ti-section-morph-word-target {
-    display: inline-block;
-    transition: opacity 380ms ease;
-  }
-  .ti-section-morph-word-target {
-    position: absolute;
-    inset: 0 auto auto 0;
-    opacity: 0;
-  }
-  .ti-section-morph-word[data-state="settling"] .ti-section-morph-word-source {
-    opacity: 0;
-  }
-  .ti-section-morph-word[data-state="settling"] .ti-section-morph-word-target {
-    opacity: 1;
-  }
   @media (min-width: 1180px) {
     .ti-prose .ti-section[data-pin-source="true"] .ti-section-numeral,
     .ti-prose .ti-section[data-pin-source="true"] .ti-section-h2,
     .ti-prose .ti-section[data-pin-source="true"] .ti-section-stand,
     .ti-prose .ti-section[data-pin-source="true"] .ti-thread-logo {
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+    .ti-hero[data-pin-source="true"] .ti-hero-copy {
       opacity: 0;
       transition: opacity 120ms ease;
     }
@@ -2541,7 +2585,7 @@ main { max-width: 1160px; margin: 0 auto; }
 
 .dbm-board {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--dbm-border);
   border-radius: 14px;
   background:
@@ -2628,14 +2672,15 @@ main { max-width: 1160px; margin: 0 auto; }
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(280px, 0.86fr) minmax(420px, 1.14fr);
-  gap: 22px;
-  padding: 24px 28px 28px;
+  gap: clamp(24px, 4vw, 54px);
+  align-items: start;
+  padding: 24px 28px 36px;
 }
 
 .dbm-trail {
   position: relative;
   display: grid;
-  gap: 12px;
+  gap: 0;
   align-content: start;
   margin: 0;
   padding: 0 0 0 24px;
@@ -2655,6 +2700,9 @@ main { max-width: 1160px; margin: 0 auto; }
 
 .dbm-step {
   position: relative;
+  min-height: max(520px, 72svh);
+  display: flex;
+  align-items: center;
   margin: 0;
 }
 
@@ -2685,11 +2733,11 @@ main { max-width: 1160px; margin: 0 auto; }
 .dbm-trigger {
   display: block;
   width: 100%;
-  min-height: 116px;
-  padding: 14px 15px 13px;
+  min-height: 0;
+  padding: 20px 18px 18px;
   border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -2754,14 +2802,17 @@ main { max-width: 1160px; margin: 0 auto; }
 }
 
 .dbm-stage {
-  position: relative;
-  min-height: 458px;
+  position: sticky;
+  top: clamp(18px, 8svh, 86px);
+  height: min(70svh, 720px);
+  min-height: 500px;
   border: 1px solid var(--dbm-border);
-  border-radius: 12px;
+  border-radius: 18px;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.04), transparent 26%),
     rgba(8, 13, 24, 0.72);
   overflow: hidden;
+  box-shadow: 0 28px 80px rgba(3, 7, 18, 0.26);
 }
 
 .dbm-image-stack {
@@ -2775,7 +2826,7 @@ main { max-width: 1160px; margin: 0 auto; }
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   opacity: 0;
-  transform: translateY(8px) scale(0.985);
+  transform: translateY(18px) scale(0.985);
   pointer-events: none;
   transition: opacity 260ms ease, transform 260ms ease;
 }
@@ -2790,25 +2841,28 @@ main { max-width: 1160px; margin: 0 auto; }
   display: grid;
   place-items: center;
   min-height: 0;
-  padding: 22px 22px 12px;
+  padding: 0;
+  overflow: hidden;
 }
 
 .dbm-panel img {
   display: block;
-  max-width: 100%;
-  max-height: 342px;
-  width: auto;
-  height: auto;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.09);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 0;
+  border: 0;
   background: #0b1020;
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.34);
+  box-shadow: none;
 }
 
 .dbm-panel-note {
   margin: 0;
-  padding: 14px 18px 16px;
+  padding: 16px 20px 18px;
   border-top: 1px solid var(--dbm-rule);
+  background: rgba(8, 13, 24, 0.84);
   color: var(--dbm-muted);
   font-size: 13px;
   line-height: 1.48;
@@ -2819,10 +2873,15 @@ main { max-width: 1160px; margin: 0 auto; }
 }
 
 .dbm-progress {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 18px;
+  right: 18px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  padding: 0 18px 18px;
+  padding: 0;
 }
 
 .dbm-progress button {
@@ -2888,6 +2947,9 @@ main { max-width: 1160px; margin: 0 auto; }
   .dbm-stage {
     background: rgba(255, 255, 255, 0.74);
   }
+  .dbm-panel-note {
+    background: rgba(248, 250, 252, 0.90);
+  }
 }
 
 @media (max-width: 900px) {
@@ -2901,8 +2963,21 @@ main { max-width: 1160px; margin: 0 auto; }
   .dbm-grid {
     grid-template-columns: 1fr;
   }
+  .dbm-trail {
+    order: 2;
+  }
   .dbm-stage {
-    min-height: 438px;
+    position: relative;
+    top: auto;
+    order: 1;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 11;
+    margin-bottom: 6px;
+  }
+  .dbm-step {
+    min-height: 0;
+    padding: 8px 0;
   }
 }
 
@@ -2923,13 +2998,13 @@ main { max-width: 1160px; margin: 0 auto; }
     min-height: 0;
   }
   .dbm-stage {
-    min-height: 390px;
+    aspect-ratio: 16 / 12;
   }
   .dbm-panel-img-wrap {
-    padding: 14px 14px 10px;
+    padding: 0;
   }
   .dbm-panel img {
-    max-height: 250px;
+    max-height: none;
   }
   .dbm-query {
     white-space: normal;
@@ -5448,15 +5523,15 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q69.4,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q66.6,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q56.4,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q69.4,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q64.39999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q48.0,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q60.199999999999996,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q66.6,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q73.6,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,90 Q72.2,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q73.6,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q50.8,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q68.0,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,210 Q57.39999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q53.599999999999994,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q65.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q70.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q69.4,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -5722,7 +5797,7 @@ $$
 <p>Paradigm formed the backbone of my Associate Technical Fellow (ATF)<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-17">*</sup><span class="ti-aside-content" id="ti-aside-17" role="tooltip">Not Alcohol, Tobacco, and Firearms - though that would be cool.</span></span><insert a real picture of ATF looking cool> application for Boeing. I had accomplishments in traditional engineering fields at Aurora and from previous employers, but Paradigm really <em>felt</em> like something powerful - if you <em>got it</em> then you understood that it could change how we picked which aircraft to build. The tagline could be summarised as &ldquo;stop drawing pictures of cool-looking future aircraft&hellip;start figuring out what sort of aircraft we <em>should</em> draw pictures of.&rdquo;</p>
 <p>Paradigm needed an organisation that could reward and acknowledge cross-domain work, and Boeing&rsquo;s structure whilst great at building aircraft, was not set up to celebrate that at the time. Paradigm won the No-Bull Prize at the international Crew and Fleet Optimisation Workshop<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-18">*</sup><span class="ti-aside-content" id="ti-aside-18" role="tooltip">CoW Workshop&hellip;COW, No-Bull, Nobel&hellip;geddit? <em>Sigh</em>.</span></span> hosted by Jeppesen in 2025, credited as the work presented that was &ldquo;most economically valuable to Boeing.&rdquo; A mock reviewer in the rehearsal panel for my Associate Technical Fellow interview called it &ldquo;revolutionary,&rdquo; and told me I was a shoe-in for ATF. </p>
 <figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-jeppesen-award-figcap">
-  <img src="figures/jeppesen-no-bull-award-cartoon.png" alt="Editorial cartoon of two workshop attendees shaking hands while one presents a blue No-Bull Prize package at a Jeppesen Crew and Fleet Optimisation Workshop" loading="lazy" />
+  <img src="figures/jeppesen-no-bull-award-cartoon.png" alt="Editorial cartoon of Harry shaking hands with a judge while receiving a blue No-Bull Prize package at a Jeppesen Crew and Fleet Optimisation Workshop" loading="lazy" />
   <figcaption id="ti-jeppesen-award-figcap" class="ti-figcap">The No-Bull Prize: funny name, real signal. The work made economic sense to the people who understood the network.</figcaption>
 </figure>
 <p>The ATF panel didn&rsquo;t see demonstrable impact to Boeing, and around the same time the project got dropped<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-19">*</sup><span class="ti-aside-content" id="ti-aside-19" role="tooltip">My manager, Dom Barone, always saw the value and gave me aircover, for which I am eternally thankful - but it could only last so long.</span></span>. I was furious and heartbroken. It took me a while to realise the system, not the work, was the problem.</p>
@@ -5748,6 +5823,12 @@ $$
     <video src="figures/cartoon-storage-migrations.mp4" autoplay muted loop playsinline preload="metadata" poster="figures/cartoon-storage-migrations.png" aria-label="Three engineers at separate workstations — Paraview, Excel, Simulink — exchange a chaotic flock of file-format icons (.csv, .xlsx, .png, .mat, .dat) by hand, while a single clean database on the right answers GET and POST and tracks versioning"></video>
   </div>
   <figcaption id="ti-cartoon-storage-figcap" class="ti-figcap">Three tools, five formats, and someone manually re-typing the metrics. Or one database that holds the relationships, versions everything, and answers GET / POST.</figcaption>
+</figure>
+<figure class="ti-figure ti-figure-video ti-figure-fullbleed ti-data-drift" aria-labelledby="ti-data-drift-figcap" data-ti-restart-on-view="1">
+  <div class="ti-video-wrap">
+    <video src="figures/data-drift.mp4" autoplay muted loop playsinline preload="metadata" poster="figures/data-drift/05-final-row.png" aria-label="A 15-second short film: a CFD lift-coefficient value Cl = 0.413 is copied into a spreadsheet cell, a slide PNG, an email quote, and a Teams chat. The four copies freeze at 0.413 while the live source ticks on to 0.421, 0.428, and 0.435. The final composition is a row of frozen 0.413 cards behind a single live 0.435 card — the visual gap is the cost."></video>
+  </div>
+  <figcaption id="ti-data-drift-figcap" class="ti-figcap">Each handoff freezes a moment. Then the moment moves on.</figcaption>
 </figure>
 <p>I&rsquo;m spelling it out at all is that I don&rsquo;t want anyone reading the rest of this post to think I&rsquo;m claiming exceptionalism. My understanding of infrastructure caught up to my instinct slowly, and I had many wrong steps along the way. The instinct was visible all along; the supporting tooling was the bit that took the years.</p>
 <p>If I had to put the through-line on a t-shirt: I have spent over a decade trying not to become the join<make join a true-type font so it looks like code>. The join between two formats. The join between a database and a paper form. The join between a fleet model and an airport model. The join between an analysis tool and a slide deck. Every time the system can&rsquo;t connect two things itself, a person has to. That person is an engineer who usually has to do this in lieu of their actual job, and it&rsquo;s the mundane bullshit that you&rsquo;re not taught in an actual engineering degree<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-21">*</sup><span class="ti-aside-content" id="ti-aside-21" role="tooltip">Case-in-point, my most watched YouTube video is &ldquo;How to loop over files in a directory using Python&rdquo;<Put this link along with the quote: https://www.youtube.com/watch?v=uhz_RKgCqe4></span></span>.</p>
@@ -5897,7 +5978,7 @@ $$
         <div>
           <p class="dbm-eyebrow">A straightforward traceability question</p>
           <h3 class="dbm-title">One plot, four artefacts, no proof.</h3>
-          <p class="dbm-subtitle">The slide sequence worked because it showed the failure as a chain, not a mood board. Each click below advances the same small disaster: the answer exists, but the connection to it has been flattened away.</p>
+          <p class="dbm-subtitle">The failure is a chain, not a mood board. Scroll through the same small disaster: the answer exists, but the connection to it has been flattened away.</p>
         </div>
         <div class="dbm-status" aria-live="polite">
           <span class="dbm-status-label">Current state</span>
@@ -5941,25 +6022,25 @@ $$
           <div class="dbm-image-stack">
             <figure class="dbm-panel dbm-active" data-dbm-panel="1">
               <div class="dbm-panel-img-wrap">
-                <img src="figures/data-black-market/01-der-question.png" alt="A cert engineer asks whether a hinge-moment plot is still valid after the latest configuration change." />
+                <img src="figures/data-black-market/01-question-harry-frustrated.png" alt="Harry looks frustrated as a cert engineer asks whether a hinge-moment plot is still valid after the latest configuration change." />
               </div>
               <figcaption class="dbm-panel-note"><strong>The failure starts innocently:</strong> a plot that looked good in a deck is suddenly asked to remember where it came from.</figcaption>
             </figure>
             <figure class="dbm-panel" data-dbm-panel="2">
               <div class="dbm-panel-img-wrap">
-                <img src="figures/data-black-market/02-slide-just-a-png.png" alt="The plot is only a PNG in a design review slide, with no metadata or provenance." />
+                <img src="figures/data-black-market/02-png-found-harry-frustrated.png" alt="Harry finds the plot pasted into a slide as a flat PNG, with no metadata or provenance attached." />
               </div>
               <figcaption class="dbm-panel-note"><strong>The artefact survived the meeting.</strong> The relationship between plot, run, mesh, configuration, and script did not.</figcaption>
             </figure>
             <figure class="dbm-panel" data-dbm-panel="3">
               <div class="dbm-panel-img-wrap">
-                <img src="figures/data-black-market/03-script-found.png" alt="A script is found, but its data path points to an old configuration directory." />
+                <img src="figures/data-black-market/03-script-search-harry-frustrated.png" alt="Harry searches clustered engineering files for the script that probably made the plot." />
               </div>
               <figcaption class="dbm-panel-note"><strong>This is the expensive bit:</strong> reconstructing context by reading file paths, commit dates, folder names, and people’s memories.</figcaption>
             </figure>
             <figure class="dbm-panel" data-dbm-panel="4">
               <div class="dbm-panel-img-wrap">
-                <img src="figures/data-black-market/04-archaeology.png" alt="Two engineers spend a week reconstructing provenance and discover the answer was for the wrong configuration." />
+                <img src="figures/data-black-market/04-archaeology-harry-frustrated.png" alt="Harry and another engineer reconstruct provenance from printouts and discover the result was for the wrong configuration." />
               </div>
               <figcaption class="dbm-panel-note"><strong>Nothing here is corrupt.</strong> It is worse than that. Every individual file is plausible, and the missing thing is the chain between them.</figcaption>
             </figure>
@@ -6628,6 +6709,52 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     window.addEventListener('scroll', updateEpiquotes, { passive: true });
     window.addEventListener('resize', updateEpiquotes);
     updateEpiquotes();
+  }
+})();
+
+// ---------------------------------------------------------------------------
+// Data-drift: restart the fullbleed video from currentTime=0 each time the
+// figure scrolls back into view, so the 15-second beat-by-beat film plays
+// from the top — not wherever the loop happened to be when the reader
+// arrived. Uses an IntersectionObserver with a moderate threshold so we
+// don't fire while the video is only just peeking onto screen.
+// ---------------------------------------------------------------------------
+(function () {
+  if (!('IntersectionObserver' in window)) return;
+
+  function init() {
+    const figs = document.querySelectorAll('figure[data-ti-restart-on-view] video');
+    if (!figs.length) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const inView = new WeakSet();
+
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const v = entry.target;
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          if (inView.has(v)) return;
+          inView.add(v);
+          try {
+            v.currentTime = 0;
+            if (!reduce) {
+              const p = v.play();
+              if (p && typeof p.catch === 'function') p.catch(() => {});
+            }
+          } catch (e) { /* ignore */ }
+        } else if (entry.intersectionRatio < 0.05) {
+          inView.delete(v);
+        }
+      });
+    }, { threshold: [0, 0.05, 0.5, 0.8] });
+
+    figs.forEach(v => io.observe(v));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
 
@@ -7776,9 +7903,8 @@ window.PlotlyVsPP = (function () {
   const jumps = Array.from(figure.querySelectorAll('[data-dbm-jump]'));
   const status = figure.querySelector('[data-dbm-status]');
   let active = 1;
-  let timer = null;
 
-  function show(index, userInitiated) {
+  function show(index) {
     active = Math.max(1, Math.min(4, Number(index) || 1));
 
     steps.forEach((step) => {
@@ -7798,35 +7924,40 @@ window.PlotlyVsPP = (function () {
       jump.classList.toggle('dbm-active', isActive);
       jump.setAttribute('aria-current', isActive ? 'step' : 'false');
     });
-
-    if (userInitiated) stopAutoplay();
-  }
-
-  function stopAutoplay() {
-    if (timer) {
-      window.clearInterval(timer);
-      timer = null;
-    }
   }
 
   steps.forEach((step) => {
     const trigger = step.querySelector('.dbm-trigger');
     if (!trigger) return;
-    trigger.addEventListener('click', () => show(step.dataset.dbmStep, true));
-    trigger.addEventListener('mouseenter', () => show(step.dataset.dbmStep, true));
+    trigger.addEventListener('click', () => {
+      step.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      show(step.dataset.dbmStep);
+    });
   });
 
   jumps.forEach((jump) => {
-    jump.addEventListener('click', () => show(jump.dataset.dbmJump, true));
+    jump.addEventListener('click', () => {
+      const target = steps.find((step) => step.dataset.dbmStep === jump.dataset.dbmJump);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      show(jump.dataset.dbmJump);
+    });
   });
 
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    timer = window.setInterval(() => show(active === 4 ? 1 : active + 1, false), 4200);
-    figure.addEventListener('focusin', stopAutoplay);
-    figure.addEventListener('pointerdown', stopAutoplay);
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => {
+          const aDistance = Math.abs(a.boundingClientRect.top + a.boundingClientRect.height / 2 - window.innerHeight / 2);
+          const bDistance = Math.abs(b.boundingClientRect.top + b.boundingClientRect.height / 2 - window.innerHeight / 2);
+          return aDistance - bDistance;
+        });
+      if (visible[0]) show(visible[0].target.dataset.dbmStep);
+    }, { threshold: [0.25, 0.55, 0.8], rootMargin: '-18% 0px -24% 0px' });
+    steps.forEach((step) => observer.observe(step));
   }
 
-  show(1, false);
+  show(1);
 
   return { show };
 })();</script>
@@ -10034,10 +10165,14 @@ window.PlotlyVsPP = (function () {
   const pin = document.querySelector('.ti-section-pin');
   if (!sections.length || !pin) return;
 
+  const hero = document.querySelector('.ti-hero');
+  const heroTitle = document.querySelector('#ti-title');
+  const heroKicker = document.querySelector('.ti-hero-kicker');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wideMQ = window.matchMedia('(min-width: 1180px)');
 
   let pinnedSection = null;
+  let introPinned = false;
   let lastClone = null;
 
   function isWide() { return wideMQ.matches; }
@@ -10071,16 +10206,36 @@ window.PlotlyVsPP = (function () {
     return { top, left, width: right - left, height: bottom - top };
   }
 
-  function applyPinContent(section) {
+  function introInfo() {
+    return {
+      numeral: '00',
+      title: heroTitle ? heroTitle.textContent || "I Don't Like Data Entry" : "I Don't Like Data Entry",
+      stand: heroKicker ? heroKicker.textContent || '' : '',
+    };
+  }
+
+  function heroParts() {
+    return { numeral: null, h2: heroTitle, stand: heroKicker };
+  }
+
+  function applyPinInfo(info) {
     const numeralEl = pin.querySelector('.ti-section-pin-numeral');
     const titleEl   = pin.querySelector('.ti-section-pin-title');
     const standEl   = pin.querySelector('.ti-section-pin-stand');
+    if (numeralEl) numeralEl.textContent = info.numeral || '';
+    if (titleEl)   titleEl.textContent   = info.title || '';
+    if (standEl)   standEl.textContent   = info.stand || '';
+  }
+
+  function applyPinContent(section) {
     const num   = section.querySelector('.ti-section-numeral');
     const h2    = section.querySelector('.ti-section-h2');
     const stand = section.querySelector('.ti-section-stand');
-    if (numeralEl) numeralEl.textContent = num   ? num.textContent   : '';
-    if (titleEl)   titleEl.textContent   = h2    ? h2.textContent    : '';
-    if (standEl)   standEl.textContent   = stand ? stand.textContent : '';
+    applyPinInfo({
+      numeral: num ? num.textContent : '',
+      title: h2 ? h2.textContent : '',
+      stand: stand ? stand.textContent : '',
+    });
   }
 
   function measuredWords(el, group) {
@@ -10159,21 +10314,24 @@ window.PlotlyVsPP = (function () {
     return pairs.filter(pair => pair.source && pair.target);
   }
 
-  function buildWordLayer(parts) {
-    const pinParts = {
+  function pinParts() {
+    return {
       numeral: pin.querySelector('.ti-section-pin-numeral'),
       h2: pin.querySelector('.ti-section-pin-title'),
       stand: pin.querySelector('.ti-section-pin-stand'),
     };
+  }
+
+  function buildWordLayer(sourceParts, targetParts) {
     const sourceWords = [
-      ...measuredWords(parts.numeral, 'numeral'),
-      ...measuredWords(parts.h2, 'title'),
-      ...measuredWords(parts.stand, 'stand'),
+      ...measuredWords(sourceParts.numeral, 'numeral'),
+      ...measuredWords(sourceParts.h2, 'title'),
+      ...measuredWords(sourceParts.stand, 'stand'),
     ];
     const targetWords = [
-      ...measuredWords(pinParts.numeral, 'numeral'),
-      ...measuredWords(pinParts.h2, 'title'),
-      ...measuredWords(pinParts.stand, 'stand'),
+      ...measuredWords(targetParts.numeral, 'numeral'),
+      ...measuredWords(targetParts.h2, 'title'),
+      ...measuredWords(targetParts.stand, 'stand'),
     ];
     const pairs = pairWords(sourceWords, targetWords);
     if (!pairs.length) return null;
@@ -10184,8 +10342,6 @@ window.PlotlyVsPP = (function () {
       const source = pair.source;
       const target = pair.target;
       const word = document.createElement('span');
-      const sourceSpan = document.createElement('span');
-      const targetSpan = document.createElement('span');
       const dx = target.left - source.left;
       const dy = target.top - source.top;
 
@@ -10205,42 +10361,26 @@ window.PlotlyVsPP = (function () {
       word.dataset.targetFontSize = target.fontSize;
       word.dataset.targetFontWeight = target.fontWeight;
       word.dataset.targetColor = target.color;
+      word.dataset.targetText = target.text;
+      word.textContent = source.text;
 
-      sourceSpan.className = 'ti-section-morph-word-source';
-      sourceSpan.textContent = source.text;
-      targetSpan.className = 'ti-section-morph-word-target';
-      targetSpan.textContent = target.text;
-      word.appendChild(sourceSpan);
-      word.appendChild(targetSpan);
       layer.appendChild(word);
     });
     return layer;
   }
 
-  function morph(section) {
-    if (!isWide()) {
-      applyPinContent(section);
-      return;
-    }
-    const parts = pickSourceParts(section);
-    if (!parts) return; // Agent B's logo section: gracefully no-op.
-
-    pin.removeAttribute('data-flipping');
-    applyPinContent(section);
-    pin.dataset.visible = 'true';
-    const targetRect = pin.getBoundingClientRect();
-    if (targetRect.width === 0) return;
-
+  function animateWords(sourceParts, targetParts, finishMode, afterFinish) {
     if (reduceMotion) {
-      pin.dataset.visible = 'true';
+      if (afterFinish) afterFinish();
       return;
     }
 
     pin.dataset.flipping = 'true';
 
-    const clone = buildWordLayer(parts);
+    const clone = buildWordLayer(sourceParts, targetParts);
     if (!clone) {
       pin.removeAttribute('data-flipping');
+      if (afterFinish) afterFinish();
       return;
     }
     document.body.appendChild(clone);
@@ -10258,6 +10398,9 @@ window.PlotlyVsPP = (function () {
         word.style.fontSize = word.dataset.targetFontSize || word.style.fontSize;
         word.style.fontWeight = word.dataset.targetFontWeight || word.style.fontWeight;
         word.style.color = word.dataset.targetColor || word.style.color;
+        setTimeout(() => {
+          word.textContent = word.dataset.targetText || word.textContent;
+        }, 320);
       });
     });
 
@@ -10266,9 +10409,11 @@ window.PlotlyVsPP = (function () {
       if (done) return;
       done = true;
       pin.removeAttribute('data-flipping');
-      pin.dataset.visible = 'true';
+      if (finishMode === 'show-pin') pin.dataset.visible = 'true';
+      if (finishMode === 'hide-pin') pin.dataset.visible = 'false';
       if (clone.parentNode) clone.parentNode.removeChild(clone);
       if (lastClone === clone) lastClone = null;
+      if (afterFinish) afterFinish();
     };
     clone.addEventListener('transitionend', e => {
       if (e.target && e.target.classList && e.target.classList.contains('ti-section-morph-word')) {
@@ -10278,19 +10423,94 @@ window.PlotlyVsPP = (function () {
     setTimeout(finish, 1100);
   }
 
+  function morph(section) {
+    if (!isWide()) {
+      applyPinContent(section);
+      return;
+    }
+    const parts = pickSourceParts(section);
+    if (!parts) return; // Agent B's logo section: gracefully no-op.
+
+    pin.removeAttribute('data-flipping');
+    pin.removeAttribute('data-intro');
+    applyPinContent(section);
+    pin.dataset.visible = 'true';
+    const targetRect = pin.getBoundingClientRect();
+    if (targetRect.width === 0) return;
+
+    animateWords(parts, pinParts(), 'show-pin');
+  }
+
+  function morphBackToSection(section, afterFinish) {
+    if (!isWide()) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+    const targetParts = pickSourceParts(section);
+    if (!targetParts) {
+      if (afterFinish) afterFinish();
+      return;
+    }
+    animateWords(pinParts(), targetParts, 'hide-pin', afterFinish);
+  }
+
+  function showIntroPin() {
+    applyPinInfo(introInfo());
+    pin.removeAttribute('data-flipping');
+    pin.dataset.intro = 'true';
+    pin.dataset.visible = isWide() ? 'true' : 'false';
+    introPinned = isWide();
+  }
+
+  function morphIntroToPin() {
+    if (!isWide() || introPinned || pinnedSection) return;
+    applyPinInfo(introInfo());
+    pin.dataset.intro = 'true';
+    pin.dataset.visible = 'true';
+    if (hero) hero.dataset.pinSource = 'true';
+    introPinned = true;
+    animateWords(heroParts(), pinParts(), 'show-pin');
+  }
+
+  function morphIntroBackToHero() {
+    if (!isWide() || !introPinned || pinnedSection) return;
+    if (hero) hero.dataset.pinSource = 'true';
+    animateWords(pinParts(), heroParts(), 'hide-pin', () => {
+      if (hero) hero.removeAttribute('data-pin-source');
+      pin.removeAttribute('data-intro');
+      introPinned = false;
+    });
+  }
+
+  function updateIntroFromScroll() {
+    if (pinnedSection) return;
+    if ((window.scrollY || document.documentElement.scrollTop || 0) > 8) {
+      morphIntroToPin();
+    } else {
+      morphIntroBackToHero();
+    }
+  }
+
   function setPinnedSection(section) {
     if (section === pinnedSection) return;
-    if (pinnedSection) pinnedSection.removeAttribute('data-pin-source');
+    const previous = pinnedSection;
     pinnedSection = section;
     if (!section) {
-      pin.removeAttribute('data-flipping');
-      pin.dataset.visible = 'false';
-      if (lastClone && lastClone.parentNode) {
-        lastClone.parentNode.removeChild(lastClone);
-        lastClone = null;
+      if (previous) {
+        morphBackToSection(previous, () => {
+          previous.removeAttribute('data-pin-source');
+          showIntroPin();
+          updateIntroFromScroll();
+        });
+      } else {
+        updateIntroFromScroll();
       }
       return;
     }
+    if (previous && previous !== section) previous.removeAttribute('data-pin-source');
+    if (hero) hero.removeAttribute('data-pin-source');
+    introPinned = false;
+    pin.removeAttribute('data-intro');
     section.dataset.pinSource = 'true';
     morph(section);
   }
@@ -10326,18 +10546,32 @@ window.PlotlyVsPP = (function () {
       next.dataset.pinSource = 'true';
       applyPinContent(next);
     }
-    pin.dataset.visible = (isWide() && next) ? 'true' : 'false';
+    if (next) {
+      introPinned = false;
+      pin.dataset.visible = isWide() ? 'true' : 'false';
+    } else {
+      pin.dataset.visible = 'false';
+      introPinned = false;
+      if (hero) hero.removeAttribute('data-pin-source');
+      updateIntroFromScroll();
+    }
   });
 
   // First paint: if the user lands mid-article, settle the pin without
-  // animating.
+  // animating; otherwise leave the hero title as the opening rail source.
   const initial = currentPinnedFromScroll();
   if (initial) {
     pinnedSection = initial;
     initial.dataset.pinSource = 'true';
     applyPinContent(initial);
     if (isWide()) pin.dataset.visible = 'true';
+  } else {
+    pin.dataset.visible = 'false';
+    pin.removeAttribute('data-intro');
+    updateIntroFromScroll();
   }
+
+  window.addEventListener('scroll', updateIntroFromScroll, { passive: true });
 })();
 </script>
 

@@ -97,6 +97,8 @@ Twenty years of disciplined infrastructure work, no moments of insight, just one
 
 [FIGURE: cartoon-storage-migrations]
 
+[VIDEO: data-drift]
+
 I'm spelling it out at all is that I don't want anyone reading the rest of this post to think I'm claiming exceptionalism. My understanding of infrastructure caught up to my instinct slowly, and I had many wrong steps along the way. The instinct was visible all along; the supporting tooling was the bit that took the years.
 
 If I had to put the through-line on a t-shirt: I have spent over a decade trying not to become the join<make join a true-type font so it looks like code>. The join between two formats. The join between a database and a paper form. The join between a fleet model and an airport model. The join between an analysis tool and a slide deck. Every time the system can't connect two things itself, a person has to. That person is an engineer who usually has to do this in lieu of their actual job, and it's the mundane bullshit that you're not taught in an actual engineering degree[asterisk: Case-in-point, my most watched YouTube video is "How to loop over files in a directory using Python"<Put this link along with the quote: https://www.youtube.com/watch?v=uhz_RKgCqe4>].
