@@ -5419,15 +5419,15 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q72.2,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q69.4,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
     <path class="ti-map-edge" d="M31,90 Q65.2,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q53.599999999999994,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q52.199999999999996,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
     <path class="ti-map-edge" d="M31,150 Q69.4,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q60.199999999999996,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q49.4,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q60.199999999999996,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q63.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q72.2,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,210 Q64.39999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q56.4,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q67.19999999999999,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q66.6,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q70.8,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -9883,23 +9883,13 @@ window.PlotlyVsPP = (function () {
 
   function updateSectionLocator() {
     if (!sectionPin || !linkLine || !linkPath) return;
-    const info = getSectionInfo(activeId);
+    // NOTE: FLIP module (SECTION_FLIP_JS) owns pin content + data-visible.
+    // Here we only mirror the linkline visibility off the pin's state and
+    // recompute the curve geometry. Don't touch sectionPin.dataset.visible
+    // or its text — that races with the FLIP morph.
     const wide = isWideLocator();
-    let visible = false;
-    if (wide && info) {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-      const next = getNextSectionTarget(info.target);
-      const starts = scrollY >= pageTop(info.target) - 112;
-      const beforeNext = !next || scrollY < pageTop(next) - 132;
-      visible = starts && beforeNext;
-      if (visible) {
-        sectionPinNumeral.textContent = info.numeral;
-        sectionPinTitle.textContent = info.title;
-        sectionPinStand.textContent = info.stand;
-      }
-    }
-
-    sectionPin.dataset.visible = visible ? 'true' : 'false';
+    const info = getSectionInfo(activeId);
+    const visible = wide && info && sectionPin.dataset.visible === 'true';
     linkLine.dataset.visible = visible ? 'true' : 'false';
     map.dataset.pinActive = visible ? 'true' : 'false';
     if (!visible) return;
@@ -9999,6 +9989,206 @@ window.PlotlyVsPP = (function () {
   }, { passive: true });
   window.addEventListener('resize', updateSectionLocator);
   updateActiveFromScroll();
+})();
+</script>
+<script>
+(function () {
+  // Guardian/NYT-style FLIP morph: when an inline section header scrolls
+  // off the top of the viewport, spawn a position:fixed clone of the
+  // numeral + h2 + stand-first triple and animate it (transform-only)
+  // from the inline source rect to the left-rail .ti-section-pin
+  // target rect. The pin itself is the source of truth for the settled
+  // rail content — the clone just masks the snap.
+  const sections = Array.from(document.querySelectorAll('.ti-section'));
+  const pin = document.querySelector('.ti-section-pin');
+  if (!sections.length || !pin) return;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wideMQ = window.matchMedia('(min-width: 1180px)');
+
+  let pinnedSection = null;
+  let lastClone = null;
+
+  function isWide() { return wideMQ.matches; }
+
+  function pickSourceParts(section) {
+    // Defensive: if Agent B has replaced the H2 with .ti-thread-logo,
+    // the H2 may be empty — bail out gracefully.
+    const numeral = section.querySelector('.ti-section-numeral');
+    const h2      = section.querySelector('.ti-section-h2');
+    const stand   = section.querySelector('.ti-section-stand');
+    if (!h2) return null;
+    const h2Text = (h2.textContent || '').trim();
+    if (!h2Text) return null; // empty H2 — let other systems own it
+    return { numeral, h2, stand };
+  }
+
+  function unionRect(els) {
+    let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
+    let any = false;
+    els.forEach(el => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return;
+      top = Math.min(top, r.top);
+      left = Math.min(left, r.left);
+      right = Math.max(right, r.right);
+      bottom = Math.max(bottom, r.bottom);
+      any = true;
+    });
+    if (!any) return null;
+    return { top, left, width: right - left, height: bottom - top };
+  }
+
+  function applyPinContent(section) {
+    const numeralEl = pin.querySelector('.ti-section-pin-numeral');
+    const titleEl   = pin.querySelector('.ti-section-pin-title');
+    const standEl   = pin.querySelector('.ti-section-pin-stand');
+    const num   = section.querySelector('.ti-section-numeral');
+    const h2    = section.querySelector('.ti-section-h2');
+    const stand = section.querySelector('.ti-section-stand');
+    if (numeralEl) numeralEl.textContent = num   ? num.textContent   : '';
+    if (titleEl)   titleEl.textContent   = h2    ? h2.textContent    : '';
+    if (standEl)   standEl.textContent   = stand ? stand.textContent : '';
+  }
+
+  function buildClone(parts) {
+    // Clone text content into a fresh wrapper so we can FLIP all three
+    // elements as a single transform target. Inherits styling from
+    // .ti-prose so the inline-state typography matches the source.
+    const wrap = document.createElement('div');
+    wrap.className = 'ti-section-morph ti-prose';
+    if (parts.numeral) {
+      const n = document.createElement('span');
+      n.className = 'ti-section-numeral';
+      n.textContent = parts.numeral.textContent || '';
+      wrap.appendChild(n);
+    }
+    const h = document.createElement('h2');
+    h.className = 'ti-section-h2';
+    h.textContent = parts.h2.textContent || '';
+    wrap.appendChild(h);
+    if (parts.stand) {
+      const s = document.createElement('p');
+      s.className = 'ti-section-stand';
+      s.textContent = parts.stand.textContent || '';
+      wrap.appendChild(s);
+    }
+    return wrap;
+  }
+
+  function morph(section) {
+    if (!isWide()) {
+      applyPinContent(section);
+      return;
+    }
+    const parts = pickSourceParts(section);
+    if (!parts) return; // Agent B's logo section: gracefully no-op.
+
+    pin.removeAttribute('data-flipping');
+    applyPinContent(section);
+    pin.dataset.visible = 'true';
+    const sourceRect = unionRect([parts.numeral, parts.h2, parts.stand]);
+    const targetRect = pin.getBoundingClientRect();
+    if (!sourceRect || targetRect.width === 0) return;
+
+    if (reduceMotion) {
+      pin.dataset.visible = 'true';
+      return;
+    }
+
+    // Canonical FLIP: paint the clone at the *target* rect, transform
+    // it back to the *source* rect, then animate transform → identity.
+    const dx = sourceRect.left - targetRect.left;
+    const dy = sourceRect.top  - targetRect.top;
+    const scale = sourceRect.width / Math.max(1, targetRect.width);
+
+    pin.dataset.flipping = 'true';
+
+    const clone = buildClone(parts);
+    clone.style.left   = targetRect.left + 'px';
+    clone.style.top    = targetRect.top  + 'px';
+    clone.style.width  = targetRect.width + 'px';
+    clone.style.opacity = '1';
+    clone.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+    document.body.appendChild(clone);
+
+    if (lastClone && lastClone !== clone && lastClone.parentNode) {
+      lastClone.parentNode.removeChild(lastClone);
+    }
+    lastClone = clone;
+
+    void clone.offsetWidth;
+    requestAnimationFrame(() => {
+      clone.style.transform = 'translate(0, 0) scale(1)';
+    });
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      pin.removeAttribute('data-flipping');
+      pin.dataset.visible = 'true';
+      if (clone.parentNode) clone.parentNode.removeChild(clone);
+      if (lastClone === clone) lastClone = null;
+    };
+    clone.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 900);
+  }
+
+  function setPinnedSection(section) {
+    if (section === pinnedSection) return;
+    pinnedSection = section;
+    if (!section) {
+      pin.removeAttribute('data-flipping');
+      pin.dataset.visible = 'false';
+      if (lastClone && lastClone.parentNode) {
+        lastClone.parentNode.removeChild(lastClone);
+        lastClone = null;
+      }
+      return;
+    }
+    morph(section);
+  }
+
+  function currentPinnedFromScroll() {
+    // The "pinned" section is the last .ti-section whose top has crossed
+    // the viewport top. If none have, no rail.
+    let candidate = null;
+    for (let i = 0; i < sections.length; i++) {
+      const r = sections[i].getBoundingClientRect();
+      if (r.top <= 4) candidate = sections[i];
+      else break;
+    }
+    return candidate;
+  }
+
+  // IntersectionObserver: rootMargin -100% bottom => fires the moment a
+  // section's top crosses the viewport top, in either direction.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(() => {
+      const next = currentPinnedFromScroll();
+      if (next !== pinnedSection) setPinnedSection(next);
+    }, { rootMargin: '0px 0px -100% 0px', threshold: [0, 1] });
+    sections.forEach(s => io.observe(s));
+  }
+
+  window.addEventListener('resize', () => {
+    const next = currentPinnedFromScroll();
+    if (next === pinnedSection) return;
+    pinnedSection = next;
+    if (next) applyPinContent(next);
+    pin.dataset.visible = (isWide() && next) ? 'true' : 'false';
+  });
+
+  // First paint: if the user lands mid-article, settle the pin without
+  // animating.
+  const initial = currentPinnedFromScroll();
+  if (initial) {
+    pinnedSection = initial;
+    applyPinContent(initial);
+    if (isWide()) pin.dataset.visible = 'true';
+  }
 })();
 </script>
 

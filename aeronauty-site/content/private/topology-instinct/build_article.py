@@ -3286,23 +3286,13 @@ MAP_JS = r"""
 
   function updateSectionLocator() {
     if (!sectionPin || !linkLine || !linkPath) return;
-    const info = getSectionInfo(activeId);
+    // NOTE: FLIP module (SECTION_FLIP_JS) owns pin content + data-visible.
+    // Here we only mirror the linkline visibility off the pin's state and
+    // recompute the curve geometry. Don't touch sectionPin.dataset.visible
+    // or its text — that races with the FLIP morph.
     const wide = isWideLocator();
-    let visible = false;
-    if (wide && info) {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-      const next = getNextSectionTarget(info.target);
-      const starts = scrollY >= pageTop(info.target) - 112;
-      const beforeNext = !next || scrollY < pageTop(next) - 132;
-      visible = starts && beforeNext;
-      if (visible) {
-        sectionPinNumeral.textContent = info.numeral;
-        sectionPinTitle.textContent = info.title;
-        sectionPinStand.textContent = info.stand;
-      }
-    }
-
-    sectionPin.dataset.visible = visible ? 'true' : 'false';
+    const info = getSectionInfo(activeId);
+    const visible = wide && info && sectionPin.dataset.visible === 'true';
     linkLine.dataset.visible = visible ? 'true' : 'false';
     map.dataset.pinActive = visible ? 'true' : 'false';
     if (!visible) return;
@@ -4331,6 +4321,7 @@ def main() -> None:
         flowchart_scrolly_js=FLOWCHART_SCROLLY_JS,
         orch_scrolly_js=ORCH_SCROLLY_JS,
         map_js=MAP_JS,
+        section_flip_js=SECTION_FLIP_JS,
     )
 
     OUT.write_text(out)
