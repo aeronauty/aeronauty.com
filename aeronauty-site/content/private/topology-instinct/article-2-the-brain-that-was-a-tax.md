@@ -1,6 +1,6 @@
 # The Brain That Was a Tax Is Now an Asset
 
-In an earlier version of this essay, this was the point where the article quietly became a different article. The first one was about data entry — about systems losing the shape of the work and making people put it back by hand. It ended at a thing called Thread. If you haven't read it, the short version is: I have spent twenty years noticing the same wrong-frame thing across very different jobs, mostly without realising it was the same thing.
+In an earlier version of this essay, this was the point where the article quietly became a different article. The first one was about data entry — about systems losing the shape of the work and making people put it back by hand. It ended at a thing called Thread. [If you haven't read it](/lab/articles/i-dont-like-data-entry), the short version is: I have spent twenty years noticing the same wrong-frame thing across very different jobs, mostly without realising it was the same thing.
 
 This one is about the person who kept noticing. About why he kept losing tools, abandoning projects at 80%, and looking, on paper, scattered. And about what happened when prescribed ADHD medication and a swarm of cheap fast AI agents arrived more or less at the same time.
 
@@ -97,3 +97,9 @@ Maybe AI compresses that role later. I don't know. In 2026, it is real.
 [VIDEO: orchestrator-day]
 
 <p class="ti-final">The brain that was a tax is now an asset.</p>
+
+<aside class="ti-sister-link">
+  <p class="ti-sister-eyebrow">Companion piece</p>
+  <p class="ti-sister-title"><a href="/lab/articles/i-dont-like-data-entry">I Don't Like Data Entry</a></p>
+  <p class="ti-sister-blurb">The other side: twenty years of avoiding the human join operation — from PDF figures and PowerPoint refusals through Paradigm and Postgres to Flexcompute Thread.</p>
+</aside>

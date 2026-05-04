@@ -215,6 +215,51 @@ def _read(p: Path) -> str:
     return p.read_text()
 
 
+def _expand_epiquotes(md: str) -> str:
+    """Replace `[EPIQUOTE] ... [/EPIQUOTE]` blocks in raw markdown with
+    rendered <aside class="ti-epiquote"> HTML *before* the markdown
+    library runs.
+
+    Inside a block, the last line that begins with an em-dash (—) or
+    a double hyphen (--) is treated as the attribution; everything
+    else is the quote body. Lines are joined with a single space.
+
+    Example:
+        [EPIQUOTE]
+        Stop optimising the fleet in isolation. Optimise the network
+        the fleet flies on, and the fleet that network can support,
+        jointly.
+        — The Paradigm reframe
+        [/EPIQUOTE]
+
+    The aside is emitted as a literal HTML block (markdown leaves
+    raw block-level HTML alone with `extensions=["extra"]`).
+    """
+    def repl(m: re.Match) -> str:
+        inner = m.group(1).strip()
+        lines = [l.strip() for l in inner.splitlines() if l.strip()]
+        attr = ""
+        body_lines: list[str] = []
+        for line in lines:
+            if line.startswith("— "):
+                attr = line[2:].strip()
+            elif line.startswith("-- "):
+                attr = line[3:].strip()
+            else:
+                body_lines.append(line)
+        body = " ".join(body_lines)
+        attr_html = f'\n  <p class="ti-epiquote-attr">{attr}</p>' if attr else ''
+        # Emit with surrounding blank lines so markdown's HTML-block
+        # heuristic recognises it as a block element.
+        return (
+            f'\n\n<aside class="ti-epiquote" role="doc-epigraph">\n'
+            f'  <p class="ti-epiquote-text">{body}</p>'
+            f'{attr_html}\n'
+            f'</aside>\n\n'
+        )
+    return re.sub(r'\[EPIQUOTE\](.*?)\[/EPIQUOTE\]', repl, md, flags=re.DOTALL)
+
+
 def _extract_first(html: str, tag: str) -> str:
     m = re.search(fr"<{tag}[^>]*>(.*?)</{tag}>", html, re.DOTALL | re.IGNORECASE)
     return m.group(1) if m else ""
@@ -383,6 +428,11 @@ def render_prose() -> tuple[str, str]:
     md = re.sub(r"^# [^\n]+\n\s*", "", md, count=1)
     # Drop the editor-orientation paragraph if present (legacy prose-source.md).
     md = re.sub(r"^Draft for Harry[^\n]*\n\s*", "", md, count=1)
+
+    # Pre-process [EPIQUOTE] ... [/EPIQUOTE] blocks before markdown sees
+    # them, so the markdown library doesn't paragraph-wrap their inner
+    # text. The block becomes an <aside> at this stage.
+    md = _expand_epiquotes(md)
 
     html = markdown.markdown(md, extensions=["extra", "smarty"])
 
@@ -1196,8 +1246,9 @@ ARTICLE_CSS = r"""
     --ti-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --ti-font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
     --ti-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    --ti-content-w: 700px;
-    --ti-wide-w:   1200px;
+    --ti-content-w: 760px;       /* bumped from 700 — prose still in the readable range, more presence on wide screens */
+    --ti-wide-w:   1480px;       /* bumped from 1200 — figures get more horizontal room when they break out */
+    --ti-side-w:   320px;        /* right-margin column on >=1280 viewports — homes for pull-quotes and side asides */
   }
 
   @media (prefers-color-scheme: light) {
@@ -1270,7 +1321,7 @@ ARTICLE_CSS = r"""
   .ti-prose .ti-what-changed {
     margin-left: calc(50% - 50vw + 8px);
     margin-right: calc(50% - 50vw + 8px);
-    max-width: 1240px;
+    max-width: clamp(1240px, 92vw, 1480px);   /* fluid cap — uses available width on big monitors */
     margin-inline: auto;
   }
   .ti-prose .ti-what-changed {
@@ -1576,6 +1627,137 @@ ARTICLE_CSS = r"""
       padding: 16px 0 18px;
       font-size: 21px;
       max-width: 24ch;
+    }
+  }
+  /* On wide screens (>=1280 px), pull-quotes break OUT into the
+     right margin instead of sitting centred — Guardian-style margin
+     pull. Prose flows on the left at reading width; the quote sits
+     beside it, smaller, italicised, in the empty side gutter. */
+  @media (min-width: 1280px) {
+    .ti-prose .ti-pullquote {
+      float: right;
+      margin: 8px -300px 12px 24px;   /* negative right margin pulls into the side gutter */
+      padding: 18px 0 18px;
+      width: 280px;
+      max-width: 280px;
+      font-size: 19px;
+      line-height: 1.36;
+      text-align: left;
+      border-top: 2px solid var(--ti-accent);
+      border-bottom: 1px solid var(--ti-rule);
+    }
+    /* Clear floats so following content doesn't wrap underneath. */
+    .ti-prose h2, .ti-prose .ti-divider, .ti-prose .ti-eyebrow,
+    .ti-prose figure, .ti-prose .ti-final, .ti-prose .ti-epiquote,
+    .ti-prose aside { clear: both; }
+  }
+
+  /* ---- epigraph / epiquote ----
+     A quoted passage that opens (or punctuates) a section, set in
+     display type with attribution. Wired via the [EPIQUOTE] ...
+     [/EPIQUOTE] markdown block, which the build expands into:
+       <aside class="ti-epiquote">
+         <p class="ti-epiquote-text">...</p>
+         <p class="ti-epiquote-attr">...</p>
+       </aside>
+  */
+  .ti-prose .ti-epiquote {
+    display: grid;
+    gap: 16px;
+    margin: 72px auto 64px;
+    padding: 6px 8px 18px;
+    max-width: 720px;
+    text-align: center;
+    position: relative;
+  }
+  .ti-prose .ti-epiquote::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 1px;
+    background: var(--ti-accent);
+    margin: 0 auto 6px;
+  }
+  .ti-prose .ti-epiquote-text {
+    margin: 0;
+    font-family: var(--ti-font-serif);
+    font-size: clamp(22px, 2.6vw, 30px);
+    line-height: 1.32;
+    font-style: italic;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  .ti-prose .ti-epiquote-attr {
+    margin: 0;
+    font-family: var(--ti-font-sans);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ti-fg-dim);
+    font-style: normal;
+  }
+  .ti-prose .ti-epiquote-attr::before { content: "— "; }
+  @media (max-width: 480px) {
+    .ti-prose .ti-epiquote {
+      margin: 48px auto 36px;
+      padding: 4px 4px 14px;
+      gap: 12px;
+    }
+    .ti-prose .ti-epiquote-text { font-size: 20px; }
+  }
+
+  /* ---- companion-piece sister link ----
+     Cross-article handoff at the bottom of each article — the other
+     piece in the pair. Sits below the held closer line, set restrained:
+     a small eyebrow, the title as link, a one-sentence blurb. */
+  .ti-prose .ti-sister-link {
+    display: block;
+    margin: 64px auto 12px;
+    max-width: 540px;
+    padding: 22px 26px 24px;
+    border: 1px solid var(--ti-rule);
+    border-radius: 10px;
+    background: var(--ti-surface);
+    text-align: center;
+  }
+  .ti-prose .ti-sister-eyebrow {
+    margin: 0 0 6px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ti-accent);
+    font-weight: 700;
+  }
+  .ti-prose .ti-sister-title {
+    margin: 0 0 8px;
+    font-family: var(--ti-font-serif);
+    font-size: clamp(20px, 2.2vw, 24px);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.005em;
+  }
+  .ti-prose .ti-sister-title a {
+    color: var(--ti-fg);
+    text-decoration: none;
+    border-bottom: 2px solid var(--ti-accent);
+    padding-bottom: 1px;
+  }
+  .ti-prose .ti-sister-title a:hover {
+    color: var(--ti-accent);
+  }
+  .ti-prose .ti-sister-blurb {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ti-fg-dim);
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-sister-link {
+      margin: 48px auto 8px;
+      padding: 18px 18px 20px;
     }
   }
 

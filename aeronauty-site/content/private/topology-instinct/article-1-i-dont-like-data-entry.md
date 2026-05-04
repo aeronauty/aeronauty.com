@@ -70,6 +70,8 @@ Paradigm formed the backbone of my Associate Technical Fellow (ATF)[asterisk: No
 
 Paradigm needed an organisation that could reward and acknowledge cross-domain work, and Boeing's structure whilst great at building aircraft, was not set up to celebrate that at the time. Paradigm won the No-Bull Prize at the international Crew and Fleet Optimisation Workshop[asterisk: CoW Workshop...COW, No-Bull, Nobel...geddit? _Sigh_.] hosted by Jeppesen in 2025, credited as the work presented that was "most economically valuable to Boeing." A mock reviewer in the rehearsal panel for my Associate Technical Fellow interview called it "revolutionary," and told me I was a shoe-in for ATF. 
 
+[FIGURE: jeppesen-no-bull-award]
+
 The ATF panel didn't see demonstrable impact to Boeing, and around the same time the project got dropped[asterisk: My manager, Dom Barone, always saw the value and gave me aircover, for which I am eternally thankful - but it could only last so long.]. I was furious and heartbroken. It took me a while to realise the system, not the work, was the problem.
 
 The bit I want you to take from Paradigm isn't the equation. It's the same complaint as the PowerPoint deck and the doctor's-office form, scaled up. Two coupled systems — aircraft and airports — were being analysed separately, and someone was meant to manually reconcile the results. The MILP just put the coupling in the model so a human didn't have to - and that, compared to a solver for that purpose, a human is laughably shit at. 
@@ -169,3 +171,9 @@ Thread is the latest and most literal version of that refusal. Store the shape. 
 I don't think this is a particularly profound observation. It is, if anything, the opposite — most of the people I admire technically have an instinctive version of the same complaint, and the tooling response (databases, type systems, dependency graphs, build tools, even the version-control history of a file) is largely the same response across very different fields. The bit that took me two decades wasn't *having* the instinct. It was finding the right place to put it down. Plot dashboards were a place to put it down for a project. Paradigm was a place to put it down for a year. Postgres was a place to put it down with decent structure. Thread is, I think, the right place to put it down for the work I want to spend the rest of my career on.
 
 That is the thread. It was there the whole time.
+
+<aside class="ti-sister-link">
+  <p class="ti-sister-eyebrow">Companion piece</p>
+  <p class="ti-sister-title"><a href="/lab/articles/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
+  <p class="ti-sister-blurb">The same instinct, the other way round: about the person who kept noticing — and what changed when prescribed ADHD medication and a swarm of cheap fast AI agents arrived more or less at the same time.</p>
+</aside>

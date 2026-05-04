@@ -43,8 +43,9 @@
     --ti-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --ti-font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
     --ti-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    --ti-content-w: 700px;
-    --ti-wide-w:   1200px;
+    --ti-content-w: 760px;       /* bumped from 700 — prose still in the readable range, more presence on wide screens */
+    --ti-wide-w:   1480px;       /* bumped from 1200 — figures get more horizontal room when they break out */
+    --ti-side-w:   320px;        /* right-margin column on >=1280 viewports — homes for pull-quotes and side asides */
   }
 
   @media (prefers-color-scheme: light) {
@@ -117,7 +118,7 @@
   .ti-prose .ti-what-changed {
     margin-left: calc(50% - 50vw + 8px);
     margin-right: calc(50% - 50vw + 8px);
-    max-width: 1240px;
+    max-width: clamp(1240px, 92vw, 1480px);   /* fluid cap — uses available width on big monitors */
     margin-inline: auto;
   }
   .ti-prose .ti-what-changed {
@@ -423,6 +424,137 @@
       padding: 16px 0 18px;
       font-size: 21px;
       max-width: 24ch;
+    }
+  }
+  /* On wide screens (>=1280 px), pull-quotes break OUT into the
+     right margin instead of sitting centred — Guardian-style margin
+     pull. Prose flows on the left at reading width; the quote sits
+     beside it, smaller, italicised, in the empty side gutter. */
+  @media (min-width: 1280px) {
+    .ti-prose .ti-pullquote {
+      float: right;
+      margin: 8px -300px 12px 24px;   /* negative right margin pulls into the side gutter */
+      padding: 18px 0 18px;
+      width: 280px;
+      max-width: 280px;
+      font-size: 19px;
+      line-height: 1.36;
+      text-align: left;
+      border-top: 2px solid var(--ti-accent);
+      border-bottom: 1px solid var(--ti-rule);
+    }
+    /* Clear floats so following content doesn't wrap underneath. */
+    .ti-prose h2, .ti-prose .ti-divider, .ti-prose .ti-eyebrow,
+    .ti-prose figure, .ti-prose .ti-final, .ti-prose .ti-epiquote,
+    .ti-prose aside { clear: both; }
+  }
+
+  /* ---- epigraph / epiquote ----
+     A quoted passage that opens (or punctuates) a section, set in
+     display type with attribution. Wired via the [EPIQUOTE] ...
+     [/EPIQUOTE] markdown block, which the build expands into:
+       <aside class="ti-epiquote">
+         <p class="ti-epiquote-text">...</p>
+         <p class="ti-epiquote-attr">...</p>
+       </aside>
+  */
+  .ti-prose .ti-epiquote {
+    display: grid;
+    gap: 16px;
+    margin: 72px auto 64px;
+    padding: 6px 8px 18px;
+    max-width: 720px;
+    text-align: center;
+    position: relative;
+  }
+  .ti-prose .ti-epiquote::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 1px;
+    background: var(--ti-accent);
+    margin: 0 auto 6px;
+  }
+  .ti-prose .ti-epiquote-text {
+    margin: 0;
+    font-family: var(--ti-font-serif);
+    font-size: clamp(22px, 2.6vw, 30px);
+    line-height: 1.32;
+    font-style: italic;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  .ti-prose .ti-epiquote-attr {
+    margin: 0;
+    font-family: var(--ti-font-sans);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ti-fg-dim);
+    font-style: normal;
+  }
+  .ti-prose .ti-epiquote-attr::before { content: "— "; }
+  @media (max-width: 480px) {
+    .ti-prose .ti-epiquote {
+      margin: 48px auto 36px;
+      padding: 4px 4px 14px;
+      gap: 12px;
+    }
+    .ti-prose .ti-epiquote-text { font-size: 20px; }
+  }
+
+  /* ---- companion-piece sister link ----
+     Cross-article handoff at the bottom of each article — the other
+     piece in the pair. Sits below the held closer line, set restrained:
+     a small eyebrow, the title as link, a one-sentence blurb. */
+  .ti-prose .ti-sister-link {
+    display: block;
+    margin: 64px auto 12px;
+    max-width: 540px;
+    padding: 22px 26px 24px;
+    border: 1px solid var(--ti-rule);
+    border-radius: 10px;
+    background: var(--ti-surface);
+    text-align: center;
+  }
+  .ti-prose .ti-sister-eyebrow {
+    margin: 0 0 6px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ti-accent);
+    font-weight: 700;
+  }
+  .ti-prose .ti-sister-title {
+    margin: 0 0 8px;
+    font-family: var(--ti-font-serif);
+    font-size: clamp(20px, 2.2vw, 24px);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.005em;
+  }
+  .ti-prose .ti-sister-title a {
+    color: var(--ti-fg);
+    text-decoration: none;
+    border-bottom: 2px solid var(--ti-accent);
+    padding-bottom: 1px;
+  }
+  .ti-prose .ti-sister-title a:hover {
+    color: var(--ti-accent);
+  }
+  .ti-prose .ti-sister-blurb {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ti-fg-dim);
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-sister-link {
+      margin: 48px auto 8px;
+      padding: 18px 18px 20px;
     }
   }
 
@@ -4331,29 +4463,33 @@ main { max-width: 1280px; margin: 0 auto; }
   position: relative;
   min-height: 420px;
   display: grid;
-  align-content: end;
+  align-content: center;
   justify-items: center;
 }
 
 .wc-photo svg {
-  width: min(280px, 100%);
+  width: min(310px, 100%);
   height: auto;
   filter: drop-shadow(0 16px 26px rgba(15,23,42,0.22));
 }
 
 .wc-photo-card {
   position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: 5%;
-  transform: rotate(-2deg);
-  padding: 16px;
+  left: 9%;
+  right: 9%;
+  bottom: 7%;
+  transform: rotate(-3deg);
+  padding: 14px 15px;
   border: 1px solid #b08968;
   border-radius: 3px;
-  background: #f5e6c8;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(255,255,255,0.45), transparent 22%),
+    #f5e6c8;
   color: #5c3b19;
   font-family: Georgia, "Times New Roman", serif;
-  box-shadow: 0 18px 34px rgba(92,59,25,0.18);
+  box-shadow:
+    0 18px 34px rgba(92,59,25,0.18),
+    inset 0 0 0 1px rgba(255,255,255,0.28);
 }
 
 .wc-photo-card strong {
@@ -4366,6 +4502,13 @@ main { max-width: 1280px; margin: 0 auto; }
   display: block;
   font-size: 13px;
   line-height: 1.38;
+}
+
+.wc-photo .wc-bellows-fold {
+  fill: none;
+  stroke: #8b5e34;
+  stroke-width: 2.2;
+  opacity: 0.72;
 }
 
 .wc-caption {
@@ -4445,14 +4588,14 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q68.0,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q65.2,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q52.199999999999996,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q65.2,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q57.39999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q46.599999999999994,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q65.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q65.2,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,90 Q70.8,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q63.8,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q46.599999999999994,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q70.8,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,210 Q58.8,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q49.4,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q62.99999999999999,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q70.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
     <path class="ti-map-edge" d="M31,30 Q72.2,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
@@ -5396,18 +5539,27 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
                 </div>
               </div>
               <div class="wc-photo" aria-hidden="true">
-                <svg viewBox="0 0 260 360">
-                  <rect x="54" y="112" width="130" height="88" rx="8" fill="#2f2418"/>
-                  <rect x="72" y="130" width="94" height="52" rx="6" fill="#111827"/>
-                  <circle cx="118" cy="156" r="29" fill="#374151"/>
-                  <circle cx="118" cy="156" r="18" fill="#111827"/>
-                  <rect x="154" y="92" width="55" height="34" rx="5" fill="#4b321f"/>
-                  <path d="M75 200 L40 330 M160 200 L210 330 M118 200 L120 333" stroke="#3f2d1f" stroke-width="10" stroke-linecap="round"/>
-                  <circle cx="203" cy="83" r="24" fill="#e7c7a1"/>
-                  <path d="M175 75 C184 42 221 43 230 74 C216 65 196 68 175 75Z" fill="#3f2d1f"/>
-                  <rect x="190" y="108" width="31" height="92" rx="12" fill="#4b5563"/>
-                  <path d="M190 136 L154 160" stroke="#e7c7a1" stroke-width="11" stroke-linecap="round"/>
-                  <path d="M221 139 L238 187" stroke="#e7c7a1" stroke-width="11" stroke-linecap="round"/>
+                <svg viewBox="0 0 300 380">
+                  <ellipse cx="143" cy="332" rx="92" ry="13" fill="rgba(92,59,25,0.18)"/>
+                  <path d="M96 191 L55 335 M151 193 L147 338 M206 191 L249 335" stroke="#3f2d1f" stroke-width="8" stroke-linecap="round"/>
+                  <path d="M72 260 L226 260" stroke="#3f2d1f" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+                  <rect x="69" y="118" width="80" height="68" rx="6" fill="#2f2418"/>
+                  <path d="M146 124 L198 104 L198 202 L146 182 Z" fill="#c49a6c" stroke="#6b4423" stroke-width="4"/>
+                  <path class="wc-bellows-fold" d="M156 121 L156 186 M167 117 L167 190 M178 113 L178 194 M189 109 L189 198"/>
+                  <rect x="194" y="96" width="56" height="112" rx="7" fill="#3b2818" stroke="#1f140c" stroke-width="4"/>
+                  <rect x="205" y="115" width="34" height="70" rx="4" fill="#111827"/>
+                  <circle cx="222" cy="150" r="24" fill="#374151"/>
+                  <circle cx="222" cy="150" r="13" fill="#020617"/>
+                  <rect x="91" y="98" width="39" height="22" rx="4" fill="#4b321f"/>
+                  <path d="M43 142 C63 118 95 109 122 117" fill="none" stroke="#2f2418" stroke-width="11" stroke-linecap="round"/>
+                  <circle cx="63" cy="93" r="21" fill="#e7c7a1"/>
+                  <path d="M36 89 C44 56 84 54 96 87 C76 80 57 82 36 89Z" fill="#2f2418"/>
+                  <path d="M42 115 C57 127 76 127 91 115 L98 183 L35 183 Z" fill="#334155"/>
+                  <path d="M43 132 L76 151" stroke="#e7c7a1" stroke-width="10" stroke-linecap="round"/>
+                  <path d="M91 132 L118 123" stroke="#e7c7a1" stroke-width="10" stroke-linecap="round"/>
+                  <path d="M31 181 L107 181 L96 258 L43 258 Z" fill="#1f2937"/>
+                  <path d="M47 258 L40 330 M86 258 L96 330" stroke="#1f2937" stroke-width="13" stroke-linecap="round"/>
+                  <path d="M36 178 C58 166 84 166 107 178 L100 207 C75 199 56 199 31 207 Z" fill="#111827" opacity="0.82"/>
                 </svg>
                 <div class="wc-photo-card">
                   <strong>The deck is a photograph.</strong>
@@ -5467,6 +5619,11 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 <p>Thread is the latest and most literal version of that refusal. Store the shape. Preserve the provenance. Let the flat view be a view, not the truth. Stop making humans re-enter structure the system should have kept.</p>
 <p>I don&rsquo;t think this is a particularly profound observation. It is, if anything, the opposite — most of the people I admire technically have an instinctive version of the same complaint, and the tooling response (databases, type systems, dependency graphs, build tools, even the version-control history of a file) is largely the same response across very different fields. The bit that took me two decades wasn&rsquo;t <em>having</em> the instinct. It was finding the right place to put it down. Plot dashboards were a place to put it down for a project. Paradigm was a place to put it down for a year. Postgres was a place to put it down with decent structure. Thread is, I think, the right place to put it down for the work I want to spend the rest of my career on.</p>
 <p class="ti-final">That is the thread. It was there the whole time.</p>
+<aside class="ti-sister-link">
+  <p class="ti-sister-eyebrow">Companion piece</p>
+  <p class="ti-sister-title"><a href="/lab/articles/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
+  <p class="ti-sister-blurb">The same instinct, the other way round: about the person who kept noticing — and what changed when prescribed ADHD medication and a swarm of cheap fast AI agents arrived more or less at the same time.</p>
+</aside>
   </main>
 
   <footer class="ti-foot ti-narrow" role="contentinfo">
