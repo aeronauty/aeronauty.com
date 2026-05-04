@@ -502,7 +502,21 @@ def render_prose() -> tuple[str, str]:
         bits.append(f'<section class="ti-section" id="{node_id}" data-node-id="{node_id}">')
         if numeral:
             bits.append(f'<span class="ti-section-numeral" aria-hidden="true">{numeral}</span>')
-        bits.append(f'<h2 class="ti-section-h2">{text}</h2>')
+        # Special-case: article 1 section 5 ("Thread") gets a cinematic SVG
+        # logotype that draws itself in (a thin black thread crosses the page,
+        # spawning each letter as it passes, then settles into a hairline rule
+        # under the word). The H2 still exists for the article-map / sidebar /
+        # accessibility tree — it's just visually replaced by the logo block.
+        if CURRENT_ARTICLE_ID == 1 and text.strip() == "Thread":
+            bits.append(
+                f'<h2 class="ti-section-h2 ti-visually-hidden">{text}</h2>'
+            )
+            bits.append(
+                '<div class="ti-thread-logo" id="ti-thread-logo" '
+                'data-thread-logo aria-hidden="true"></div>'
+            )
+        else:
+            bits.append(f'<h2 class="ti-section-h2">{text}</h2>')
         if stand:
             bits.append(f'<p class="ti-section-stand">{stand}</p>')
         bits.append('</section>')
@@ -2529,6 +2543,138 @@ ARTICLE_CSS = r"""
     .ti-prose .ti-section { margin: 56px 0 24px; }
     .ti-prose .ti-section-stand { font-size: 17px; padding-left: 11px; }
   }
+
+  /* ---- visually-hidden helper (preserves a11y H2 for the section
+     anchor / article map while the visual element is the logo) ---- */
+  .ti-visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ---- cinematic "Thread" logotype (article 1, section 5) ----
+     A thin line draws across the page from left to right, spawning each
+     letter as it passes; the line then loops down and settles as a
+     hairline rule beneath the word. End state is a clean black-on-white
+     wordmark. */
+  .ti-thread-logo {
+    display: block;
+    margin: 4px 0 22px;
+    color: var(--ti-fg);   /* drives currentColor for the SVG strokes */
+    line-height: 0;        /* no extra baseline gap below the SVG */
+  }
+  .ti-thread-logo svg {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    overflow: visible;
+  }
+  /* Letter glyphs: drawn-on stroke that fills in once the thread has
+     passed. Idle state (off-viewport) hides them; the .play class
+     animates them in. */
+  .ti-thread-logo .ti-thread-letter {
+    fill: transparent;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: var(--len, 600);
+    stroke-dashoffset: var(--len, 600);
+    opacity: 0;
+  }
+  .ti-thread-logo .ti-thread-line {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-dasharray: var(--line-len, 1200);
+    stroke-dashoffset: var(--line-len, 1200);
+  }
+  .ti-thread-logo .ti-thread-rule {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-dasharray: var(--rule-len, 360);
+    stroke-dashoffset: var(--rule-len, 360);
+    opacity: 0;
+  }
+
+  /* The thread sweeps across (0 -> ~70% of duration); each letter starts
+     drawing as the thread crosses its centre, then fills to solid; the
+     thread continues, loops down, and the underline rule settles last. */
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-line {
+    animation: ti-thread-draw 1500ms cubic-bezier(.65,.05,.36,1) forwards;
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-letter {
+    animation:
+      ti-thread-letter-draw 700ms cubic-bezier(.55,.08,.32,1) forwards,
+      ti-thread-letter-fill 320ms ease-out forwards;
+    /* per-letter delays are set inline by JS via --d-draw / --d-fill */
+    animation-delay: var(--d-draw, 0ms), var(--d-fill, 700ms);
+  }
+  .ti-thread-logo.ti-thread-logo-play .ti-thread-rule {
+    animation: ti-thread-rule-draw 520ms cubic-bezier(.45,.05,.2,1) 1480ms forwards;
+  }
+
+  /* End state — once the play class has run, the styles above leave the
+     animations in their forwards state. We also set this when reduced
+     motion or post-replay so the wordmark renders intact even if the
+     element re-mounts mid-paint. */
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-letter {
+    fill: currentColor;
+    stroke-width: 0;
+    stroke-dashoffset: 0;
+    opacity: 1;
+    animation: none;
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-line {
+    opacity: 0;
+    animation: none;
+  }
+  .ti-thread-logo.ti-thread-logo-rest .ti-thread-rule {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    animation: none;
+  }
+
+  @keyframes ti-thread-draw {
+    0%   { stroke-dashoffset: var(--line-len, 1200); opacity: 1; }
+    72%  { stroke-dashoffset: 0; opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+  @keyframes ti-thread-letter-draw {
+    0%   { opacity: 1; stroke-dashoffset: var(--len, 600); fill: transparent; }
+    100% { opacity: 1; stroke-dashoffset: 0; fill: transparent; }
+  }
+  @keyframes ti-thread-letter-fill {
+    0%   { fill: transparent; }
+    100% { fill: currentColor; stroke-width: 0; }
+  }
+  @keyframes ti-thread-rule-draw {
+    0%   { stroke-dashoffset: var(--rule-len, 360); opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  @media (max-width: 520px) {
+    .ti-thread-logo svg { max-width: 300px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ti-thread-logo .ti-thread-letter,
+    .ti-thread-logo .ti-thread-rule {
+      animation: none !important;
+      opacity: 1 !important;
+      stroke-dashoffset: 0 !important;
+    }
+    .ti-thread-logo .ti-thread-letter { fill: currentColor !important; stroke-width: 0 !important; }
+    .ti-thread-logo .ti-thread-line { display: none; }
+  }
+
   .ti-section-pin {
     display: none;
   }
@@ -2617,6 +2763,38 @@ ARTICLE_CSS = r"""
     .ti-section-pin-stand {
       font-size: 16px;
     }
+  }
+  /* ---- FLIP morph: floating clone that animates from inline header
+     position to the .ti-section-pin rail target. Created on the fly
+     by SECTION_FLIP_JS; lives only for the duration of the animation. ---- */
+  .ti-section-morph {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 41;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    transform-origin: top left;
+    will-change: transform, opacity;
+    transition: transform 640ms cubic-bezier(0.65, 0, 0.32, 1),
+                opacity 320ms ease;
+  }
+  .ti-section-morph .ti-section-numeral,
+  .ti-section-morph .ti-section-h2,
+  .ti-section-morph .ti-section-stand {
+    margin: 0;
+  }
+  .ti-section-morph .ti-section-numeral { margin-bottom: 10px; }
+  .ti-section-morph .ti-section-h2 { margin-bottom: 14px; }
+  /* While a morph is in flight, mask the pin's snap-update by hiding
+     its contents — the clone is the visible thing during the flight. */
+  .ti-section-pin[data-flipping="true"] {
+    opacity: 0 !important;
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ti-section-morph { transition: opacity 160ms ease; }
   }
   /* Bigger, breathier section break. Replaces the old tight ✦ rule with
      a long thin horizontal rule with the bullet centred, plus more
@@ -3228,6 +3406,208 @@ MAP_JS = r"""
 """
 
 
+SECTION_FLIP_JS = r"""
+(function () {
+  // Guardian/NYT-style FLIP morph: when an inline section header scrolls
+  // off the top of the viewport, spawn a position:fixed clone of the
+  // numeral + h2 + stand-first triple and animate it (transform-only)
+  // from the inline source rect to the left-rail .ti-section-pin
+  // target rect. The pin itself is the source of truth for the settled
+  // rail content — the clone just masks the snap.
+  const sections = Array.from(document.querySelectorAll('.ti-section'));
+  const pin = document.querySelector('.ti-section-pin');
+  if (!sections.length || !pin) return;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wideMQ = window.matchMedia('(min-width: 1180px)');
+
+  let pinnedSection = null;
+  let lastClone = null;
+
+  function isWide() { return wideMQ.matches; }
+
+  function pickSourceParts(section) {
+    // Defensive: if Agent B has replaced the H2 with .ti-thread-logo,
+    // the H2 may be empty — bail out gracefully.
+    const numeral = section.querySelector('.ti-section-numeral');
+    const h2      = section.querySelector('.ti-section-h2');
+    const stand   = section.querySelector('.ti-section-stand');
+    if (!h2) return null;
+    const h2Text = (h2.textContent || '').trim();
+    if (!h2Text) return null; // empty H2 — let other systems own it
+    return { numeral, h2, stand };
+  }
+
+  function unionRect(els) {
+    let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
+    let any = false;
+    els.forEach(el => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return;
+      top = Math.min(top, r.top);
+      left = Math.min(left, r.left);
+      right = Math.max(right, r.right);
+      bottom = Math.max(bottom, r.bottom);
+      any = true;
+    });
+    if (!any) return null;
+    return { top, left, width: right - left, height: bottom - top };
+  }
+
+  function applyPinContent(section) {
+    const numeralEl = pin.querySelector('.ti-section-pin-numeral');
+    const titleEl   = pin.querySelector('.ti-section-pin-title');
+    const standEl   = pin.querySelector('.ti-section-pin-stand');
+    const num   = section.querySelector('.ti-section-numeral');
+    const h2    = section.querySelector('.ti-section-h2');
+    const stand = section.querySelector('.ti-section-stand');
+    if (numeralEl) numeralEl.textContent = num   ? num.textContent   : '';
+    if (titleEl)   titleEl.textContent   = h2    ? h2.textContent    : '';
+    if (standEl)   standEl.textContent   = stand ? stand.textContent : '';
+  }
+
+  function buildClone(parts) {
+    // Clone text content into a fresh wrapper so we can FLIP all three
+    // elements as a single transform target. Inherits styling from
+    // .ti-prose so the inline-state typography matches the source.
+    const wrap = document.createElement('div');
+    wrap.className = 'ti-section-morph ti-prose';
+    if (parts.numeral) {
+      const n = document.createElement('span');
+      n.className = 'ti-section-numeral';
+      n.textContent = parts.numeral.textContent || '';
+      wrap.appendChild(n);
+    }
+    const h = document.createElement('h2');
+    h.className = 'ti-section-h2';
+    h.textContent = parts.h2.textContent || '';
+    wrap.appendChild(h);
+    if (parts.stand) {
+      const s = document.createElement('p');
+      s.className = 'ti-section-stand';
+      s.textContent = parts.stand.textContent || '';
+      wrap.appendChild(s);
+    }
+    return wrap;
+  }
+
+  function morph(section) {
+    if (!isWide()) {
+      applyPinContent(section);
+      return;
+    }
+    const parts = pickSourceParts(section);
+    if (!parts) return; // Agent B's logo section: gracefully no-op.
+
+    pin.removeAttribute('data-flipping');
+    applyPinContent(section);
+    pin.dataset.visible = 'true';
+    const sourceRect = unionRect([parts.numeral, parts.h2, parts.stand]);
+    const targetRect = pin.getBoundingClientRect();
+    if (!sourceRect || targetRect.width === 0) return;
+
+    if (reduceMotion) {
+      pin.dataset.visible = 'true';
+      return;
+    }
+
+    // Canonical FLIP: paint the clone at the *target* rect, transform
+    // it back to the *source* rect, then animate transform → identity.
+    const dx = sourceRect.left - targetRect.left;
+    const dy = sourceRect.top  - targetRect.top;
+    const scale = sourceRect.width / Math.max(1, targetRect.width);
+
+    pin.dataset.flipping = 'true';
+
+    const clone = buildClone(parts);
+    clone.style.left   = targetRect.left + 'px';
+    clone.style.top    = targetRect.top  + 'px';
+    clone.style.width  = targetRect.width + 'px';
+    clone.style.opacity = '1';
+    clone.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+    document.body.appendChild(clone);
+
+    if (lastClone && lastClone !== clone && lastClone.parentNode) {
+      lastClone.parentNode.removeChild(lastClone);
+    }
+    lastClone = clone;
+
+    void clone.offsetWidth;
+    requestAnimationFrame(() => {
+      clone.style.transform = 'translate(0, 0) scale(1)';
+    });
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      pin.removeAttribute('data-flipping');
+      pin.dataset.visible = 'true';
+      if (clone.parentNode) clone.parentNode.removeChild(clone);
+      if (lastClone === clone) lastClone = null;
+    };
+    clone.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 900);
+  }
+
+  function setPinnedSection(section) {
+    if (section === pinnedSection) return;
+    pinnedSection = section;
+    if (!section) {
+      pin.removeAttribute('data-flipping');
+      pin.dataset.visible = 'false';
+      if (lastClone && lastClone.parentNode) {
+        lastClone.parentNode.removeChild(lastClone);
+        lastClone = null;
+      }
+      return;
+    }
+    morph(section);
+  }
+
+  function currentPinnedFromScroll() {
+    // The "pinned" section is the last .ti-section whose top has crossed
+    // the viewport top. If none have, no rail.
+    let candidate = null;
+    for (let i = 0; i < sections.length; i++) {
+      const r = sections[i].getBoundingClientRect();
+      if (r.top <= 4) candidate = sections[i];
+      else break;
+    }
+    return candidate;
+  }
+
+  // IntersectionObserver: rootMargin -100% bottom => fires the moment a
+  // section's top crosses the viewport top, in either direction.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(() => {
+      const next = currentPinnedFromScroll();
+      if (next !== pinnedSection) setPinnedSection(next);
+    }, { rootMargin: '0px 0px -100% 0px', threshold: [0, 1] });
+    sections.forEach(s => io.observe(s));
+  }
+
+  window.addEventListener('resize', () => {
+    const next = currentPinnedFromScroll();
+    if (next === pinnedSection) return;
+    pinnedSection = next;
+    if (next) applyPinContent(next);
+    pin.dataset.visible = (isWide() && next) ? 'true' : 'false';
+  });
+
+  // First paint: if the user lands mid-article, settle the pin without
+  // animating.
+  const initial = currentPinnedFromScroll();
+  if (initial) {
+    pinnedSection = initial;
+    applyPinContent(initial);
+    if (isWide()) pin.dataset.visible = 'true';
+  }
+})();
+"""
+
+
 FLOWCHART_SCROLLY_JS = r"""
 (function () {
   // Replace the ADHD flowchart's auto-advance loop with scroll-driven
@@ -3425,6 +3805,204 @@ PROGRESS_JS = r"""
     updateEpiquotes();
   }
 })();
+
+// ---------------------------------------------------------------------------
+// Cinematic "Thread" logotype (article 1, section 5).
+//
+// Builds an inline SVG inside #ti-thread-logo that draws the word "Thread"
+// letter-by-letter as a thin black thread sweeps across the page from left
+// to right. After the letters fill in, the thread loops down and settles as
+// a hairline rule under the word — the final state is a clean black-on-white
+// wordmark that persists.
+//
+// Triggered ONCE per viewport-entry via IntersectionObserver (threshold 0.4).
+// prefers-reduced-motion users get the final state directly, no animation.
+// ---------------------------------------------------------------------------
+(function () {
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const WORD = 'Thread';
+
+  function buildLogo(host) {
+    if (!host || host.dataset.threadLogoBuilt === '1') return;
+    host.dataset.threadLogoBuilt = '1';
+
+    // Reduced-motion: skip the build animation, paint the rest state.
+    const reduced = window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // viewBox is wide so the thread has room to enter from the left and
+    // loop under the word on exit. Y baseline at 105 leaves headroom for
+    // the swept-line preamble and a comfortable underline below.
+    const VB_W = 600;
+    const VB_H = 200;
+    const BASELINE = 122;
+    const FONT_SIZE = 96; // px in viewBox space — display weight
+
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + VB_W + ' ' + VB_H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Thread');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    // Hidden measuring text — we use getComputedTextLength on a single full
+    // word render to find each letter's x-position. We then create one
+    // <text> element per letter for independent dash/delay animation.
+    const probe = document.createElementNS(SVG_NS, 'text');
+    probe.setAttribute('x', '0');
+    probe.setAttribute('y', BASELINE);
+    probe.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
+    probe.setAttribute('font-size', FONT_SIZE);
+    probe.setAttribute('font-weight', '600');
+    probe.setAttribute('letter-spacing', '0');
+    probe.setAttribute('fill', 'transparent');
+    probe.setAttribute('visibility', 'hidden');
+    probe.textContent = WORD;
+    svg.appendChild(probe);
+
+    // Append SVG to host so getComputedTextLength works (needs layout).
+    host.appendChild(svg);
+
+    // Measure cumulative widths of each prefix to find letter centres.
+    const prefixWidths = [0];
+    for (let i = 1; i <= WORD.length; i++) {
+      const p = document.createElementNS(SVG_NS, 'text');
+      p.setAttribute('x', '0');
+      p.setAttribute('y', BASELINE);
+      p.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
+      p.setAttribute('font-size', FONT_SIZE);
+      p.setAttribute('font-weight', '600');
+      p.setAttribute('fill', 'transparent');
+      p.setAttribute('visibility', 'hidden');
+      p.textContent = WORD.substring(0, i);
+      svg.appendChild(p);
+      prefixWidths.push(p.getComputedTextLength());
+      svg.removeChild(p);
+    }
+    const totalW = prefixWidths[prefixWidths.length - 1];
+
+    // Centre the word in the viewBox.
+    const xStart = (VB_W - totalW) / 2;
+
+    // The sweeping thread path: enters left, gentle dip down, climbs to the
+    // baseline midline, exits right, then a second segment that loops down
+    // and becomes the underline rule. We separate them for control: one
+    // <path> for the sweep, one <line> for the persistent rule.
+    const lineY = BASELINE - FONT_SIZE * 0.42; // approx mid-x-height
+    const sweep = document.createElementNS(SVG_NS, 'path');
+    const dipY = lineY + 6;
+    const sweepD = [
+      'M', -20, dipY,
+      'C', xStart * 0.4, dipY - 4, xStart * 0.7, lineY, xStart - 8, lineY,
+      'L', xStart + totalW + 8, lineY,
+      'C', VB_W - xStart * 0.5, lineY, VB_W - xStart * 0.3, dipY - 6, VB_W + 20, dipY
+    ].join(' ');
+    sweep.setAttribute('d', sweepD);
+    sweep.setAttribute('class', 'ti-thread-line');
+    svg.appendChild(sweep);
+    const sweepLen = Math.ceil(sweep.getTotalLength());
+    sweep.style.setProperty('--line-len', sweepLen);
+
+    // Per-letter <text> elements. Each starts as a stroked outline (drawn
+    // via dashoffset) then fills to currentColor.
+    const ruleY = BASELINE + 18;
+    const totalSweepMs = 1500;
+    const letterEls = [];
+    for (let i = 0; i < WORD.length; i++) {
+      const t = document.createElementNS(SVG_NS, 'text');
+      t.setAttribute('x', xStart + prefixWidths[i]);
+      t.setAttribute('y', BASELINE);
+      t.setAttribute('font-family', 'Source Serif 4, Source Serif Pro, Georgia, "Times New Roman", serif');
+      t.setAttribute('font-size', FONT_SIZE);
+      t.setAttribute('font-weight', '600');
+      t.setAttribute('class', 'ti-thread-letter');
+      t.textContent = WORD[i];
+      svg.appendChild(t);
+      // Heuristic dash length; serif glyphs at 96px settle around 320-520.
+      const dashLen = Math.max(320, Math.ceil(FONT_SIZE * 4.2));
+      t.style.setProperty('--len', dashLen);
+      // Per-letter delay synced to where the thread crosses each letter's
+      // centre. The sweep goes 0 -> 72% over totalSweepMs, then fades.
+      const letterCentre = xStart + (prefixWidths[i] + prefixWidths[i + 1]) / 2;
+      const sweepProgress = Math.min(1, Math.max(0, (letterCentre + 20) / (VB_W + 40)));
+      const drawDelay = Math.round(sweepProgress * totalSweepMs * 0.72);
+      const fillDelay = drawDelay + 580; // letter starts to fill ~near end of its draw
+      t.style.setProperty('--d-draw', drawDelay + 'ms');
+      t.style.setProperty('--d-fill', fillDelay + 'ms');
+      letterEls.push(t);
+    }
+
+    // Persistent underline rule (a thin hairline that draws last and stays).
+    const rule = document.createElementNS(SVG_NS, 'line');
+    rule.setAttribute('x1', xStart - 4);
+    rule.setAttribute('y1', ruleY);
+    rule.setAttribute('x2', xStart + totalW + 4);
+    rule.setAttribute('y2', ruleY);
+    rule.setAttribute('class', 'ti-thread-rule');
+    const ruleLen = Math.ceil(totalW + 8);
+    rule.style.setProperty('--rule-len', ruleLen);
+    svg.appendChild(rule);
+
+    // Remove probe — done with it.
+    if (probe.parentNode) probe.parentNode.removeChild(probe);
+
+    if (reduced) {
+      host.classList.add('ti-thread-logo-rest');
+      return host;
+    }
+
+    return host;
+  }
+
+  function play(host) {
+    if (!host) return;
+    host.classList.remove('ti-thread-logo-rest');
+    // Reset animations by force-reflow.
+    host.classList.remove('ti-thread-logo-play');
+    void host.offsetWidth;
+    host.classList.add('ti-thread-logo-play');
+    // After the full cycle, lock to rest state so it persists cleanly even
+    // if styles re-evaluate.
+    const totalMs = 2050;
+    window.setTimeout(function () {
+      host.classList.add('ti-thread-logo-rest');
+    }, totalMs);
+  }
+
+  function init() {
+    const host = document.getElementById('ti-thread-logo');
+    if (!host) return;
+    buildLogo(host);
+
+    const reduced = window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || !('IntersectionObserver' in window)) {
+      host.classList.add('ti-thread-logo-rest');
+      return;
+    }
+
+    let inView = false;
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+          if (!inView) {
+            inView = true;
+            play(host);
+          }
+        } else if (entry.intersectionRatio < 0.05) {
+          // Once the section is fully out of view, arm for replay.
+          inView = false;
+        }
+      });
+    }, { threshold: [0, 0.05, 0.4, 0.6] });
+    io.observe(host);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 """
 
 
@@ -3513,6 +4091,7 @@ HTML_TEMPLATE = """<!doctype html>
 <script>{flowchart_scrolly_js}</script>
 <script>{orch_scrolly_js}</script>
 <script>{map_js}</script>
+<script>{section_flip_js}</script>
 
 </body>
 </html>
