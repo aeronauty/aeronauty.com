@@ -60,6 +60,7 @@ function isDashboardSelfEvent(event: ActivityEvent): boolean {
 export default function LabActivityPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [storeConfigured, setStoreConfigured] = useState<boolean | null>(null);
+  const [ownerActivityFiltered, setOwnerActivityFiltered] = useState(false);
   const [loading, setLoading] = useState(true);
   const [trackerStatus, setTrackerStatus] = useState<TrackerStatus>(null);
 
@@ -76,10 +77,12 @@ export default function LabActivityPage() {
       .then((body) => {
         setEvents(body.events ?? []);
         setStoreConfigured(body.activityStoreConfigured ?? null);
+        setOwnerActivityFiltered(Boolean(body.ownerActivityFiltered));
       })
       .catch(() => {
         setEvents([]);
         setStoreConfigured(null);
+        setOwnerActivityFiltered(false);
       })
       .finally(() => {
         setLoading(false);
@@ -112,7 +115,10 @@ export default function LabActivityPage() {
 
         <p className="eyebrow">Lab</p>
         <h1 className="mt-4 text-5xl font-semibold tracking-tight">Activity</h1>
-        <p className="mt-4 text-stone-600">Recent first-party activity events.</p>
+        <p className="mt-4 text-stone-600">
+          Recent first-party activity events
+          {ownerActivityFiltered ? ", excluding your own signed-in views" : ""}.
+        </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
           <div className="rounded-md border border-stone-200 bg-white p-5">
