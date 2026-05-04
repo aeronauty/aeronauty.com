@@ -83,6 +83,12 @@ The bit I want you to take from Paradigm isn't the equation. It's the same compl
 
 That sentence is the whole project.
 
+<aside class="ti-bridge-link">
+  <p class="ti-bridge-eyebrow">The personal version</p>
+  <p class="ti-bridge-copy">The companion essay picks up this exact move — refusing to decouple a problem that only makes sense when solved jointly — and asks why that kind of problem has always felt native to my brain.</p>
+  <p class="ti-bridge-action"><a href="/lab/articles/the-brain-that-was-a-tax#problem-class">Read the ADHD/aeroelasticity link</a></p>
+</aside>
+
 ## Twenty years of trying not to be the human join operation
 
 The plot stuff and Paradigm are the visible bits. Most of the work was invisible.
@@ -99,15 +105,15 @@ If I had to put the through-line on a t-shirt: I have spent over a decade trying
 
 The frustrating bit is that the tooling for not-being-the-join existed for most of those twenty years. Foreign keys are not new. Graph databases are not new. Provenance tracking is not new. What was missing wasn't the technology; it was anyone willing to sit in the gap between the engineers who had the data and the database people who knew how to store it properly. The OR community had MILP. The CFD community had file formats. Neither group routinely picked up the other one's tools, so the engineer in the middle ended up doing the picking up — which is, again, the same complaint. Two systems that should be coupled aren't, and a human ends up holding the coupling. Every time I migrated a storage layer, it was because nobody else had decided that the engineering data deserved the database treatment that the rest of the world had been using for decades. It wasn't a frontier. It was just a gap nobody had stepped into.
 
-## Vera
+## Flexcompute
 
-Vera Yang is the president of Flexcompute. She somehow found me through one of my interactive flight-dynamics explainers — the Plotly-not-PowerPoint instinct, in a LinkedIn post<link: https://www.linkedin.com/posts/smithharry_flightdynamics-aislop-cursor-activity-7376916528644026368-kM7c?utm_source=share&utm_medium=member_desktop&rcm=ACoAAANMdVwBKLOcMRpXWyRH2Z7n96t-w04J4Zw> — and decided I should be at her company.
+[Vera Yang](https://www.linkedin.com/in/vera-yang-54767959/) is the president of Flexcompute. She somehow found me through one of my interactive flight-dynamics explainers — the Plotly-not-PowerPoint instinct, in a [LinkedIn post](https://www.linkedin.com/posts/smithharry_flightdynamics-aislop-cursor-activity-7376916528644026368-kM7c) — and decided I should be at her company.
 
 [FIGURE: vera-applet]
 
 Two organisations with different filters, looking at the same instinct in me, seeing different things. One graded the work on whether it could be priced into a deliverables list; the other graded it on whether it looked like the kind of thinking they wanted more of. This isn't a sleight on Boeing - they're a big and successful company for a reason.
 
-So - thank you, Vera. And thank you, Dom - for keeping the project alive when the system around it wasn't built to reward that kind of work.
+So - thank you, [Vera](https://www.linkedin.com/in/vera-yang-54767959/). And thank you, [Dom](https://www.linkedin.com/in/dominicbarone/) - for keeping the project alive when the system around it wasn't built to reward that kind of work.
 
 ## Thread
 
@@ -178,5 +184,5 @@ That is the thread. It was there the whole time.
 <aside class="ti-sister-link">
   <p class="ti-sister-eyebrow">Companion piece</p>
   <p class="ti-sister-title"><a href="/lab/articles/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
-  <p class="ti-sister-blurb">The same instinct, the other way round: about the person who kept noticing — and what changed when prescribed ADHD medication and a swarm of cheap fast AI agents arrived more or less at the same time.</p>
+  <p class="ti-sister-blurb">The same instinct, the other way round: from coupled engineering problems to the ADHD-shaped brain that kept being drawn to them.</p>
 </aside>

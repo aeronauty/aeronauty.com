@@ -1536,6 +1536,15 @@
   .ti-section-morph-word[data-state="settling"] .ti-section-morph-word-target {
     opacity: 1;
   }
+  @media (min-width: 1180px) {
+    .ti-prose .ti-section[data-pin-source="true"] .ti-section-numeral,
+    .ti-prose .ti-section[data-pin-source="true"] .ti-section-h2,
+    .ti-prose .ti-section[data-pin-source="true"] .ti-section-stand,
+    .ti-prose .ti-section[data-pin-source="true"] .ti-thread-logo {
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+  }
   /* While a morph is in flight, mask the pin's snap-update by hiding
      its contents — the word layer is the visible thing during the flight. */
   .ti-section-pin[data-flipping="true"] {
@@ -2227,17 +2236,17 @@
 <aside class="ti-map" aria-label="Article map" data-article-id="2">
   <svg class="ti-map-svg" viewBox="0 0 110 480" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385 M28,395 L28,445" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q63.8,180.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="why-now" />
-    <path class="ti-map-edge" d="M31,90 Q65.2,270.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q50.8,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="problem-class" />
-    <path class="ti-map-edge" d="M31,150 Q72.2,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="swarm-cant" />
-    <path class="ti-map-edge" d="M31,150 Q69.4,270.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="how-made" />
+    <path class="ti-map-edge" d="M31,90 Q69.4,180.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="why-now" />
+    <path class="ti-map-edge" d="M31,90 Q73.6,270.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q53.599999999999994,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="problem-class" />
+    <path class="ti-map-edge" d="M31,150 Q73.6,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,150 Q72.2,270.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="how-made" />
     <path class="ti-map-edge" d="M31,150 Q64.39999999999999,210.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="why-now" />
-    <path class="ti-map-edge" d="M31,210 Q57.39999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="problem-class" data-edge-to="swarm-cant" />
-    <path class="ti-map-edge" d="M31,210 Q73.6,330.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="problem-class" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,330 Q60.199999999999996,390.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="swarm-cant" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q72.2,180.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="swarm-cant" />
-    <path class="ti-map-edge" d="M31,270 Q67.19999999999999,330.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="why-now" data-edge-to="how-made" />
+    <path class="ti-map-edge" d="M31,210 Q60.199999999999996,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="problem-class" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,210 Q66.6,330.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="problem-class" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,330 Q62.99999999999999,390.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="swarm-cant" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q65.2,180.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,270 Q57.39999999999999,330.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="why-now" data-edge-to="how-made" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Up front: Cold open: this is about the person who kept noticing.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -4108,6 +4117,7 @@
 
   function setPinnedSection(section) {
     if (section === pinnedSection) return;
+    if (pinnedSection) pinnedSection.removeAttribute('data-pin-source');
     pinnedSection = section;
     if (!section) {
       pin.removeAttribute('data-flipping');
@@ -4118,6 +4128,7 @@
       }
       return;
     }
+    section.dataset.pinSource = 'true';
     morph(section);
   }
 
@@ -4146,8 +4157,12 @@
   window.addEventListener('resize', () => {
     const next = currentPinnedFromScroll();
     if (next === pinnedSection) return;
+    if (pinnedSection) pinnedSection.removeAttribute('data-pin-source');
     pinnedSection = next;
-    if (next) applyPinContent(next);
+    if (next) {
+      next.dataset.pinSource = 'true';
+      applyPinContent(next);
+    }
     pin.dataset.visible = (isWide() && next) ? 'true' : 'false';
   });
 
@@ -4156,6 +4171,7 @@
   const initial = currentPinnedFromScroll();
   if (initial) {
     pinnedSection = initial;
+    initial.dataset.pinSource = 'true';
     applyPinContent(initial);
     if (isWide()) pin.dataset.visible = 'true';
   }
