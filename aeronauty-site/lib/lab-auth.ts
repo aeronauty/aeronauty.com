@@ -4,6 +4,7 @@ export const LAB_SESSION_COOKIE = "__Host-aeronauty-lab-session";
 
 const MAGIC_LINK_TTL = "15m";
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+const BUILT_IN_ALLOWED_EMAILS = ["sunnyholme@google.com"];
 
 type LabTokenPayload = {
   email: string;
@@ -31,6 +32,7 @@ export function isAllowedLabEmail(email: string): boolean {
   const rawAllowlist = process.env.AERONAUTY_LAB_ALLOWED_EMAILS ?? "";
   const allowlist = rawAllowlist
     .split(",")
+    .concat(BUILT_IN_ALLOWED_EMAILS)
     .map((item) => normalizeEmail(item))
     .filter(Boolean);
 
