@@ -64,9 +64,13 @@ function hashClientIp(req: Request): string | null {
 }
 
 export async function getKnownUser(req: Request): Promise<{ email: string | null; authMethod: string | null }> {
-  const session = await auth();
-  if (session?.user?.email) {
-    return { email: session.user.email.toLowerCase(), authMethod: "google" };
+  try {
+    const session = await auth();
+    if (session?.user?.email) {
+      return { email: session.user.email.toLowerCase(), authMethod: "google" };
+    }
+  } catch (error) {
+    console.debug("NextAuth user lookup failed while recording activity:", error);
   }
 
   const cookie = req.headers.get("cookie") ?? "";
