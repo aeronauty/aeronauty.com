@@ -2892,6 +2892,101 @@ main { max-width: 1200px; margin: 0 auto; }
 .atp-tooltip.atp-tooltip-show { opacity: 1; }
 .atp-tooltip strong { color: var(--atp-accent-2); font-weight: 600; }
 
+/* Right-click contextual "ask Thread" menu. Opens beside whatever data
+   point the reader right-clicked. Same vocabulary as the flat-view's
+   per-cell menu — metadata that lives next to the thing it describes. */
+.atp-ctxmenu {
+  position: absolute;
+  z-index: 7;
+  min-width: 240px;
+  max-width: 320px;
+  background: var(--atp-surface);
+  border: 1px solid var(--atp-accent);
+  border-radius: 8px;
+  padding: 10px 12px 8px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+  font-size: 12.5px;
+  color: var(--atp-fg);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(0, 0) scale(0.97);
+  transform-origin: top left;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.atp-ctxmenu.atp-show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, 0) scale(1);
+}
+.atp-ctxmenu .atp-ctx-head {
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--atp-rule);
+  margin-bottom: 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--atp-fg-dim);
+  font-weight: 600;
+}
+.atp-ctxmenu .atp-ctx-head strong { color: var(--atp-accent); font-weight: 700; }
+.atp-ctxmenu .atp-ctx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.atp-ctxmenu .atp-ctx-list li {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) 1fr;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 12.5px;
+  line-height: 1.45;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.atp-ctxmenu .atp-ctx-list li.atp-ctx-shown { opacity: 1; transform: translateY(0); }
+.atp-ctxmenu .atp-ctx-q { color: var(--atp-fg-dim); font-style: italic; }
+.atp-ctxmenu .atp-ctx-a {
+  color: var(--atp-accent);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  word-break: break-word;
+}
+@media (max-width: 480px) {
+  .atp-ctxmenu { min-width: 200px; max-width: 86vw; font-size: 12px; }
+  .atp-ctxmenu .atp-ctx-list li { grid-template-columns: 1fr; gap: 1px; }
+}
+
+/* Right-click hint card in the side panel. */
+.atp-card-rc-tip {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--atp-accent) 6%, var(--atp-surface-2));
+  border-color: color-mix(in srgb, var(--atp-accent) 35%, var(--atp-border));
+}
+.atp-card-rc-tip .atp-rc-line {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--atp-fg-dim);
+  line-height: 1.5;
+}
+.atp-rc-kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--atp-accent);
+  border: 1px solid color-mix(in srgb, var(--atp-accent) 50%, var(--atp-border));
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--atp-accent) 10%, transparent);
+  margin-right: 2px;
+}
+
 /* ---- Side panel ---- */
 .atp-side {
   display: flex;
@@ -3723,25 +3818,27 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 
           <!-- Tooltip pinned to the active point -->
           <div class="atp-tooltip" id="atp-tooltip" role="status" aria-live="polite"></div>
+
+          <!-- Contextual "ask Thread" menu — opens on right-click of any
+               data point, sits next to the point inside the plot. -->
+          <div class="atp-ctxmenu" id="atp-ctxmenu" role="menu" aria-label="Ask Thread about this point"></div>
         </div>
 
-        <!-- Side panel -->
+        <!-- Side panel — now only the ephemerality card. The Q&A used
+             to live here; it's been moved into the contextual right-click
+             menu so the metadata sits next to the point it describes. -->
         <div class="atp-side">
-          <div class="atp-card" aria-live="polite">
-            <p class="atp-card-eyebrow">Ask Thread about this point</p>
-            <h4 class="atp-card-title" id="atp-card-title">α=6°, C<sub>L</sub>=0.592</h4>
-            <ul class="atp-q-list" id="atp-q-list">
-              <!-- Populated by JS — six question/answer rows for the
-                   currently-active data point. -->
-            </ul>
-          </div>
-
           <div class="atp-card atp-card-eph">
             <p class="atp-eph-title">This plot is ephemeral. The connection isn&rsquo;t.</p>
             <p class="atp-eph-sub">Drop the PNG anywhere &mdash; deck, doc, Slack, screenshot &mdash; you can still walk back to the data.</p>
             <ul class="atp-eph-list" id="atp-eph-list">
               <!-- Populated by JS — three ephemerality mechanisms. -->
             </ul>
+          </div>
+          <div class="atp-card atp-card-rc-tip" aria-hidden="true">
+            <p class="atp-rc-line">
+              <span class="atp-rc-kbd">right-click</span> any point &rarr; ask Thread what flowed into it.
+            </p>
           </div>
         </div>
       </div>
@@ -6893,11 +6990,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     return c;
   });
 
-  // ---- Tooltip + side-panel updates ------------------------------------
+  // ---- Tooltip + contextual menu ---------------------------------------
   const host       = document.getElementById('atp-plot-host');
   const tooltip    = document.getElementById('atp-tooltip');
-  const cardTitle  = document.getElementById('atp-card-title');
-  const qList      = document.getElementById('atp-q-list');
+  const ctxMenu    = document.getElementById('atp-ctxmenu');
   const ephList    = document.getElementById('atp-eph-list');
 
   function pointPosOnHost(idx) {
@@ -6927,18 +7023,56 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   function setActivePoint(idx) {
     ptEls.forEach((e, i) => e.classList.toggle('atp-pt-active', i === idx));
     rings.forEach((e, i) => e.classList.toggle('atp-show', i === idx));
-    const p = POINTS[idx];
-    cardTitle.innerHTML = `α=${p.alpha}°, C<sub>L</sub>=${p.cl.toFixed(3)} <span style="color:var(--atp-fg-faint);font-weight:400;">(run ${p.run})</span>`;
-    // Rebuild question rows; reveal them with stagger.
-    qList.innerHTML = '';
+  }
+
+  // ---- Right-click contextual menu -------------------------------------
+  // Replaces the old side-panel Q&A. Asking Thread about a point now
+  // happens *on* the point — same vocabulary as right-clicking a cell
+  // in the flat-view table.
+  function buildCtxMenuFor(idx) {
+    const p  = POINTS[idx];
     const qs = questionsFor(p);
+    ctxMenu.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'atp-ctx-head';
+    head.innerHTML = `Ask Thread about <strong>α=${p.alpha}°, C<sub>L</sub>=${p.cl.toFixed(3)}</strong>`;
+    ctxMenu.appendChild(head);
+    const ul = document.createElement('ul');
+    ul.className = 'atp-ctx-list';
     qs.forEach((qa, i) => {
       const li = document.createElement('li');
-      li.innerHTML = `<span class="atp-q">${qa.q}</span><span class="atp-a">${qa.a}</span>`;
-      qList.appendChild(li);
-      setTimeout(() => li.classList.add('atp-q-shown'), 60 + i * 90);
+      li.innerHTML = `<span class="atp-ctx-q">${qa.q}</span><span class="atp-ctx-a">${qa.a}</span>`;
+      ul.appendChild(li);
+      // Stagger reveal so the menu feels like Thread "answering" rather
+      // than just dumping a record.
+      setTimeout(() => li.classList.add('atp-ctx-shown'), 80 + i * 90);
+    });
+    ctxMenu.appendChild(ul);
+  }
+
+  function openCtxMenu(idx) {
+    buildCtxMenuFor(idx);
+    const pos = pointPosOnHost(idx);
+    const hostRect = host.getBoundingClientRect();
+    // Place the menu just to the right + below the point, then clamp.
+    let x = pos.x + 12;
+    let y = pos.y + 12;
+    ctxMenu.style.left = x + 'px';
+    ctxMenu.style.top  = y + 'px';
+    ctxMenu.classList.add('atp-show');
+    requestAnimationFrame(() => {
+      const mr = ctxMenu.getBoundingClientRect();
+      if (mr.right > hostRect.right - 8) {
+        x = Math.max(8, hostRect.width - mr.width - 12);
+      }
+      if (mr.bottom > hostRect.bottom - 8) {
+        y = Math.max(8, pos.y - mr.height - 12);
+      }
+      ctxMenu.style.left = x + 'px';
+      ctxMenu.style.top  = y + 'px';
     });
   }
+  function closeCtxMenu() { ctxMenu.classList.remove('atp-show'); }
 
   // ---- Ephemerality reveal --------------------------------------------
   // Build once; reveal items with stagger (loops with the demo).
@@ -6959,12 +7093,15 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   }
   buildEphemerality();
 
-  // Initial state — show point 3 (α=6°) selected so the side panel
-  // isn't empty before the auto-play kicks in.
+  // Initial state — show point 3 (α=6°) marked so the demo starts on
+  // a known cell. The contextual menu stays closed until right-click
+  // (or until the auto-play opens it).
   setActivePoint(3);
 
-  // ---- User hover handling --------------------------------------------
-  // Hovering a point updates everything. Auto-play steps aside.
+  // ---- User hover + right-click handling -------------------------------
+  // Hovering a point updates the active dot + tooltip. Right-clicking
+  // opens the "ask Thread" menu on that point. Auto-play steps aside on
+  // either interaction.
   let userTookOver = false;
   function onPointHover(idx) {
     userTookOver = true;
@@ -6972,12 +7109,29 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     setActivePoint(idx);
     showTooltip(idx);
   }
+  function onPointRightClick(idx, ev) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    userTookOver = true;
+    stopDemo();
+    setActivePoint(idx);
+    showTooltip(idx);
+    openCtxMenu(idx);
+  }
   ptEls.forEach((e, i) => {
-    e.addEventListener('mouseenter', () => onPointHover(i));
-    e.addEventListener('focus',      () => onPointHover(i));
-    e.addEventListener('click',      () => onPointHover(i));
+    e.addEventListener('mouseenter',  () => onPointHover(i));
+    e.addEventListener('focus',       () => onPointHover(i));
+    e.addEventListener('click',       (ev) => { onPointHover(i); });
+    e.addEventListener('contextmenu', (ev) => onPointRightClick(i, ev));
   });
   host.addEventListener('mouseleave', () => { hideTooltip(); });
+  // Close the contextual menu on outside-click, Escape, or scroll.
+  document.addEventListener('click', (ev) => {
+    if (!ctxMenu.contains(ev.target)) closeCtxMenu();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') closeCtxMenu();
+  });
+  window.addEventListener('scroll', closeCtxMenu, { passive: true });
 
   const qrEl   = document.getElementById('atp-qr');
   const qrScan = document.getElementById('atp-qr-scan');
@@ -7026,48 +7180,61 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   function runDemoCycle() {
     if (!demoActive || userTookOver) return;
 
-    // Phase 1: cursor lands on point α=6°. Tooltip shows. Side panel
-    // updates with question stagger.
+    // Phase 1: cursor lands on point α=6°. Tooltip shows. The dot
+    // becomes the active one.
+    closeCtxMenu();
     moveCursorToPoint(3);
-    cursor.classList.add('atp-cursor-click');
-    setTimeout(() => cursor.classList.remove('atp-cursor-click'), 420);
     demoTimer = setTimeout(() => {
       if (!demoActive || userTookOver) return;
       setActivePoint(3);
       showTooltip(3);
 
-      // Phase 2: after questions finish staggering (~1.5s), move to QR.
+      // Phase 2: ~900 ms later, fire a right-click on the point. The
+      // contextual menu opens with question/answer rows revealing in
+      // sequence — same vocabulary as right-clicking a cell in the
+      // flat-view table.
       demoTimer = setTimeout(() => {
         if (!demoActive || userTookOver) return;
-        hideTooltip();
-        moveCursorToQR();
-        // Click the QR.
+        cursor.classList.add('atp-cursor-click');
+        setTimeout(() => cursor.classList.remove('atp-cursor-click'), 420);
+        openCtxMenu(3);
+
+        // Phase 3: after the menu's question stagger finishes (~1.6 s),
+        // move on to the QR badge for the ephemerality reveal.
         demoTimer = setTimeout(() => {
           if (!demoActive || userTookOver) return;
-          cursor.classList.add('atp-cursor-click');
-          setTimeout(() => cursor.classList.remove('atp-cursor-click'), 420);
-          fireQrScan();
-          revealEphemerality();
-          // Hold, then loop.
+          closeCtxMenu();
+          hideTooltip();
+          moveCursorToQR();
           demoTimer = setTimeout(() => {
             if (!demoActive || userTookOver) return;
-            cursor.classList.remove('atp-cursor-show');
+            cursor.classList.add('atp-cursor-click');
+            setTimeout(() => cursor.classList.remove('atp-cursor-click'), 420);
+            fireQrScan();
+            revealEphemerality();
+            // Hold, then loop.
             demoTimer = setTimeout(() => {
               if (!demoActive || userTookOver) return;
-              runDemoCycle();
-            }, 900);
-          }, 3600);
-        }, 900);
-      }, 2400);
+              cursor.classList.remove('atp-cursor-show');
+              demoTimer = setTimeout(() => {
+                if (!demoActive || userTookOver) return;
+                runDemoCycle();
+              }, 900);
+            }, 3600);
+          }, 900);
+        }, 3200);
+      }, 900);
     }, 700);
   }
 
-  // Reduced motion: skip the cursor animation, just leave the active
-  // point selected and the ephemerality block visible.
+  // Reduced motion: skip the cursor animation. Mark the active point,
+  // open the contextual menu statically, and reveal the ephemerality
+  // block — no movement, no auto-loop.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     cursor.classList.remove('atp-cursor-show');
     setActivePoint(3);
     showTooltip(3);
+    openCtxMenu(3);
     ephList.querySelectorAll('li').forEach(li => li.classList.add('atp-eph-shown'));
     return { setActivePoint };
   }
