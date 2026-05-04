@@ -207,32 +207,6 @@ def data_black_market_assets() -> tuple[str, str, str]:
         'src="figures/data-black-market/',
     )
 
-    # Two beats are slated to become Runway-generated videos rather than
-    # stills (beat 3 — directory hunt, beat 8 — closing zoom-out). When the
-    # corresponding .mp4 files exist on disk, swap the still <img> for an
-    # autoplaying muted-loop <video> with the still kept as the poster
-    # (so the first frame matches the cartoon style we generated). When
-    # the .mp4 isn't there yet, the still <img> stays — so the figure
-    # always renders cleanly.
-    for stem in ("03-folders", "08-archaeology"):
-        mp4_path = ROOT / "figures" / "data-black-market" / f"{stem}.mp4"
-        if not mp4_path.exists():
-            continue
-        # Match the <img ... /> for this stem as written in the figure
-        # source (with the figures/ prefix already applied above) and
-        # swap it for a <video> that posters the still.
-        pattern = (
-            r'<img\s+src="figures/data-black-market/' + re.escape(stem) + r'\.png"\s+'
-            r'alt="([^"]*)"\s*/>'
-        )
-        replacement = (
-            f'<video src="figures/data-black-market/{stem}.mp4" '
-            f'poster="figures/data-black-market/{stem}.png" '
-            f'autoplay muted loop playsinline preload="metadata" '
-            f'aria-label="\\1"></video>'
-        )
-        structure = re.sub(pattern, replacement, structure, count=1)
-
     return css, iife, structure
 
 
@@ -835,6 +809,89 @@ ARTICLE_CSS = r"""
   .ti-hero {
     margin: 24px 0 80px;
   }
+  .ti-hero-cinematic {
+    position: relative;
+    width: calc(100vw - 40px);
+    max-width: 1440px;
+    min-height: min(820px, calc(100vh - 116px));
+    margin: 0 auto 88px;
+    display: grid;
+    align-items: end;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #050914;
+    isolation: isolate;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.26);
+  }
+  .ti-hero-media,
+  .ti-hero-media video,
+  .ti-hero-shade {
+    position: absolute;
+    inset: 0;
+  }
+  .ti-hero-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.82;
+    filter: saturate(0.88) contrast(1.08);
+  }
+  .ti-hero-shade {
+    z-index: 1;
+    background:
+      linear-gradient(180deg, rgba(5,9,20,0.08) 0%, rgba(5,9,20,0.36) 43%, rgba(5,9,20,0.88) 100%),
+      radial-gradient(circle at 22% 28%, rgba(34,211,238,0.20), transparent 34%),
+      radial-gradient(circle at 82% 16%, rgba(168,85,247,0.20), transparent 30%);
+  }
+  .ti-hero-copy {
+    position: relative;
+    z-index: 2;
+    width: min(760px, calc(100% - 48px));
+    margin: 0;
+    padding: clamp(28px, 6vw, 74px);
+    color: #f8fafc;
+  }
+  .ti-hero-cinematic .ti-hero-eyebrow {
+    color: rgba(226,232,240,0.76);
+    margin-bottom: 18px;
+  }
+  .ti-hero-cinematic h1 {
+    max-width: 11ch;
+    color: #ffffff;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: 0 4px 32px rgba(0,0,0,0.45);
+    font-size: clamp(42px, 8.6vw, 112px);
+    letter-spacing: -0.055em;
+    line-height: 0.88;
+    margin-bottom: 24px;
+  }
+  .ti-hero-kicker {
+    max-width: 54ch;
+    margin: 0;
+    color: rgba(226,232,240,0.88);
+    font-family: var(--ti-font-serif);
+    font-size: clamp(18px, 2vw, 25px);
+    line-height: 1.42;
+  }
+  .ti-scroll-cue {
+    position: absolute;
+    right: 28px;
+    bottom: 22px;
+    z-index: 2;
+    color: rgba(226,232,240,0.70);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+  .ti-scroll-cue::after {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 46px;
+    margin: 9px auto 0;
+    background: linear-gradient(rgba(226,232,240,0.75), transparent);
+  }
   .ti-hero-eyebrow {
     font-size: 11px;
     text-transform: uppercase;
@@ -869,15 +926,41 @@ ARTICLE_CSS = r"""
     max-width: 56ch;
     line-height: 1.55;
   }
+  @media (max-width: 720px) {
+    .ti-hero-cinematic {
+      width: calc(100vw - 20px);
+      min-height: 76vh;
+      border-radius: 14px;
+      margin-bottom: 56px;
+    }
+    .ti-hero-copy {
+      width: 100%;
+      padding: 28px 22px 54px;
+    }
+    .ti-hero-cinematic h1 { max-width: 8.5ch; }
+    .ti-scroll-cue { display: none; }
+  }
 
   /* ---- prose typography ---- */
   .ti-prose {
-    font-size: 17px;
+    font-family: var(--ti-font-serif);
+    font-size: 18px;
     line-height: 1.7;
+  }
+  .ti-prose h2,
+  .ti-prose h3,
+  .ti-prose .ti-eyebrow,
+  .ti-prose .ti-figcap,
+  .ti-prose .ti-caption,
+  .ti-prose .ti-demo,
+  .ti-prose .ti-figure-milp,
+  .ti-prose pre,
+  .ti-prose code {
+    font-family: var(--ti-font-sans);
   }
   /* Prose stays >= 16 px on phones; cap it so it doesn't shrink. */
   @media (max-width: 480px) {
-    .ti-prose { font-size: 16.5px; line-height: 1.65; }
+    .ti-prose { font-size: 17px; line-height: 1.65; }
     .ti-prose blockquote { font-size: 17px; padding-left: 16px; }
     .ti-hero { margin: 16px 0 56px; }
     .ti-hero-deck { font-size: 17px; }
@@ -906,6 +989,9 @@ ARTICLE_CSS = r"""
   }
   .ti-prose p {
     margin: 0 0 1.15em;
+  }
+  .ti-prose > p {
+    text-wrap: pretty;
   }
   .ti-prose p strong {
     font-weight: 600;
@@ -1061,11 +1147,32 @@ ARTICLE_CSS = r"""
 
   /* ---- figures ---- */
   .ti-figure {
-    margin: 36px 0;
+    margin: 52px 0;
     padding: 18px;
     background: var(--ti-surface);
     border: 1px solid var(--ti-border);
     border-radius: 12px;
+  }
+  .ti-figure,
+  .ti-demo,
+  .ti-flat-view,
+  .ti-ask-the-plot,
+  .ti-data-black-market {
+    transition: opacity 520ms ease, transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
+  }
+  html.ti-js .ti-reveal {
+    opacity: 0.18;
+    transform: translateY(42px) scale(0.985);
+    filter: saturate(0.72);
+  }
+  html.ti-js .ti-reveal.ti-inview {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: saturate(1);
+  }
+  html.ti-js .ti-reveal.ti-dimmed {
+    opacity: 0.30;
+    transform: translateY(-14px) scale(0.992);
   }
   @media (max-width: 480px) {
     .ti-figure { padding: 12px; margin: 28px 0; }
@@ -1114,11 +1221,11 @@ ARTICLE_CSS = r"""
 
   /* ---- demo (globe) — break out of the narrow column ---- */
   .ti-demo {
-    margin: 56px 0 56px;
+    margin: 72px 0 72px;
   }
   @media (min-width: 1000px) {
     .ti-demo {
-      width: min(100vw - 32px, var(--ti-wide-w));
+      width: min(100vw - 32px, 1320px);
       margin-left: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
       margin-right: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
     }
@@ -1128,7 +1235,7 @@ ARTICLE_CSS = r"""
   /* ---- flat-view + adhd-flowchart asides — also break out wide so the
      scrolly grid has enough room for the table + DAG panel ---- */
   .ti-flat-view, .ti-flowchart {
-    margin: 56px 0;
+    margin: 72px 0;
   }
   @media (min-width: 1000px) {
     .ti-flat-view, .ti-flowchart {
@@ -1169,6 +1276,44 @@ ARTICLE_CSS = r"""
   .ti-figure-video {
     max-width: 720px;
     margin: 32px auto 28px;
+  }
+  .ti-figure-fullbleed {
+    position: relative;
+    width: min(100vw - 32px, 1240px);
+    max-width: none;
+    margin: 78px 50% 78px;
+    transform: translateX(-50%);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 18px;
+    overflow: clip;
+  }
+  .ti-figure-fullbleed .ti-video-wrap,
+  .ti-figure-fullbleed img {
+    border-radius: 18px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.28);
+  }
+  .ti-figure-fullbleed .ti-figcap {
+    width: min(680px, calc(100% - 32px));
+    margin: 14px auto 0;
+  }
+  @media (min-width: 980px) {
+    .ti-figure-fullbleed {
+      position: sticky;
+      top: 20px;
+      z-index: 1;
+    }
+  }
+  @media (max-width: 720px) {
+    .ti-figure-fullbleed {
+      width: 100%;
+      margin: 42px 0;
+      transform: none;
+      border-radius: 12px;
+    }
+    .ti-figure-fullbleed .ti-video-wrap,
+    .ti-figure-fullbleed img { border-radius: 12px; }
   }
 
   /* ---- MILP equations (beat 4) — KaTeX-rendered display math ---- */
@@ -1269,9 +1414,10 @@ ARTICLE_CSS = r"""
 PROGRESS_JS = r"""
 (function () {
   // Scroll-progress bar — width tracks how far through the article you are.
+  document.documentElement.classList.add('ti-js');
   const bar = document.querySelector('.ti-progress');
-  if (!bar) return;
   function update() {
+    if (!bar) return;
     const h = document.documentElement;
     const max = (h.scrollHeight - h.clientHeight) || 1;
     const r = Math.max(0, Math.min(1, h.scrollTop / max));
@@ -1280,6 +1426,31 @@ PROGRESS_JS = r"""
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   update();
+
+  const revealTargets = [
+    ...document.querySelectorAll('.ti-figure, .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
+  ];
+  revealTargets.forEach(el => el.classList.add('ti-reveal'));
+
+  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const seen = new WeakSet();
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const el = entry.target;
+        if (entry.isIntersecting) {
+          el.classList.add('ti-inview');
+          el.classList.remove('ti-dimmed');
+          seen.add(el);
+        } else if (seen.has(el)) {
+          el.classList.remove('ti-inview');
+          el.classList.add('ti-dimmed');
+        }
+      });
+    }, { threshold: [0.18, 0.56], rootMargin: '-8% 0px -12% 0px' });
+    revealTargets.forEach(el => io.observe(el));
+  } else {
+    revealTargets.forEach(el => el.classList.add('ti-inview'));
+  }
 })();
 """
 
@@ -1297,17 +1468,7 @@ HTML_TEMPLATE = """<!doctype html>
 <link rel="preconnect" href="https://rsms.me/" />
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
 
-<!-- Visualisation libraries (CDN) -->
-<script src="https://unpkg.com/d3@7"></script>
-<script src="https://unpkg.com/globe.gl"></script>
-<script src="https://unpkg.com/roughjs@4.6.6/bundled/rough.js"></script>
-<script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" charset="utf-8"></script>
-
-<!-- KaTeX (math typesetting for the MILP block in beat 4) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
-  onload="renderMathInElement(document.body, {{delimiters: [{{left: '$$', right: '$$', display: true}}, {{left: '$', right: '$', display: false}}], throwOnError: false}});"></script>
+{library_tags}
 
 <style>{article_css}</style>
 <style>{globe_css}</style>
@@ -1360,52 +1521,122 @@ HTML_TEMPLATE = """<!doctype html>
 """
 
 
+def marker_present(html: str, kind: str, name: str | None = None) -> bool:
+    if kind == "demo":
+        return "[INTERACTIVE DEMO:" in html
+    if name is None:
+        return False
+    return f"[{kind}: {name}]" in html or f"[{kind}:{name}]" in html
+
+
+def required_library_tags(needs: dict[str, bool]) -> str:
+    tags: list[str] = []
+    if needs["globe"]:
+        tags.extend([
+            '<!-- Globe + chart libraries for the airport-upgrade demo -->',
+            '<script src="https://unpkg.com/d3@7"></script>',
+            '<script src="https://unpkg.com/globe.gl"></script>',
+        ])
+    if needs["flowchart"]:
+        tags.extend([
+            '<!-- rough.js for the hand-drawn ADHD flowchart -->',
+            '<script src="https://unpkg.com/roughjs@4.6.6/bundled/rough.js"></script>',
+        ])
+    if needs["milp"]:
+        tags.extend([
+            '<!-- KaTeX (math typesetting for the MILP block) -->',
+            '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />',
+            '<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>',
+            '<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"',
+            '  onload="renderMathInElement(document.body, {delimiters: [{left: \'$$\', right: \'$$\', display: true}, {left: \'$\', right: \'$\', display: false}], throwOnError: false});"></script>',
+        ])
+    return "\n".join(tags)
+
+
 def main() -> None:
     print("Reading prose...")
     prose_html, page_title = render_prose()
 
-    print("Extracting globe demo assets...")
-    globe_css, globe_js, globe_struct = globe_assets()
+    needs = {
+        "globe": marker_present(prose_html, "demo"),
+        "flowchart": marker_present(prose_html, "FIGURE", "subverted-adhd-flowchart"),
+        "atomic": marker_present(prose_html, "FIGURE", "atomic-row"),
+        "flat_view": marker_present(prose_html, "FIGURE", "flat-view"),
+        "vera": marker_present(prose_html, "FIGURE", "vera-applet"),
+        "plotly_vs_pp": marker_present(prose_html, "FIGURE", "plotly-vs-powerpoint"),
+        "data_black_market": marker_present(prose_html, "FIGURE", "data-black-market"),
+        "ask_the_plot": marker_present(prose_html, "FIGURE", "ask-the-plot"),
+        "milp": marker_present(prose_html, "FIGURE", "milp-equations"),
+    }
 
-    print("Extracting flowchart assets...")
-    flow_css, flow_js, flow_struct = flowchart_assets()
+    globe_css = globe_js = globe_struct = ""
+    flow_css = flow_js = flow_struct = ""
+    atomic_css = atomic_js = atomic_struct = ""
+    fv_css = fv_js = fv_struct = ""
+    va_css = va_js = va_struct = ""
+    pv_css = pv_js = pv_struct = ""
+    dbm_css = dbm_js = dbm_struct = ""
+    atp_css = atp_js = atp_struct = ""
 
-    print("Extracting atomic-row assets...")
-    atomic_css, atomic_js, atomic_struct = atomic_row_assets()
+    if needs["globe"]:
+        print("Extracting globe demo assets...")
+        globe_css, globe_js, globe_struct = globe_assets()
 
-    print("Extracting flat-view assets...")
-    fv_css, fv_js, fv_struct = flat_view_assets()
+    if needs["flowchart"]:
+        print("Extracting flowchart assets...")
+        flow_css, flow_js, flow_struct = flowchart_assets()
 
-    print("Extracting vera-applet assets...")
-    va_css, va_js, va_struct = vera_applet_assets()
+    if needs["atomic"]:
+        print("Extracting atomic-row assets...")
+        atomic_css, atomic_js, atomic_struct = atomic_row_assets()
 
-    print("Extracting plotly-vs-powerpoint assets...")
-    pv_css, pv_js, pv_struct = plotly_vs_pp_assets()
+    if needs["flat_view"]:
+        print("Extracting flat-view assets...")
+        fv_css, fv_js, fv_struct = flat_view_assets()
 
-    print("Extracting data-black-market assets...")
-    dbm_css, dbm_js, dbm_struct = data_black_market_assets()
+    if needs["vera"]:
+        print("Extracting vera-applet assets...")
+        va_css, va_js, va_struct = vera_applet_assets()
 
-    print("Extracting ask-the-plot assets...")
-    atp_css, atp_js, atp_struct = ask_the_plot_assets()
+    if needs["plotly_vs_pp"]:
+        print("Extracting plotly-vs-powerpoint assets...")
+        pv_css, pv_js, pv_struct = plotly_vs_pp_assets()
+
+    if needs["data_black_market"]:
+        print("Extracting data-black-market assets...")
+        dbm_css, dbm_js, dbm_struct = data_black_market_assets()
+
+    if needs["ask_the_plot"]:
+        print("Extracting ask-the-plot assets...")
+        atp_css, atp_js, atp_struct = ask_the_plot_assets()
 
     print("Substituting placeholders...")
     prose_html = substitute_asides(prose_html)
     prose_html = substitute_excel_solari_video(prose_html)
     prose_html = substitute_homer(prose_html)
-    prose_html = substitute_plotly_vs_pp(prose_html, pv_struct)
-    prose_html = substitute_demo(prose_html, globe_struct)
-    prose_html = substitute_flowchart(prose_html, flow_struct)
-    prose_html = substitute_atomic_row(prose_html, atomic_struct)
-    prose_html = substitute_data_black_market(prose_html, dbm_struct)
-    prose_html = substitute_flat_view(prose_html, fv_struct)
-    prose_html = substitute_ask_the_plot(prose_html, atp_struct)
-    prose_html = substitute_vera_applet(prose_html, va_struct)
+    if needs["plotly_vs_pp"]:
+        prose_html = substitute_plotly_vs_pp(prose_html, pv_struct)
+    if needs["globe"]:
+        prose_html = substitute_demo(prose_html, globe_struct)
+    if needs["flowchart"]:
+        prose_html = substitute_flowchart(prose_html, flow_struct)
+    if needs["atomic"]:
+        prose_html = substitute_atomic_row(prose_html, atomic_struct)
+    if needs["data_black_market"]:
+        prose_html = substitute_data_black_market(prose_html, dbm_struct)
+    if needs["flat_view"]:
+        prose_html = substitute_flat_view(prose_html, fv_struct)
+    if needs["ask_the_plot"]:
+        prose_html = substitute_ask_the_plot(prose_html, atp_struct)
+    if needs["vera"]:
+        prose_html = substitute_vera_applet(prose_html, va_struct)
     prose_html = substitute_cartoon_normal_things(prose_html)
     prose_html = substitute_cartoon_ip_printer(prose_html)
     prose_html = substitute_cartoon_orchestrator(prose_html)
     prose_html = substitute_cartoon_storage_migrations(prose_html)
     prose_html = substitute_harry_plot_video(prose_html)
-    prose_html = substitute_milp_equations(prose_html)
+    if needs["milp"]:
+        prose_html = substitute_milp_equations(prose_html)
 
     # Runway-generated supplemental videos. Each call no-ops if the
     # placeholder isn't in the prose for the article currently being
@@ -1429,7 +1660,7 @@ def main() -> None:
         prose_html,
         marker="connections-by-hand",
         mp4_filename="connections-by-hand.mp4",
-        aria_label="Time-lapse of a hand drawing a flat table on paper, then drawing arcing connecting lines between cells",
+        aria_label="The same evolving 3D wireframe lattice from the photographer scene. A hand reaches in, plucks a few orbs, and places them onto a plot on a wooden easel. Thin cyan threads stay connected from each plot point back to its source node in the lattice — and pulses travel along them as the lattice keeps shifting.",
         caption="The connections were always meant to be first-class. Engineering data just got there last.",
     )
     prose_html = substitute_runway_video(
@@ -1471,6 +1702,7 @@ def main() -> None:
     print("Rendering article...")
     out = HTML_TEMPLATE.format(
         title=page_title,
+        library_tags=required_library_tags(needs),
         article_css=ARTICLE_CSS,
         globe_css=globe_css,
         flowchart_css=flow_css,

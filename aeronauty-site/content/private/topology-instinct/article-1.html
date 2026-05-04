@@ -11,13 +11,10 @@
 <link rel="preconnect" href="https://rsms.me/" />
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
 
-<!-- Visualisation libraries (CDN) -->
+<!-- Globe + chart libraries for the airport-upgrade demo -->
 <script src="https://unpkg.com/d3@7"></script>
 <script src="https://unpkg.com/globe.gl"></script>
-<script src="https://unpkg.com/roughjs@4.6.6/bundled/rough.js"></script>
-<script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" charset="utf-8"></script>
-
-<!-- KaTeX (math typesetting for the MILP block in beat 4) -->
+<!-- KaTeX (math typesetting for the MILP block) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
@@ -164,6 +161,89 @@
   .ti-hero {
     margin: 24px 0 80px;
   }
+  .ti-hero-cinematic {
+    position: relative;
+    width: calc(100vw - 40px);
+    max-width: 1440px;
+    min-height: min(820px, calc(100vh - 116px));
+    margin: 0 auto 88px;
+    display: grid;
+    align-items: end;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #050914;
+    isolation: isolate;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.26);
+  }
+  .ti-hero-media,
+  .ti-hero-media video,
+  .ti-hero-shade {
+    position: absolute;
+    inset: 0;
+  }
+  .ti-hero-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.82;
+    filter: saturate(0.88) contrast(1.08);
+  }
+  .ti-hero-shade {
+    z-index: 1;
+    background:
+      linear-gradient(180deg, rgba(5,9,20,0.08) 0%, rgba(5,9,20,0.36) 43%, rgba(5,9,20,0.88) 100%),
+      radial-gradient(circle at 22% 28%, rgba(34,211,238,0.20), transparent 34%),
+      radial-gradient(circle at 82% 16%, rgba(168,85,247,0.20), transparent 30%);
+  }
+  .ti-hero-copy {
+    position: relative;
+    z-index: 2;
+    width: min(760px, calc(100% - 48px));
+    margin: 0;
+    padding: clamp(28px, 6vw, 74px);
+    color: #f8fafc;
+  }
+  .ti-hero-cinematic .ti-hero-eyebrow {
+    color: rgba(226,232,240,0.76);
+    margin-bottom: 18px;
+  }
+  .ti-hero-cinematic h1 {
+    max-width: 11ch;
+    color: #ffffff;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: 0 4px 32px rgba(0,0,0,0.45);
+    font-size: clamp(42px, 8.6vw, 112px);
+    letter-spacing: -0.055em;
+    line-height: 0.88;
+    margin-bottom: 24px;
+  }
+  .ti-hero-kicker {
+    max-width: 54ch;
+    margin: 0;
+    color: rgba(226,232,240,0.88);
+    font-family: var(--ti-font-serif);
+    font-size: clamp(18px, 2vw, 25px);
+    line-height: 1.42;
+  }
+  .ti-scroll-cue {
+    position: absolute;
+    right: 28px;
+    bottom: 22px;
+    z-index: 2;
+    color: rgba(226,232,240,0.70);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+  .ti-scroll-cue::after {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 46px;
+    margin: 9px auto 0;
+    background: linear-gradient(rgba(226,232,240,0.75), transparent);
+  }
   .ti-hero-eyebrow {
     font-size: 11px;
     text-transform: uppercase;
@@ -198,15 +278,41 @@
     max-width: 56ch;
     line-height: 1.55;
   }
+  @media (max-width: 720px) {
+    .ti-hero-cinematic {
+      width: calc(100vw - 20px);
+      min-height: 76vh;
+      border-radius: 14px;
+      margin-bottom: 56px;
+    }
+    .ti-hero-copy {
+      width: 100%;
+      padding: 28px 22px 54px;
+    }
+    .ti-hero-cinematic h1 { max-width: 8.5ch; }
+    .ti-scroll-cue { display: none; }
+  }
 
   /* ---- prose typography ---- */
   .ti-prose {
-    font-size: 17px;
+    font-family: var(--ti-font-serif);
+    font-size: 18px;
     line-height: 1.7;
+  }
+  .ti-prose h2,
+  .ti-prose h3,
+  .ti-prose .ti-eyebrow,
+  .ti-prose .ti-figcap,
+  .ti-prose .ti-caption,
+  .ti-prose .ti-demo,
+  .ti-prose .ti-figure-milp,
+  .ti-prose pre,
+  .ti-prose code {
+    font-family: var(--ti-font-sans);
   }
   /* Prose stays >= 16 px on phones; cap it so it doesn't shrink. */
   @media (max-width: 480px) {
-    .ti-prose { font-size: 16.5px; line-height: 1.65; }
+    .ti-prose { font-size: 17px; line-height: 1.65; }
     .ti-prose blockquote { font-size: 17px; padding-left: 16px; }
     .ti-hero { margin: 16px 0 56px; }
     .ti-hero-deck { font-size: 17px; }
@@ -235,6 +341,9 @@
   }
   .ti-prose p {
     margin: 0 0 1.15em;
+  }
+  .ti-prose > p {
+    text-wrap: pretty;
   }
   .ti-prose p strong {
     font-weight: 600;
@@ -390,11 +499,32 @@
 
   /* ---- figures ---- */
   .ti-figure {
-    margin: 36px 0;
+    margin: 52px 0;
     padding: 18px;
     background: var(--ti-surface);
     border: 1px solid var(--ti-border);
     border-radius: 12px;
+  }
+  .ti-figure,
+  .ti-demo,
+  .ti-flat-view,
+  .ti-ask-the-plot,
+  .ti-data-black-market {
+    transition: opacity 520ms ease, transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
+  }
+  html.ti-js .ti-reveal {
+    opacity: 0.18;
+    transform: translateY(42px) scale(0.985);
+    filter: saturate(0.72);
+  }
+  html.ti-js .ti-reveal.ti-inview {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: saturate(1);
+  }
+  html.ti-js .ti-reveal.ti-dimmed {
+    opacity: 0.30;
+    transform: translateY(-14px) scale(0.992);
   }
   @media (max-width: 480px) {
     .ti-figure { padding: 12px; margin: 28px 0; }
@@ -443,11 +573,11 @@
 
   /* ---- demo (globe) — break out of the narrow column ---- */
   .ti-demo {
-    margin: 56px 0 56px;
+    margin: 72px 0 72px;
   }
   @media (min-width: 1000px) {
     .ti-demo {
-      width: min(100vw - 32px, var(--ti-wide-w));
+      width: min(100vw - 32px, 1320px);
       margin-left: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
       margin-right: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
     }
@@ -457,7 +587,7 @@
   /* ---- flat-view + adhd-flowchart asides — also break out wide so the
      scrolly grid has enough room for the table + DAG panel ---- */
   .ti-flat-view, .ti-flowchart {
-    margin: 56px 0;
+    margin: 72px 0;
   }
   @media (min-width: 1000px) {
     .ti-flat-view, .ti-flowchart {
@@ -498,6 +628,44 @@
   .ti-figure-video {
     max-width: 720px;
     margin: 32px auto 28px;
+  }
+  .ti-figure-fullbleed {
+    position: relative;
+    width: min(100vw - 32px, 1240px);
+    max-width: none;
+    margin: 78px 50% 78px;
+    transform: translateX(-50%);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 18px;
+    overflow: clip;
+  }
+  .ti-figure-fullbleed .ti-video-wrap,
+  .ti-figure-fullbleed img {
+    border-radius: 18px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.28);
+  }
+  .ti-figure-fullbleed .ti-figcap {
+    width: min(680px, calc(100% - 32px));
+    margin: 14px auto 0;
+  }
+  @media (min-width: 980px) {
+    .ti-figure-fullbleed {
+      position: sticky;
+      top: 20px;
+      z-index: 1;
+    }
+  }
+  @media (max-width: 720px) {
+    .ti-figure-fullbleed {
+      width: 100%;
+      margin: 42px 0;
+      transform: none;
+      border-radius: 12px;
+    }
+    .ti-figure-fullbleed .ti-video-wrap,
+    .ti-figure-fullbleed img { border-radius: 12px; }
   }
 
   /* ---- MILP equations (beat 4) — KaTeX-rendered display math ---- */
@@ -605,6 +773,8 @@
     --tg-text-faint:   #5c6a82;
     --tg-accent:       #22d3ee;     /* cyan-400 — upgraded airports + selected bar */
     --tg-accent-soft:  #22d3ee33;
+    --tg-new:          #f8fafc;
+    --tg-new-soft:     #f8fafc55;
     --tg-arc:          #22d3ee;
     --tg-arc-faint:    #93a0b633;
     --tg-strat-optimal: #22d3ee;
@@ -646,8 +816,68 @@
     height: 70vh;
     min-height: 480px;
   }
+  .tg-projection {
+    position: relative;
+    display: none;
+    width: 100%;
+    height: 70vh;
+    min-height: 480px;
+    background:
+      linear-gradient(rgba(147,160,182,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(147,160,182,0.04) 1px, transparent 1px),
+      radial-gradient(ellipse at top, #111b2d 0%, var(--tg-bg) 72%);
+    background-size: 36px 36px, 36px 36px, auto;
+  }
+  .tg-projection.tg-active { display: block; }
+  .tg-globe.tg-hidden-view { display: none; }
+  .tg-map-svg { display: block; width: 100%; height: 100%; }
+  .tg-map-frame { fill: rgba(10,14,26,0.35); stroke: var(--tg-border); stroke-width: 1; }
+  .tg-map-graticule { fill: none; stroke: rgba(147,160,182,0.18); stroke-width: 0.6; }
+  .tg-map-route {
+    fill: none;
+    stroke-linecap: round;
+    opacity: 0.62;
+    transition: opacity 220ms ease, stroke-width 220ms ease;
+  }
+  .tg-map-route.tg-new-route {
+    stroke: var(--tg-new);
+    opacity: 1;
+    filter: drop-shadow(0 0 5px var(--tg-new-soft));
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: tg-route-draw 1.25s ease-out forwards, tg-route-pulse 1.8s ease-out 1.25s 2;
+  }
+  .tg-map-point {
+    fill: var(--tg-accent);
+    stroke: rgba(10,14,26,0.92);
+    stroke-width: 1;
+    opacity: 0.86;
+    transition: r 220ms ease, fill 220ms ease, opacity 220ms ease;
+  }
+  .tg-map-point.tg-new-airport {
+    fill: var(--tg-new);
+    opacity: 1;
+    animation: tg-point-pop 1.8s ease-out 2;
+  }
+  .tg-map-point.tg-dim { fill: var(--tg-text-faint); opacity: 0.44; }
+  .tg-map-plane {
+    fill: var(--tg-new);
+    font-size: 13px;
+    filter: drop-shadow(0 0 4px rgba(248,250,252,0.85));
+    pointer-events: none;
+  }
+  @keyframes tg-route-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes tg-route-pulse {
+    0%, 100% { opacity: 0.95; }
+    50% { opacity: 0.35; }
+  }
+  @keyframes tg-point-pop {
+    0% { r: 3; opacity: 0.3; }
+    35% { r: 8; opacity: 1; }
+    100% { r: 4; opacity: 1; }
+  }
   @media (max-width: 600px) {
-    .tg-globe { height: 50vh; min-height: 320px; }
+    .tg-globe, .tg-projection { height: 50vh; min-height: 320px; }
   }
 
   .tg-loading {
@@ -664,7 +894,7 @@
   .tg-controls {
     position: absolute;
     top: 12px; right: 12px;
-    width: 280px;
+    width: 320px;
     background: rgba(18,24,38,0.92);
     border: 1px solid var(--tg-border);
     border-radius: 10px;
@@ -696,16 +926,58 @@
     margin-bottom: 6px;
   }
 
-  .tg-radio-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+  .tg-view-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--tg-border);
+    border-radius: 8px;
+    background: rgba(10,14,26,0.62);
+  }
+  .tg-view-tab {
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--tg-text-dim);
+    font-size: 13px;
+    font-weight: 650;
+    padding: 7px 8px;
+    cursor: pointer;
+  }
+  .tg-view-tab[aria-selected="true"] {
+    color: #06111c;
+    background: var(--tg-accent);
+  }
+
+  .tg-radio-list { display: grid; grid-template-columns: 1fr; gap: 6px; }
   .tg-radio-list label {
     display: flex; align-items: center; gap: 6px;
-    font-size: 12px;
+    min-height: 34px;
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--tg-text);
     cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 6px;
+    padding: 7px 8px;
+    border: 1px solid rgba(147,160,182,0.24);
+    border-radius: 8px;
+    background: rgba(10,14,26,0.42);
   }
-  .tg-radio-list label:hover { background: var(--tg-surface-2); }
+  .tg-radio-list label:hover { background: var(--tg-surface-2); border-color: var(--tg-text-dim); }
+  .tg-radio-list label:has(input:checked) {
+    border-color: var(--tg-accent);
+    background: rgba(34,211,238,0.14);
+    box-shadow: inset 3px 0 0 var(--tg-accent);
+  }
   .tg-radio-list input[type=radio] { accent-color: var(--tg-accent); }
+  .tg-radio-list .tg-strat-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    flex: 0 0 auto;
+    border-radius: 2px;
+  }
+  .tg-radio-list .tg-strat-label { overflow-wrap: anywhere; }
 
   .tg-slider-row {
     display: flex; align-items: center; gap: 10px;
@@ -717,17 +989,42 @@
   .tg-slider-readout {
     font-variant-numeric: tabular-nums;
     color: var(--tg-text);
-    font-size: 12px;
+    font-size: 13px;
     min-width: 56px;
     text-align: right;
   }
 
   .tg-checkbox-row {
     display: flex; align-items: center; gap: 8px;
-    font-size: 12px;
+    font-size: 13px;
+    color: var(--tg-text);
     cursor: pointer;
   }
+  .tg-checkbox-row:has(input:disabled) { color: var(--tg-text-faint); }
   .tg-checkbox-row input[type=checkbox] { accent-color: var(--tg-accent); }
+
+  .tg-legend-note {
+    display: grid;
+    gap: 5px;
+    color: var(--tg-text-dim);
+    font-size: 11px;
+  }
+  .tg-legend-note span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tg-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--tg-accent);
+  }
+  .tg-legend-dot.tg-new-dot {
+    background: var(--tg-new);
+    box-shadow: 0 0 8px var(--tg-new-soft);
+  }
 
   .tg-table-toggle {
     margin-top: 8px;
@@ -736,10 +1033,46 @@
     border: 1px solid var(--tg-border);
     padding: 5px 8px;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 13px;
     cursor: pointer;
   }
   .tg-table-toggle:hover { color: var(--tg-text); border-color: var(--tg-text-dim); }
+
+  .tg-delta {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 4;
+    max-width: min(420px, calc(100% - 24px));
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid rgba(248,250,252,0.22);
+    border-radius: 10px;
+    background: rgba(10,14,26,0.78);
+    color: var(--tg-text);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-size: 12px;
+    pointer-events: none;
+  }
+  .tg-delta[hidden] { display: none; }
+  .tg-delta strong { color: var(--tg-new); font-variant-numeric: tabular-nums; }
+  .tg-delta span { color: var(--tg-text-dim); white-space: nowrap; }
+  @media (max-width: 720px) {
+    .tg-delta {
+      position: static;
+      grid-template-columns: 1fr 1fr;
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+      background: var(--tg-surface);
+      max-width: none;
+    }
+  }
 
   /* Globe.gl tooltip override (default is too bright) */
   .tg-tooltip {
@@ -784,7 +1117,7 @@
   .tg-legend {
     display: flex; flex-wrap: wrap; gap: 12px 18px;
     margin-top: 6px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--tg-text-dim);
   }
   .tg-legend-item { display: inline-flex; align-items: center; gap: 6px; }
@@ -841,388 +1174,8 @@
     outline-offset: 2px;
   }
 </style>
-<style>
-    @media (prefers-color-scheme: dark) {
-      body { background: #111418; color: #e6e6e6; }
-    }
-    main {
-      max-width: 980px;
-      margin: 0 auto;
-    }
-
-    /* ===========================================================
-       af- = adhd-flowchart, namespaced to avoid collision with
-       the globe demo or anything else on the article page.
-       =========================================================== */
-
-    .af-figure {
-      position: relative;
-      width: 100%;
-      margin: 0 auto;
-      --af-fg: #1f2328;
-      --af-muted: #6b7280;
-      --af-faint: #b0b6bf;
-      --af-accent: #854d0e;
-      --af-row-band: rgba(133, 77, 14, 0.08);
-      --af-loop-fill: #fef9c3;
-      --af-loop-stroke: #854d0e;
-      --af-ai-fill: #dbeafe;
-      --af-ai-stroke: #1e3a8a;
-      --af-finish-grey-fill: #d1d5db;
-      --af-finish-grey-stroke: #4b5563;
-      --af-finish-green-fill: #bbf7d0;
-      --af-finish-green-stroke: #166534;
-      --af-edge: #1f2328;
-      --af-edge-soft: #6b7280;
-      --af-rule: #d8dde6;
-      --af-stage-bg: #ffffff;
-      --af-stage-border: #d8dde6;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .af-figure {
-        --af-fg: #e6e6e6;
-        --af-muted: #9aa0a6;
-        --af-faint: #5c6a82;
-        --af-accent: #e0b84a;
-        --af-row-band: rgba(224, 184, 74, 0.10);
-        --af-loop-fill: #4a3508;
-        --af-loop-stroke: #e0b84a;
-        --af-ai-fill: #1b2840;
-        --af-ai-stroke: #6fb1d9;
-        --af-finish-grey-fill: #2a2f36;
-        --af-finish-grey-stroke: #6b7280;
-        --af-finish-green-fill: #14391f;
-        --af-finish-green-stroke: #5fc07b;
-        --af-edge: #e6e6e6;
-        --af-edge-soft: #9aa0a6;
-        --af-rule: #2a3447;
-        --af-stage-bg: #161a20;
-        --af-stage-border: #2a3447;
-      }
-    }
-
-    /* ----- Scrollytelling layout: beats left, sticky stage right ----- */
-    .af-scrolly {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-      gap: 28px;
-      margin: 0;
-    }
-    @media (max-width: 800px) {
-      .af-scrolly { grid-template-columns: 1fr; gap: 14px; }
-    }
-
-    .af-scrolly-beats { display: flex; flex-direction: column; gap: 0; }
-    .af-scrolly-beat {
-      min-height: 60vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 22px 16px;
-      border-left: 3px solid var(--af-faint);
-      opacity: 0.42;
-      transition: opacity 350ms ease, border-left-color 350ms ease, background 350ms ease;
-    }
-    .af-scrolly-beat.af-active {
-      opacity: 1;
-      border-left-color: var(--af-accent);
-      background: var(--af-row-band);
-    }
-    .af-scrolly-beat-tag {
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--af-accent);
-      font-weight: 600;
-      margin: 0 0 6px;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    }
-    .af-scrolly-beat h4 {
-      font-size: 16.5px;
-      font-weight: 700;
-      margin: 0 0 8px;
-      color: var(--af-fg);
-      letter-spacing: -0.005em;
-      line-height: 1.3;
-    }
-    .af-scrolly-beat p {
-      font-size: 14px;
-      line-height: 1.55;
-      color: var(--af-muted);
-      margin: 0;
-    }
-    .af-scrolly-beat p strong { color: var(--af-fg); font-weight: 600; }
-    .af-scrolly-beat p em { color: var(--af-fg); }
-
-    .af-scrolly-stage {
-      position: sticky;
-      top: 80px;
-      align-self: start;
-      height: clamp(440px, 78vh, 620px);
-      border: 1px solid var(--af-stage-border);
-      border-radius: 10px;
-      background: var(--af-stage-bg);
-      padding: 18px 18px 14px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    @media (max-width: 800px) {
-      .af-scrolly-stage {
-        position: static;
-        height: auto;
-        min-height: 360px;
-      }
-    }
-
-    .af-svg-wrap {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .af-figure svg {
-      width: 100%;
-      height: 100%;
-      max-height: 100%;
-      display: block;
-      overflow: visible;
-    }
-
-    .af-caption {
-      margin-top: 12px;
-      text-align: center;
-      font-style: italic;
-      color: var(--af-muted);
-      font-size: 14px;
-      min-height: 1.4em;
-      transition: opacity 220ms ease;
-    }
-
-    .af-replay {
-      position: absolute;
-      bottom: 8px;
-      right: 12px;
-      background: transparent;
-      border: 1px solid var(--af-muted);
-      color: var(--af-muted);
-      padding: 4px 10px;
-      font: inherit;
-      font-size: 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      opacity: 0.55;
-      transition: opacity 150ms ease, color 150ms ease, border-color 150ms ease;
-    }
-    .af-replay:hover { opacity: 1; color: var(--af-fg); border-color: var(--af-fg); }
-
-    /* Animation primitives. rough.js renders <path>/<g> children inside
-       host groups; we control fade/draw via parent group classes. */
-    .af-ai-group {
-      opacity: 0;
-      transition: opacity 350ms ease;
-    }
-    .af-ai-group.af-visible { opacity: 1; }
-
-    /* Tell-everyone node + the two bypass edges (start→tell, tell→idea)
-       fade out together when the swarm takes over (state 2). */
-    .af-tell-group, .af-loop-edges-bypass {
-      opacity: 1;
-      transition: opacity 380ms ease;
-    }
-    .af-tell-group.af-faded, .af-loop-edges-bypass.af-faded {
-      opacity: 0;
-    }
-
-    .af-finish-group .af-finish-grey { transition: opacity 250ms ease; }
-    .af-finish-group .af-finish-green {
-      opacity: 0;
-      transform-box: fill-box;
-      transform-origin: center;
-      transition: opacity 250ms ease, transform 350ms cubic-bezier(.34,1.56,.64,1);
-    }
-    .af-finish-group.af-finished .af-finish-grey { opacity: 0; }
-    .af-finish-group.af-finished .af-finish-green {
-      opacity: 1;
-      animation: af-pulse 480ms cubic-bezier(.34,1.56,.64,1) 0s 1;
-    }
-    @keyframes af-pulse {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.10); }
-      100% { transform: scale(1); }
-    }
-
-    .af-label {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      font-size: 14px;
-      fill: var(--af-fg);
-      text-anchor: middle;
-      dominant-baseline: middle;
-      pointer-events: none;
-    }
-    .af-label-finish-grey { fill: var(--af-muted); }
-    .af-label-finish-green { fill: var(--af-fg); }
-
-    /* Path-draw animation: stroke-dasharray controlled inline by JS. */
-    .af-edge-anim {
-      transition: stroke-dashoffset 420ms ease-in-out;
-    }
-
-    /* Reduced motion: render the settled end-state instantly. */
-    @media (prefers-reduced-motion: reduce) {
-      .af-ai-group { opacity: 1; transition: none; }
-      .af-finish-group .af-finish-grey { opacity: 0; }
-      .af-finish-group .af-finish-green { opacity: 1; animation: none; }
-      .af-edge-anim { transition: none; }
-      .af-scrolly-beat { opacity: 1; transition: none; }
-    }
-  </style>
-<style>
-@media (prefers-color-scheme: light) {
-  body { background: #fafbfd; color: #1f2328; }
-}
-main { max-width: 880px; margin: 0 auto; }
-
-/* ===========================================================
-   ar- = atomic-row, namespaced to avoid collision with
-   the globe demo, the flowchart figure, or anything else.
-   =========================================================== */
-.ar-figure {
-  position: relative;
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  --ar-bg:        #0c0c0f;
-  --ar-grid:      #1a1a2e;
-  --ar-text:      #94a3b8;
-  --ar-text-br:   #e2e8f0;
-  --ar-rail:      #334155;
-  /* the five colours match Thread's atomic-row canon */
-  --ar-operation: #a855f7;  /* violet */
-  --ar-tool:      #22c55e;  /* green */
-  --ar-artifact:  #3b82f6;  /* blue */
-  --ar-binding:   #06b6d4;  /* cyan */
-  --ar-group:     #ec4899;  /* pink */
-}
-@media (prefers-color-scheme: light) {
-  .ar-figure {
-    --ar-bg:      #ffffff;
-    --ar-grid:    #e5e7eb;
-    --ar-text:    #475569;
-    --ar-text-br: #1e293b;
-    --ar-rail:    #cbd5e1;
-  }
-}
-
-.ar-figure-frame {
-  background: var(--ar-bg);
-  border: 1px solid var(--ar-grid);
-  border-radius: 12px;
-  padding: 28px 24px 22px;
-  position: relative;
-  overflow: hidden;
-}
-
-.ar-eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ar-text);
-  margin: 0 0 14px;
-  font-weight: 600;
-}
-
-.ar-figure svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.ar-rows {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 6px;
-}
-
-/* Each "row" is a flat horizontal strip — the atomic unit.
-   Code on the left, comment on the right, accent stripe on the far left. */
-.ar-row {
-  position: relative;
-  display: grid;
-  grid-template-columns: 6px 1fr auto;
-  align-items: center;
-  gap: 14px;
-  padding: 10px 14px 10px 0;
-  border-radius: 7px;
-  border: 1px solid color-mix(in srgb, var(--ar-row-color) 35%, transparent);
-  background: color-mix(in srgb, var(--ar-row-color) 6%, transparent);
-  opacity: 0;
-  transform: translateX(-8px);
-  transition: opacity 420ms ease, transform 420ms ease;
-}
-.ar-row.ar-visible {
-  opacity: 1;
-  transform: translateX(0);
-}
-.ar-row::before {
-  content: "";
-  display: block;
-  width: 6px;
-  height: 100%;
-  background: var(--ar-row-color);
-  border-radius: 7px 0 0 7px;
-}
-.ar-code {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 13.5px;
-  color: var(--ar-text-br);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.ar-comment {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 11px;
-  color: var(--ar-row-color);
-  font-style: italic;
-  white-space: nowrap;
-}
-@media (max-width: 560px) {
-  .ar-comment { display: none; }
-  .ar-code { font-size: 12px; }
-}
-
-.ar-caption {
-  margin-top: 14px;
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--ar-text);
-}
-.ar-caption strong { color: var(--ar-text-br); font-weight: 600; }
-
-/* Subtle grid background as a treat (matches Thread's diagram aesthetic) */
-.ar-figure-frame::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, var(--ar-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--ar-grid) 1px, transparent 1px);
-  background-size: 30px 30px;
-  opacity: 0.3;
-  pointer-events: none;
-}
-.ar-rows, .ar-eyebrow, .ar-caption { position: relative; z-index: 1; }
-
-@media (prefers-reduced-motion: reduce) {
-  .ar-row { transition: none; opacity: 1; transform: none; }
-}
-</style>
+<style></style>
+<style></style>
 <style>
 @media (prefers-color-scheme: light) {
   body { background: #fafbfd; color: #1f2328; }
@@ -3287,9 +3240,19 @@ $$
 
   <div class="tg-stage" id="tg-stage">
     <div class="tg-globe" id="tg-globe" role="img" aria-label="Interactive globe showing upgraded airports and routes"></div>
+    <div class="tg-projection" id="tg-projection" role="img" aria-label="Projection map showing upgraded airports and routes">
+      <svg class="tg-map-svg" id="tg-map-svg" aria-hidden="true"></svg>
+    </div>
     <div class="tg-loading" id="tg-loading">Loading optimisation data…</div>
 
     <div class="tg-controls" id="tg-controls" role="region" aria-label="Demo controls">
+      <div class="tg-control-group">
+        <span class="tg-control-label">View</span>
+        <div class="tg-view-tabs" role="tablist" aria-label="View mode">
+          <button type="button" class="tg-view-tab" id="tg-view-globe" data-view="globe" role="tab" aria-selected="true">Globe</button>
+          <button type="button" class="tg-view-tab" id="tg-view-projection" data-view="projection" role="tab" aria-selected="false">Projection</button>
+        </div>
+      </div>
 
       <div class="tg-control-group" role="radiogroup" aria-label="Strategy">
         <span class="tg-control-label">Strategy</span>
@@ -3319,8 +3282,17 @@ $$
       <div class="tg-control-group">
         <label class="tg-checkbox-row" for="tg-faint-toggle">
           <input id="tg-faint-toggle" type="checkbox" />
-          Show all routes faintly
+          Show ineligible routes faintly
         </label>
+        <label class="tg-checkbox-row" for="tg-aircraft-toggle">
+          <input id="tg-aircraft-toggle" type="checkbox" />
+          Animate aircraft
+        </label>
+      </div>
+
+      <div class="tg-control-group tg-legend-note" aria-label="Route colour legend">
+        <span><i class="tg-legend-dot"></i>Blue routes: eligible now</span>
+        <span><i class="tg-legend-dot tg-new-dot"></i>White routes: changed by the last year move</span>
       </div>
 
       <button type="button" class="tg-table-toggle" id="tg-table-btn"
@@ -3328,6 +3300,8 @@ $$
         View as table
       </button>
     </div>
+
+    <div class="tg-delta" id="tg-delta" aria-live="polite" hidden></div>
   </div>
 
   <div class="tg-fallback" id="tg-fallback" hidden>
@@ -3336,7 +3310,7 @@ $$
       <thead>
         <tr>
           <th>IATA</th><th>Airport</th><th>City</th><th>Country</th>
-          <th class="tg-num">Routes</th><th class="tg-num">CO2 (t/yr)</th>
+          <th class="tg-num">Routes</th><th class="tg-num">CO₂ (t/yr)</th>
         </tr>
       </thead>
       <tbody id="tg-fallback-body"></tbody>
@@ -3345,10 +3319,10 @@ $$
 
   <div class="tg-comparison" aria-label="Strategy comparison chart">
     <div class="tg-comparison-header">
-      <h3 class="tg-comparison-title">CO2 captured by strategy and budget</h3>
+      <h3 class="tg-comparison-title">CO₂ captured by strategy and budget</h3>
       <span class="tg-comparison-year" id="tg-comparison-year">Year —</span>
     </div>
-    <svg class="tg-chart-svg" id="tg-chart" role="img" aria-label="Grouped bar chart comparing CO2 captured across strategies and budgets"></svg>
+    <svg class="tg-chart-svg" id="tg-chart" role="img" aria-label="Grouped bar chart comparing CO₂ captured across strategies and budgets"></svg>
     <div class="tg-legend" id="tg-legend"></div>
   </div>
 
@@ -3837,7 +3811,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 <p>Thread is the topology instinct given proper tooling, and structurally the same complaint as the PowerPoint deck refusal: <em>data has structure, and the format you&rsquo;re forcing it through doesn&rsquo;t.</em> The difference is twenty years of catching up. Refuse the flattening. Store the topology. Let the user query the actual shape of their work. Stop making humans re-enter structure the system should have kept.</p>
 <figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-connections-by-hand-figcap">
   <div class="ti-video-wrap">
-    <video src="figures/connections-by-hand.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Time-lapse of a hand drawing a flat table on paper, then drawing arcing connecting lines between cells"></video>
+    <video src="figures/connections-by-hand.mp4" autoplay muted loop playsinline preload="metadata" aria-label="The same evolving 3D wireframe lattice from the photographer scene. A hand reaches in, plucks a few orbs, and places them onto a plot on a wooden easel. Thin cyan threads stay connected from each plot point back to its source node in the lattice — and pulses travel along them as the lattice keeps shifting."></video>
   </div>
   <figcaption id="ti-video-connections-by-hand-figcap" class="ti-figcap">The connections were always meant to be first-class. Engineering data just got there last.</figcaption>
 </figure>
@@ -3870,9 +3844,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 <script>
 (function () {
   // Scroll-progress bar — width tracks how far through the article you are.
+  document.documentElement.classList.add('ti-js');
   const bar = document.querySelector('.ti-progress');
-  if (!bar) return;
   function update() {
+    if (!bar) return;
     const h = document.documentElement;
     const max = (h.scrollHeight - h.clientHeight) || 1;
     const r = Math.max(0, Math.min(1, h.scrollTop / max));
@@ -3881,6 +3856,31 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   update();
+
+  const revealTargets = [
+    ...document.querySelectorAll('.ti-figure, .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
+  ];
+  revealTargets.forEach(el => el.classList.add('ti-reveal'));
+
+  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const seen = new WeakSet();
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const el = entry.target;
+        if (entry.isIntersecting) {
+          el.classList.add('ti-inview');
+          el.classList.remove('ti-dimmed');
+          seen.add(el);
+        } else if (seen.has(el)) {
+          el.classList.remove('ti-inview');
+          el.classList.add('ti-dimmed');
+        }
+      });
+    }, { threshold: [0.18, 0.56], rootMargin: '-8% 0px -12% 0px' });
+    revealTargets.forEach(el => io.observe(el));
+  } else {
+    revealTargets.forEach(el => el.classList.add('ti-inview'));
+  }
 })();
 </script>
 <script>window.TopologyGlobe = (() => {
@@ -3895,7 +3895,9 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       strategy: "optimal",
       budget:   15,
       year:     2030,
+      viewMode: "globe",
       showFaintRoutes: false,
+      animateAircraft: false,
     },
 
     strategies: [
@@ -3918,7 +3920,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   };
 
   // ---- internal state ------------------------------------------------------
-  const state = { ...CONFIG.defaults, data: null };
+  const state = { ...CONFIG.defaults, data: null, delta: null };
 
   // ---- helpers -------------------------------------------------------------
   const fmtTonnes = (t) => {
@@ -3941,8 +3943,44 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     return byYear[String(budget)] || null;
   };
 
+  const solutionSets = (sol) => ({
+    airports: new Set(sol ? sol.upgraded_airports : []),
+    routes: new Set(sol ? sol.upgraded_route_ids : []),
+  });
+
+  function captureSelection() {
+    return {
+      strategy: state.strategy,
+      budget: state.budget,
+      year: state.year,
+      solution: getSolution(),
+    };
+  }
+
+  function computeDelta(prev) {
+    const current = getSolution();
+    if (!current) return null;
+    const curSets = solutionSets(current);
+    if (!prev || !prev.solution || prev.strategy !== state.strategy || prev.budget !== state.budget) {
+      return { direction: "fresh", airports: new Set(), routes: new Set(), previousYear: null };
+    }
+    const prevSets = solutionSets(prev.solution);
+    const forward = state.year > prev.year;
+    const baseA = forward ? prevSets.airports : curSets.airports;
+    const compA = forward ? curSets.airports : prevSets.airports;
+    const baseR = forward ? prevSets.routes : curSets.routes;
+    const compR = forward ? curSets.routes : prevSets.routes;
+    return {
+      direction: forward ? "added" : "removed",
+      airports: new Set([...compA].filter(id => !baseA.has(id))),
+      routes: new Set([...compR].filter(id => !baseR.has(id))),
+      previousYear: prev.year,
+    };
+  }
+
   // ---- globe ---------------------------------------------------------------
   let globe; // Globe.gl instance
+  let projectionResizeObserver;
 
   function initGlobe() {
     const el = document.getElementById("tg-globe");
@@ -3960,8 +3998,8 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       .pointLat(d => d.lat)
       .pointLng(d => d.lon)
       .pointAltitude(d => d._upgraded ? 0.012 : 0.005)
-      .pointRadius(d => d._upgraded ? CONFIG.globe.pointBrightRadius : CONFIG.globe.pointDimRadius)
-      .pointColor(d => d._upgraded ? CONFIG.globe.pointBrightColor : CONFIG.globe.pointDimColor)
+      .pointRadius(d => d._isNew ? 0.82 : (d._upgraded ? CONFIG.globe.pointBrightRadius : CONFIG.globe.pointDimRadius))
+      .pointColor(d => d._isNew ? "#f8fafc" : (d._upgraded ? CONFIG.globe.pointBrightColor : CONFIG.globe.pointDimColor))
       .pointLabel(d => airportTooltip(d))
       // arcs
       .arcsData([])
@@ -4007,15 +4045,35 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       <div><b>${d.iata}</b> <span class="tg-tt-dim">${d.icao || ""}</span></div>
       <div>${d.name}</div>
       <div class="tg-tt-dim">${d.city}, ${d.country}</div>
-      <div class="tg-tt-dim">${d.route_count} routes · ${fmtTonnes(d.annual_co2_outbound_tonnes)} CO2/yr outbound</div>
+      <div class="tg-tt-dim">${d.route_count} routes · ${fmtTonnes(d.annual_co2_outbound_tonnes)} CO₂/yr outbound</div>
     </div>`;
   }
 
   function arcTooltip(d) {
     return `<div class="tg-tooltip">
       <div><b>${d._src}</b> → <b>${d._dst}</b></div>
-      <div class="tg-tt-dim">${fmtTonnes(d._co2)} CO2/yr · ${numberWithCommas(d._distance)} km</div>
+      <div class="tg-tt-dim">${fmtTonnes(d._co2)} CO₂/yr · ${numberWithCommas(d._distance)} km</div>
     </div>`;
+  }
+
+  function routeStyle(r, weight, isNew) {
+    if (isNew) {
+      return {
+        color: "rgba(248, 250, 252, 0.96)",
+        stroke: 0.72 + 0.72 * weight,
+        dashLen: state.animateAircraft ? 0.075 : 1,
+        dashGap: state.animateAircraft ? 0.12 : 0,
+        animTime: state.animateAircraft ? 1900 : 0,
+      };
+    }
+    const baseAlpha = 0.42 + 0.34 * weight;
+    return {
+      color: `rgba(34, 211, 238, ${baseAlpha})`,
+      stroke: 0.22 + 0.36 * weight,
+      dashLen: state.animateAircraft ? 0.025 : 1,
+      dashGap: state.animateAircraft ? 0.50 - 0.42 * weight : 0,
+      animTime: state.animateAircraft ? 8500 - 4500 * weight : 0,
+    };
   }
 
   // ---- data binding --------------------------------------------------------
@@ -4024,9 +4082,15 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     const sol = getSolution();
     const upgraded = new Set(sol ? sol.upgraded_airports : []);
     const upgradedRouteIds = new Set(sol ? sol.upgraded_route_ids : []);
+    const newAirports = state.delta ? state.delta.airports : new Set();
+    const newRoutes = state.delta ? state.delta.routes : new Set();
 
     // Points: mark upgraded.
-    const points = state.data.airports.map(a => ({ ...a, _upgraded: upgraded.has(a.id) }));
+    const points = state.data.airports.map(a => ({
+      ...a,
+      _upgraded: upgraded.has(a.id),
+      _isNew: newAirports.has(a.id),
+    }));
     globe.pointsData(points);
 
     // Build a coordinate lookup for arc endpoints.
@@ -4049,18 +4113,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       if (!upgradedArc && !state.showFaintRoutes) continue;
       const weight = r.annual_co2_tonnes_2023 / co2Max; // 0..1
       const co2 = r.annual_co2_tonnes_2023;
+      const isNew = newRoutes.has(r.id);
 
       if (upgradedArc) {
-        // Shooting-star aesthetic:
-        //   dashLen     — short dot of light moving along the arc
-        //   dashGap     — separation between dots; smaller for busier routes
-        //   animTime    — cycle period in ms; faster for busier routes
-        const dashLen   = 0.025;
-        const dashGap   = 0.50 - 0.42 * weight;             // 0.08 .. 0.50
-        const animTime  = 8500 - 4500 * weight;             // 4000 .. 8500 ms
-        const baseAlpha = 0.55 + 0.40 * weight;
-        const baseColor = `rgba(34, 211, 238, ${baseAlpha})`;
-        const stroke    = 0.28 + 0.45 * weight;
+        const style = routeStyle(r, weight, isNew);
 
         // Forward direction
         arcs.push({
@@ -4068,12 +4124,12 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
           _srcLat: src.lat, _srcLon: src.lon,
           _dstLat: dst.lat, _dstLon: dst.lon,
           _co2: co2, _distance: r.distance_km,
-          _faint: false,
-          _color: baseColor, _stroke: stroke,
-          _dashLen: dashLen,
-          _dashGap: dashGap,
+          _faint: false, _isNew: isNew,
+          _color: style.color, _stroke: style.stroke,
+          _dashLen: style.dashLen,
+          _dashGap: style.dashGap,
           _dashInitGap: 0,
-          _animTime: animTime,
+          _animTime: style.animTime,
         });
         // Backward direction — same arc, swapped endpoints, phase offset by
         // half a (dash + gap) cycle so the two streams interleave rather than
@@ -4083,12 +4139,12 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
           _srcLat: dst.lat, _srcLon: dst.lon,
           _dstLat: src.lat, _dstLon: src.lon,
           _co2: co2, _distance: r.distance_km,
-          _faint: false,
-          _color: baseColor, _stroke: stroke,
-          _dashLen: dashLen,
-          _dashGap: dashGap,
-          _dashInitGap: 0.5 * (dashLen + dashGap),
-          _animTime: animTime,
+          _faint: false, _isNew: isNew,
+          _color: style.color, _stroke: style.stroke,
+          _dashLen: style.dashLen,
+          _dashGap: style.dashGap,
+          _dashInitGap: 0.5 * (style.dashLen + style.dashGap),
+          _animTime: style.animTime,
         });
       } else {
         // Faint background — single non-animated arc.
@@ -4107,8 +4163,133 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     globe.arcsData(arcs);
   }
 
+  function renderProjection() {
+    if (!state.data) return;
+    const wrap = document.getElementById("tg-projection");
+    const svg = d3.select("#tg-map-svg");
+    const node = svg.node();
+    if (!wrap || !node) return;
+
+    const width = Math.max(320, wrap.clientWidth || 900);
+    const height = Math.max(260, wrap.clientHeight || 520);
+    svg.attr("viewBox", `0 0 ${width} ${height}`);
+    svg.selectAll("*").remove();
+
+    const projection = d3.geoNaturalEarth1()
+      .fitExtent([[24, 24], [width - 24, height - 24]], { type: "Sphere" });
+    const path = d3.geoPath(projection);
+    const graticule = d3.geoGraticule10();
+    const sol = getSolution();
+    const upgraded = new Set(sol ? sol.upgraded_airports : []);
+    const upgradedRouteIds = new Set(sol ? sol.upgraded_route_ids : []);
+    const newAirports = state.delta ? state.delta.airports : new Set();
+    const newRoutes = state.delta ? state.delta.routes : new Set();
+    const coords = Object.fromEntries(state.data.airports.map(a => [a.id, a]));
+    const co2Max = Math.max(1, ...state.data.routes.map(r => r.annual_co2_tonnes_2023));
+
+    svg.append("path")
+      .attr("class", "tg-map-frame")
+      .attr("d", path({ type: "Sphere" }));
+    svg.append("path")
+      .attr("class", "tg-map-graticule")
+      .attr("d", path(graticule));
+
+    const routeRows = [];
+    for (const r of state.data.routes) {
+      const src = coords[r.src], dst = coords[r.dst];
+      if (!src || !dst) continue;
+      const upgradedRoute = upgradedRouteIds.has(r.id);
+      if (!upgradedRoute && !state.showFaintRoutes) continue;
+      const weight = r.annual_co2_tonnes_2023 / co2Max;
+      const isNew = newRoutes.has(r.id);
+      const style = routeStyle(r, weight, isNew);
+      routeRows.push({
+        id: r.id,
+        upgradedRoute,
+        isNew,
+        weight,
+        color: upgradedRoute ? style.color : `rgba(147, 160, 182, ${0.05 + 0.08 * weight})`,
+        stroke: upgradedRoute ? style.stroke : 0.18 + 0.20 * weight,
+        feature: {
+          type: "LineString",
+          coordinates: [[src.lon, src.lat], [dst.lon, dst.lat]],
+        },
+      });
+    }
+
+    svg.append("g")
+      .selectAll("path")
+      .data(routeRows, d => d.id)
+      .join("path")
+      .attr("id", d => `tg-map-route-${d.id}`)
+      .attr("class", d => `tg-map-route${d.isNew ? " tg-new-route" : ""}`)
+      .attr("d", d => path(d.feature))
+      .attr("stroke", d => d.color)
+      .attr("stroke-width", d => d.stroke)
+      .attr("pathLength", d => d.isNew ? 1 : null);
+
+    svg.append("g")
+      .selectAll("circle")
+      .data(state.data.airports, d => d.id)
+      .join("circle")
+      .attr("class", d => {
+        const classes = ["tg-map-point"];
+        if (!upgraded.has(d.id)) classes.push("tg-dim");
+        if (newAirports.has(d.id)) classes.push("tg-new-airport");
+        return classes.join(" ");
+      })
+      .attr("cx", d => projection([d.lon, d.lat])[0])
+      .attr("cy", d => projection([d.lon, d.lat])[1])
+      .attr("r", d => upgraded.has(d.id) ? (newAirports.has(d.id) ? 4.8 : 3.2) : 1.5);
+
+    if (state.animateAircraft) {
+      const planeRows = routeRows
+        .filter(d => d.upgradedRoute && !d.isNew)
+        .sort((a, b) => b.weight - a.weight)
+        .slice(0, 36);
+      const newPlaneRows = routeRows
+        .filter(d => d.upgradedRoute && d.isNew)
+        .sort((a, b) => b.weight - a.weight)
+        .slice(0, 28);
+      svg.append("g")
+        .selectAll("text")
+        .data([...planeRows, ...newPlaneRows], d => d.id)
+        .join("text")
+        .attr("class", "tg-map-plane")
+        .text("✈")
+        .append("animateMotion")
+        .attr("dur", d => `${Math.max(3.2, 8.5 - 5 * d.weight).toFixed(1)}s`)
+        .attr("begin", (_, i) => `${(i % 12) * 0.23}s`)
+        .attr("repeatCount", "indefinite")
+        .attr("rotate", "auto")
+        .append("mpath")
+        .attr("href", d => `#tg-map-route-${d.id}`);
+    }
+  }
+
+  function applyVisuals() {
+    applyToGlobe();
+    renderProjection();
+    renderDelta();
+  }
+
+  function setViewMode(mode) {
+    state.viewMode = mode;
+    document.getElementById("tg-globe").classList.toggle("tg-hidden-view", mode !== "globe");
+    document.getElementById("tg-projection").classList.toggle("tg-active", mode === "projection");
+    document.querySelectorAll(".tg-view-tab").forEach(btn => {
+      btn.setAttribute("aria-selected", btn.dataset.view === mode ? "true" : "false");
+    });
+    if (mode === "projection") renderProjection();
+  }
+
   // ---- controls ------------------------------------------------------------
   function buildControls() {
+    // view tabs
+    document.querySelectorAll(".tg-view-tab").forEach(btn => {
+      btn.addEventListener("click", () => setViewMode(btn.dataset.view));
+    });
+
     // strategy radios
     const list = document.getElementById("tg-strategy-list");
     list.innerHTML = "";
@@ -4119,14 +4300,15 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       wrap.innerHTML = `
         <input type="radio" name="tg-strategy" id="${id}" value="${s.id}"
                ${s.id === state.strategy ? "checked" : ""} aria-label="${s.label}">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${s.color}"></span>
-        <span>${s.label}</span>`;
+        <span class="tg-strat-swatch" style="background:${s.color}"></span>
+        <span class="tg-strat-label">${s.label}</span>`;
       list.appendChild(wrap);
     });
     list.addEventListener("change", e => {
       if (e.target.name === "tg-strategy") {
+        const prev = captureSelection();
         state.strategy = e.target.value;
-        onStateChanged();
+        onStateChanged(prev);
       }
     });
 
@@ -4140,9 +4322,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     budgetInput.value = String(bIdx);
     state.budget = budgets[bIdx];
     budgetInput.addEventListener("input", e => {
+      const prev = captureSelection();
       const idx = +e.target.value;
       state.budget = budgets[idx];
-      onStateChanged();
+      onStateChanged(prev);
     });
 
     // year slider — discrete index over data.years
@@ -4155,9 +4338,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     yearInput.value = String(yIdx);
     state.year = years[yIdx];
     yearInput.addEventListener("input", e => {
+      const prev = captureSelection();
       const idx = +e.target.value;
       state.year = years[idx];
-      onStateChanged();
+      onStateChanged(prev);
     });
 
     // faint-routes toggle
@@ -4165,7 +4349,14 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     faint.checked = state.showFaintRoutes;
     faint.addEventListener("change", e => {
       state.showFaintRoutes = e.target.checked;
-      applyToGlobe();
+      applyVisuals();
+    });
+
+    const aircraft = document.getElementById("tg-aircraft-toggle");
+    aircraft.checked = state.animateAircraft;
+    aircraft.addEventListener("change", e => {
+      state.animateAircraft = e.target.checked;
+      applyVisuals();
     });
 
     // table toggle
@@ -4214,6 +4405,27 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       `<span class="tg-caption-num">${state.year}</span>, the optimiser captures ` +
       `<span class="tg-caption-num">${fmtPct(dTraf)}</span> vs. the greedy algorithm and ` +
       `<span class="tg-caption-num">${fmtPct(dCit)}</span> vs. picking biggest cities first.`;
+  }
+
+  function renderDelta() {
+    const el = document.getElementById("tg-delta");
+    if (!el || !state.delta || state.delta.direction === "fresh") {
+      if (el) el.setAttribute("hidden", "");
+      return;
+    }
+    const airportN = state.delta.airports.size;
+    const routeN = state.delta.routes.size;
+    if (airportN === 0 && routeN === 0) {
+      el.setAttribute("hidden", "");
+      return;
+    }
+    const verb = state.delta.direction === "added" ? "Added" : "Rolled back";
+    const from = state.delta.previousYear ? ` since ${state.delta.previousYear}` : "";
+    el.innerHTML = `
+      <span>${verb}${from}</span>
+      <span><strong>${airportN}</strong> airports</span>
+      <span><strong>${routeN}</strong> routes</span>`;
+    el.removeAttribute("hidden");
   }
 
   function renderFallbackTable() {
@@ -4307,7 +4519,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       .attr("class", "tg-axis-label")
       .attr("transform", `translate(${-margin.left + 14},${innerH / 2}) rotate(-90)`)
       .attr("text-anchor", "middle")
-      .text("CO2 captured (tonnes/yr)");
+      .text("CO₂ captured (tonnes/yr)");
 
     // Vertical dashed guideline at the current K — connects the chart to the slider.
     g.append("line")
@@ -4370,9 +4582,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   }
 
   // ---- state change pipeline -----------------------------------------------
-  function onStateChanged() {
+  function onStateChanged(prev = null) {
+    state.delta = computeDelta(prev);
     updateReadouts();
-    applyToGlobe();
+    applyVisuals();
     updateCaption();
     renderChart();
     if (!document.getElementById("tg-fallback").hasAttribute("hidden")) {
@@ -4394,6 +4607,10 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 
   async function start() {
     initGlobe();
+    projectionResizeObserver = new ResizeObserver(() => {
+      if (state.viewMode === "projection") renderProjection();
+    });
+    projectionResizeObserver.observe(document.getElementById("tg-projection"));
     try {
       state.data = await loadData();
     } catch (err) {
@@ -4404,6 +4621,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 
     buildControls();
     buildChartLegend();
+    setViewMode(state.viewMode);
     onStateChanged();
 
     document.getElementById("tg-loading").classList.add("tg-hidden");
@@ -4433,800 +4651,8 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 
   return api;
 })();</script>
-<script>/* =========================================================
-       ADHD flowchart — animated, hand-drawn, scroll-driven.
-       Wrapped in IIFE under window.AdhdFlowchart for safety.
-
-       Beats / states:
-         step 1 — meme intact. idea → start → tell → idea (diagonal).
-                  finish grey & orphaned in BL. AI hidden.
-                  caption: "the original flowchart isn't mine but it
-                  bloody rings true".
-         step 2 — same picture, caption names the orphan: "finish
-                  project, sitting in the corner — the joke is that
-                  it never gets connected."
-         step 3 — the SUBSTITUTION + back-and-forth. "tell everyone"
-                  and its two bypass edges (start→tell, tell→idea)
-                  fade OUT. AI nodes fade IN (80ms stagger).
-                  Delegation edges (start → AI, downward) draw at
-                  +370ms; report-back edges (AI → start, upward) draw
-                  at +520ms — the 150ms stagger reads as "send work
-                  down, get answers back". idea + start are kept.
-                  caption: "the loop didn't get fixed. it got
-                  supplemented — a swarm to send work to, and answers
-                  coming back."
-         step 4 — the closer. start → finish edge draws diagonally
-                  down-left across the square (~300ms). finish flips
-                  grey → green with 1.10x scale pulse. NO AI→finish
-                  edge: the work has already cycled back through
-                  start (Harry), and Harry is the one who closes.
-                  caption (must contain the verbatim line):
-                  "PhD supervisor energy. The swarm reports up; I
-                  close the loop. The brain that was a tax is now an
-                  asset."
-
-       The animation is idempotent and seekable: jumping straight to
-       4 sets the settled state instantly; jumping back to 1 restores
-       the meme (tell + bypass edges visible, AI hidden, all step-2
-       edges undrawn, finish grey).
-       ========================================================= */
-    window.AdhdFlowchart = (function () {
-      'use strict';
-
-      const SVG     = document.getElementById('af-svg');
-      const ROOT    = document.getElementById('af-root');
-      const CAPTION = document.getElementById('af-caption');
-      const REPLAY  = document.getElementById('af-replay');
-      const FIGURE  = document.getElementById('af-figure');
-      const STAGE   = document.getElementById('af-scrolly-stage');
-
-      const NS = 'http://www.w3.org/2000/svg';
-
-      // --- Layout (in viewBox coordinates) -----------------------
-      // The original meme nodes form a SQUARE — idea (top-left), start
-      // (top-right), tell (bottom-right), finish (bottom-left). The
-      // meme loop bypasses finish: tell → idea cuts diagonally up-left
-      // across the square, leaving finish orphaned. That's the joke.
-      //
-      //   ┌─ idea (TL) ──→ start (TR) ─┐
-      //   │     ↖                    │
-      //   │       ╲                  │  loop: idea→start→tell→idea
-      //   │         ╲                ↓
-      //   └─ finish (BL)        tell (BR) ─┘
-      //                           ↑ the diagonal goes back to idea
-      //
-      // In state 2 (steps 3+4) the SUBSTITUTION happens: "tell everyone"
-      // and its two edges (start→tell, tell→idea) fade OUT, and the AI
-      // agent layer fades IN. Crucially the work flow is now a
-      // BACK-AND-FORTH between Harry (start) and the swarm:
-      //
-      //   - Delegation edges: start → each AI (downward, paired-left)
-      //   - Report-back edges: each AI → start (upward,  paired-right)
-      //   - Closer edge:      start → finish (diagonal, drawn at step 4)
-      //
-      // The swarm reports up; Harry closes the loop to finish. There is
-      // NO direct AI→finish edge — that was the wrong semantics. idea +
-      // start are preserved at the top — same brain pattern, different
-      // downstream.
-      const NODES = {
-        idea:    { x: 120, y:  80, w: 200, h: 60, label: 'Get new idea' },      // top-left
-        start:   { x: 480, y:  80, w: 200, h: 60, label: 'Start new project' }, // top-right
-        tell:    { x: 480, y: 240, w: 200, h: 60, label: 'Tell everyone' },     // bottom-right (fades out in state 2)
-        finish:  { x: 120, y: 240, w: 200, h: 60, label: 'Finish project' },    // bottom-left
-        // AI agent nodes — pale blue, fade in across the bottom centre
-        // when "tell everyone" recedes. Spanning x≈60..720 so they read
-        // as the new downstream layer between start (top-right) and
-        // finish (bottom-left).
-        ai1:     { x:  60, y: 380, w: 150, h: 50, label: 'boilerplate' },
-        ai2:     { x: 230, y: 380, w: 150, h: 50, label: 'tests' },
-        ai3:     { x: 400, y: 380, w: 150, h: 50, label: 'data cleaning' },
-        ai4:     { x: 570, y: 380, w: 150, h: 50, label: 'lit review' },
-      };
-
-      function centre(n) { return { x: n.x + n.w/2, y: n.y + n.h/2 }; }
-
-      // Compute attach point on a box edge along the line to a target point.
-      function attach(node, targetX, targetY, inset) {
-        const cx = node.x + node.w/2;
-        const cy = node.y + node.h/2;
-        const dx = targetX - cx;
-        const dy = targetY - cy;
-        const halfW = node.w/2 + (inset || 0);
-        const halfH = node.h/2 + (inset || 0);
-        const sx = dx === 0 ? Infinity : Math.abs(halfW / dx);
-        const sy = dy === 0 ? Infinity : Math.abs(halfH / dy);
-        const s = Math.min(sx, sy);
-        return { x: cx + dx * s, y: cy + dy * s };
-      }
-
-      // --- rough.js setup ---------------------------------------
-      let rc = null;
-
-      function readVar(name) {
-        return getComputedStyle(FIGURE).getPropertyValue(name).trim();
-      }
-
-      function themeColours() {
-        return {
-          fg:           readVar('--af-fg'),
-          muted:        readVar('--af-muted'),
-          loopFill:     readVar('--af-loop-fill'),
-          loopStroke:   readVar('--af-loop-stroke'),
-          aiFill:       readVar('--af-ai-fill'),
-          aiStroke:     readVar('--af-ai-stroke'),
-          greyFill:     readVar('--af-finish-grey-fill'),
-          greyStroke:   readVar('--af-finish-grey-stroke'),
-          greenFill:    readVar('--af-finish-green-fill'),
-          greenStroke:  readVar('--af-finish-green-stroke'),
-          edge:         readVar('--af-edge'),
-          edgeSoft:     readVar('--af-edge-soft'),
-        };
-      }
-
-      function nodeOpts(fill, stroke) {
-        return {
-          fill: fill,
-          fillStyle: 'hachure',
-          fillWeight: 1.4,
-          hachureGap: 6,
-          stroke: stroke,
-          strokeWidth: 2,
-          roughness: 1.5,
-          bowing: 1,
-          seed: 7,
-        };
-      }
-      function edgeOpts(stroke, opts) {
-        return Object.assign({
-          stroke: stroke,
-          strokeWidth: 2,
-          roughness: 1.5,
-          bowing: 1.5,
-          seed: 11,
-          fill: 'none',
-        }, opts || {});
-      }
-
-      function drawNode(parent, n, opts, labelClass) {
-        const r = 10;
-        const x = n.x, y = n.y, w = n.w, h = n.h;
-        const d =
-          'M ' + (x+r) + ' ' + y +
-          ' L ' + (x+w-r) + ' ' + y +
-          ' Q ' + (x+w) + ' ' + y + ' ' + (x+w) + ' ' + (y+r) +
-          ' L ' + (x+w) + ' ' + (y+h-r) +
-          ' Q ' + (x+w) + ' ' + (y+h) + ' ' + (x+w-r) + ' ' + (y+h) +
-          ' L ' + (x+r) + ' ' + (y+h) +
-          ' Q ' + x + ' ' + (y+h) + ' ' + x + ' ' + (y+h-r) +
-          ' L ' + x + ' ' + (y+r) +
-          ' Q ' + x + ' ' + y + ' ' + (x+r) + ' ' + y +
-          ' Z';
-        const node = rc.path(d, opts);
-        parent.appendChild(node);
-
-        const t = document.createElementNS(NS, 'text');
-        t.setAttribute('class', 'af-label' + (labelClass ? ' ' + labelClass : ''));
-        t.setAttribute('x', n.x + n.w/2);
-        t.setAttribute('y', n.y + n.h/2 + 1);
-        t.textContent = n.label;
-        parent.appendChild(t);
-
-        return { box: node, label: t };
-      }
-
-      function drawArrow(parent, from, to, opts) {
-        const mx = (from.x + to.x) / 2;
-        const my = (from.y + to.y) / 2;
-        const dx = to.x - from.x;
-        const dy = to.y - from.y;
-        const len = Math.hypot(dx, dy) || 1;
-        const nx = -dy / len;
-        const ny =  dx / len;
-        const curve = (opts && opts.curve != null) ? opts.curve : 14;
-        const cx = mx + nx * curve;
-        const cy = my + ny * curve;
-
-        const g = document.createElementNS(NS, 'g');
-        parent.appendChild(g);
-
-        const path = rc.path(
-          'M ' + from.x + ' ' + from.y +
-          ' Q ' + cx + ' ' + cy + ' ' + to.x + ' ' + to.y,
-          edgeOpts(opts.stroke, { strokeWidth: opts.strokeWidth || 2 })
-        );
-        g.appendChild(path);
-
-        const tdx = to.x - cx, tdy = to.y - cy;
-        const tlen = Math.hypot(tdx, tdy) || 1;
-        const ux = tdx / tlen, uy = tdy / tlen;
-        const ah = 10;
-        const aw = 6;
-        const baseX = to.x - ux * ah;
-        const baseY = to.y - uy * ah;
-        const px = -uy, py = ux;
-        const a1x = baseX + px * aw, a1y = baseY + py * aw;
-        const a2x = baseX - px * aw, a2y = baseY - py * aw;
-
-        const head = rc.path(
-          'M ' + a1x + ' ' + a1y + ' L ' + to.x + ' ' + to.y + ' L ' + a2x + ' ' + a2y,
-          edgeOpts(opts.stroke, { strokeWidth: opts.strokeWidth || 2 })
-        );
-        g.appendChild(head);
-
-        return { group: g, path: path, head: head };
-      }
-
-      // Make a rough.js path element animatable as a draw-on:
-      // collect every <path> inside, set up dasharray = total length.
-      function prepareDrawOn(group) {
-        const paths = group.querySelectorAll('path');
-        const records = [];
-        paths.forEach(p => {
-          let len = 0;
-          try { len = p.getTotalLength(); } catch (e) { len = 0; }
-          if (len > 0) {
-            p.setAttribute('stroke-dasharray', len);
-            p.setAttribute('stroke-dashoffset', len);
-            p.classList.add('af-edge-anim');
-            records.push({ p: p, len: len });
-          }
-        });
-        return records;
-      }
-
-      // --- Build / rebuild the whole figure ---------------------
-      let groups = {};   // group references for animation
-      let timers = [];   // setTimeout handles for cancellation
-
-      function clearTimers() {
-        timers.forEach(t => clearTimeout(t));
-        timers = [];
-      }
-
-      function svgGroup(cls) {
-        const g = document.createElementNS(NS, 'g');
-        g.setAttribute('class', cls);
-        return g;
-      }
-
-      function build() {
-        while (ROOT.firstChild) ROOT.removeChild(ROOT.firstChild);
-        rc = rough.svg(SVG);
-        const c = themeColours();
-
-        // Layered groups, drawn in this z-order:
-        //   gLoopEdgesKept   — idea→start (always visible)
-        //   gLoopEdgesBypass — start→tell + tell→idea (fade out in state 2)
-        //   gLoopNodesKept   — idea + start (always visible)
-        //   gTell            — tell node (fades out in state 2)
-        //   gAi              — AI agent layer (fades in in state 2)
-        //   gDelegate        — start → AI edges, downward (draw at step 3)
-        //   gReport          — AI → start edges, upward (draw at step 3,
-        //                      ~150ms after delegation so the eye reads
-        //                      "send work down, get answers back")
-        //   gCloser          — start → finish edge, the closer move that
-        //                      Harry himself makes (draws at step 4 —
-        //                      THIS replaces the old AI→finish edges)
-        //   gFinish          — finish (grey/green stacked)
-        const gLoopEdgesKept   = svgGroup('af-loop-edges-kept');
-        const gLoopEdgesBypass = svgGroup('af-loop-edges-bypass');
-        const gLoopNodesKept   = svgGroup('af-loop-nodes-kept');
-        const gTell            = svgGroup('af-tell-group');
-        const gAi              = svgGroup('af-ai-group');
-        const gDelegate        = svgGroup('af-delegate-edges');
-        const gReport          = svgGroup('af-report-edges');
-        const gCloser          = svgGroup('af-closer-edge');
-        const gFinish          = svgGroup('af-finish-group');
-
-        ROOT.appendChild(gLoopEdgesKept);
-        ROOT.appendChild(gLoopEdgesBypass);
-        ROOT.appendChild(gLoopNodesKept);
-        ROOT.appendChild(gTell);
-        ROOT.appendChild(gAi);
-        ROOT.appendChild(gDelegate);
-        ROOT.appendChild(gReport);
-        ROOT.appendChild(gCloser);
-        ROOT.appendChild(gFinish);
-
-        // 1. Kept loop edge: idea → start (always visible).
-        drawArrow(
-          gLoopEdgesKept,
-          attach(NODES.idea, NODES.start.x + NODES.start.w/2, NODES.start.y + NODES.start.h/2),
-          attach(NODES.start, NODES.idea.x + NODES.idea.w/2, NODES.idea.y + NODES.idea.h/2),
-          { stroke: c.edge, curve: -10 }
-        );
-
-        // 2. Bypass loop edges: start → tell, and tell → idea (fade out
-        //    in state 2 along with the tell node itself).
-        drawArrow(
-          gLoopEdgesBypass,
-          attach(NODES.start, NODES.tell.x + NODES.tell.w/2, NODES.tell.y + NODES.tell.h/2),
-          attach(NODES.tell, NODES.start.x + NODES.start.w/2, NODES.start.y + NODES.start.h/2),
-          { stroke: c.edge, curve: -12 }
-        );
-        drawArrow(
-          gLoopEdgesBypass,
-          attach(NODES.tell, NODES.idea.x + NODES.idea.w/2, NODES.idea.y + NODES.idea.h/2),
-          attach(NODES.idea, NODES.tell.x + NODES.tell.w/2, NODES.tell.y + NODES.tell.h/2),
-          { stroke: c.edge, curve: 14 }
-        );
-
-        // 3. Kept loop nodes: idea + start (always visible).
-        drawNode(gLoopNodesKept, NODES.idea,  nodeOpts(c.loopFill, c.loopStroke));
-        drawNode(gLoopNodesKept, NODES.start, nodeOpts(c.loopFill, c.loopStroke));
-
-        // 4. Tell node — fades out in state 2.
-        drawNode(gTell, NODES.tell, nodeOpts(c.loopFill, c.loopStroke));
-
-        // 5. AI agent nodes (built but invisible until reveal).
-        drawNode(gAi, NODES.ai1, nodeOpts(c.aiFill, c.aiStroke));
-        drawNode(gAi, NODES.ai2, nodeOpts(c.aiFill, c.aiStroke));
-        drawNode(gAi, NODES.ai3, nodeOpts(c.aiFill, c.aiStroke));
-        drawNode(gAi, NODES.ai4, nodeOpts(c.aiFill, c.aiStroke));
-
-        // 6. Delegation edges (start -> each AI), downward.
-        //    Offset slightly to the LEFT of each AI's centre so the
-        //    paired report-back edge can sit to the right and the two
-        //    parallel arrows read as a back-and-forth, not as one
-        //    line drawn twice. Inset of ±14px on the AI top edge.
-        const aiNodes = [NODES.ai1, NODES.ai2, NODES.ai3, NODES.ai4];
-        const PAIR_OFFSET = 14;  // px on the start/AI box edges
-        aiNodes.forEach(ai => {
-          // Attach point on start's bottom edge, shifted LEFT.
-          const startCx = NODES.start.x + NODES.start.w/2 - PAIR_OFFSET;
-          const startCy = NODES.start.y + NODES.start.h;
-          // Attach point on AI's top edge, shifted LEFT.
-          const aiCx = ai.x + ai.w/2 - PAIR_OFFSET;
-          const aiCy = ai.y;
-          drawArrow(
-            gDelegate,
-            { x: startCx, y: startCy },
-            { x: aiCx,    y: aiCy },
-            { stroke: c.edgeSoft, curve: 6 }
-          );
-        });
-        const delegateRecords = prepareDrawOn(gDelegate);
-
-        // 7. Report-back edges (each AI -> start), upward.
-        //    Paired with the delegation arrows above, but offset to the
-        //    RIGHT so the two arrows sit side-by-side. This is the
-        //    "answers coming back" half of the back-and-forth.
-        aiNodes.forEach(ai => {
-          const startCx = NODES.start.x + NODES.start.w/2 + PAIR_OFFSET;
-          const startCy = NODES.start.y + NODES.start.h;
-          const aiCx = ai.x + ai.w/2 + PAIR_OFFSET;
-          const aiCy = ai.y;
-          drawArrow(
-            gReport,
-            { x: aiCx,    y: aiCy },
-            { x: startCx, y: startCy },
-            { stroke: c.edgeSoft, curve: 6 }
-          );
-        });
-        const reportRecords = prepareDrawOn(gReport);
-
-        // 8. Closer edge (start -> finish), diagonal down-left across
-        //    the square. THIS is the move Harry makes — the AI swarm
-        //    reports up, Harry closes the loop. Draws at step 4.
-        drawArrow(
-          gCloser,
-          attach(NODES.start, NODES.finish.x + NODES.finish.w/2, NODES.finish.y + NODES.finish.h/2),
-          attach(NODES.finish, NODES.start.x + NODES.start.w/2, NODES.start.y + NODES.start.h/2),
-          // Stronger stroke (use the primary edge colour, not the soft
-          // grey of the AI back-and-forth) — this is the load-bearing
-          // arrow of the new state. Slight curve so it doesn't run
-          // straight through the AI row.
-          { stroke: c.edge, curve: -22, strokeWidth: 2.5 }
-        );
-        const closerRecords = prepareDrawOn(gCloser);
-
-        // 9. Finish project, two stacked variants (grey + green).
-        const greyG = svgGroup('af-finish-grey');
-        const greenG = svgGroup('af-finish-green');
-        gFinish.appendChild(greyG);
-        gFinish.appendChild(greenG);
-        drawNode(greyG, NODES.finish, nodeOpts(c.greyFill, c.greyStroke), 'af-label-finish-grey');
-        drawNode(greenG, NODES.finish, nodeOpts(c.greenFill, c.greenStroke), 'af-label-finish-green');
-
-        groups = {
-          gTell: gTell,
-          gBypass: gLoopEdgesBypass,
-          gAi: gAi,
-          gFinish: gFinish,
-          delegateRecords: delegateRecords,
-          reportRecords: reportRecords,
-          closerRecords: closerRecords,
-        };
-      }
-
-      // --- Captions per beat ------------------------------------
-      const CAPTIONS = {
-        1: "the original flowchart isn’t mine but it bloody rings true",
-        2: "finish project, sitting in the corner — the joke is that it never gets connected.",
-        3: "the loop didn’t get fixed. it got supplemented — a swarm to send work to, and answers coming back.",
-        4: "PhD supervisor energy. The swarm reports up; I close the loop. The brain that was a tax is now an asset.",
-      };
-
-      function setCaption(text, immediate) {
-        if (immediate) {
-          CAPTION.textContent = text;
-          CAPTION.style.opacity = '1';
-          return;
-        }
-        // Brief opacity dip for a softer swap.
-        CAPTION.style.opacity = '0';
-        setTimeout(() => {
-          CAPTION.textContent = text;
-          CAPTION.style.opacity = '1';
-        }, 140);
-      }
-
-      // -----------------------------------------------------------
-      // State helpers — set the figure to a specific step's state
-      // either with animation (when the user just scrolled into that
-      // beat) or instantly (when seeking, e.g. cold-load on step 4 or
-      // jumping back from 4 to 1).
-      // -----------------------------------------------------------
-      // Fade out (or back in) the meme bypass: "tell everyone" + the
-      // two edges (start→tell and tell→idea). When animated=false we
-      // suppress the CSS transition so seeking is instant.
-      function setMemeBypassVisible(visible, animated) {
-        const els = [groups.gTell, groups.gBypass];
-        els.forEach(el => {
-          if (!el) return;
-          if (animated) {
-            el.style.transition = '';
-          } else {
-            el.style.transition = 'none';
-          }
-          el.classList.toggle('af-faded', !visible);
-        });
-        if (!animated) {
-          // Force layout flush so the no-transition style applies before
-          // we restore the default transition on the next frame.
-          requestAnimationFrame(() => {
-            els.forEach(el => { if (el) el.style.transition = ''; });
-          });
-        }
-      }
-
-      function setAiVisible(visible, animated) {
-        const children = groups.gAi.children;
-        if (visible) {
-          if (animated) {
-            for (let i = 0; i < children.length; i++) {
-              children[i].style.transition = 'opacity 320ms ease ' + (i * 80) + 'ms';
-              children[i].style.opacity = '1';
-            }
-          } else {
-            for (let i = 0; i < children.length; i++) {
-              children[i].style.transition = 'none';
-              children[i].style.opacity = '1';
-            }
-          }
-          groups.gAi.classList.add('af-visible');
-        } else {
-          for (let i = 0; i < children.length; i++) {
-            children[i].style.transition = 'none';
-            children[i].style.opacity = '0';
-          }
-          groups.gAi.classList.remove('af-visible');
-        }
-      }
-
-      function setEdgesDrawn(records, drawn, animated, durationMs) {
-        records.forEach(r => {
-          if (drawn) {
-            if (animated) {
-              r.p.style.transitionDuration = (durationMs || 420) + 'ms';
-              // Force layout flush so the transition triggers.
-              // eslint-disable-next-line no-unused-expressions
-              r.p.getBoundingClientRect();
-              r.p.setAttribute('stroke-dashoffset', '0');
-            } else {
-              r.p.style.transitionDuration = '0ms';
-              r.p.setAttribute('stroke-dashoffset', '0');
-            }
-          } else {
-            r.p.style.transitionDuration = '0ms';
-            r.p.setAttribute('stroke-dashoffset', r.len);
-          }
-        });
-      }
-
-      function setFinished(finished, animated) {
-        if (finished) {
-          if (!animated) {
-            // Suppress the pulse animation when seeking instantly.
-            const greenEls = groups.gFinish.querySelectorAll('.af-finish-green');
-            greenEls.forEach(el => {
-              el.style.animation = 'none';
-            });
-            // Force reflow then restore so subsequent animated finishes still pulse.
-            requestAnimationFrame(() => {
-              greenEls.forEach(el => { el.style.animation = ''; });
-            });
-          }
-          groups.gFinish.classList.add('af-finished');
-        } else {
-          groups.gFinish.classList.remove('af-finished');
-        }
-      }
-
-      // -----------------------------------------------------------
-      // goToStep(n, animated)
-      //   Idempotent + seekable. n in {1,2,3,4}.
-      //   animated=true uses the original timeline-ish transitions
-      //   (slightly compressed for scroll-driven cadence). false
-      //   sets the settled state for that step instantly.
-      // -----------------------------------------------------------
-      let currentStep = 0;
-
-      function goToStep(n, animated) {
-        clearTimers();
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduced) animated = false;
-
-        // Always update the stage's data-step (handy for any CSS hooks).
-        if (STAGE) STAGE.dataset.step = String(n);
-
-        // Step 1 & 2 — full meme intact. tell visible + bypass edges
-        // visible, AI hidden, delegation/report/closer undrawn, finish
-        // grey. The picture is identical between 1 and 2; only the
-        // caption changes (beat 2 names the orphan).
-        if (n === 1 || n === 2) {
-          setMemeBypassVisible(true, false);
-          setAiVisible(false, false);
-          setEdgesDrawn(groups.delegateRecords, false, false);
-          setEdgesDrawn(groups.reportRecords, false, false);
-          setEdgesDrawn(groups.closerRecords, false, false);
-          setFinished(false, false);
-          setCaption(CAPTIONS[n], !animated);
-          currentStep = n;
-          return;
-        }
-
-        // Step 3 — the substitution + the back-and-forth.
-        // "tell everyone" + its two edges fade OUT; AI nodes fade IN
-        // with the 80ms stagger; delegation (down) and report-back
-        // (up) edges both draw — paired arrows, staggered by ~150ms
-        // so the eye reads "send work down, get answers back".
-        if (n === 3) {
-          // Reset downstream state (in case we're scrolling backward from 4).
-          setEdgesDrawn(groups.closerRecords, false, false);
-          setFinished(false, false);
-
-          if (animated) {
-            // Start from the meme-intact state, then run the substitution.
-            setMemeBypassVisible(true, false);
-            setAiVisible(false, false);
-            setEdgesDrawn(groups.delegateRecords, false, false);
-            setEdgesDrawn(groups.reportRecords, false, false);
-            // Layout flush, then animate.
-            requestAnimationFrame(() => {
-              // Fade tell + bypass edges OUT.
-              setMemeBypassVisible(false, true);
-              // ~120ms in, fade AI nodes IN (overlapping for a clean swap).
-              timers.push(setTimeout(() => {
-                setAiVisible(true, true);
-              }, 120));
-              // ~370ms after kickoff, draw delegation edges (down).
-              timers.push(setTimeout(() => {
-                setEdgesDrawn(groups.delegateRecords, true, true, 400);
-              }, 370));
-              // ~150ms later, draw the report-back edges (up). The
-              // stagger reads as "send work down, get answers back".
-              timers.push(setTimeout(() => {
-                setEdgesDrawn(groups.reportRecords, true, true, 400);
-              }, 520));
-            });
-            setCaption(CAPTIONS[3], false);
-          } else {
-            setMemeBypassVisible(false, false);
-            setAiVisible(true, false);
-            setEdgesDrawn(groups.delegateRecords, true, false);
-            setEdgesDrawn(groups.reportRecords, true, false);
-            setCaption(CAPTIONS[3], true);
-          }
-          currentStep = n;
-          return;
-        }
-
-        // Step 4 — the closer. start → finish edge draws across the
-        // square (~300ms), then finish flips grey → green with the
-        // 1.10x scale pulse. No AI→finish edges in this version: the
-        // work has already cycled back through start (Harry), and
-        // Harry is the one who closes.
-        if (n === 4) {
-          if (animated) {
-            // Ensure prerequisites are set instantly (tell faded, AI in,
-            // back-and-forth drawn) so step 4's motion reads cleanly.
-            setMemeBypassVisible(false, false);
-            setAiVisible(true, false);
-            setEdgesDrawn(groups.delegateRecords, true, false);
-            setEdgesDrawn(groups.reportRecords, true, false);
-            setEdgesDrawn(groups.closerRecords, false, false);
-            requestAnimationFrame(() => {
-              setEdgesDrawn(groups.closerRecords, true, true, 300);
-              // ~200ms after closer starts, pulse green.
-              timers.push(setTimeout(() => {
-                setFinished(true, true);
-              }, 200));
-            });
-            setCaption(CAPTIONS[4], false);
-          } else {
-            setMemeBypassVisible(false, false);
-            setAiVisible(true, false);
-            setEdgesDrawn(groups.delegateRecords, true, false);
-            setEdgesDrawn(groups.reportRecords, true, false);
-            setEdgesDrawn(groups.closerRecords, true, false);
-            setFinished(true, false);
-            setCaption(CAPTIONS[4], true);
-          }
-          currentStep = n;
-          return;
-        }
-      }
-
-      // --- Wire it up -------------------------------------------
-      function init() {
-        build();
-
-        // Initial state: step 1, instant (no animation on cold load).
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduced) {
-          // Reduced motion: render settled state immediately.
-          goToStep(4, false);
-        } else {
-          goToStep(1, false);
-        }
-
-        // Replay button — reset to step 1; scroll re-drives the rest.
-        REPLAY.addEventListener('click', () => {
-          goToStep(1, false);
-          // If the active beat is past 1, advance with animation to it.
-          const activeBeat = document.querySelector('.af-scrolly-beat.af-active');
-          if (activeBeat) {
-            const step = parseInt(activeBeat.dataset.step, 10);
-            if (step > 1) {
-              // Walk forward through animated steps so each beat's
-              // entrance still reads.
-              let s = 2;
-              const tick = () => {
-                if (s > step) return;
-                goToStep(s, true);
-                if (s < step) {
-                  timers.push(setTimeout(tick, 700));
-                }
-                s++;
-              };
-              timers.push(setTimeout(tick, 200));
-            }
-          }
-        });
-
-        // Theme change: rebuild geometry with new colours, restore state.
-        const mq = window.matchMedia('(prefers-color-scheme: dark)');
-        const onSchemeChange = () => {
-          const remembered = currentStep || 1;
-          build();
-          goToStep(remembered, false);
-        };
-        if (mq.addEventListener) mq.addEventListener('change', onSchemeChange);
-        else if (mq.addListener) mq.addListener(onSchemeChange);
-
-        // --- Scrolly observer ----------------------------------
-        // Each beat advances the figure to its data-step when it crosses
-        // the centre 20vh band. Same trick as flat-view.html.
-        if (reduced) {
-          // Reduced motion: skip scroll-driven progression. Render settled
-          // state and mark all beats as visible/active for readability.
-          document.querySelectorAll('.af-scrolly-beat').forEach(b => b.classList.add('af-active'));
-          return;
-        }
-
-        const beats = Array.from(document.querySelectorAll('.af-scrolly-beat'));
-        if (beats.length === 0) return;
-
-        function activateBeat(beat) {
-          beats.forEach(b => b.classList.toggle('af-active', b === beat));
-          if (!beat) return;
-          const step = parseInt(beat.dataset.step, 10);
-          if (!step) return;
-          // If we're advancing, animate; if we're going back, snap.
-          const animated = step > currentStep;
-          goToStep(step, animated);
-        }
-
-        // First beat active by default.
-        activateBeat(beats[0]);
-
-        if ('IntersectionObserver' in window) {
-          const io = new IntersectionObserver((entries) => {
-            const inView = entries.filter(e => e.isIntersecting).map(e => e.target);
-            if (inView.length === 0) return;
-            // Pick the last in-view beat in document order — the most
-            // recent the reader has scrolled INTO.
-            inView.sort((a, b) => beats.indexOf(a) - beats.indexOf(b));
-            activateBeat(inView[inView.length - 1]);
-          }, { threshold: 0, rootMargin: "-40% 0px -40% 0px" });
-          beats.forEach(b => io.observe(b));
-        }
-      }
-
-      // Wait for both rough and the DOM (script is at end of body, but
-      // rough.js loads from CDN so it might not be ready yet).
-      function ready(fn) {
-        if (window.rough) fn();
-        else window.addEventListener('load', fn, { once: true });
-      }
-      ready(init);
-
-      return { goToStep: goToStep };
-    })();</script>
-<script>window.AtomicRowFigure = (function () {
-  'use strict';
-
-  const ROWS = [
-    { code: "CL, CD = flow360(geom, mesh, bcs, cfg)",      comment: "# a CFD run",          color: "var(--ar-operation)" },
-    { code: "lift = integrate_spanwise(surface, chord)",   comment: "# a post-processor",   color: "var(--ar-tool)"      },
-    { code: "gp = fit(training_data, kernel)",             comment: "# a GP fit",           color: "var(--ar-artifact)"  },
-    { code: "next = acquire(gp, domain)",                  comment: "# an acquisition step",color: "var(--ar-binding)"   },
-    { code: "answer = rag(question, retrieved_context)",   comment: "# an LLM answer",      color: "var(--ar-group)"     },
-  ];
-
-  const FIGURE = document.getElementById('ar-figure');
-  const ROWS_EL = document.getElementById('ar-rows');
-
-  // Build rows.
-  const rowEls = ROWS.map((r, i) => {
-    const row = document.createElement('div');
-    row.className = 'ar-row';
-    row.setAttribute('role', 'listitem');
-    row.style.setProperty('--ar-row-color', r.color);
-    row.style.transitionDelay = (i * 80) + 'ms';
-    const code = document.createElement('span');
-    code.className = 'ar-code';
-    code.textContent = r.code;
-    const comment = document.createElement('span');
-    comment.className = 'ar-comment';
-    comment.textContent = r.comment;
-    row.appendChild(document.createElement('span')); // for the ::before stripe spacer
-    row.appendChild(code);
-    row.appendChild(comment);
-    ROWS_EL.appendChild(row);
-    return row;
-  });
-
-  function reveal() {
-    rowEls.forEach(el => el.classList.add('ar-visible'));
-  }
-
-  function reset() {
-    rowEls.forEach(el => el.classList.remove('ar-visible'));
-  }
-
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced) {
-    rowEls.forEach(el => el.classList.add('ar-visible'));
-  } else if ('IntersectionObserver' in window) {
-    let played = false;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && !played) {
-          played = true;
-          reveal();
-          io.disconnect();
-        }
-      });
-    }, { threshold: 0.4 });
-    io.observe(FIGURE);
-  } else {
-    reveal();
-  }
-
-  return { reveal: reveal, reset: reset };
-})();</script>
+<script></script>
+<script></script>
 <script>// PlotlyVsPP — no-op IIFE retained so build_article.py's asset extractor
 // (which looks for a script tagged with this token) keeps wiring this figure
 // into the article. The figure itself is now a single still cartoon (see the
