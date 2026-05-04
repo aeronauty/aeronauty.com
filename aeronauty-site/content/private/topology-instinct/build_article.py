@@ -182,7 +182,15 @@ def vera_applet_assets() -> tuple[str, str, str]:
 
 
 def plotly_vs_pp_assets() -> tuple[str, str, str]:
-    return _iife_assets(PV_HTML, "PlotlyVsPP", '<div class="pv-figure"')
+    css, iife, structure = _iife_assets(PV_HTML, "PlotlyVsPP", '<div class="pv-figure"')
+    # Standalone preview lives in figures/, so the cartoon image is referenced
+    # relative to that directory. When integrated into the article at the
+    # package root, the same path needs a "figures/" prefix.
+    structure = structure.replace(
+        'src="plotly-vs-powerpoint-cartoon.png"',
+        'src="figures/plotly-vs-powerpoint-cartoon.png"',
+    )
+    return css, iife, structure
 
 
 def ask_the_plot_assets() -> tuple[str, str, str]:

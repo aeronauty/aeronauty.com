@@ -1231,165 +1231,46 @@ main { max-width: 1080px; margin: 0 auto; }
 
 /* ===========================================================
    pv- = plotly-vs-powerpoint, namespaced.
+   Replaced the original split-card mockup with a single still
+   illustration: a 3D lattice of connected nodes with a sheet of
+   paper slicing through it, orphan nodes drifting outside the
+   plane. Editorial-cartoon style matches cartoon-*.png siblings.
    =========================================================== */
 .pv-figure {
   width: 100%;
-  --pv-bg:        #121826;
-  --pv-fg:        #e6edf6;
-  --pv-fg-dim:    #93a0b6;
-  --pv-fg-faint:  #5c6a82;
-  --pv-border:    #2a3447;
-  --pv-accent:    #22d3ee;
-  --pv-paper:     #ffffff;       /* the powerpoint mockup IS white */
-  --pv-paper-fg:  #1f2328;
-  --pv-paper-dim: #6b7280;
-  --pv-paper-rule:#d8dde6;
-  --pv-paper-line:#1f6feb;
-  --pv-paper-grid:#e5e7eb;
 }
-@media (prefers-color-scheme: light) {
-  .pv-figure {
-    --pv-bg:       #ffffff;
-    --pv-fg:       #1f2328;
-    --pv-fg-dim:   #5c6675;
-    --pv-fg-faint: #8a93a3;
-    --pv-border:   #d8dde6;
-  }
-}
-
 .pv-eyebrow {
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--pv-fg-dim);
+  color: #93a0b6;
   margin: 0 0 14px;
   font-weight: 600;
   text-align: center;
 }
-
-.pv-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-items: stretch;
-}
-@media (max-width: 760px) {
-  .pv-grid { grid-template-columns: 1fr; }
+@media (prefers-color-scheme: light) {
+  .pv-eyebrow { color: #5c6675; }
 }
 
-/* Each panel — a "card" the same height in both columns. */
-.pv-card {
-  border: 1px solid var(--pv-border);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 380px;
-}
-
-.pv-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: color-mix(in srgb, var(--pv-fg) 5%, transparent);
-  border-bottom: 1px solid var(--pv-border);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--pv-fg-dim);
-  font-weight: 600;
-}
-.pv-card-tag { color: var(--pv-fg-faint); font-weight: 500; letter-spacing: 0.04em; text-transform: none; }
-
-/* PowerPoint slide — looks like a slide deliberately. */
-.pv-slide {
-  background: var(--pv-paper);
-  color: var(--pv-paper-fg);
-  flex: 1;
-  padding: 18px 20px 14px;
-  display: flex;
-  flex-direction: column;
-  font-family: "Calibri", "Segoe UI", Helvetica, Arial, sans-serif;
-}
-.pv-slide-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 2px;
-  color: var(--pv-paper-fg);
-}
-.pv-slide-sub {
-  font-size: 12px;
-  color: var(--pv-paper-dim);
-  margin: 0 0 12px;
-}
-.pv-slide-chart {
-  flex: 1;
-  min-height: 180px;
-  margin-bottom: 10px;
-}
-.pv-slide-chart svg { width: 100%; height: 100%; display: block; }
-.pv-slide-bullets {
-  margin: 0;
-  padding-left: 22px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--pv-paper-fg);
-}
-.pv-slide-bullets li { margin-bottom: 2px; }
-.pv-slide-foot {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid var(--pv-paper-rule);
-  font-size: 10px;
-  color: var(--pv-paper-dim);
-  display: flex;
-  justify-content: space-between;
-}
-
-/* Plotly side */
-.pv-plotly {
-  background: var(--pv-bg);
-  flex: 1;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.pv-plot {
-  flex: 1;
-  min-height: 320px;
-}
-.pv-plot-hint {
-  font-size: 11px;
-  color: var(--pv-fg-faint);
-  padding: 6px 14px 10px;
-  font-style: italic;
-  text-align: center;
-}
-.pv-plot-hint kbd {
-  background: color-mix(in srgb, var(--pv-fg) 10%, transparent);
-  border: 1px solid var(--pv-border);
-  border-radius: 3px;
-  padding: 1px 5px;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 10px;
-  font-style: normal;
-}
-
-/* Plotly tooltip override (more readable on dark bg) */
-.pv-figure .hovertext {
-  font-family: "Inter", sans-serif !important;
+.pv-still {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
 }
 
 .pv-caption {
   margin-top: 14px;
   font-size: 13px;
   line-height: 1.55;
-  color: var(--pv-fg-dim);
+  color: #93a0b6;
   text-align: center;
   padding: 0 8px;
 }
-.pv-caption strong { color: var(--pv-fg); font-weight: 600; }
+@media (prefers-color-scheme: light) {
+  .pv-caption { color: #5c6675; }
+}
+.pv-caption strong { color: inherit; font-weight: 600; }
 </style>
 <style>
 @media (prefers-color-scheme: light) {
@@ -4641,272 +4522,13 @@ main { max-width: 1200px; margin: 0 auto; }
 
   return { reveal: reveal, reset: reset };
 })();</script>
-<script>window.PlotlyVsPP = (function () {
+<script>// PlotlyVsPP — no-op IIFE retained so build_article.py's asset extractor
+// (which looks for a script tagged with this token) keeps wiring this figure
+// into the article. The figure itself is now a single still cartoon (see the
+// .pv-figure block above); no client-side rendering is required.
+window.PlotlyVsPP = (function () {
   'use strict';
-
-  // ---- Synthetic but plausible flight-dynamics dataset --------------------
-  // alpha sweep at four Mach numbers. Linear lift slope with Prandtl-Glauert,
-  // smooth post-stall roll-off, drag = parasite + induced + Mach-rise.
-  // Not airfoil-accurate. Pedagogically representative.
-  const ALPHA = [];
-  for (let a = -5; a <= 20; a += 0.5) ALPHA.push(a);
-
-  const MACHS = [0.30, 0.50, 0.70, 0.85];
-
-  function lerp(a, b, t) { return a + (b - a) * t; }
-
-  function CL(alpha, mach) {
-    const beta = Math.sqrt(Math.max(0.05, 1 - mach * mach));
-    const slopeDeg = (2 * Math.PI / beta) * (Math.PI / 180); // per deg
-    const alpha0   = -2;
-    const linear   = slopeDeg * (alpha - alpha0);
-    const alphaMax = 14 - 4 * mach;
-    const sharpness = 0.6;
-    // Smooth blend from linear (pre-stall) toward post-stall plateau ~0.4.
-    const w = 1 / (1 + Math.exp((alpha - alphaMax) * sharpness));
-    const post = 0.45 + 0.05 * Math.sin(alpha * 0.4);
-    return linear * w + post * (1 - w);
-  }
-
-  function CD(alpha, mach) {
-    const cl  = CL(alpha, mach);
-    const AR  = 8;
-    const e   = 0.82;
-    const cdi = (cl * cl) / (Math.PI * AR * e);
-    const cd0 = 0.022 + 0.05 * Math.pow(Math.max(0, mach - 0.72), 2);
-    // Stall drag bump
-    const alphaMax = 14 - 4 * mach;
-    const stallBump = 0.04 / (1 + Math.exp(-(alpha - alphaMax) * 0.7));
-    return cd0 + cdi + stallBump;
-  }
-
-  // Control deflection: for the demo, modulate aileron deflection
-  // sinusoidally with alpha — a realistic-ish "test sweep" artefact.
-  function ailerom(alpha, mach) {
-    return Math.round( 5 * Math.sin((alpha + 5) / 6) ) ; // -5..+5 deg
-  }
-
-  // Reynolds number (simulated)
-  function reynolds(alpha, mach) {
-    return Math.round((mach * 5e6) + 0.05e6 * (alpha + 5));
-  }
-
-  // Build per-Mach trace data.
-  function buildTrace(mach, color) {
-    const xs = [], ys = [], custom = [];
-    for (const a of ALPHA) {
-      const cl = CL(a, mach);
-      const cd = CD(a, mach);
-      const lod = cl / Math.max(0.001, cd);
-      xs.push(a);
-      ys.push(cl);
-      custom.push([cd.toFixed(4), lod.toFixed(2), ailerom(a, mach), reynolds(a, mach)]);
-    }
-    return {
-      type: "scatter",
-      mode: "lines+markers",
-      name: "M = " + mach.toFixed(2),
-      x: xs,
-      y: ys,
-      customdata: custom,
-      line:   { color: color, width: 2 },
-      marker: { color: color, size: 5, opacity: 0.85 },
-      hovertemplate:
-        "<b>M = " + mach.toFixed(2) + "</b><br>" +
-        "α = %{x:.1f}°<br>" +
-        "C<sub>L</sub> = %{y:.3f}<br>" +
-        "C<sub>D</sub> = %{customdata[0]}<br>" +
-        "L/D = %{customdata[1]}<br>" +
-        "δ<sub>aileron</sub> = %{customdata[2]:+d}°<br>" +
-        "Re = %{customdata[3]:,}" +
-        "<extra></extra>",
-    };
-  }
-
-  // Mach colour palette — perceptually graded blue→cyan→amber.
-  const MACH_COLORS = ["#3b82f6", "#22d3ee", "#84cc16", "#f59e0b"];
-
-  // ---- Detect dark mode + colour scheme observers ----
-  function isDark() {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-
-  function plotlyLayout() {
-    const dark = isDark();
-    const fg     = dark ? "#e6edf6" : "#1f2328";
-    const fgDim  = dark ? "#93a0b6" : "#5c6675";
-    const grid   = dark ? "#1f2940" : "#e5e7eb";
-    const paper  = "rgba(0,0,0,0)";  // transparent — card bg shows through
-    return {
-      paper_bgcolor: paper,
-      plot_bgcolor:  paper,
-      margin: { l: 50, r: 16, t: 28, b: 44 },
-      font: { family: "Inter, -apple-system, sans-serif", color: fg, size: 11 },
-      hoverlabel: {
-        bgcolor: dark ? "rgba(10,14,26,0.95)" : "rgba(255,255,255,0.97)",
-        bordercolor: dark ? "#2a3447" : "#cbd5e1",
-        font: { color: fg, family: "Inter, sans-serif", size: 11 },
-        align: "left",
-      },
-      xaxis: {
-        title: { text: "Angle of attack α (deg)", font: { color: fgDim, size: 11 } },
-        gridcolor: grid, zerolinecolor: grid,
-        tickfont: { color: fgDim, size: 10 },
-        showspikes: true, spikemode: "across", spikesnap: "cursor",
-        spikecolor: fgDim, spikethickness: 1, spikedash: "dot",
-      },
-      yaxis: {
-        title: { text: "Lift coefficient CL", font: { color: fgDim, size: 11 } },
-        gridcolor: grid, zerolinecolor: grid,
-        tickfont: { color: fgDim, size: 10 },
-        showspikes: true, spikemode: "across", spikesnap: "cursor",
-        spikecolor: fgDim, spikethickness: 1, spikedash: "dot",
-      },
-      legend: {
-        orientation: "h",
-        yanchor: "bottom", y: 1.02,
-        xanchor: "right",  x: 1,
-        font: { color: fg, size: 10 },
-        bgcolor: "rgba(0,0,0,0)",
-      },
-      annotations: [{
-        x: 13, y: 1.3,
-        xref: "x", yref: "y",
-        text: "stall",
-        showarrow: true, arrowhead: 0, ax: 28, ay: -22,
-        font: { color: fgDim, size: 10, style: "italic" },
-        arrowcolor: fgDim, arrowwidth: 1,
-      }],
-      // Reasonable initial range — readers can drag/zoom.
-      xaxis_range: [-5, 20],
-      yaxis_range: [-0.4, 1.7],
-    };
-  }
-
-  const plotlyConfig = {
-    responsive: true,
-    displaylogo: false,
-    displayModeBar: "hover",
-    modeBarButtonsToRemove: [
-      "lasso2d", "select2d", "toggleSpikelines",
-      "hoverClosestCartesian", "hoverCompareCartesian",
-    ],
-    scrollZoom: true,
-    toImageButtonOptions: { format: "png", filename: "plotly-cl-vs-alpha", scale: 2 },
-  };
-
-  function renderPlotly() {
-    const traces = MACHS.map((m, i) => buildTrace(m, MACH_COLORS[i]));
-    const node = document.getElementById("pv-plot");
-    if (!node || !window.Plotly) return;
-    Plotly.newPlot(node, traces, plotlyLayout(), plotlyConfig);
-  }
-
-  // Re-render on theme change (Plotly bakes colours at draw time).
-  function onSchemeChange() {
-    const node = document.getElementById("pv-plot");
-    if (!node || !window.Plotly) return;
-    Plotly.relayout(node, plotlyLayout());
-  }
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  if (mq.addEventListener) mq.addEventListener('change', onSchemeChange);
-  else if (mq.addListener) mq.addListener(onSchemeChange);
-
-  // ---- PowerPoint slide chart (static SVG, generated client-side so
-  //      the slide always matches the live data) ----
-  function renderSlideChart() {
-    const host = document.getElementById("pv-slide-chart");
-    if (!host) return;
-    const w = host.clientWidth || 380;
-    const h = host.clientHeight || 200;
-    const pad = { l: 40, r: 12, t: 8, b: 28 };
-
-    // Mach 0.5 only — single line, the deliverable's restriction.
-    const mach = 0.50;
-    const pts = ALPHA.map(a => ({ a: a, cl: CL(a, mach) }));
-    const xMin = -5, xMax = 20;
-    const yMin = -0.4, yMax = 1.7;
-    const X = a => pad.l + (a - xMin) / (xMax - xMin) * (w - pad.l - pad.r);
-    const Y = c => h - pad.b - (c - yMin) / (yMax - yMin) * (h - pad.t - pad.b);
-
-    const ticksX = [-5, 0, 5, 10, 15, 20];
-    const ticksY = [0, 0.5, 1.0, 1.5];
-    const path = "M " + pts.map(p => X(p.a) + " " + Y(p.cl)).join(" L ");
-
-    const svgNS = "http://www.w3.org/2000/svg";
-    while (host.firstChild) host.removeChild(host.firstChild);
-    const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
-    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    host.appendChild(svg);
-
-    function el(tag, attrs, text) {
-      const e = document.createElementNS(svgNS, tag);
-      for (const k in attrs) e.setAttribute(k, attrs[k]);
-      if (text != null) e.textContent = text;
-      return e;
-    }
-
-    // Subtle gridlines
-    for (const t of ticksY) {
-      svg.appendChild(el("line", {
-        x1: pad.l, x2: w - pad.r, y1: Y(t), y2: Y(t),
-        stroke: "#e5e7eb", "stroke-width": 1,
-      }));
-    }
-    // Axes
-    svg.appendChild(el("line", {
-      x1: pad.l, x2: pad.l, y1: pad.t, y2: h - pad.b,
-      stroke: "#9ca3af", "stroke-width": 1,
-    }));
-    svg.appendChild(el("line", {
-      x1: pad.l, x2: w - pad.r, y1: h - pad.b, y2: h - pad.b,
-      stroke: "#9ca3af", "stroke-width": 1,
-    }));
-    // Tick labels
-    for (const t of ticksX) {
-      svg.appendChild(el("text", {
-        x: X(t), y: h - pad.b + 14, "text-anchor": "middle",
-        "font-size": 10, fill: "#6b7280",
-      }, String(t)));
-    }
-    for (const t of ticksY) {
-      svg.appendChild(el("text", {
-        x: pad.l - 6, y: Y(t) + 3, "text-anchor": "end",
-        "font-size": 10, fill: "#6b7280",
-      }, t.toFixed(1)));
-    }
-    // Axis labels
-    svg.appendChild(el("text", {
-      x: (pad.l + (w - pad.r)) / 2, y: h - 4,
-      "text-anchor": "middle", "font-size": 10, fill: "#374151",
-    }, "α (deg)"));
-    svg.appendChild(el("text", {
-      x: 10, y: (pad.t + (h - pad.b)) / 2,
-      "text-anchor": "middle", "font-size": 10, fill: "#374151",
-      transform: "rotate(-90 10 " + (pad.t + (h - pad.b)) / 2 + ")",
-    }, "CL"));
-    // The line — a corporate-blue PowerPoint default
-    svg.appendChild(el("path", {
-      d: path, fill: "none", stroke: "#1f6feb", "stroke-width": 2,
-    }));
-  }
-
-  // Boot once libraries are ready.
-  function boot() {
-    renderSlideChart();
-    renderPlotly();
-    // Re-draw the slide SVG on resize so it tracks card width.
-    let t;
-    window.addEventListener("resize", function () {
-      clearTimeout(t);
-      t = setTimeout(renderSlideChart, 120);
-    });
-  }
-  if (window.Plotly) boot();
-  else window.addEventListener("load", boot, { once: true });
-
-  return { rerender: renderPlotly, refreshSlide: renderSlideChart };
+  return { rerender: function () {}, refreshSlide: function () {} };
 })();</script>
 <script>window.DataBlackMarket = (function () {
   'use strict';
