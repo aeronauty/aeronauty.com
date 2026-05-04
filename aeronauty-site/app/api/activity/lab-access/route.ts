@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getKnownUser, hasActivityStore, recordActivityEvent } from "@/lib/activity-store";
 
 export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({}));
+  const path = typeof body.path === "string" ? body.path : null;
+
+  if (path === "/lab/activity") {
+    return NextResponse.json({ ok: true, recorded: false, reason: "ignored-dashboard-self-view" });
+  }
+
   const user = await getKnownUser(req);
 
   if (!user.email) {
@@ -12,12 +19,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, recorded: false, reason: "activity-store-not-configured" });
   }
 
-  const body = await req.json().catch(() => ({}));
-
   try {
     await recordActivityEvent(req, {
       eventType: "lab_access",
-      path: typeof body.path === "string" ? body.path : null,
+      path,
       pageTitle: typeof body.pageTitle === "string" ? body.pageTitle : null,
       metadata: typeof body.metadata === "object" && body.metadata !== null ? body.metadata : {},
     });
