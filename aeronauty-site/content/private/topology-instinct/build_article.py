@@ -3389,25 +3389,27 @@ ARTICLE_CSS = r"""
     .ti-orch-stage {
       position: relative;
       top: auto;
-      height: 46svh;
-      margin: 18px 0 0;
+      height: auto;
+      margin: 18px 0 28px;
     }
     .ti-orch-stage .ti-orch-figure {
-      height: 100%;
+      height: auto;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      padding: 10px;
+      padding: 8px;
     }
     .ti-orch-stage .ti-orch-figure img {
-      max-height: 100%;
+      width: 100%;
+      max-height: none;
+      height: auto;
       object-fit: contain;
     }
     .ti-orch-stage .ti-orch-figure .ti-figcap { display: none; }
     .ti-orch-beat {
-      min-height: 100svh;
+      min-height: auto;
       padding: 5svh 0 0;
       opacity: 1;
     }
@@ -4198,6 +4200,10 @@ SECTION_FLIP_JS = r"""
   }
 
   function setPinnedSection(section) {
+    if (!isWide()) {
+      pinnedSection = section;
+      return;
+    }
     if (section === pinnedSection) return;
     const previous = pinnedSection;
     const previousIndex = sectionIndex(previous);

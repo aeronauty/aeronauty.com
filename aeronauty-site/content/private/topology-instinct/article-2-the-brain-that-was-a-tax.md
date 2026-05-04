@@ -1,6 +1,6 @@
 # The Brain That Was a Tax Is Now an Asset
 
-In an earlier version of this essay, this was the point where the article quietly became a different article. The first one was about data entry — about systems losing the shape of the work and making people put it back by hand. It ended at a thing called Thread. [If you haven't read it](/lab/articles/i-dont-like-data-entry), the short version is: I have spent twenty years noticing the same thing across very different jobs, mostly without realising it was the same thing.
+In an earlier version of this essay, this was the point where the article quietly became a different article. The first one was about data entry — about systems losing the shape of the work and making people put it back by hand. It ended at a thing called Thread. [If you haven't read it](/writing/i-dont-like-data-entry), the short version is: I have spent twenty years noticing the same thing across very different jobs, mostly without realising it was the same thing.
 
 This one is about the person who kept noticing. About why he kept losing tools (in the garage, but also scripts I wrote), abandoning projects at 80%, and looking, on paper, scattered. And about what happened when prescribed ADHD medication and a swarm of cheap fast AI agents arrived more or less at the same time.
 
@@ -59,7 +59,7 @@ Once I saw that, I started seeing the same taste everywhere. Thread treats simul
 <aside class="ti-bridge-link">
   <p class="ti-bridge-eyebrow">The engineering version</p>
   <p class="ti-bridge-copy">The first essay makes this same move in Paradigm: aircraft and airports are not two clean sequential problems. Solve them separately and a human gets stuck holding the coupling.</p>
-  <p class="ti-bridge-action"><a href="/lab/articles/i-dont-like-data-entry#paradigm">Read the coupled-systems example</a></p>
+  <p class="ti-bridge-action"><a href="/writing/i-dont-like-data-entry#paradigm">Read the coupled-systems example</a></p>
 </aside>
 
 That is the link between the engineering work and the ADHD bit. Not architecture. Taste. ADHD, at least in my case, does not naturally separate things in the first place. That is a problem when the task wants clean sequential execution — school, admin, most forms of adulthood, most forms of "can you just" — and an asset when the task is genuinely coupled and rewards the refusal to decouple. The brain finds its native problem class.
@@ -142,6 +142,6 @@ Maybe AI compresses that role later. I don't know. In 2026, it is real.
 
 <aside class="ti-sister-link">
   <p class="ti-sister-eyebrow">Companion piece</p>
-  <p class="ti-sister-title"><a href="/lab/articles/i-dont-like-data-entry">I Don't Like Data Entry</a></p>
+  <p class="ti-sister-title"><a href="/writing/i-dont-like-data-entry">I Don't Like Data Entry</a></p>
   <p class="ti-sister-blurb">The other side: the coupled engineering instinct in plot decks, Paradigm, Postgres, and Flexcompute Thread.</p>
 </aside>

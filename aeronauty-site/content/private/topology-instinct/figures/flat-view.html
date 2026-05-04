@@ -129,6 +129,7 @@ main { max-width: 980px; margin: 0 auto; }
   overflow: hidden;
   background: var(--fv-surface-2);
   margin-bottom: 12px;
+  -webkit-touch-callout: none;
 }
 /* On narrow viewports the 8-column table is wider than the screen.
    Allow horizontal scroll inside the wrap and give the table a sensible
@@ -982,7 +983,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
           <!-- ===== Panel C — Thread (interactive) ===== -->
           <div class="fv-panel fv-panel-thread" data-state="thread">
             <p class="fv-hint" style="margin-top:6px;">
-              Mouseover any cell &mdash; Thread already knows what flowed into it and what didn&rsquo;t share a source. <em>Here it is, simulated; you&rsquo;ll be able to try it yourself in a moment.</em>
+              Hover or tap any cell &mdash; Thread already knows what flowed into it and what didn&rsquo;t share a source. <kbd>Long-press</kbd> a cell on mobile to ask what produced it. <em>Here it is, simulated; you&rsquo;ll be able to try it yourself in a moment.</em>
               <span style="display:inline-block;margin-left:6px;white-space:nowrap;">
                 <span class="fv-key-swatch" style="background:var(--fv-cell-lit-fg)"></span><span style="color:var(--fv-cell-lit-fg);font-weight:600;">ancestor</span>
                 &nbsp;&middot;&nbsp;
@@ -1759,11 +1760,12 @@ window.FlatView = (function () {
     });
   })();
 
-  // ---- Right-click context menu — "ask the DAG" --------------------------
+  // ---- Context menu — "ask the DAG" -------------------------------------
   // Each non-empty cell carries far more than the value shown in the table.
-  // Right-click any cell to ask the DAG questions whose answers aren't in
-  // the projection — producer, timestamp, kind, content hash. The point is
-  // that the table is a view; the DAG underneath knows N×many more facts.
+  // Right-click any cell on desktop, or long-press it on touch, to ask the
+  // DAG questions whose answers aren't in the projection — producer,
+  // timestamp, kind, content hash. The point is that the table is a view;
+  // the DAG underneath knows N×many more facts.
   const CTX_MENU = document.getElementById('fv-ctxmenu');
 
   // Per-(rowIdx, col) metadata generator. Mock but realistic — the article
@@ -1915,22 +1917,60 @@ window.FlatView = (function () {
     CTX_MENU.classList.remove('fv-show');
   }
 
-  // Wire contextmenu events on every non-empty cell.
+  function canOpenCellMenu(td) {
+    return td && !td.classList.contains('fv-empty') && td.dataset.col !== 'run';
+  }
+
+  let cellLongPressTimer = null;
+  let cellLongPressStart = null;
+  const CELL_LONG_PRESS_MS = 560;
+  const CELL_LONG_PRESS_MOVE_PX = 12;
+
+  function clearCellLongPress() {
+    if (cellLongPressTimer) {
+      clearTimeout(cellLongPressTimer);
+      cellLongPressTimer = null;
+    }
+    cellLongPressStart = null;
+  }
+
+  function startCellLongPress(td, ev) {
+    if (ev.pointerType === 'mouse' || !canOpenCellMenu(td)) return;
+    clearCellLongPress();
+    cellLongPressStart = { td, x: ev.clientX, y: ev.clientY };
+    cellLongPressTimer = setTimeout(() => {
+      if (!cellLongPressStart) return;
+      selectCell(td);
+      showCtxMenu(+td.dataset.run, td.dataset.col, cellLongPressStart.x, cellLongPressStart.y);
+      clearCellLongPress();
+    }, CELL_LONG_PRESS_MS);
+  }
+
+  function moveCellLongPress(ev) {
+    if (!cellLongPressStart) return;
+    if (Math.hypot(ev.clientX - cellLongPressStart.x, ev.clientY - cellLongPressStart.y) > CELL_LONG_PRESS_MOVE_PX) {
+      clearCellLongPress();
+    }
+  }
+
+  // Wire contextmenu / long-press events on every non-empty cell.
   tbody.querySelectorAll('td').forEach(td => {
     td.addEventListener('contextmenu', (ev) => {
-      if (td.classList.contains('fv-empty')) return;
-      if (td.dataset.col === 'run')          return;
+      if (!canOpenCellMenu(td)) return;
       ev.preventDefault();
       ev.stopPropagation();
       showCtxMenu(+td.dataset.run, td.dataset.col, ev.clientX, ev.clientY);
     });
     td.addEventListener('dblclick', (ev) => {
-      if (td.classList.contains('fv-empty')) return;
-      if (td.dataset.col === 'run')          return;
+      if (!canOpenCellMenu(td)) return;
       ev.preventDefault();
       ev.stopPropagation();
       showCtxMenu(+td.dataset.run, td.dataset.col, ev.clientX, ev.clientY);
     });
+    td.addEventListener('pointerdown', (ev) => startCellLongPress(td, ev));
+    td.addEventListener('pointermove', moveCellLongPress, { passive: true });
+    td.addEventListener('pointerup', clearCellLongPress, { passive: true });
+    td.addEventListener('pointercancel', clearCellLongPress, { passive: true });
   });
   // Close menu on outside click, Escape, scroll, or another contextmenu.
   document.addEventListener('click', (ev) => {

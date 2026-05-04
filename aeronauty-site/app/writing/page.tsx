@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
+import { topologyArticles } from "@/lib/topology-articles";
 
 const pieces = [
+  ...topologyArticles.map((article) => ({
+    title: article.title,
+    description: article.description,
+    tags: article.tags,
+    link: `/writing/${article.slug}`,
+    type: "Essay",
+  })),
   {
     title: "Why choosing the right fit matters",
     description:

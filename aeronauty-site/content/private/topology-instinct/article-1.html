@@ -2010,25 +2010,27 @@
     .ti-orch-stage {
       position: relative;
       top: auto;
-      height: 46svh;
-      margin: 18px 0 0;
+      height: auto;
+      margin: 18px 0 28px;
     }
     .ti-orch-stage .ti-orch-figure {
-      height: 100%;
+      height: auto;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      padding: 10px;
+      padding: 8px;
     }
     .ti-orch-stage .ti-orch-figure img {
-      max-height: 100%;
+      width: 100%;
+      max-height: none;
+      height: auto;
       object-fit: contain;
     }
     .ti-orch-stage .ti-orch-figure .ti-figcap { display: none; }
     .ti-orch-beat {
-      min-height: 100svh;
+      min-height: auto;
       padding: 5svh 0 0;
       opacity: 1;
     }
@@ -3370,6 +3372,7 @@ main { max-width: 980px; margin: 0 auto; }
   overflow: hidden;
   background: var(--fv-surface-2);
   margin-bottom: 12px;
+  -webkit-touch-callout: none;
 }
 /* On narrow viewports the 8-column table is wider than the screen.
    Allow horizontal scroll inside the wrap and give the table a sensible
@@ -4420,6 +4423,8 @@ main { max-width: 1200px; margin: 0 auto; }
   border-radius: 10px;
   overflow: hidden;
   min-height: 320px;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 .atp-plot-svg {
   display: block;
@@ -4658,7 +4663,7 @@ main { max-width: 1200px; margin: 0 auto; }
   .atp-ctxmenu .atp-ctx-list li { grid-template-columns: 1fr; gap: 1px; }
 }
 
-/* Right-click hint card in the side panel. */
+/* Context-menu hint card in the side panel. */
 .atp-card-rc-tip {
   padding: 12px 14px;
   background: color-mix(in srgb, var(--atp-accent) 6%, var(--atp-surface-2));
@@ -5818,15 +5823,15 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q70.8,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q68.0,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q49.4,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q72.2,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q67.19999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q46.599999999999994,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q67.19999999999999,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q65.2,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q72.2,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,90 Q69.4,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q70.8,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q55.0,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q63.8,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,210 Q61.599999999999994,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q56.4,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q58.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q70.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q68.0,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -5925,7 +5930,7 @@ main { max-width: 1280px; margin: 0 auto; }
 <p>In engineering systems, it&rsquo;s annoying because data and its relationship to other data has a shape<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-4">*</sup><span class="ti-aside-content" id="ti-aside-4" role="tooltip">that should be datums and relationship to other datums, perhaps. I don&rsquo;t know, I&rsquo;m not a dictionary.</span></span>. That shape got lost somewhere between two tools, or two teams, or two formats, and a human got handed the reconstruction job and lost the shape and context at the same time. This is what&rsquo;s going on when you find yourself typing the same thing into a second box, or hard coding a constant, or exporting to file and re-importing into another tool, or filling your name and telephone number back out on a repeat visit to the doctor.</p>
 <p>There&rsquo;s a smaller, more personal version of this realisation that I had years before any of it got technical. I&rsquo;ve always tried to automate tasks that I knew didn&rsquo;t interest me — because boredom produces errors, and because the <em>challenge</em> of figuring out an automation is <em>fun</em>. Data entry is the worst case: both boring and error-prone. Richer data<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-5">*</sup><span class="ti-aside-content" id="ti-aside-5" role="tooltip">by which I mean data that contains more information than you see in any particular view</span></span> is the opposite. Richer data is <em>more interesting</em>, and when there&rsquo;s structure, wrong answers look and feel wrong, because they break the structure - which you can <em>only</em> do when you have the ability to observe all data together. Contrastingly, if you typo a number into a CSV or an Excel spreadsheet, the mutated data is just as happy as it would have been with the right number<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-6">*</sup><span class="ti-aside-content" id="ti-aside-6" role="tooltip">not to mention that the manual transfer makes it out of date the moment you do it</span></span>.</p>
 <p>My ADHD diagnosis didn&rsquo;t tell me that. It just made it obvious to me: avoiding boring error-prone work hadn&rsquo;t been laziness<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-7">*</sup><span class="ti-aside-content" id="ti-aside-7" role="tooltip">why copy some numbers into a spreadsheet when I can spend twice as long automating it?</span></span>, it had been my brain&rsquo;s natural response to a class of work that uses none of the things my brain is good at.</p>
-<p>This is a post about that pattern, and my personal realisation. It ends, for now, at a thing called Flexcompute Thread - and I give a glimpse at why it&rsquo;s magical. There&rsquo;s also a <a href="/lab/articles/the-brain-that-was-a-tax">Part 2/sister article about why AI agents are ideal for generalists</a>.</p>
+<p>This is a post about that pattern, and my personal realisation. It ends, for now, at a thing called Flexcompute Thread - and I give a glimpse at why it&rsquo;s magical. There&rsquo;s also a <a href="/writing/the-brain-that-was-a-tax">Part 2/sister article about why AI agents are ideal for generalists</a>.</p>
 <p>I am also aware that this writing is long and not everyone<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-8">*</sup><span class="ti-aside-content" id="ti-aside-8" role="tooltip">or anyone, barring my father (thanks, Dad)</span></span> will read it in full. The act of writing this and publishing it is really for me, because it&rsquo;s helping me to get my thoughts out and forcing me to structure them.</p>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="plot-form" data-node-id="plot-form">
@@ -6128,7 +6133,7 @@ $$
 <aside class="ti-bridge-link">
   <p class="ti-bridge-eyebrow">The personal version</p>
   <p class="ti-bridge-copy">The companion essay picks up this exact move — refusing to decouple a problem that only makes sense when solved jointly — and asks why that kind of problem has always felt native to my brain.</p>
-  <p class="ti-bridge-action"><a href="/lab/articles/the-brain-that-was-a-tax#problem-class">Read the ADHD/aeroelasticity link</a></p>
+  <p class="ti-bridge-action"><a href="/writing/the-brain-that-was-a-tax#problem-class">Read the ADHD/aeroelasticity link</a></p>
 </aside>
 
 <div class="ti-divider" aria-hidden="true">✦</div>
@@ -6515,7 +6520,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
           <!-- ===== Panel C — Thread (interactive) ===== -->
           <div class="fv-panel fv-panel-thread" data-state="thread">
             <p class="fv-hint" style="margin-top:6px;">
-              Mouseover any cell &mdash; Thread already knows what flowed into it and what didn&rsquo;t share a source. <em>Here it is, simulated; you&rsquo;ll be able to try it yourself in a moment.</em>
+              Hover or tap any cell &mdash; Thread already knows what flowed into it and what didn&rsquo;t share a source. <kbd>Long-press</kbd> a cell on mobile to ask what produced it. <em>Here it is, simulated; you&rsquo;ll be able to try it yourself in a moment.</em>
               <span style="display:inline-block;margin-left:6px;white-space:nowrap;">
                 <span class="fv-key-swatch" style="background:var(--fv-cell-lit-fg)"></span><span style="color:var(--fv-cell-lit-fg);font-weight:600;">ancestor</span>
                 &nbsp;&middot;&nbsp;
@@ -6674,7 +6679,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
           </div>
           <div class="atp-card atp-card-rc-tip" aria-hidden="true">
             <p class="atp-rc-line">
-              <span class="atp-rc-kbd">right-click</span> any point &rarr; ask Thread what flowed into it.
+              <span class="atp-rc-kbd" id="atp-context-gesture">right-click</span> any point &rarr; ask Thread what flowed into it.
             </p>
           </div>
         </div>
@@ -6946,7 +6951,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 <p>That is the thread. It was there the whole time, and I&rsquo;d love to talk to you about it.</p>
 <aside class="ti-sister-link">
   <p class="ti-sister-eyebrow">Companion piece</p>
-  <p class="ti-sister-title"><a href="/lab/articles/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
+  <p class="ti-sister-title"><a href="/writing/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
   <p class="ti-sister-blurb">The same instinct, the other way round: from coupled engineering problems to the ADHD-shaped brain that kept being drawn to them.</p>
 </aside>
   </main>
@@ -9011,11 +9016,12 @@ window.PlotlyVsPP = (function () {
     });
   })();
 
-  // ---- Right-click context menu — "ask the DAG" --------------------------
+  // ---- Context menu — "ask the DAG" -------------------------------------
   // Each non-empty cell carries far more than the value shown in the table.
-  // Right-click any cell to ask the DAG questions whose answers aren't in
-  // the projection — producer, timestamp, kind, content hash. The point is
-  // that the table is a view; the DAG underneath knows N×many more facts.
+  // Right-click any cell on desktop, or long-press it on touch, to ask the
+  // DAG questions whose answers aren't in the projection — producer,
+  // timestamp, kind, content hash. The point is that the table is a view;
+  // the DAG underneath knows N×many more facts.
   const CTX_MENU = document.getElementById('fv-ctxmenu');
 
   // Per-(rowIdx, col) metadata generator. Mock but realistic — the article
@@ -9167,22 +9173,60 @@ window.PlotlyVsPP = (function () {
     CTX_MENU.classList.remove('fv-show');
   }
 
-  // Wire contextmenu events on every non-empty cell.
+  function canOpenCellMenu(td) {
+    return td && !td.classList.contains('fv-empty') && td.dataset.col !== 'run';
+  }
+
+  let cellLongPressTimer = null;
+  let cellLongPressStart = null;
+  const CELL_LONG_PRESS_MS = 560;
+  const CELL_LONG_PRESS_MOVE_PX = 12;
+
+  function clearCellLongPress() {
+    if (cellLongPressTimer) {
+      clearTimeout(cellLongPressTimer);
+      cellLongPressTimer = null;
+    }
+    cellLongPressStart = null;
+  }
+
+  function startCellLongPress(td, ev) {
+    if (ev.pointerType === 'mouse' || !canOpenCellMenu(td)) return;
+    clearCellLongPress();
+    cellLongPressStart = { td, x: ev.clientX, y: ev.clientY };
+    cellLongPressTimer = setTimeout(() => {
+      if (!cellLongPressStart) return;
+      selectCell(td);
+      showCtxMenu(+td.dataset.run, td.dataset.col, cellLongPressStart.x, cellLongPressStart.y);
+      clearCellLongPress();
+    }, CELL_LONG_PRESS_MS);
+  }
+
+  function moveCellLongPress(ev) {
+    if (!cellLongPressStart) return;
+    if (Math.hypot(ev.clientX - cellLongPressStart.x, ev.clientY - cellLongPressStart.y) > CELL_LONG_PRESS_MOVE_PX) {
+      clearCellLongPress();
+    }
+  }
+
+  // Wire contextmenu / long-press events on every non-empty cell.
   tbody.querySelectorAll('td').forEach(td => {
     td.addEventListener('contextmenu', (ev) => {
-      if (td.classList.contains('fv-empty')) return;
-      if (td.dataset.col === 'run')          return;
+      if (!canOpenCellMenu(td)) return;
       ev.preventDefault();
       ev.stopPropagation();
       showCtxMenu(+td.dataset.run, td.dataset.col, ev.clientX, ev.clientY);
     });
     td.addEventListener('dblclick', (ev) => {
-      if (td.classList.contains('fv-empty')) return;
-      if (td.dataset.col === 'run')          return;
+      if (!canOpenCellMenu(td)) return;
       ev.preventDefault();
       ev.stopPropagation();
       showCtxMenu(+td.dataset.run, td.dataset.col, ev.clientX, ev.clientY);
     });
+    td.addEventListener('pointerdown', (ev) => startCellLongPress(td, ev));
+    td.addEventListener('pointermove', moveCellLongPress, { passive: true });
+    td.addEventListener('pointerup', clearCellLongPress, { passive: true });
+    td.addEventListener('pointercancel', clearCellLongPress, { passive: true });
   });
   // Close menu on outside click, Escape, scroll, or another contextmenu.
   document.addEventListener('click', (ev) => {
@@ -9815,6 +9859,16 @@ window.PlotlyVsPP = (function () {
   const tooltip    = document.getElementById('atp-tooltip');
   const ctxMenu    = document.getElementById('atp-ctxmenu');
   const ephList    = document.getElementById('atp-eph-list');
+  const contextGesture = document.getElementById('atp-context-gesture');
+  const touchMq = window.matchMedia('(hover: none), (pointer: coarse)');
+  function isTouchUi() {
+    return touchMq.matches || window.innerWidth <= 880 || navigator.maxTouchPoints > 0;
+  }
+  function updateContextGestureCopy() {
+    if (contextGesture) contextGesture.textContent = isTouchUi() ? 'long-press' : 'right-click';
+  }
+  updateContextGestureCopy();
+  if (touchMq.addEventListener) touchMq.addEventListener('change', updateContextGestureCopy);
 
   function pointPosOnHost(idx) {
     // Convert SVG viewBox coords to host pixel coords for absolute
@@ -9845,10 +9899,9 @@ window.PlotlyVsPP = (function () {
     rings.forEach((e, i) => e.classList.toggle('atp-show', i === idx));
   }
 
-  // ---- Right-click contextual menu -------------------------------------
+  // ---- Contextual menu -------------------------------------------------
   // Replaces the old side-panel Q&A. Asking Thread about a point now
-  // happens *on* the point — same vocabulary as right-clicking a cell
-  // in the flat-view table.
+  // happens *on* the point — right-click on desktop, long-press on touch.
   function buildCtxMenuFor(idx) {
     const p  = POINTS[idx];
     const qs = questionsFor(p);
@@ -9914,8 +9967,8 @@ window.PlotlyVsPP = (function () {
   buildEphemerality();
 
   // Initial state — show point 3 (α=6°) marked so the demo starts on
-  // a known cell. The contextual menu stays closed until right-click
-  // (or until the auto-play opens it).
+  // a known cell. The contextual menu stays closed until right-click /
+  // long-press (or until the auto-play opens it).
   setActivePoint(3);
 
   function nearestPointIndexFromEvent(ev) {
@@ -9936,11 +9989,27 @@ window.PlotlyVsPP = (function () {
     return bestDist < 42 ? bestIdx : -1;
   }
 
-  // ---- User hover/tap + right-click handling ---------------------------
+  // ---- User hover/tap + context-menu handling --------------------------
   // Hovering or tapping a point updates the active dot + tooltip.
-  // Right-clicking opens the "ask Thread" menu on that point. Auto-play
-  // steps aside on either interaction.
+  // Right-clicking on desktop or long-pressing on touch opens the
+  // "ask Thread" menu on that point. Auto-play steps aside on either
+  // interaction.
   let userTookOver = false;
+  let longPressTimer = null;
+  let longPressPoint = null;
+  let suppressNextTap = false;
+  let ignoreDocumentClickUntil = 0;
+  const LONG_PRESS_MS = 560;
+  const LONG_PRESS_MOVE_PX = 12;
+
+  function clearLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    longPressPoint = null;
+  }
+
   function onPointHover(idx) {
     userTookOver = true;
     stopDemo();
@@ -9955,14 +10024,47 @@ window.PlotlyVsPP = (function () {
     showTooltip(idx);
     openCtxMenu(idx);
   }
+  function startPointLongPress(idx, ev) {
+    if (ev.pointerType === 'mouse') return;
+    clearLongPress();
+    longPressPoint = { idx, x: ev.clientX, y: ev.clientY };
+    longPressTimer = setTimeout(() => {
+      if (!longPressPoint) return;
+      suppressNextTap = true;
+      ignoreDocumentClickUntil = Date.now() + 900;
+      onPointRightClick(longPressPoint.idx, ev);
+      clearLongPress();
+    }, LONG_PRESS_MS);
+  }
+  function movePointLongPress(ev) {
+    if (!longPressPoint) return;
+    if (Math.hypot(ev.clientX - longPressPoint.x, ev.clientY - longPressPoint.y) > LONG_PRESS_MOVE_PX) {
+      clearLongPress();
+    }
+  }
   ptEls.forEach((e, i) => {
     e.addEventListener('mouseenter',  () => onPointHover(i));
     e.addEventListener('focus',       () => onPointHover(i));
     e.addEventListener('click',       (ev) => { ev.stopPropagation(); onPointHover(i); });
     e.addEventListener('contextmenu', (ev) => onPointRightClick(i, ev));
+    e.addEventListener('pointerdown', (ev) => startPointLongPress(i, ev));
   });
-  host.addEventListener('pointerup', (ev) => {
+  host.addEventListener('pointerdown', (ev) => {
     if (ev.pointerType === 'mouse') return;
+    const idx = nearestPointIndexFromEvent(ev);
+    if (idx < 0) return;
+    startPointLongPress(idx, ev);
+  });
+  host.addEventListener('pointermove', movePointLongPress, { passive: true });
+  host.addEventListener('pointercancel', clearLongPress, { passive: true });
+  host.addEventListener('pointerup', (ev) => {
+    clearLongPress();
+    if (ev.pointerType === 'mouse') return;
+    if (suppressNextTap) {
+      suppressNextTap = false;
+      ev.preventDefault();
+      return;
+    }
     const idx = nearestPointIndexFromEvent(ev);
     if (idx < 0) return;
     ev.preventDefault();
@@ -9971,6 +10073,7 @@ window.PlotlyVsPP = (function () {
   host.addEventListener('mouseleave', () => { hideTooltip(); });
   // Close the contextual menu on outside-click, Escape, or scroll.
   document.addEventListener('click', (ev) => {
+    if (Date.now() < ignoreDocumentClickUntil) return;
     if (!ctxMenu.contains(ev.target)) closeCtxMenu();
   });
   document.addEventListener('keydown', (ev) => {
@@ -11086,6 +11189,10 @@ window.PlotlyVsPP = (function () {
   }
 
   function setPinnedSection(section) {
+    if (!isWide()) {
+      pinnedSection = section;
+      return;
+    }
     if (section === pinnedSection) return;
     const previous = pinnedSection;
     const previousIndex = sectionIndex(previous);

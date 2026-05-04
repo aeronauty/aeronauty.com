@@ -101,6 +101,8 @@ main { max-width: 1200px; margin: 0 auto; }
   border-radius: 10px;
   overflow: hidden;
   min-height: 320px;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 .atp-plot-svg {
   display: block;
@@ -339,7 +341,7 @@ main { max-width: 1200px; margin: 0 auto; }
   .atp-ctxmenu .atp-ctx-list li { grid-template-columns: 1fr; gap: 1px; }
 }
 
-/* Right-click hint card in the side panel. */
+/* Context-menu hint card in the side panel. */
 .atp-card-rc-tip {
   padding: 12px 14px;
   background: color-mix(in srgb, var(--atp-accent) 6%, var(--atp-surface-2));
@@ -609,7 +611,7 @@ main { max-width: 1200px; margin: 0 auto; }
           </div>
           <div class="atp-card atp-card-rc-tip" aria-hidden="true">
             <p class="atp-rc-line">
-              <span class="atp-rc-kbd">right-click</span> any point &rarr; ask Thread what flowed into it.
+              <span class="atp-rc-kbd" id="atp-context-gesture">right-click</span> any point &rarr; ask Thread what flowed into it.
             </p>
           </div>
         </div>
@@ -752,6 +754,16 @@ window.AskThePlot = (function () {
   const tooltip    = document.getElementById('atp-tooltip');
   const ctxMenu    = document.getElementById('atp-ctxmenu');
   const ephList    = document.getElementById('atp-eph-list');
+  const contextGesture = document.getElementById('atp-context-gesture');
+  const touchMq = window.matchMedia('(hover: none), (pointer: coarse)');
+  function isTouchUi() {
+    return touchMq.matches || window.innerWidth <= 880 || navigator.maxTouchPoints > 0;
+  }
+  function updateContextGestureCopy() {
+    if (contextGesture) contextGesture.textContent = isTouchUi() ? 'long-press' : 'right-click';
+  }
+  updateContextGestureCopy();
+  if (touchMq.addEventListener) touchMq.addEventListener('change', updateContextGestureCopy);
 
   function pointPosOnHost(idx) {
     // Convert SVG viewBox coords to host pixel coords for absolute
@@ -782,10 +794,9 @@ window.AskThePlot = (function () {
     rings.forEach((e, i) => e.classList.toggle('atp-show', i === idx));
   }
 
-  // ---- Right-click contextual menu -------------------------------------
+  // ---- Contextual menu -------------------------------------------------
   // Replaces the old side-panel Q&A. Asking Thread about a point now
-  // happens *on* the point — same vocabulary as right-clicking a cell
-  // in the flat-view table.
+  // happens *on* the point — right-click on desktop, long-press on touch.
   function buildCtxMenuFor(idx) {
     const p  = POINTS[idx];
     const qs = questionsFor(p);
@@ -851,8 +862,8 @@ window.AskThePlot = (function () {
   buildEphemerality();
 
   // Initial state — show point 3 (α=6°) marked so the demo starts on
-  // a known cell. The contextual menu stays closed until right-click
-  // (or until the auto-play opens it).
+  // a known cell. The contextual menu stays closed until right-click /
+  // long-press (or until the auto-play opens it).
   setActivePoint(3);
 
   function nearestPointIndexFromEvent(ev) {
@@ -873,11 +884,27 @@ window.AskThePlot = (function () {
     return bestDist < 42 ? bestIdx : -1;
   }
 
-  // ---- User hover/tap + right-click handling ---------------------------
+  // ---- User hover/tap + context-menu handling --------------------------
   // Hovering or tapping a point updates the active dot + tooltip.
-  // Right-clicking opens the "ask Thread" menu on that point. Auto-play
-  // steps aside on either interaction.
+  // Right-clicking on desktop or long-pressing on touch opens the
+  // "ask Thread" menu on that point. Auto-play steps aside on either
+  // interaction.
   let userTookOver = false;
+  let longPressTimer = null;
+  let longPressPoint = null;
+  let suppressNextTap = false;
+  let ignoreDocumentClickUntil = 0;
+  const LONG_PRESS_MS = 560;
+  const LONG_PRESS_MOVE_PX = 12;
+
+  function clearLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    longPressPoint = null;
+  }
+
   function onPointHover(idx) {
     userTookOver = true;
     stopDemo();
@@ -892,14 +919,47 @@ window.AskThePlot = (function () {
     showTooltip(idx);
     openCtxMenu(idx);
   }
+  function startPointLongPress(idx, ev) {
+    if (ev.pointerType === 'mouse') return;
+    clearLongPress();
+    longPressPoint = { idx, x: ev.clientX, y: ev.clientY };
+    longPressTimer = setTimeout(() => {
+      if (!longPressPoint) return;
+      suppressNextTap = true;
+      ignoreDocumentClickUntil = Date.now() + 900;
+      onPointRightClick(longPressPoint.idx, ev);
+      clearLongPress();
+    }, LONG_PRESS_MS);
+  }
+  function movePointLongPress(ev) {
+    if (!longPressPoint) return;
+    if (Math.hypot(ev.clientX - longPressPoint.x, ev.clientY - longPressPoint.y) > LONG_PRESS_MOVE_PX) {
+      clearLongPress();
+    }
+  }
   ptEls.forEach((e, i) => {
     e.addEventListener('mouseenter',  () => onPointHover(i));
     e.addEventListener('focus',       () => onPointHover(i));
     e.addEventListener('click',       (ev) => { ev.stopPropagation(); onPointHover(i); });
     e.addEventListener('contextmenu', (ev) => onPointRightClick(i, ev));
+    e.addEventListener('pointerdown', (ev) => startPointLongPress(i, ev));
   });
-  host.addEventListener('pointerup', (ev) => {
+  host.addEventListener('pointerdown', (ev) => {
     if (ev.pointerType === 'mouse') return;
+    const idx = nearestPointIndexFromEvent(ev);
+    if (idx < 0) return;
+    startPointLongPress(idx, ev);
+  });
+  host.addEventListener('pointermove', movePointLongPress, { passive: true });
+  host.addEventListener('pointercancel', clearLongPress, { passive: true });
+  host.addEventListener('pointerup', (ev) => {
+    clearLongPress();
+    if (ev.pointerType === 'mouse') return;
+    if (suppressNextTap) {
+      suppressNextTap = false;
+      ev.preventDefault();
+      return;
+    }
     const idx = nearestPointIndexFromEvent(ev);
     if (idx < 0) return;
     ev.preventDefault();
@@ -908,6 +968,7 @@ window.AskThePlot = (function () {
   host.addEventListener('mouseleave', () => { hideTooltip(); });
   // Close the contextual menu on outside-click, Escape, or scroll.
   document.addEventListener('click', (ev) => {
+    if (Date.now() < ignoreDocumentClickUntil) return;
     if (!ctxMenu.contains(ev.target)) closeCtxMenu();
   });
   document.addEventListener('keydown', (ev) => {

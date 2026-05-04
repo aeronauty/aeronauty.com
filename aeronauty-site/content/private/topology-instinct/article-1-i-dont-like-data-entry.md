@@ -24,7 +24,7 @@ There's a smaller, more personal version of this realisation that I had years be
 
 My ADHD diagnosis didn't tell me that. It just made it obvious to me: avoiding boring error-prone work hadn't been laziness[asterisk: why copy some numbers into a spreadsheet when I can spend twice as long automating it?], it had been my brain's natural response to a class of work that uses none of the things my brain is good at.
 
-This is a post about that pattern, and my personal realisation. It ends, for now, at a thing called Flexcompute Thread - and I give a glimpse at why it's magical. There's also a [Part 2/sister article about why AI agents are ideal for generalists](/lab/articles/the-brain-that-was-a-tax).
+This is a post about that pattern, and my personal realisation. It ends, for now, at a thing called Flexcompute Thread - and I give a glimpse at why it's magical. There's also a [Part 2/sister article about why AI agents are ideal for generalists](/writing/the-brain-that-was-a-tax).
 
 I am also aware that this writing is long and not everyone[asterisk: or anyone, barring my father (thanks, Dad)] will read it in full. The act of writing this and publishing it is really for me, because it's helping me to get my thoughts out and forcing me to structure them.
 
@@ -111,7 +111,7 @@ That sentence is the whole project.
 <aside class="ti-bridge-link">
   <p class="ti-bridge-eyebrow">The personal version</p>
   <p class="ti-bridge-copy">The companion essay picks up this exact move — refusing to decouple a problem that only makes sense when solved jointly — and asks why that kind of problem has always felt native to my brain.</p>
-  <p class="ti-bridge-action"><a href="/lab/articles/the-brain-that-was-a-tax#problem-class">Read the ADHD/aeroelasticity link</a></p>
+  <p class="ti-bridge-action"><a href="/writing/the-brain-that-was-a-tax#problem-class">Read the ADHD/aeroelasticity link</a></p>
 </aside>
 
 ## Twenty years of trying not to be the human join operation
@@ -214,6 +214,6 @@ That is the thread. It was there the whole time, and I'd love to talk to you abo
 
 <aside class="ti-sister-link">
   <p class="ti-sister-eyebrow">Companion piece</p>
-  <p class="ti-sister-title"><a href="/lab/articles/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
+  <p class="ti-sister-title"><a href="/writing/the-brain-that-was-a-tax">The Brain That Was a Tax Is Now an Asset</a></p>
   <p class="ti-sister-blurb">The same instinct, the other way round: from coupled engineering problems to the ADHD-shaped brain that kept being drawn to them.</p>
 </aside>
