@@ -577,13 +577,19 @@ def substitute_flowchart(html: str, flowchart_structure: str) -> str:
         for i, text in enumerate(beats)
     )
 
+    # New layout: 3-column grid — graph rail (left) | prose (middle) | cartoon rail (right).
+    # The figure ships its own .af-svg-pane and .af-cartoon-pane; the scroll-driver JS
+    # moves them into the rails at startup (see whenReady() in PROGRESS_JS or the
+    # .ti-flowchart-scrolly block below).
     block = (
         '<aside class="ti-flowchart-scrolly" aria-label="ADHD flowchart, then and now — scroll to advance">\n'
         '  <div class="af-scroll">\n'
+        '    <div class="af-graph-rail" id="af-graph-rail" aria-hidden="true"></div>\n'
         '    <div class="af-scroll-prose">\n'
         f'{beats_html}\n'
         '    </div>\n'
-        '    <div class="af-scroll-stage">\n'
+        '    <div class="af-cartoon-rail" id="af-cartoon-rail" aria-hidden="true"></div>\n'
+        '    <div class="af-scroll-stage" hidden>\n'
         '      <aside class="ti-flowchart" aria-label="ADHD flowchart, then and now">\n'
         f'{flowchart_structure}\n'
         '      </aside>\n'
@@ -1713,6 +1719,7 @@ ARTICLE_CSS = r"""
     padding: 56px 36px 28px;
     max-width: 880px;
     text-align: center;
+    transition: opacity 180ms ease, transform 180ms ease;
   }
   /* Big decorative opening quotation mark, NYT/Guardian style — sits
      behind the body, in the accent colour, oversized. */
@@ -1738,7 +1745,7 @@ ARTICLE_CSS = r"""
     line-height: 1.24;
     font-style: italic;
     color: var(--ti-fg);
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     font-weight: 400;
     text-wrap: balance;
   }
@@ -1777,6 +1784,50 @@ ARTICLE_CSS = r"""
     }
     .ti-prose .ti-epiquote-text { font-size: 22px; }
     .ti-prose .ti-epiquote-attr { margin-top: 22px; padding-top: 14px; font-size: 10.5px; }
+  }
+  @media (min-width: 1320px) {
+    .ti-prose .ti-epiquote {
+      position: sticky;
+      top: 112px;
+      float: right;
+      clear: right;
+      width: min(300px, var(--ti-side-w));
+      max-width: none;
+      margin: 10px calc(-1 * (var(--ti-side-w) + 6px)) 30px 34px;
+      padding: 36px 0 18px 18px;
+      text-align: left;
+      border-left: 2px solid color-mix(in srgb, var(--ti-accent) 70%, transparent);
+      z-index: 3;
+    }
+    .ti-prose .ti-epiquote::before {
+      top: -16px;
+      left: 0;
+      transform: none;
+      font-size: 72px;
+      line-height: 0.8;
+      opacity: 0.72;
+    }
+    .ti-prose .ti-epiquote-text {
+      font-size: 23px;
+      line-height: 1.25;
+      text-wrap: pretty;
+    }
+    .ti-prose .ti-epiquote-attr {
+      margin: 22px 0 0;
+      padding-top: 14px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+    }
+    .ti-prose .ti-epiquote-attr::before {
+      left: 0;
+      transform: none;
+      width: 28px;
+    }
+    .ti-js .ti-prose .ti-epiquote.ti-epiquote-suppressed {
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+    }
   }
 
   /* ---- companion-piece sister link ----
@@ -2258,31 +2309,75 @@ ARTICLE_CSS = r"""
   }
   .ti-figure-fullbleed {
     position: relative;
-    width: min(100vw - 32px, 1240px);
+    width: 100vw;
+    min-height: 100svh;
     max-width: none;
-    margin: 78px 50% 78px;
+    margin: clamp(72px, 12vh, 132px) 50%;
     transform: translateX(-50%);
     padding: 0;
     border: 0;
     background: transparent;
-    border-radius: 18px;
+    border-radius: 0;
     overflow: clip;
+    display: grid;
+    place-items: center;
   }
-  .ti-figure-fullbleed .ti-video-wrap,
+  .ti-figure-fullbleed .ti-video-wrap {
+    width: 100%;
+    height: 100svh;
+    min-height: 560px;
+    aspect-ratio: auto;
+    border-radius: 0;
+    background: var(--ti-bg);
+  }
+  .ti-figure-fullbleed .ti-video-wrap video,
+  .ti-figure-fullbleed .ti-video-wrap iframe {
+    object-fit: cover;
+  }
   .ti-figure-fullbleed img {
-    border-radius: 18px;
+    width: 100%;
+    height: 100svh;
+    min-height: 560px;
+    object-fit: cover;
+    border-radius: 0;
     box-shadow: 0 30px 80px rgba(0,0,0,0.28);
   }
   .ti-figure-fullbleed .ti-figcap {
-    width: min(680px, calc(100% - 32px));
-    margin: 14px auto 0;
+    position: absolute;
+    left: 50%;
+    bottom: clamp(18px, 5vh, 56px);
+    width: min(760px, calc(100% - 40px));
+    margin: 0;
+    padding: 10px 18px;
+    transform: translateX(-50%) translateY(18px);
+    border-radius: 999px;
+    background: rgba(248, 250, 252, 0.82);
+    color: #475569;
+    box-shadow: 0 14px 42px rgba(15, 23, 42, 0.14);
+    opacity: 0;
+    transition: opacity 520ms ease 240ms, transform 640ms cubic-bezier(.2,.8,.2,1) 240ms;
+    backdrop-filter: blur(12px);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-inview .ti-figcap,
+  html:not(.ti-js) .ti-figure-fullbleed .ti-figcap {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
   @media (max-width: 720px) {
     .ti-figure-fullbleed {
       width: 100%;
+      min-height: auto;
       margin: 42px 0;
       transform: none;
       border-radius: 12px;
+      display: block;
+    }
+    .ti-figure-fullbleed .ti-video-wrap,
+    .ti-figure-fullbleed img {
+      height: auto;
+      min-height: 0;
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
     }
     html.ti-js .ti-figure-fullbleed.ti-reveal {
       transform: translateY(24px) scale(0.992);
@@ -2295,6 +2390,21 @@ ARTICLE_CSS = r"""
     }
     .ti-figure-fullbleed .ti-video-wrap,
     .ti-figure-fullbleed img { border-radius: 12px; }
+    .ti-figure-fullbleed .ti-figcap {
+      position: static;
+      width: min(680px, calc(100% - 32px));
+      margin: 12px auto 0;
+      transform: translateY(12px);
+      border-radius: 12px;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      padding: 0;
+    }
+    html.ti-js .ti-figure-fullbleed.ti-inview .ti-figcap,
+    html:not(.ti-js) .ti-figure-fullbleed .ti-figcap {
+      transform: translateY(0);
+    }
   }
 
   /* ---- MILP equations (beat 4) — KaTeX-rendered display math ---- */
@@ -2419,6 +2529,95 @@ ARTICLE_CSS = r"""
     .ti-prose .ti-section { margin: 56px 0 24px; }
     .ti-prose .ti-section-stand { font-size: 17px; padding-left: 11px; }
   }
+  .ti-section-pin {
+    display: none;
+  }
+  .ti-section-linkline {
+    display: none;
+  }
+  @media (min-width: 1180px) {
+    .ti-section-pin {
+      position: fixed;
+      left: 98px;
+      top: 104px;
+      z-index: 39;
+      display: block;
+      width: 112px;
+      padding: 0 0 0 12px;
+      border-left: 2px solid color-mix(in srgb, var(--ti-accent) 58%, transparent);
+      color: var(--ti-fg);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .ti-section-pin[data-visible="true"] {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .ti-section-pin-numeral {
+      display: block;
+      margin: 0 0 8px;
+      font-family: var(--ti-font-sans);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      color: var(--ti-accent);
+    }
+    .ti-section-pin-title {
+      margin: 0 0 10px;
+      font-family: var(--ti-font-sans);
+      font-size: 20px;
+      font-weight: 760;
+      line-height: 1.03;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+    .ti-section-pin-stand {
+      margin: 0;
+      font-family: var(--ti-font-serif);
+      font-size: 13px;
+      font-style: italic;
+      line-height: 1.32;
+      color: var(--ti-fg-dim);
+      text-wrap: balance;
+    }
+    .ti-section-linkline {
+      position: fixed;
+      inset: 0;
+      z-index: 38;
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      overflow: visible;
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+    .ti-section-linkline[data-visible="true"] {
+      opacity: 1;
+    }
+    .ti-section-linkline path {
+      fill: none;
+      stroke: var(--ti-accent);
+      stroke-width: 1;
+      stroke-opacity: 0.54;
+      stroke-dasharray: 3 5;
+    }
+  }
+  @media (min-width: 1320px) {
+    .ti-section-pin {
+      left: 124px;
+      width: 190px;
+      padding-left: 16px;
+    }
+    .ti-section-pin-title {
+      font-size: 25px;
+    }
+    .ti-section-pin-stand {
+      font-size: 16px;
+    }
+  }
   /* Bigger, breathier section break. Replaces the old tight ✦ rule with
      a long thin horizontal rule with the bullet centred, plus more
      vertical space. Magazine-length, not wiki-tight. */
@@ -2484,19 +2683,67 @@ ARTICLE_CSS = r"""
   }
   .af-scroll {
     display: grid;
-    /* Keep prose at reading width (~480 px) on the left; let the
-       sticky stage swallow the rest of the breakout width. */
-    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
-    gap: 48px;
+    /* Three-column layout: graph rail (left) | prose (middle) | cartoon rail (right).
+       Both rails are sticky and host the figure's panes after JS re-parents them.
+       The figure itself is hidden in-place — only the panes are visible, in the rails. */
+    grid-template-columns: minmax(280px, 0.32fr) minmax(0, 0.4fr) minmax(280px, 0.32fr);
+    gap: 32px;
     align-items: start;
     max-width: 100%;
   }
   @media (min-width: 1200px) {
     .af-scroll {
-      grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
-      gap: 64px;
+      grid-template-columns: minmax(320px, 0.34fr) minmax(0, 0.36fr) minmax(320px, 0.34fr);
+      gap: 48px;
     }
   }
+  .af-graph-rail,
+  .af-cartoon-rail {
+    position: sticky;
+    top: 8vh;
+    height: 84vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    /* Naked rails — no border, padding, or background. */
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+  /* Re-parented panes fill the rail edge-to-edge. */
+  .af-graph-rail > .af-svg-pane,
+  .af-cartoon-rail > .af-cartoon-pane {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+  }
+  .af-graph-rail .af-svg-wrap,
+  .af-graph-rail svg#af-svg {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+  }
+  .af-cartoon-rail .af-cartoon-stack,
+  .af-cartoon-rail .af-cartoon-frame,
+  .af-cartoon-rail .af-cartoon-frame img {
+    width: 100%;
+    height: 100%;
+  }
+  .af-cartoon-rail .af-cartoon-frame img {
+    object-fit: contain;
+  }
+  /* Hide the figure's auto-advance hint, replay button, caption — scroll drives state. */
+  .ti-flowchart-scrolly .af-controls { display: none; }
+  .af-graph-rail .af-controls,
+  .af-cartoon-rail .af-caption { display: none; }
   .af-scroll-prose {
     display: flex;
     flex-direction: column;
@@ -2528,74 +2775,38 @@ ARTICLE_CSS = r"""
   .af-scroll-beat p {
     margin: 0;
     font-family: var(--ti-font-serif);
+    font-style: italic;
     font-size: 19px;
     line-height: 1.55;
     color: var(--ti-fg);
     max-width: 36ch;
   }
+  /* The figure's own .af-stage container is kept in the DOM (so the IIFE
+     keeps working) but rendered invisibly — its child panes have been moved
+     out into the rails. */
   .af-scroll-stage {
-    position: sticky;
-    top: 6vh;
-    height: 88vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: none;
   }
-  .af-scroll-stage .ti-flowchart {
-    width: 100%;
-    margin: 0;
-    max-height: 88vh;
-    overflow: hidden;
+  /* Strip the bordered-card chrome from the figure when it's inside the scrolly. */
+  .ti-flowchart-scrolly .af-frame {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
   }
-  /* Inside the figure, give the cartoon panel + flowchart the full
-     stage width — they were constrained for the narrow column case. */
-  .af-scroll-stage .af-figure,
-  .af-scroll-stage .af-frame {
-    width: 100%;
-    max-width: 100%;
-    padding: 16px 18px;
-  }
-  .af-scroll-stage .af-cartoon-pane,
-  .af-scroll-stage .af-cartoon-pane img {
-    max-width: 100%;
-    width: 100%;
-  }
-  /* In the sticky stage, hide the figure's auto-advance hint + replay button
-     since scroll drives the state now. */
-  .ti-flowchart-scrolly .af-controls { display: none; }
-  /* Make the figure's internal stage fill the sticky-stage height so
-     the cartoon panel + flowchart actually use the room they have. */
-  .af-scroll-stage .af-stage {
-    height: 100%;
-    align-items: stretch;
-    grid-template-columns: minmax(0, 1.0fr) minmax(0, 1.1fr);
-    gap: 22px;
-  }
-  .af-scroll-stage .af-svg-pane,
-  .af-scroll-stage .af-cartoon-pane {
-    min-height: 0;
-    height: 100%;
-  }
-  .af-scroll-stage .af-cartoon-frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;             /* fill the pane — the cartoons are 16:9, the pane is taller now */
-  }
-  /* On very wide screens, lean further into the cartoon — it carries
-     the human moment. */
-  @media (min-width: 1400px) {
-    .af-scroll-stage .af-stage { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr); }
-  }
+  .ti-flowchart-scrolly .af-stepbar { display: none; }
+  .ti-flowchart-scrolly .af-figure { padding: 0; margin: 0; }
   @media (max-width: 880px) {
     .af-scroll {
       grid-template-columns: 1fr;
       gap: 0;
     }
-    .af-scroll-stage {
+    .af-graph-rail,
+    .af-cartoon-rail {
       position: relative;
       top: auto;
-      height: auto;
-      margin: 24px 0;
+      height: 60vh;
+      margin: 16px 0;
     }
     .af-scroll-beat { min-height: 0; padding: 16px 0; opacity: 1; }
   }
@@ -2676,6 +2887,9 @@ ARTICLE_CSS = r"""
     align-items: center;
     justify-content: center;
     padding: 12px 6px;
+  }
+  .ti-map[data-pin-active="true"] .ti-map-tooltip {
+    opacity: 0;
   }
   .ti-map-svg {
     max-height: calc(100vh - 24px);
@@ -2804,12 +3018,18 @@ MAP_JS = r"""
   const tooltip = map.querySelector('.ti-map-tooltip');
   const tipTitle = tooltip ? tooltip.querySelector('.ti-map-tooltip-title') : null;
   const tipSummary = tooltip ? tooltip.querySelector('.ti-map-tooltip-summary') : null;
+  const sectionPin = document.querySelector('.ti-section-pin');
+  const sectionPinNumeral = sectionPin ? sectionPin.querySelector('.ti-section-pin-numeral') : null;
+  const sectionPinTitle = sectionPin ? sectionPin.querySelector('.ti-section-pin-title') : null;
+  const sectionPinStand = sectionPin ? sectionPin.querySelector('.ti-section-pin-stand') : null;
+  const linkLine = document.querySelector('.ti-section-linkline');
+  const linkPath = linkLine ? linkLine.querySelector('path') : null;
 
   // Article-map node ids in scroll order — populated by document order of
   // section anchors with [data-node-id]. Lets us mark visited ids when
   // scrolling past.
   const SECTION_TARGETS = Array.from(
-    document.querySelectorAll('[data-node-id]')
+    document.querySelectorAll('.ti-anchor[data-node-id], .ti-section[data-node-id]')
   );
 
   // Click any node → smooth-scroll its target into view.
@@ -2861,6 +3081,67 @@ MAP_JS = r"""
   const visited = new Set();
   let activeId = null;
 
+  function isWideLocator() {
+    return window.matchMedia('(min-width: 1180px)').matches;
+  }
+
+  function pageTop(el) {
+    return el.getBoundingClientRect().top + (window.scrollY || document.documentElement.scrollTop || 0);
+  }
+
+  function getSectionInfo(id) {
+    const target = id ? document.getElementById(id) : null;
+    if (!target || !target.classList.contains('ti-section')) return null;
+    return {
+      target,
+      numeral: (target.querySelector('.ti-section-numeral') || {}).textContent || '',
+      title: (target.querySelector('.ti-section-h2') || {}).textContent || '',
+      stand: (target.querySelector('.ti-section-stand') || {}).textContent || '',
+    };
+  }
+
+  function getNextSectionTarget(target) {
+    const sections = SECTION_TARGETS.filter(el => el.classList && el.classList.contains('ti-section'));
+    const idx = sections.indexOf(target);
+    return idx >= 0 ? sections[idx + 1] || null : null;
+  }
+
+  function updateSectionLocator() {
+    if (!sectionPin || !linkLine || !linkPath) return;
+    const info = getSectionInfo(activeId);
+    const wide = isWideLocator();
+    let visible = false;
+    if (wide && info) {
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const next = getNextSectionTarget(info.target);
+      const starts = scrollY >= pageTop(info.target) - 112;
+      const beforeNext = !next || scrollY < pageTop(next) - 132;
+      visible = starts && beforeNext;
+      if (visible) {
+        sectionPinNumeral.textContent = info.numeral;
+        sectionPinTitle.textContent = info.title;
+        sectionPinStand.textContent = info.stand;
+      }
+    }
+
+    sectionPin.dataset.visible = visible ? 'true' : 'false';
+    linkLine.dataset.visible = visible ? 'true' : 'false';
+    map.dataset.pinActive = visible ? 'true' : 'false';
+    if (!visible) return;
+
+    const activeNode = nodes.find(g => g.getAttribute('data-node-id') === activeId);
+    const dot = activeNode ? activeNode.querySelector('.ti-map-dot') : null;
+    if (!dot) return;
+    const dotBox = dot.getBoundingClientRect();
+    const pinBox = sectionPin.getBoundingClientRect();
+    const x1 = dotBox.left + dotBox.width / 2;
+    const y1 = dotBox.top + dotBox.height / 2;
+    const x2 = pinBox.left;
+    const y2 = pinBox.top + Math.min(84, pinBox.height * 0.36);
+    linkLine.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+    linkPath.setAttribute('d', `M ${x1} ${y1} C ${x1 + 34} ${y1}, ${x2 - 42} ${y2}, ${x2} ${y2}`);
+  }
+
   function setActive(id) {
     if (id === activeId) return;
     activeId = id;
@@ -2881,6 +3162,17 @@ MAP_JS = r"""
       const b = e.getAttribute('data-edge-to');
       e.classList.toggle('ti-map-edge-active', a === id || b === id);
     });
+    updateSectionLocator();
+  }
+
+  function updateActiveFromScroll() {
+    const y = (window.scrollY || document.documentElement.scrollTop || 0) + 140;
+    let best = SECTION_TARGETS[0] || null;
+    SECTION_TARGETS.forEach(t => {
+      if (pageTop(t) <= y) best = t;
+    });
+    if (best) setActive(best.getAttribute('data-node-id'));
+    updateSectionLocator();
   }
 
   // IO: pick the section whose top is currently nearest the viewport's
@@ -2921,6 +3213,17 @@ MAP_JS = r"""
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
   }
+
+  let sectionRaf = 0;
+  window.addEventListener('scroll', () => {
+    if (sectionRaf) return;
+    sectionRaf = requestAnimationFrame(() => {
+      sectionRaf = 0;
+      updateActiveFromScroll();
+    });
+  }, { passive: true });
+  window.addEventListener('resize', updateSectionLocator);
+  updateActiveFromScroll();
 })();
 """
 
@@ -2953,6 +3256,22 @@ FLOWCHART_SCROLLY_JS = r"""
     }
     const HINT = wrap.querySelector('#af-hint');
     if (HINT) HINT.textContent = 'scroll to advance';
+
+    // Re-parent the figure's panes into the left/right rails so the
+    // layout is graph | prose | cartoon. The figure's own .af-stage
+    // stays in the DOM (hidden via CSS) so the IIFE's references to
+    // these nodes still resolve — we're just moving the same DOM nodes,
+    // so api.goToStep(n) class mutations still target the visible ones.
+    const graphRail   = wrap.querySelector('#af-graph-rail');
+    const cartoonRail = wrap.querySelector('#af-cartoon-rail');
+    const svgPane     = wrap.querySelector('.af-svg-pane');
+    const cartoonPane = wrap.querySelector('.af-cartoon-pane');
+    if (graphRail && svgPane && svgPane.parentNode !== graphRail) {
+      graphRail.appendChild(svgPane);
+    }
+    if (cartoonRail && cartoonPane && cartoonPane.parentNode !== cartoonRail) {
+      cartoonRail.appendChild(cartoonPane);
+    }
 
     const beats = Array.from(wrap.querySelectorAll('.af-scroll-beat'));
     if (!beats.length) return;
@@ -3060,6 +3379,51 @@ PROGRESS_JS = r"""
   } else {
     revealTargets.forEach(el => el.classList.add('ti-inview'));
   }
+
+  const epiquotes = Array.from(document.querySelectorAll('.ti-epiquote'));
+  if (epiquotes.length) {
+    const visualSelector = [
+      '.ti-figure',
+      '.ti-demo',
+      '.ti-flat-view',
+      '.ti-ask-the-plot',
+      '.ti-data-black-market',
+      '.ti-twenty-years',
+      '.ti-what-changed',
+      '.ti-figure-vera'
+    ].join(', ');
+
+    const getNext = (el, selector) => {
+      let node = el.nextElementSibling;
+      while (node) {
+        if (node.matches && node.matches(selector)) return node;
+        node = node.nextElementSibling;
+      }
+      return null;
+    };
+
+    const updateEpiquotes = () => {
+      const wide = window.matchMedia('(min-width: 1320px)').matches;
+      epiquotes.forEach(quote => {
+        if (!wide) {
+          quote.classList.remove('ti-epiquote-suppressed');
+          return;
+        }
+        const nextVisual = getNext(quote, visualSelector);
+        const nextDivider = getNext(quote, '.ti-divider');
+        const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        const quoteStart = quote.offsetTop - 126;
+        const visualLead = Math.min(480, Math.max(340, window.innerHeight * 0.52));
+        const visualStop = nextVisual ? nextVisual.offsetTop - visualLead : Infinity;
+        const sectionStop = nextDivider ? nextDivider.offsetTop - 220 : Infinity;
+        const stop = Math.min(visualStop, sectionStop);
+        quote.classList.toggle('ti-epiquote-suppressed', scrollY > stop && scrollY > quoteStart);
+      });
+    };
+    window.addEventListener('scroll', updateEpiquotes, { passive: true });
+    window.addEventListener('resize', updateEpiquotes);
+    updateEpiquotes();
+  }
 })();
 """
 
@@ -3096,6 +3460,14 @@ HTML_TEMPLATE = """<!doctype html>
 <div class="ti-progress" aria-hidden="true"></div>
 
 {article_map}
+<aside class="ti-section-pin" aria-hidden="true">
+  <span class="ti-section-pin-numeral"></span>
+  <p class="ti-section-pin-title"></p>
+  <p class="ti-section-pin-stand"></p>
+</aside>
+<svg class="ti-section-linkline" aria-hidden="true">
+  <path></path>
+</svg>
 
 <div class="ti-page">
 
@@ -3161,6 +3533,7 @@ def required_library_tags(needs: dict[str, bool]) -> str:
         tags.extend([
             '<!-- Globe + chart libraries for the airport-upgrade demo -->',
             '<script src="https://unpkg.com/d3@7"></script>',
+            '<script src="https://unpkg.com/topojson-client@3"></script>',
             '<script src="https://unpkg.com/globe.gl"></script>',
         ])
     if needs["flowchart"]:
