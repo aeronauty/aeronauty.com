@@ -48,7 +48,10 @@ The question I kept getting stuck on, which Cascade didn't, was the one undernea
 
 So I built Paradigm. The reframe was small in words and large in consequence.
 
-> Stop optimising the fleet in isolation. Optimise the network the fleet flies on, and the fleet that network can support, jointly.
+[EPIQUOTE]
+Stop optimising the fleet in isolation. Optimise the network the fleet flies on, and the fleet that network can support, jointly.
+— The Paradigm reframe
+[/EPIQUOTE]
 
 Optimise aircraft alone, you get plans that depend on infrastructure that doesn't exist. Optimise infrastructure alone, you get upgrade lists with no connection to which aircraft will benefit. Coupled, the problem becomes: given a budget, a timeline, a fleet roadmap — *which airports do you upgrade, in which order, to maximise CO2 reduction?*
 

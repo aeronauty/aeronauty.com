@@ -1668,51 +1668,75 @@ ARTICLE_CSS = r"""
        </aside>
   */
   .ti-prose .ti-epiquote {
-    display: grid;
-    gap: 16px;
-    margin: 72px auto 64px;
-    padding: 6px 8px 18px;
-    max-width: 720px;
-    text-align: center;
     position: relative;
+    margin: 112px auto 96px;
+    padding: 56px 36px 28px;
+    max-width: 880px;
+    text-align: center;
   }
+  /* Big decorative opening quotation mark, NYT/Guardian style — sits
+     behind the body, in the accent colour, oversized. */
   .ti-prose .ti-epiquote::before {
-    content: "";
-    display: block;
-    width: 36px;
-    height: 1px;
-    background: var(--ti-accent);
-    margin: 0 auto 6px;
+    content: "\201C";          /* left double curly quote */
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--ti-font-serif);
+    font-style: normal;
+    font-weight: 700;
+    font-size: clamp(96px, 11vw, 152px);
+    line-height: 0.85;
+    color: var(--ti-accent);
+    opacity: 0.88;
+    pointer-events: none;
   }
   .ti-prose .ti-epiquote-text {
     margin: 0;
     font-family: var(--ti-font-serif);
-    font-size: clamp(22px, 2.6vw, 30px);
-    line-height: 1.32;
+    font-size: clamp(26px, 3vw, 40px);
+    line-height: 1.24;
     font-style: italic;
     color: var(--ti-fg);
-    letter-spacing: -0.005em;
+    letter-spacing: -0.01em;
     font-weight: 400;
     text-wrap: balance;
   }
+  /* Hairline rule between body and attribution. */
   .ti-prose .ti-epiquote-attr {
-    margin: 0;
+    margin: 30px auto 0;
+    padding-top: 18px;
+    position: relative;
     font-family: var(--ti-font-sans);
-    font-size: 12px;
-    letter-spacing: 0.16em;
+    font-size: 11px;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ti-fg-dim);
     font-style: normal;
   }
-  .ti-prose .ti-epiquote-attr::before { content: "— "; }
-  @media (max-width: 480px) {
+  .ti-prose .ti-epiquote-attr::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 1px;
+    background: var(--ti-accent);
+    opacity: 0.78;
+  }
+  @media (max-width: 720px) {
     .ti-prose .ti-epiquote {
-      margin: 48px auto 36px;
-      padding: 4px 4px 14px;
-      gap: 12px;
+      margin: 72px auto 56px;
+      padding: 44px 16px 22px;
     }
-    .ti-prose .ti-epiquote-text { font-size: 20px; }
+    .ti-prose .ti-epiquote::before {
+      top: -8px;
+      font-size: 84px;
+    }
+    .ti-prose .ti-epiquote-text { font-size: 22px; }
+    .ti-prose .ti-epiquote-attr { margin-top: 22px; padding-top: 14px; font-size: 10.5px; }
   }
 
   /* ---- companion-piece sister link ----

@@ -461,51 +461,75 @@
        </aside>
   */
   .ti-prose .ti-epiquote {
-    display: grid;
-    gap: 16px;
-    margin: 72px auto 64px;
-    padding: 6px 8px 18px;
-    max-width: 720px;
-    text-align: center;
     position: relative;
+    margin: 112px auto 96px;
+    padding: 56px 36px 28px;
+    max-width: 880px;
+    text-align: center;
   }
+  /* Big decorative opening quotation mark, NYT/Guardian style — sits
+     behind the body, in the accent colour, oversized. */
   .ti-prose .ti-epiquote::before {
-    content: "";
-    display: block;
-    width: 36px;
-    height: 1px;
-    background: var(--ti-accent);
-    margin: 0 auto 6px;
+    content: "\201C";          /* left double curly quote */
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--ti-font-serif);
+    font-style: normal;
+    font-weight: 700;
+    font-size: clamp(96px, 11vw, 152px);
+    line-height: 0.85;
+    color: var(--ti-accent);
+    opacity: 0.88;
+    pointer-events: none;
   }
   .ti-prose .ti-epiquote-text {
     margin: 0;
     font-family: var(--ti-font-serif);
-    font-size: clamp(22px, 2.6vw, 30px);
-    line-height: 1.32;
+    font-size: clamp(26px, 3vw, 40px);
+    line-height: 1.24;
     font-style: italic;
     color: var(--ti-fg);
-    letter-spacing: -0.005em;
+    letter-spacing: -0.01em;
     font-weight: 400;
     text-wrap: balance;
   }
+  /* Hairline rule between body and attribution. */
   .ti-prose .ti-epiquote-attr {
-    margin: 0;
+    margin: 30px auto 0;
+    padding-top: 18px;
+    position: relative;
     font-family: var(--ti-font-sans);
-    font-size: 12px;
-    letter-spacing: 0.16em;
+    font-size: 11px;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ti-fg-dim);
     font-style: normal;
   }
-  .ti-prose .ti-epiquote-attr::before { content: "— "; }
-  @media (max-width: 480px) {
+  .ti-prose .ti-epiquote-attr::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 1px;
+    background: var(--ti-accent);
+    opacity: 0.78;
+  }
+  @media (max-width: 720px) {
     .ti-prose .ti-epiquote {
-      margin: 48px auto 36px;
-      padding: 4px 4px 14px;
-      gap: 12px;
+      margin: 72px auto 56px;
+      padding: 44px 16px 22px;
     }
-    .ti-prose .ti-epiquote-text { font-size: 20px; }
+    .ti-prose .ti-epiquote::before {
+      top: -8px;
+      font-size: 84px;
+    }
+    .ti-prose .ti-epiquote-text { font-size: 22px; }
+    .ti-prose .ti-epiquote-attr { margin-top: 22px; padding-top: 14px; font-size: 10.5px; }
   }
 
   /* ---- companion-piece sister link ----
@@ -1473,7 +1497,12 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 24px 16px 64px;
+    box-sizing: border-box;
   }
+
+  .tg-root *,
+  .tg-root *::before,
+  .tg-root *::after { box-sizing: border-box; }
 
   .tg-title {
     font-size: 20px;
@@ -1564,8 +1593,17 @@
     35% { r: 8; opacity: 1; }
     100% { r: 4; opacity: 1; }
   }
+  @media (max-width: 980px) {
+    .tg-globe, .tg-projection {
+      height: clamp(360px, 66vw, 540px);
+      min-height: 360px;
+    }
+  }
   @media (max-width: 600px) {
-    .tg-globe, .tg-projection { height: 50vh; min-height: 320px; }
+    .tg-globe, .tg-projection {
+      height: clamp(330px, 88vw, 430px);
+      min-height: 330px;
+    }
   }
 
   .tg-loading {
@@ -1593,14 +1631,57 @@
     z-index: 4;
     box-shadow: 0 14px 36px rgba(31,41,55,0.12);
   }
-  @media (max-width: 720px) {
+  @media (max-width: 980px) {
+    .tg-stage {
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+    }
     .tg-controls {
-      position: static;
+      position: relative;
+      order: 3;
       width: auto;
-      margin-top: 0;
-      border-radius: 0;
-      border-left: none; border-right: none; border-bottom: none;
+      margin: -10px 12px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--tg-border);
       backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background: rgba(255,255,255,0.96);
+    }
+    .tg-globe,
+    .tg-projection,
+    .tg-loading {
+      order: 1;
+    }
+    .tg-loading {
+      inset: 0 0 auto 0;
+      height: clamp(360px, 66vw, 540px);
+    }
+  }
+  @media (max-width: 600px) {
+    .tg-root { padding: 18px 0 48px; }
+    .tg-title,
+    .tg-subtitle {
+      padding: 0 16px;
+    }
+    .tg-stage {
+      border-left: 0;
+      border-right: 0;
+      border-radius: 0;
+    }
+    .tg-controls {
+      margin: -8px 10px 10px;
+      padding: 12px;
+    }
+    .tg-slider-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+    .tg-radio-list label {
+      min-height: 36px;
+      font-size: 13.5px;
+      padding: 7px 9px;
     }
   }
 
@@ -1751,16 +1832,23 @@
   .tg-delta[hidden] { display: none; }
   .tg-delta strong { color: var(--tg-accent); font-variant-numeric: tabular-nums; }
   .tg-delta span { color: var(--tg-text-dim); white-space: nowrap; }
-  @media (max-width: 720px) {
+  @media (max-width: 980px) {
     .tg-delta {
       position: static;
+      order: 2;
       grid-template-columns: 1fr 1fr;
-      border-radius: 0;
-      border-left: 0;
-      border-right: 0;
-      border-bottom: 0;
-      background: var(--tg-surface);
+      margin: -8px 12px 0;
+      border-radius: 10px 10px 0 0;
+      background: rgba(255,255,255,0.96);
       max-width: none;
+    }
+  }
+  @media (max-width: 600px) {
+    .tg-delta {
+      margin: -6px 10px 0;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      font-size: 11px;
     }
   }
 
@@ -1804,6 +1892,22 @@
     width: 100%;
     height: 280px;
   }
+  @media (max-width: 600px) {
+    .tg-comparison {
+      margin: 18px 10px 0;
+      padding: 14px 10px 10px;
+    }
+    .tg-comparison-header {
+      display: grid;
+      gap: 4px;
+    }
+    .tg-chart-svg { height: 230px; }
+    .tg-caption {
+      margin: 12px 10px 0;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+  }
   .tg-legend {
     display: flex; flex-wrap: wrap; gap: 12px 18px;
     margin-top: 6px;
@@ -1843,6 +1947,15 @@
   }
   .tg-fallback th { color: var(--tg-text-dim); font-weight: 500; }
   .tg-fallback td.tg-num { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 600px) {
+    .tg-fallback {
+      margin: 14px 10px 0;
+      padding: 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tg-fallback table { min-width: 620px; }
+  }
 
   /* ---------- chart axis styling ---------- */
   .tg-chart-svg .tick line { stroke: var(--tg-border); }
@@ -4600,15 +4713,15 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q69.4,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q66.6,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q56.4,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q73.6,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q67.19999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q55.0,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q61.599999999999994,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q70.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q73.6,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,90 Q68.0,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q68.0,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q53.599999999999994,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q70.8,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,210 Q61.599999999999994,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q50.8,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q60.199999999999996,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="vera" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q66.6,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q65.2,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -4735,9 +4848,11 @@ main { max-width: 1280px; margin: 0 auto; }
 <p>Boeing has a tool called Cascade, built by the sister team of mine. Mathematically clean, built by people who knew what they were doing, and it lets you ask things like <em>if we replaced this fleet of 737s with this hypothetical hydrogen aircraft, what happens to global aviation emissions?</em> — over real flight data, at planetary scale. What it does, mathematically, is swap aircraft on routes and recompute. Hand it a fleet plan, get the emissions consequence. Answers that question well, and answer that people understand.</p>
 <p>The question I kept getting stuck on, which Cascade didn&rsquo;t, was the one underneath: <em>which aircraft can fly from which airports?</em> A hydrogen 737 can&rsquo;t land where there&rsquo;s no liquid hydrogen. A battery-electric regional can&rsquo;t operate without charging. These factors affect the design requirements of next-gen aircraft in a way that they do not for Kerosene-powered aircraft. The bottleneck on aviation decarbonisation isn&rsquo;t only fleet renewal; it&rsquo;s the discrete, capital-constrained, sequenced problem of upgrading the <em>network</em> the fleet flies on.</p>
 <p>So I built Paradigm. The reframe was small in words and large in consequence.</p>
-<blockquote>
-<p>Stop optimising the fleet in isolation. Optimise the network the fleet flies on, and the fleet that network can support, jointly.</p>
-</blockquote>
+<aside class="ti-epiquote" role="doc-epigraph">
+  <p class="ti-epiquote-text">Stop optimising the fleet in isolation. Optimise the network the fleet flies on, and the fleet that network can support, jointly.</p>
+  <p class="ti-epiquote-attr">The Paradigm reframe</p>
+</aside>
+
 <p>Optimise aircraft alone, you get plans that depend on infrastructure that doesn&rsquo;t exist. Optimise infrastructure alone, you get upgrade lists with no connection to which aircraft will benefit. Coupled, the problem becomes: given a budget, a timeline, a fleet roadmap — <em>which airports do you upgrade, in which order, to maximise CO2 reduction?</em></p>
 <p>Which is to say: it&rsquo;s a problem well-suited for MILP. Mixed-integer linear programming. Decades-old, well-understood by the OR<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-12">*</sup><span class="ti-aside-content" id="ti-aside-12" role="tooltip">Operations Research</span></span> community, solvable to optimality with off-the-shelf solvers if you formulate it sensibly - these solvers were originally designed to solve things like <em>The Travelling Salesman Problem</em><insert a link ot the wiki page for this, as an asterisk with a preview>. Binary variables for whether each airport is upgraded; binary variables for whether each route is eligible (a route is eligible only if both endpoints are upgraded); a budget cap; an objective that maximises CO2 decarbonised across all eligible routes, using actual annual per-route CO2 from real flight data, not a great-circle proxy. Sequencing makes it interesting — you upgrade in stages, each with its own budget, and once an airport is upgraded it stays upgraded — so the stages chain into one combined MILP rather than a greedy step-by-step. Greedy is the obvious wrong answer; it&rsquo;ll happily spend stage one on the highest-CO2 airport in isolation and miss that stage two wanted that airport&rsquo;s neighbour first.</p>
 <aside class="ti-callout ti-callout-asterisk" aria-label="MILP formulation aside">
