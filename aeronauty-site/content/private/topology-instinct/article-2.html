@@ -148,7 +148,7 @@
   }
   .ti-mast a { color: inherit; text-decoration: none; }
   .ti-mast a:hover { color: var(--ti-fg); }
-  .ti-mast-brand { font-weight: 600; letter-spacing: -0.01em; }
+  .ti-mast-brand { font-weight: 600; letter-spacing: 0; }
   .ti-mast-meta { font-variant-numeric: tabular-nums; }
 
   /* ---- hero ---- */
@@ -208,7 +208,7 @@
     -webkit-text-fill-color: currentColor;
     text-shadow: 0 4px 32px rgba(0,0,0,0.45);
     font-size: clamp(42px, 8.6vw, 112px);
-    letter-spacing: -0.055em;
+    letter-spacing: 0;
     line-height: 0.88;
     margin-bottom: 24px;
   }
@@ -249,7 +249,7 @@
   .ti-hero h1 {
     font-size: clamp(32px, 5vw, 56px);
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     line-height: 1.08;
     margin: 0 0 22px;
     background: linear-gradient(135deg,
@@ -261,6 +261,12 @@
     -webkit-text-fill-color: transparent;
     color: transparent;
     /* fallback for browsers without -webkit-text-fill-color */
+  }
+  .ti-hero-cinematic h1 {
+    color: #ffffff;
+    background: none;
+    -webkit-text-fill-color: #ffffff;
+    text-shadow: 0 4px 32px rgba(0,0,0,0.45);
   }
   @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
     .ti-hero h1 { color: var(--ti-fg); background: none; -webkit-text-fill-color: var(--ti-fg); }
@@ -331,7 +337,7 @@
     font-weight: 600;
     margin: 32px 0 8px;
     color: var(--ti-fg);
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
   }
   .ti-prose p {
     margin: 0 0 1.15em;
@@ -464,6 +470,51 @@
      right rather than centred. CSS-only — uses a class the JS can toggle if
      needed; for now, default centred positioning is fine for narrow column. */
 
+  /* ---- paragraph-level callouts ---- */
+  .ti-callout {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+    margin: 22px 0 28px;
+    padding: 15px 17px 15px 14px;
+    border: 1px solid var(--ti-border);
+    border-left: 3px solid var(--ti-accent);
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--ti-accent) 9%, transparent), transparent 48%),
+      var(--ti-surface);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
+  }
+  .ti-callout-mark {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid color-mix(in srgb, var(--ti-accent) 54%, var(--ti-border));
+    border-radius: 999px;
+    color: var(--ti-accent);
+    background: color-mix(in srgb, var(--ti-accent) 12%, transparent);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .ti-callout-body {
+    min-width: 0;
+    color: var(--ti-fg-dim);
+    font-size: 15px;
+    line-height: 1.62;
+  }
+  .ti-callout-body p {
+    margin: 0;
+  }
+  .ti-callout-body strong {
+    color: var(--ti-fg);
+    font-weight: 650;
+  }
+  .ti-callout-body code {
+    font-size: 0.9em;
+  }
+
   /* ---- eyebrow tags between sections ---- */
   .ti-eyebrow {
     font-size: 11px;
@@ -507,9 +558,9 @@
     transition: opacity 520ms ease, transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
   }
   html.ti-js .ti-reveal {
-    opacity: 0.18;
-    transform: translateY(42px) scale(0.985);
-    filter: saturate(0.72);
+    opacity: 0.66;
+    transform: translateY(28px) scale(0.992);
+    filter: saturate(0.86);
   }
   html.ti-js .ti-reveal.ti-inview {
     opacity: 1;
@@ -517,8 +568,22 @@
     filter: saturate(1);
   }
   html.ti-js .ti-reveal.ti-dimmed {
-    opacity: 0.30;
-    transform: translateY(-14px) scale(0.992);
+    opacity: 0.72;
+    transform: translateY(-10px) scale(0.996);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal {
+    transform: translateX(-50%) translateY(28px) scale(0.992);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal.ti-inview {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+    transform: translateX(-50%) translateY(-10px) scale(0.996);
+  }
+  html.ti-js .ti-figure-milp.ti-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
   @media (max-width: 480px) {
     .ti-figure { padding: 12px; margin: 28px 0; }
@@ -572,8 +637,8 @@
   @media (min-width: 1000px) {
     .ti-demo {
       width: min(100vw - 32px, 1320px);
-      margin-left: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
-      margin-right: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
+      margin-left: calc(50% - min(50vw - 16px, 660px));
+      margin-right: calc(50% - min(50vw - 16px, 660px));
     }
   }
   .ti-demo .tg-root { padding: 0; }
@@ -644,19 +709,21 @@
     width: min(680px, calc(100% - 32px));
     margin: 14px auto 0;
   }
-  @media (min-width: 980px) {
-    .ti-figure-fullbleed {
-      position: sticky;
-      top: 20px;
-      z-index: 1;
-    }
-  }
   @media (max-width: 720px) {
     .ti-figure-fullbleed {
       width: 100%;
       margin: 42px 0;
       transform: none;
       border-radius: 12px;
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal {
+      transform: translateY(24px) scale(0.992);
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal.ti-inview {
+      transform: translateY(0) scale(1);
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+      transform: translateY(-8px) scale(0.996);
     }
     .ti-figure-fullbleed .ti-video-wrap,
     .ti-figure-fullbleed img { border-radius: 12px; }
@@ -1000,6 +1067,7 @@
 <style></style>
 <style></style>
 <style></style>
+<style></style>
 </head>
 <body>
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
@@ -1012,9 +1080,17 @@
     <span class="ti-mast-meta"><time datetime="2026-05">May 2026</time> &middot; ~25 min read</span>
   </header>
 
-  <section class="ti-hero ti-narrow" aria-labelledby="ti-title">
-    <p class="ti-hero-eyebrow">Aeronauty &middot; Harry Smith</p>
-    <h1 id="ti-title">The Brain That Was a Tax Is Now an Asset</h1>
+  <section class="ti-hero ti-hero-cinematic" aria-labelledby="ti-title">
+    <div class="ti-hero-media" aria-hidden="true">
+      <video src="figures/paradigm-globe-pan.mp4" autoplay muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="ti-hero-shade" aria-hidden="true"></div>
+    <div class="ti-hero-copy">
+      <p class="ti-hero-eyebrow">Aeronauty &middot; Harry Smith</p>
+      <h1 id="ti-title">The Brain That Was a Tax Is Now an Asset</h1>
+      <p class="ti-hero-kicker">A story about refusing to flatten engineering work into screenshots, spreadsheets, and human memory.</p>
+    </div>
+    <div class="ti-scroll-cue" aria-hidden="true">Scroll</div>
   </section>
 
   <main id="ti-main" class="ti-prose ti-narrow" role="main">
@@ -1178,7 +1254,7 @@
   update();
 
   const revealTargets = [
-    ...document.querySelectorAll('.ti-figure, .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
+    ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
   ];
   revealTargets.forEach(el => el.classList.add('ti-reveal'));
 
@@ -1935,6 +2011,7 @@
 
       return { goToStep: goToStep };
     })();</script>
+<script></script>
 <script></script>
 <script></script>
 <script></script>

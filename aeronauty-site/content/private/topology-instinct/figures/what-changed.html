@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What changed — a CG shift, five stale plots, and Thread spotting it</title>
+<!--
+  Self-contained scrollytelling figure. The article-level build extracts:
+    - this <style> block
+    - the IIFE script containing the token "WhatChanged"
+    - the wc-figure root <div>
+-->
+<style>
+body {
+  margin: 0;
+  padding: 60px 20px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: #0a0e1a;
+  color: #e6edf6;
+}
+@media (prefers-color-scheme: light) {
+  body { background: #fafbfd; color: #1f2328; }
+}
+main { max-width: 1200px; margin: 0 auto; }
+
+/* ===========================================================
+   wc- = what-changed, namespaced.
+   =========================================================== */
+.wc-figure {
+  width: 100%;
+  --wc-fg:        #e6edf6;
+  --wc-fg-dim:    #93a0b6;
+  --wc-fg-faint:  #5c6a82;
+  --wc-border:    #2a3447;
+  --wc-rule:      #2a3447;
+  --wc-surface:   #121826;
+  --wc-surface-2: #1a2233;
+  --wc-cyan:      #22d3ee;
+  --wc-amber:     #f59e0b;
+  --wc-red:       #ef4444;
+  --wc-green:     #34d399;
+  --wc-purple:    #a855f7;
+  color: var(--wc-fg);
+}
+@media (prefers-color-scheme: light) {
+  .wc-figure {
+    --wc-fg:        #1f2328;
+    --wc-fg-dim:    #4a5060;
+    --wc-fg-faint:  #7a8090;
+    --wc-border:    #d8dde6;
+    --wc-rule:      #d8dde6;
+    --wc-surface:   #ffffff;
+    --wc-surface-2: #f3f5f8;
+  }
+}
+
+.wc-frame {
+  border: 1px solid var(--wc-border);
+  border-radius: 14px;
+  background: var(--wc-surface);
+  padding: 22px 22px 18px;
+}
+
+/* ---- header ---- */
+.wc-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wc-cyan);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.wc-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--wc-fg);
+  letter-spacing: -0.005em;
+}
+.wc-subtitle {
+  font-size: 14px;
+  color: var(--wc-fg-dim);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+
+/* ---- stage + step bar ---- */
+.wc-step-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  flex-wrap: wrap;
+}
+.wc-step-btn {
+  appearance: none;
+  border: 1px solid var(--wc-border);
+  background: var(--wc-surface-2);
+  color: var(--wc-fg-dim);
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.wc-step-btn:hover { color: var(--wc-fg); border-color: var(--wc-cyan); }
+.wc-step-btn.wc-step-active {
+  background: color-mix(in srgb, var(--wc-cyan) 18%, var(--wc-surface-2));
+  border-color: var(--wc-cyan);
+  color: var(--wc-cyan);
+  font-weight: 600;
+}
+.wc-step-progress {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--wc-fg-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.wc-pp-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--wc-border);
+  color: var(--wc-fg-dim);
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.wc-pp-btn:hover { color: var(--wc-fg); border-color: var(--wc-cyan); }
+
+.wc-stage {
+  position: relative;
+  border: 1px solid var(--wc-border);
+  border-radius: 12px;
+  background: var(--wc-surface-2);
+  min-height: 460px;
+  overflow: hidden;
+}
+.wc-state {
+  position: absolute;
+  inset: 0;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 360ms ease, transform 360ms ease;
+}
+.wc-state.wc-state-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+@media (max-width: 760px) {
+  .wc-state { grid-template-columns: 1fr; padding: 14px; }
+}
+
+/* ---- the chart (states 1, 2, 6) ---- */
+.wc-chart-host {
+  position: relative;
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  border-radius: 10px;
+  padding: 14px 16px 12px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wc-chart-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--wc-fg);
+  font-weight: 600;
+}
+.wc-chart-source {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--wc-fg-faint);
+  letter-spacing: 0.04em;
+}
+.wc-chart-svg { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; }
+.wc-chart-svg .wc-axis { stroke: var(--wc-fg-faint); stroke-width: 1; }
+.wc-chart-svg .wc-grid { stroke: var(--wc-fg-faint); stroke-width: 0.5; opacity: 0.18; stroke-dasharray: 2 3; }
+.wc-chart-svg .wc-tick { fill: var(--wc-fg-dim); font-size: 10.5px; font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+.wc-chart-svg .wc-axis-label { fill: var(--wc-fg-dim); font-size: 11.5px; }
+.wc-chart-svg path.wc-curve { fill: none; stroke-width: 2; transition: d 600ms cubic-bezier(0.4, 0.0, 0.2, 1); }
+.wc-chart-svg path.wc-curve.wc-curve-a { stroke: var(--wc-cyan); }
+.wc-chart-svg path.wc-curve.wc-curve-b { stroke: var(--wc-amber); }
+.wc-chart-svg circle.wc-pt { stroke: var(--wc-surface); stroke-width: 1.5; transition: cx 600ms cubic-bezier(0.4, 0.0, 0.2, 1), cy 600ms cubic-bezier(0.4, 0.0, 0.2, 1); }
+.wc-chart-svg circle.wc-pt-a { fill: var(--wc-cyan); }
+.wc-chart-svg circle.wc-pt-b { fill: var(--wc-amber); }
+
+.wc-chart-stamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--wc-fg-faint);
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-chart-stamp .wc-stamp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--wc-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wc-green) 15%, transparent);
+}
+.wc-chart-stamp.wc-stamp-stale .wc-stamp-dot {
+  background: var(--wc-red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wc-red) 15%, transparent);
+}
+.wc-chart-legend {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 11.5px;
+  color: var(--wc-fg-dim);
+  margin-top: 6px;
+}
+.wc-chart-legend span.wc-key {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ---- side card (right column of each state) ---- */
+.wc-side {
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+}
+.wc-side-eyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wc-cyan);
+  font-weight: 600;
+  margin: 0;
+}
+.wc-side-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--wc-fg);
+}
+.wc-side-body { font-size: 13px; line-height: 1.5; color: var(--wc-fg-dim); margin: 0; }
+.wc-side-body strong { color: var(--wc-fg); font-weight: 600; }
+.wc-side-body code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: var(--wc-amber);
+}
+
+/* ---- lineage tree (state 2) ---- */
+.wc-lineage-svg { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; }
+.wc-lineage-svg .wc-l-node {
+  fill: var(--wc-surface-2);
+  stroke: var(--wc-cyan);
+  stroke-width: 1.2;
+  rx: 6;
+  ry: 6;
+}
+.wc-lineage-svg .wc-l-node.wc-l-script {
+  stroke: var(--wc-purple);
+}
+.wc-lineage-svg .wc-l-node.wc-l-source {
+  stroke: var(--wc-amber);
+  stroke-dasharray: 4 3;
+}
+.wc-lineage-svg .wc-l-node-label {
+  fill: var(--wc-fg);
+  font-size: 11.5px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-lineage-svg .wc-l-node-sub {
+  fill: var(--wc-fg-faint);
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-lineage-svg .wc-l-edge {
+  stroke: var(--wc-fg-faint);
+  stroke-width: 1.4;
+  fill: none;
+  opacity: 0.6;
+}
+.wc-lineage-svg .wc-l-edge.wc-l-edge-pulse {
+  stroke: var(--wc-amber);
+  stroke-width: 2;
+  opacity: 1;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--wc-amber) 60%, transparent));
+}
+
+/* ---- inertia tensor (state 3) ---- */
+.wc-inertia {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  background: var(--wc-rule);
+  border: 1px solid var(--wc-border);
+  border-radius: 8px;
+  padding: 4px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-inertia-cell {
+  background: var(--wc-surface-2);
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--wc-fg);
+  border-radius: 4px;
+  transition: background 240ms ease, color 240ms ease;
+}
+.wc-inertia-cell.wc-inertia-changed {
+  background: color-mix(in srgb, var(--wc-amber) 32%, var(--wc-surface-2));
+  color: var(--wc-amber);
+  font-weight: 700;
+}
+.wc-cg-shift {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--wc-fg-dim);
+  margin-top: 6px;
+}
+.wc-cg-shift strong { color: var(--wc-amber); font-weight: 700; }
+
+.wc-commit-card {
+  background: var(--wc-surface-2);
+  border: 1px solid var(--wc-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.wc-commit-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--wc-fg-dim);
+  margin-bottom: 4px;
+}
+.wc-commit-author {
+  background: var(--wc-purple);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.wc-commit-msg { color: var(--wc-fg); font-weight: 500; }
+.wc-commit-hash {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--wc-fg-faint);
+  font-size: 11px;
+}
+
+/* ---- notification (state 4) ---- */
+.wc-notif {
+  background: color-mix(in srgb, var(--wc-amber) 8%, var(--wc-surface));
+  border: 1px solid color-mix(in srgb, var(--wc-amber) 50%, var(--wc-border));
+  border-left: 3px solid var(--wc-amber);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--wc-fg);
+}
+.wc-notif-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.wc-notif-badge {
+  background: var(--wc-amber);
+  color: #1a1100;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.wc-notif-body {
+  color: var(--wc-fg-dim);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.wc-notif-body code { color: var(--wc-amber); }
+.wc-notif-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.wc-notif-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--wc-surface-2);
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--wc-fg);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-notif-list .wc-stale-tag {
+  background: var(--wc-red);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-left: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---- Slack DM (state 5) ---- */
+.wc-slack {
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+.wc-slack-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--wc-rule);
+  padding-bottom: 8px;
+  font-size: 11.5px;
+  color: var(--wc-fg-faint);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.wc-slack-head::before {
+  content: "#";
+  font-weight: 700;
+  color: var(--wc-fg);
+  letter-spacing: 0;
+}
+.wc-slack-msg { display: flex; gap: 10px; align-items: start; }
+.wc-slack-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  flex: 0 0 auto;
+}
+.wc-slack-avatar-bot { background: var(--wc-cyan); color: #062a31; }
+.wc-slack-avatar-aero { background: var(--wc-amber); color: #2a1900; }
+.wc-slack-body { flex: 1; min-width: 0; }
+.wc-slack-name {
+  font-weight: 700;
+  color: var(--wc-fg);
+  font-size: 12.5px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.wc-slack-time { color: var(--wc-fg-faint); font-weight: 400; font-size: 10.5px; }
+.wc-slack-bot-tag {
+  background: color-mix(in srgb, var(--wc-cyan) 25%, transparent);
+  color: var(--wc-cyan);
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.wc-slack-text { font-size: 12.5px; color: var(--wc-fg); margin-top: 2px; line-height: 1.45; }
+.wc-slack-text code { color: var(--wc-amber); }
+.wc-slack-actions { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; }
+.wc-slack-action {
+  appearance: none;
+  border: 1px solid var(--wc-border);
+  background: var(--wc-surface-2);
+  color: var(--wc-fg);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.wc-slack-action.wc-slack-action-primary {
+  background: var(--wc-cyan);
+  color: #062a31;
+  border-color: var(--wc-cyan);
+  font-weight: 600;
+}
+
+/* ---- toggle (state 6) ---- */
+.wc-toggle {
+  display: inline-flex;
+  border: 1px solid var(--wc-border);
+  background: var(--wc-surface-2);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 0;
+  margin-bottom: 8px;
+}
+.wc-toggle-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--wc-fg-dim);
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+}
+.wc-toggle-btn.wc-toggle-active {
+  background: var(--wc-cyan);
+  color: #062a31;
+}
+
+.wc-state-caption {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 14px;
+  font-size: 12.5px;
+  color: var(--wc-fg-dim);
+  font-style: italic;
+  pointer-events: none;
+  text-align: left;
+  line-height: 1.5;
+}
+.wc-state-caption strong { color: var(--wc-fg); font-weight: 600; font-style: normal; }
+
+.wc-caption {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--wc-fg-dim);
+  border-top: 1px solid var(--wc-rule);
+  padding-top: 12px;
+  line-height: 1.55;
+}
+.wc-caption strong { color: var(--wc-fg); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wc-state, .wc-chart-svg circle.wc-pt, .wc-chart-svg path.wc-curve {
+    transition: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .wc-state-caption { position: static; padding: 10px 4px 0; }
+  .wc-stage { min-height: 0; }
+  .wc-state { position: relative; padding: 14px; }
+  .wc-state:not(.wc-state-active) { display: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1 style="font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;">
+    What changed (preview)
+  </h1>
+  <p style="text-align:center;font-size:12px;color:#6b7280;margin-top:0;">
+    Standalone preview file. The build lifts the wc-figure block plus the inline script at the bottom.
+  </p>
+
+  <!-- =========================================================
+       The figure itself.
+       ========================================================= -->
+  <div class="wc-figure" id="wc-figure">
+    <div class="wc-frame">
+
+      <p class="wc-eyebrow">What changed?</p>
+      <h3 class="wc-title">A reinforced wing spar shifts the CG. Five plots go stale at once. Thread spots it.</h3>
+      <p class="wc-subtitle">Real workflow, mocked: a short-period pitching-frequency comparison for two tail sizes, used in three slide decks. Then structures commit a spar reinforcement, and the inertia tensor moves.</p>
+
+      <!-- Step bar -->
+      <div class="wc-step-bar" id="wc-step-bar">
+        <button class="wc-step-btn" data-step="0">1 · ship the plot</button>
+        <button class="wc-step-btn" data-step="1">2 · lineage</button>
+        <button class="wc-step-btn" data-step="2">3 · spar reinforced</button>
+        <button class="wc-step-btn" data-step="3">4 · stale flagged</button>
+        <button class="wc-step-btn" data-step="4">5 · owners pinged</button>
+        <button class="wc-step-btn" data-step="5">6 · embedded view catches up</button>
+        <span class="wc-step-progress">
+          <button class="wc-pp-btn" id="wc-pp-btn" aria-label="Pause / play auto-advance">
+            <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true" id="wc-pp-icon">
+              <rect x="2.5" y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/>
+              <rect x="7"   y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/>
+            </svg>
+          </button>
+        </span>
+      </div>
+
+      <!-- Stage -->
+      <div class="wc-stage" id="wc-stage">
+
+        <!-- ===== State 0: ship the plot ===== -->
+        <section class="wc-state wc-state-active" data-step="0">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>Short-period pitching freq · two tail sizes</span>
+              <span class="wc-chart-source">fly_qual.py · run 2026-04-12</span>
+            </div>
+            <svg class="wc-chart-svg" id="wc-chart-svg-0" viewBox="0 0 480 300" role="img"
+                 aria-label="Line chart of short-period pitching frequency versus airspeed for two tail sizes"></svg>
+            <div class="wc-chart-legend">
+              <span><span class="wc-key" style="background:var(--wc-cyan)"></span>tail A (small)</span>
+              <span><span class="wc-key" style="background:var(--wc-amber)"></span>tail B (large)</span>
+            </div>
+            <div class="wc-chart-stamp"><span class="wc-stamp-dot"></span> rendered 2026-04-12 14:23 · embedded in 3 decks</div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">As shipped</p>
+            <h4 class="wc-side-title">Aero closes out the plot</h4>
+            <p class="wc-side-body">Two tail-size sweeps. The plot lands in <strong>Q4 design review · slide 14</strong>, <strong>cert handover · slide 7</strong>, and the <strong>wing-redesign memo</strong>.</p>
+            <p class="wc-side-body" style="font-size:12px;">Aero moves on. The deck gets circulated. Looks fine.</p>
+          </aside>
+          <p class="wc-state-caption">A normal Friday. <strong>Three downstream artefacts now reference one plot.</strong></p>
+        </section>
+
+        <!-- ===== State 1: Thread knows the lineage ===== -->
+        <section class="wc-state" data-step="1">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>Lineage</span>
+              <span class="wc-chart-source">thread://airfoil-x57/plots/sp-freq-tails</span>
+            </div>
+            <svg class="wc-lineage-svg" id="wc-lineage-svg" viewBox="0 0 480 290" role="img"
+                 aria-label="Lineage tree showing the plot, the script, and its data sources"></svg>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Thread knows</p>
+            <h4 class="wc-side-title">Plot ← script ← (CFD + inertia)</h4>
+            <p class="wc-side-body">The plot is a derived view of <code>fly_qual.py</code>. The script reads <code>cfd_results/x57.h5</code> and <code>inertia_tensor.json</code>. Each link is an edge Thread keeps live.</p>
+            <p class="wc-side-body" style="font-size:12px;">If any of those upstream things moves, every plot downstream of it can be told.</p>
+          </aside>
+          <p class="wc-state-caption">The plot doesn't <em>contain</em> the data. It points at it.</p>
+        </section>
+
+        <!-- ===== State 2: structural commits a spar reinforce ===== -->
+        <section class="wc-state" data-step="2">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>inertia_tensor.json</span>
+              <span class="wc-chart-source">structures · commit · 22 minutes ago</span>
+            </div>
+            <div class="wc-inertia" id="wc-inertia">
+              <!-- 9 cells; values updated by JS as the commit lands -->
+            </div>
+            <div class="wc-cg-shift" id="wc-cg-shift">
+              <span>CG:</span>
+              <span id="wc-cg-old"  style="color:var(--wc-fg-faint);text-decoration:line-through;">x = 4.218 m</span>
+              <span style="color:var(--wc-fg-faint);">→</span>
+              <strong id="wc-cg-new">x = 4.262 m</strong>
+              <span style="color:var(--wc-amber);">(+44 mm aft)</span>
+            </div>
+            <div class="wc-commit-card">
+              <div class="wc-commit-meta">
+                <span class="wc-commit-author">structures</span>
+                <span>updated <code style="color:var(--wc-amber)">inertia_tensor.json</code></span>
+                <span class="wc-commit-hash">#1247 · 8a3f1c2</span>
+              </div>
+              <div class="wc-commit-msg">Reinforce wing spar (LE doubler + ply layup change)</div>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Source moves</p>
+            <h4 class="wc-side-title">A real engineering change, in another room</h4>
+            <p class="wc-side-body">The structural group thickens the spar. Mass redistributes. The diagonal terms of <code>I</code> shift; the CG moves <strong>44 mm aft</strong>.</p>
+            <p class="wc-side-body" style="font-size:12px;">They commit. Thread sees the source has moved.</p>
+          </aside>
+          <p class="wc-state-caption">Nobody told aero. Aero is at lunch. <strong>Thread is awake.</strong></p>
+        </section>
+
+        <!-- ===== State 3: stale flagged ===== -->
+        <section class="wc-state" data-step="3">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>downstream of <code style="color:var(--wc-amber)">inertia_tensor.json</code></span>
+              <span class="wc-chart-source">3 affected · flagged automatically</span>
+            </div>
+            <div class="wc-notif">
+              <div class="wc-notif-head">
+                <span class="wc-notif-badge">stale</span>
+                Three artefacts reference <code>inertia_tensor.json</code>
+              </div>
+              <p class="wc-notif-body">Thread walked the lineage from the just-changed source down to every plot, table, and report that depends on it (transitively). All three derived plots from <code>fly_qual.py</code> are now flagged stale until they re-render.</p>
+              <ul class="wc-notif-list">
+                <li>📑 Q4 design review · slide 14 <span class="wc-stale-tag">stale</span></li>
+                <li>📑 Cert handover · slide 7 <span class="wc-stale-tag">stale</span></li>
+                <li>📄 Wing-redesign memo · §3.2 <span class="wc-stale-tag">stale</span></li>
+              </ul>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Thread spots it</p>
+            <h4 class="wc-side-title">Every embed gets flagged</h4>
+            <p class="wc-side-body">Not just the plot — every <strong>place the plot is used</strong>. PowerPoint deck, Word memo, internal wiki. The lineage is bidirectional: change the source, every dependent gets the warning.</p>
+            <p class="wc-side-body" style="font-size:12px;">No "did anyone notice we changed the spar?" half a sprint later.</p>
+          </aside>
+          <p class="wc-state-caption">The cost per question dropped to zero. <strong>The question got asked anyway.</strong></p>
+        </section>
+
+        <!-- ===== State 4: owners pinged ===== -->
+        <section class="wc-state" data-step="4">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>#aero-fly-qual</span>
+              <span class="wc-chart-source">slack · just now</span>
+            </div>
+            <div class="wc-slack">
+              <div class="wc-slack-head">aero-fly-qual</div>
+
+              <div class="wc-slack-msg">
+                <div class="wc-slack-avatar wc-slack-avatar-bot">TR</div>
+                <div class="wc-slack-body">
+                  <div class="wc-slack-name">
+                    Thread <span class="wc-slack-bot-tag">APP</span>
+                    <span class="wc-slack-time">14:47</span>
+                  </div>
+                  <div class="wc-slack-text">
+                    Heads up @sarah — your <code>sp-freq-tails</code> plot is downstream of <code>inertia_tensor.json</code>, which structures just changed (commit <code>8a3f1c2</code>: "reinforce wing spar"). Three places use this plot — they're all flagged stale.
+                  </div>
+                  <div class="wc-slack-actions">
+                    <button class="wc-slack-action wc-slack-action-primary">Re-render with latest</button>
+                    <button class="wc-slack-action">View change</button>
+                    <button class="wc-slack-action">Snooze · 1d</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wc-slack-msg" id="wc-slack-msg-aero" style="opacity:0;transform:translateY(6px);transition:opacity 380ms ease,transform 380ms ease;">
+                <div class="wc-slack-avatar wc-slack-avatar-aero">SC</div>
+                <div class="wc-slack-body">
+                  <div class="wc-slack-name">
+                    Sarah Carmichael
+                    <span class="wc-slack-time">14:48</span>
+                  </div>
+                  <div class="wc-slack-text">
+                    On it. Re-rendering — also pinging cert because slide 7 is in their handover deck.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Owners pinged</p>
+            <h4 class="wc-side-title">No more "I didn't know"</h4>
+            <p class="wc-side-body">The plot's owner — and the deck's owner, and the memo's owner — get told before they next open the artefact. <strong>Decision-makers find out now, not at the next review.</strong></p>
+            <p class="wc-side-body" style="font-size:12px;">If they're using PowerPoint, it's still a ping. We can't get people to stop using PowerPoint, but we can join them there.</p>
+          </aside>
+          <p class="wc-state-caption">Sarah finds out at <strong>14:47</strong>. Not three weeks later in a review.</p>
+        </section>
+
+        <!-- ===== State 5: embedded view toggles to latest data ===== -->
+        <section class="wc-state" data-step="5">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>Short-period pitching freq · two tail sizes</span>
+              <span class="wc-chart-source" id="wc-chart-source-6">embedded view · live</span>
+            </div>
+            <div class="wc-toggle" id="wc-toggle">
+              <button class="wc-toggle-btn wc-toggle-active" data-mode="entered">as entered (Apr 12)</button>
+              <button class="wc-toggle-btn" data-mode="latest">latest data</button>
+            </div>
+            <svg class="wc-chart-svg" id="wc-chart-svg-5" viewBox="0 0 480 300" role="img"
+                 aria-label="Same chart with a toggle between as-entered and latest-data; the curves shift when latest is selected"></svg>
+            <div class="wc-chart-legend">
+              <span><span class="wc-key" style="background:var(--wc-cyan)"></span>tail A (small)</span>
+              <span><span class="wc-key" style="background:var(--wc-amber)"></span>tail B (large)</span>
+            </div>
+            <div class="wc-chart-stamp" id="wc-chart-stamp-5">
+              <span class="wc-stamp-dot"></span>
+              <span id="wc-chart-stamp-text-5">as entered · 2026-04-12 14:23</span>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">If it's an embedded view</p>
+            <h4 class="wc-side-title">The truth catches up. The reader can see both.</h4>
+            <p class="wc-side-body">For embeds (live, not PNGs): a toggle. <strong>"As entered"</strong> is what the deck author saw. <strong>"Latest data"</strong> is what's true now. Reviewers can decide which to show.</p>
+            <p class="wc-side-body" style="font-size:12px;">PNGs need a human to chase down. Embeds don't.</p>
+          </aside>
+          <p class="wc-state-caption">A picture <em>is</em> worth a thousand words. <strong>A live one is worth fifty meetings.</strong></p>
+        </section>
+
+      </div>
+
+      <p class="wc-caption">
+        Same workflow most teams already have — a script, some inputs, a chart, and three places it ends up. <strong>The only difference is Thread holding onto the connections.</strong> When something upstream moves, every dependent already knows about it before anyone else has even noticed.
+      </p>
+
+    </div>
+  </div>
+</main>
+
+<script>
+window.WhatChanged = (function () {
+  'use strict';
+
+  const figure = document.getElementById('wc-figure');
+  if (!figure) return null;
+
+  // ---- Chart data ------------------------------------------------------
+  // Short-period pitching natural frequency (rad/s) vs airspeed (kts).
+  // Two tail sizes; CG shift makes the airframe slightly less stable, so
+  // both curves drop a touch when "latest data" is selected.
+  const AIRSPEEDS = [60, 90, 120, 150, 180];
+  const DATA = {
+    entered: {
+      a: [1.6, 2.1, 2.5, 2.9, 3.2],
+      b: [1.9, 2.5, 3.0, 3.4, 3.8],
+    },
+    latest: {
+      a: [1.4, 1.8, 2.2, 2.5, 2.8],
+      b: [1.7, 2.2, 2.6, 3.0, 3.4],
+    },
+  };
+
+  // ---- SVG chart helpers -----------------------------------------------
+  const VB = { w: 480, h: 300 };
+  const PAD = { l: 44, r: 12, t: 14, b: 36 };
+  const xMin = 50, xMax = 190;
+  const yMin = 1.0, yMax = 4.2;
+  const xPx = v => PAD.l + (v - xMin) / (xMax - xMin) * (VB.w - PAD.l - PAD.r);
+  const yPx = v => (VB.h - PAD.b) - (v - yMin) / (yMax - yMin) * (VB.h - PAD.t - PAD.b);
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, kids) {
+    const n = document.createElementNS(NS, tag);
+    if (attrs) for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (kids) kids.forEach(c => n.appendChild(c));
+    return n;
+  }
+
+  function drawAxes(svg) {
+    svg.appendChild(el('line', { class: 'wc-axis', x1: PAD.l, y1: PAD.t, x2: PAD.l, y2: VB.h - PAD.b }));
+    svg.appendChild(el('line', { class: 'wc-axis', x1: PAD.l, y1: VB.h - PAD.b, x2: VB.w - PAD.r, y2: VB.h - PAD.b }));
+    [60, 90, 120, 150, 180].forEach(v => {
+      svg.appendChild(el('line', { class: 'wc-grid', x1: xPx(v), x2: xPx(v), y1: PAD.t, y2: VB.h - PAD.b }));
+      const t = el('text', { class: 'wc-tick', x: xPx(v), y: VB.h - PAD.b + 14, 'text-anchor': 'middle' });
+      t.textContent = String(v);
+      svg.appendChild(t);
+    });
+    [1.5, 2.0, 2.5, 3.0, 3.5, 4.0].forEach(v => {
+      svg.appendChild(el('line', { class: 'wc-grid', x1: PAD.l, x2: VB.w - PAD.r, y1: yPx(v), y2: yPx(v) }));
+      const t = el('text', { class: 'wc-tick', x: PAD.l - 6, y: yPx(v) + 3, 'text-anchor': 'end' });
+      t.textContent = v.toFixed(1);
+      svg.appendChild(t);
+    });
+    const xL = el('text', { class: 'wc-axis-label', x: (PAD.l + VB.w - PAD.r) / 2, y: VB.h - 6, 'text-anchor': 'middle' });
+    xL.textContent = 'airspeed (kts)';
+    svg.appendChild(xL);
+    const yL = el('text', { class: 'wc-axis-label', x: 12, y: (PAD.t + VB.h - PAD.b) / 2, 'text-anchor': 'middle', transform: `rotate(-90 12 ${(PAD.t + VB.h - PAD.b) / 2})` });
+    yL.textContent = 'ωₙ (rad/s)';
+    svg.appendChild(yL);
+  }
+
+  function pathFor(seriesY) {
+    return AIRSPEEDS.map((x, i) => (i === 0 ? 'M' : 'L') + xPx(x).toFixed(2) + ',' + yPx(seriesY[i]).toFixed(2)).join(' ');
+  }
+
+  function buildChart(svgId, data) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return null;
+    svg.innerHTML = '';
+    drawAxes(svg);
+    const pa = el('path', { class: 'wc-curve wc-curve-a', d: pathFor(data.a) });
+    const pb = el('path', { class: 'wc-curve wc-curve-b', d: pathFor(data.b) });
+    svg.appendChild(pa);
+    svg.appendChild(pb);
+    const ptsA = AIRSPEEDS.map((x, i) => {
+      const c = el('circle', { class: 'wc-pt wc-pt-a', cx: xPx(x), cy: yPx(data.a[i]), r: 4 });
+      svg.appendChild(c);
+      return c;
+    });
+    const ptsB = AIRSPEEDS.map((x, i) => {
+      const c = el('circle', { class: 'wc-pt wc-pt-b', cx: xPx(x), cy: yPx(data.b[i]), r: 4 });
+      svg.appendChild(c);
+      return c;
+    });
+    return { pa, pb, ptsA, ptsB };
+  }
+  function updateChart(refs, data) {
+    if (!refs) return;
+    refs.pa.setAttribute('d', pathFor(data.a));
+    refs.pb.setAttribute('d', pathFor(data.b));
+    AIRSPEEDS.forEach((x, i) => {
+      refs.ptsA[i].setAttribute('cx', xPx(x));
+      refs.ptsA[i].setAttribute('cy', yPx(data.a[i]));
+      refs.ptsB[i].setAttribute('cx', xPx(x));
+      refs.ptsB[i].setAttribute('cy', yPx(data.b[i]));
+    });
+  }
+
+  // Build the static state-0 chart and the toggle-driven state-5 chart.
+  buildChart('wc-chart-svg-0', DATA.entered);
+  const chart5 = buildChart('wc-chart-svg-5', DATA.entered);
+
+  // ---- Lineage tree (state 1) ------------------------------------------
+  (function buildLineage() {
+    const svg = document.getElementById('wc-lineage-svg');
+    if (!svg) return;
+    // Layout: plot -> script -> {cfd, inertia}
+    // Position nodes left-to-right.
+    const nodes = [
+      { id: 'plot',    x: 60,  y: 110, w: 96, h: 50, label: 'sp-freq-tails',   sub: 'plot · 3 embeds', cls: '' },
+      { id: 'script',  x: 200, y: 110, w: 96, h: 50, label: 'fly_qual.py',     sub: 'script',          cls: 'wc-l-script' },
+      { id: 'cfd',     x: 340, y: 50,  w: 110, h: 50, label: 'cfd_results.h5', sub: 'CFD',             cls: 'wc-l-source' },
+      { id: 'inertia', x: 340, y: 170, w: 110, h: 50, label: 'inertia_tensor', sub: 'mass · CG · I',   cls: 'wc-l-source' },
+    ];
+    const edges = [
+      ['plot', 'script', false],
+      ['script', 'cfd', false],
+      ['script', 'inertia', false],
+    ];
+    const map = Object.fromEntries(nodes.map(n => [n.id, n]));
+    edges.forEach(([from, to, pulse]) => {
+      const a = map[from], b = map[to];
+      const x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      const x2 = b.x,        y2 = b.y + b.h / 2;
+      const cx = (x1 + x2) / 2;
+      const path = el('path', {
+        class: 'wc-l-edge' + (pulse ? ' wc-l-edge-pulse' : ''),
+        d: `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`,
+      });
+      svg.appendChild(path);
+    });
+    nodes.forEach(n => {
+      const r = el('rect', {
+        class: 'wc-l-node ' + n.cls,
+        x: n.x, y: n.y, width: n.w, height: n.h,
+      });
+      svg.appendChild(r);
+      const tl = el('text', { class: 'wc-l-node-label', x: n.x + n.w / 2, y: n.y + 22, 'text-anchor': 'middle' });
+      tl.textContent = n.label;
+      svg.appendChild(tl);
+      const ts = el('text', { class: 'wc-l-node-sub', x: n.x + n.w / 2, y: n.y + 36, 'text-anchor': 'middle' });
+      ts.textContent = n.sub;
+      svg.appendChild(ts);
+    });
+  })();
+
+  // ---- Inertia tensor (state 2) ----------------------------------------
+  // Pre-change values; on the state-2 reveal, three diagonal entries
+  // tick to the post-change values and gain the "changed" highlight.
+  const I_PRE  = [
+    [3220.4,    0.0,  -82.5],
+    [   0.0, 4815.6,    0.0],
+    [ -82.5,    0.0, 5210.7],
+  ];
+  const I_POST = [
+    [3268.1,    0.0,  -83.4],
+    [   0.0, 4862.9,    0.0],
+    [ -83.4,    0.0, 5298.2],
+  ];
+  const I_CHANGED = [
+    [true, false, true],
+    [false, true, false],
+    [true, false, true],
+  ];
+
+  (function buildInertia() {
+    const host = document.getElementById('wc-inertia');
+    if (!host) return;
+    const cells = [];
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const c = document.createElement('div');
+        c.className = 'wc-inertia-cell';
+        c.dataset.i = i; c.dataset.j = j;
+        c.textContent = I_PRE[i][j].toFixed(1);
+        host.appendChild(c);
+        cells.push({ el: c, i, j });
+      }
+    }
+    host._cells = cells;
+  })();
+  function setInertia(post) {
+    const host = document.getElementById('wc-inertia');
+    if (!host || !host._cells) return;
+    const M = post ? I_POST : I_PRE;
+    host._cells.forEach(({ el, i, j }) => {
+      el.textContent = M[i][j].toFixed(1);
+      el.classList.toggle('wc-inertia-changed', !!post && I_CHANGED[i][j]);
+    });
+    const cgOld = document.getElementById('wc-cg-old');
+    const cgNew = document.getElementById('wc-cg-new');
+    if (cgOld && cgNew) {
+      cgOld.style.opacity = post ? '1' : '0.45';
+      cgNew.style.opacity = post ? '1' : '0.45';
+    }
+  }
+  setInertia(false);
+
+  // ---- Toggle (state 5) ------------------------------------------------
+  let mode = 'entered';
+  const toggle = document.getElementById('wc-toggle');
+  const stampText5 = document.getElementById('wc-chart-stamp-text-5');
+  const stamp5 = document.getElementById('wc-chart-stamp-5');
+  function setMode(m) {
+    mode = m;
+    if (!toggle) return;
+    toggle.querySelectorAll('.wc-toggle-btn').forEach(b => {
+      b.classList.toggle('wc-toggle-active', b.dataset.mode === m);
+    });
+    updateChart(chart5, DATA[m]);
+    if (stampText5) stampText5.textContent = m === 'entered' ? 'as entered · 2026-04-12 14:23' : 'latest data · just now (re-rendered after #1247)';
+    if (stamp5) stamp5.classList.toggle('wc-stamp-stale', false);
+  }
+  if (toggle) {
+    toggle.querySelectorAll('.wc-toggle-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        userTookOver = true;
+        setMode(b.dataset.mode);
+      });
+    });
+  }
+
+  // ---- State machine ---------------------------------------------------
+  const states  = Array.from(figure.querySelectorAll('.wc-state'));
+  const buttons = Array.from(figure.querySelectorAll('.wc-step-btn'));
+  let stepIdx   = 0;
+  let demoTimer = null;
+  let userTookOver = false;
+  let paused = false;
+
+  function setStep(n) {
+    stepIdx = ((n % states.length) + states.length) % states.length;
+    states.forEach((s, i) => s.classList.toggle('wc-state-active', i === stepIdx));
+    buttons.forEach((b, i) => b.classList.toggle('wc-step-active', i === stepIdx));
+    // Per-step side effects.
+    if (stepIdx === 2) {
+      // Trigger the inertia-tensor commit reveal shortly after the
+      // state lands so the reader sees the values "tick".
+      setInertia(false);
+      setTimeout(() => { if (stepIdx === 2) setInertia(true); }, 700);
+    } else {
+      // Keep the post values once the state has been visited (it's
+      // "the truth now") for the rest of the cycle.
+      if (stepIdx > 2) setInertia(true);
+    }
+    if (stepIdx === 4) {
+      const a = document.getElementById('wc-slack-msg-aero');
+      if (a) {
+        a.style.opacity = '0';
+        a.style.transform = 'translateY(6px)';
+        setTimeout(() => {
+          if (stepIdx !== 4) return;
+          a.style.opacity = '1';
+          a.style.transform = 'translateY(0)';
+        }, 1400);
+      }
+    }
+    if (stepIdx === 5) {
+      // Auto-demo the toggle: start as-entered, then flip to latest
+      // after a beat.
+      setMode('entered');
+      setTimeout(() => {
+        if (stepIdx === 5 && !userTookOver) setMode('latest');
+      }, 1800);
+    }
+  }
+
+  buttons.forEach((b, i) => {
+    b.addEventListener('click', () => {
+      userTookOver = true;
+      pauseAuto();
+      setStep(i);
+    });
+  });
+
+  // ---- Auto-advance ----------------------------------------------------
+  // Each step has a different dwell so the reader has time on the dense
+  // ones (lineage, notification) and breezes through the obvious ones.
+  const DWELLS = [4200, 5800, 5200, 5800, 6200, 6800];
+
+  function scheduleNext() {
+    if (paused || userTookOver) return;
+    if (demoTimer) clearTimeout(demoTimer);
+    demoTimer = setTimeout(() => {
+      if (paused || userTookOver) return;
+      setStep(stepIdx + 1);
+      scheduleNext();
+    }, DWELLS[stepIdx] || 5000);
+  }
+  function startAuto() { paused = false; scheduleNext(); updatePpIcon(); }
+  function pauseAuto() { paused = true; if (demoTimer) { clearTimeout(demoTimer); demoTimer = null; } updatePpIcon(); }
+
+  const ppBtn  = document.getElementById('wc-pp-btn');
+  const ppIcon = document.getElementById('wc-pp-icon');
+  function updatePpIcon() {
+    if (!ppIcon) return;
+    if (paused) {
+      // play triangle
+      ppIcon.innerHTML = '<polygon points="3,2 3,10 10,6" fill="currentColor"/>';
+    } else {
+      // pause bars
+      ppIcon.innerHTML = '<rect x="2.5" y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/><rect x="7" y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/>';
+    }
+  }
+  if (ppBtn) ppBtn.addEventListener('click', () => {
+    userTookOver = true;
+    if (paused) startAuto(); else pauseAuto();
+  });
+
+  // Reduced motion: don't auto-advance; just show the first state.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setStep(0);
+    return { setStep, setMode };
+  }
+
+  // Trigger when the figure enters the viewport.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !userTookOver) startAuto();
+        else pauseAuto();
+      });
+    }, { threshold: 0.25 });
+    io.observe(figure);
+  } else {
+    setTimeout(() => { if (!userTookOver) startAuto(); }, 1500);
+  }
+
+  // Hover the stage to pause auto-advance — reading-friendly.
+  const stage = document.getElementById('wc-stage');
+  if (stage) {
+    stage.addEventListener('mouseenter', pauseAuto);
+    stage.addEventListener('mouseleave', () => { if (!userTookOver) startAuto(); });
+  }
+
+  return { setStep, setMode };
+})();
+</script>
+</body>
+</html>

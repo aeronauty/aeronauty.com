@@ -52,13 +52,13 @@ So I built Paradigm. The reframe was small in words and large in consequence.
 
 Optimise aircraft alone, you get plans that depend on infrastructure that doesn't exist. Optimise infrastructure alone, you get upgrade lists with no connection to which aircraft will benefit. Coupled, the problem becomes: given a budget, a timeline, a fleet roadmap — *which airports do you upgrade, in which order, to maximise CO2 reduction?*
 
-Which is to say: it's a problem well-suited for MILP. Mixed-integer linear programming. Decades-old, well-understood by the OR[asterisk: Operations Research] community, solvable to optimality with off-the-shelf solvers if you formulate it sensibly - these solvers were originally designed to solve things like _The Travelling Salesman Problem_<insert a link ot the wiki page for this, as an asterisk with a preview>. Binary variables for whether each airport is upgraded; binary variables for whether each route is eligible (a route is eligible only if both endpoints are upgraded); a budget cap; an objective that maximises CO2 decarbonised across all eligible routes, using actual annual per-route CO2 from real flight data, not a great-circle proxy. Sequencing makes it interesting — you upgrade in stages, each with its own budget, and once an airport is upgraded it stays upgraded — so the stages chain into one combined MILP rather than a greedy step-by-step. Greedy is the obvious wrong answer; it'll happily spend stage one on the highest-CO2 airport in isolation and miss that stage two wanted that airport's neighbour first.[^milp]
+Which is to say: it's a problem well-suited for MILP. Mixed-integer linear programming. Decades-old, well-understood by the OR[asterisk: Operations Research] community, solvable to optimality with off-the-shelf solvers if you formulate it sensibly - these solvers were originally designed to solve things like _The Travelling Salesman Problem_<insert a link ot the wiki page for this, as an asterisk with a preview>. Binary variables for whether each airport is upgraded; binary variables for whether each route is eligible (a route is eligible only if both endpoints are upgraded); a budget cap; an objective that maximises CO2 decarbonised across all eligible routes, using actual annual per-route CO2 from real flight data, not a great-circle proxy. Sequencing makes it interesting — you upgrade in stages, each with its own budget, and once an airport is upgraded it stays upgraded — so the stages chain into one combined MILP rather than a greedy step-by-step. Greedy is the obvious wrong answer; it'll happily spend stage one on the highest-CO2 airport in isolation and miss that stage two wanted that airport's neighbour first.
+
+[CALLOUT: milp-relaxation]
 
 I later than, under advisement from a specialist smarter than me[asterisk: Thanks Jeremy Harris<link to his LinkedIn>] moved to CP-SAT, which enabled a LOT more that I won't bore you with.
 
 [FIGURE: milp-equations]
-
-[VIDEO: paradigm-globe-pan]
 
 [INTERACTIVE DEMO: globe with budget K and year sliders. Shows optimal vs. greedy-by-traffic vs. greedy-myopic vs. biggest-cities. Hover for tooltips. Comparison chart below.]
 
@@ -77,8 +77,6 @@ The bit I want you to take from Paradigm isn't the equation. It's the same compl
 *These two seemingly-separate things have to be solved as one big thing, and here's how.* <turn this into a dramatic big quote>
 
 That sentence is the whole project.
-
-[^milp]: I originally wrote the endpoint constraint as `R_ij ≤ (A_i + A_j)/2`, the averaged form. Both are correct for binary variables; the paired form gives a tighter LP relaxation and the solver prunes faster. An LLM pointed that out while I was drafting this article. Standard OR practice I picked up incompletely, because I came at MILP from engineering rather than optimisation. Hub location with phasing is a standard OR formulation, decades old; DLR, MIT and NASA have published on hydrogen infrastructure rollout. Paradigm sat in a gap — coupling aircraft to network with engineering-derived costs — without inventing the technique.
 
 ## Twenty years of trying not to be the human join operation
 
@@ -143,6 +141,10 @@ The same trick lights up on a plot. A scatter chart is a projection of two colum
 That frees the user from the rectilinear constraints of pandas, polars, Excel, CSV. The original sin of computational workflows: the format you ship results in is the format you end up thinking about results in, and CSV in particular has been quietly limiting what people are willing to ask of their own data for thirty years.
 
 There's a second thing this buys you, harder to demonstrate in a screenshot but the bit users notice after a week of using it. *What changed* becomes a real question with a real answer. Two runs differ — and instead of squinting at numbers and filenames to guess why, you get *why* directly. That kind of query was technically possible before, in the same way that recovering the structure manually from a stack of CSVs is technically possible — but the cost per question was too high. Drop the cost per question and people start asking better questions, and that's most of the value.
+
+The bit that lands harder than the question, though, is the inverse: when something upstream changes, *every plot that depends on it gets flagged stale, automatically, in every place it's been used.* The structural group reinforces a wing spar; the inertia tensor moves; some short-period-frequency plot from three weeks ago, sitting in two slide decks and a memo, is now answering the wrong question. With Thread holding the connections, that's not "did anyone notice" — that's a notification, before the next review.
+
+[FIGURE: what-changed]
 
 Thread is the topology instinct given proper tooling, and structurally the same complaint as the PowerPoint deck refusal: *data has structure, and the format you're forcing it through doesn't.* The difference is twenty years of catching up. Refuse the flattening. Store the topology. Let the user query the actual shape of their work. Stop making humans re-enter structure the system should have kept.
 

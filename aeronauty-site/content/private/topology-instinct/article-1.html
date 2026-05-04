@@ -154,7 +154,7 @@
   }
   .ti-mast a { color: inherit; text-decoration: none; }
   .ti-mast a:hover { color: var(--ti-fg); }
-  .ti-mast-brand { font-weight: 600; letter-spacing: -0.01em; }
+  .ti-mast-brand { font-weight: 600; letter-spacing: 0; }
   .ti-mast-meta { font-variant-numeric: tabular-nums; }
 
   /* ---- hero ---- */
@@ -214,7 +214,7 @@
     -webkit-text-fill-color: currentColor;
     text-shadow: 0 4px 32px rgba(0,0,0,0.45);
     font-size: clamp(42px, 8.6vw, 112px);
-    letter-spacing: -0.055em;
+    letter-spacing: 0;
     line-height: 0.88;
     margin-bottom: 24px;
   }
@@ -255,7 +255,7 @@
   .ti-hero h1 {
     font-size: clamp(32px, 5vw, 56px);
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     line-height: 1.08;
     margin: 0 0 22px;
     background: linear-gradient(135deg,
@@ -267,6 +267,12 @@
     -webkit-text-fill-color: transparent;
     color: transparent;
     /* fallback for browsers without -webkit-text-fill-color */
+  }
+  .ti-hero-cinematic h1 {
+    color: #ffffff;
+    background: none;
+    -webkit-text-fill-color: #ffffff;
+    text-shadow: 0 4px 32px rgba(0,0,0,0.45);
   }
   @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
     .ti-hero h1 { color: var(--ti-fg); background: none; -webkit-text-fill-color: var(--ti-fg); }
@@ -337,7 +343,7 @@
     font-weight: 600;
     margin: 32px 0 8px;
     color: var(--ti-fg);
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
   }
   .ti-prose p {
     margin: 0 0 1.15em;
@@ -470,6 +476,51 @@
      right rather than centred. CSS-only — uses a class the JS can toggle if
      needed; for now, default centred positioning is fine for narrow column. */
 
+  /* ---- paragraph-level callouts ---- */
+  .ti-callout {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+    margin: 22px 0 28px;
+    padding: 15px 17px 15px 14px;
+    border: 1px solid var(--ti-border);
+    border-left: 3px solid var(--ti-accent);
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--ti-accent) 9%, transparent), transparent 48%),
+      var(--ti-surface);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
+  }
+  .ti-callout-mark {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid color-mix(in srgb, var(--ti-accent) 54%, var(--ti-border));
+    border-radius: 999px;
+    color: var(--ti-accent);
+    background: color-mix(in srgb, var(--ti-accent) 12%, transparent);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .ti-callout-body {
+    min-width: 0;
+    color: var(--ti-fg-dim);
+    font-size: 15px;
+    line-height: 1.62;
+  }
+  .ti-callout-body p {
+    margin: 0;
+  }
+  .ti-callout-body strong {
+    color: var(--ti-fg);
+    font-weight: 650;
+  }
+  .ti-callout-body code {
+    font-size: 0.9em;
+  }
+
   /* ---- eyebrow tags between sections ---- */
   .ti-eyebrow {
     font-size: 11px;
@@ -513,9 +564,9 @@
     transition: opacity 520ms ease, transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
   }
   html.ti-js .ti-reveal {
-    opacity: 0.18;
-    transform: translateY(42px) scale(0.985);
-    filter: saturate(0.72);
+    opacity: 0.66;
+    transform: translateY(28px) scale(0.992);
+    filter: saturate(0.86);
   }
   html.ti-js .ti-reveal.ti-inview {
     opacity: 1;
@@ -523,8 +574,22 @@
     filter: saturate(1);
   }
   html.ti-js .ti-reveal.ti-dimmed {
-    opacity: 0.30;
-    transform: translateY(-14px) scale(0.992);
+    opacity: 0.72;
+    transform: translateY(-10px) scale(0.996);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal {
+    transform: translateX(-50%) translateY(28px) scale(0.992);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal.ti-inview {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+    transform: translateX(-50%) translateY(-10px) scale(0.996);
+  }
+  html.ti-js .ti-figure-milp.ti-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
   @media (max-width: 480px) {
     .ti-figure { padding: 12px; margin: 28px 0; }
@@ -578,8 +643,8 @@
   @media (min-width: 1000px) {
     .ti-demo {
       width: min(100vw - 32px, 1320px);
-      margin-left: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
-      margin-right: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
+      margin-left: calc(50% - min(50vw - 16px, 660px));
+      margin-right: calc(50% - min(50vw - 16px, 660px));
     }
   }
   .ti-demo .tg-root { padding: 0; }
@@ -650,19 +715,21 @@
     width: min(680px, calc(100% - 32px));
     margin: 14px auto 0;
   }
-  @media (min-width: 980px) {
-    .ti-figure-fullbleed {
-      position: sticky;
-      top: 20px;
-      z-index: 1;
-    }
-  }
   @media (max-width: 720px) {
     .ti-figure-fullbleed {
       width: 100%;
       margin: 42px 0;
       transform: none;
       border-radius: 12px;
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal {
+      transform: translateY(24px) scale(0.992);
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal.ti-inview {
+      transform: translateY(0) scale(1);
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+      transform: translateY(-8px) scale(0.996);
     }
     .ti-figure-fullbleed .ti-video-wrap,
     .ti-figure-fullbleed img { border-radius: 12px; }
@@ -764,20 +831,20 @@
 <style>
   /* ---------- design tokens (CSS variables, swappable at integration time) ---------- */
   :root {
-    --tg-bg:           #0a0e1a;
-    --tg-surface:      #121826;
-    --tg-surface-2:    #1a2233;
-    --tg-border:       #2a3447;
-    --tg-text:         #e6edf6;
-    --tg-text-dim:     #93a0b6;
-    --tg-text-faint:   #5c6a82;
-    --tg-accent:       #22d3ee;     /* cyan-400 — upgraded airports + selected bar */
-    --tg-accent-soft:  #22d3ee33;
+    --tg-bg:           #f8fafc;
+    --tg-surface:      #ffffff;
+    --tg-surface-2:    #eef6fb;
+    --tg-border:       #d7e1ec;
+    --tg-text:         #1f2937;
+    --tg-text-dim:     #66758a;
+    --tg-text-faint:   #9aa8ba;
+    --tg-accent:       #0891b2;     /* cyan — upgraded airports + selected bar */
+    --tg-accent-soft:  #0891b226;
     --tg-new:          #f8fafc;
-    --tg-new-soft:     #f8fafc55;
-    --tg-arc:          #22d3ee;
-    --tg-arc-faint:    #93a0b633;
-    --tg-strat-optimal: #22d3ee;
+    --tg-new-soft:     #0f172a33;
+    --tg-arc:          #0891b2;
+    --tg-arc-faint:    #64748b33;
+    --tg-strat-optimal: #0891b2;
     --tg-strat-traffic: #f59e0b;    /* amber */
     --tg-strat-myopic:  #a78bfa;    /* violet */
     --tg-strat-cities:  #f472b6;    /* pink */
@@ -793,7 +860,7 @@
   .tg-title {
     font-size: 20px;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     margin: 0 0 4px;
   }
   .tg-subtitle {
@@ -808,7 +875,10 @@
     border: 1px solid var(--tg-border);
     border-radius: 12px;
     overflow: hidden;
-    background: radial-gradient(ellipse at top, #0f1626 0%, var(--tg-bg) 70%);
+    background:
+      radial-gradient(circle at 36% 26%, rgba(125,211,252,0.24), transparent 34%),
+      linear-gradient(180deg, #eef8ff 0%, #f8fafc 62%, #ffffff 100%);
+    box-shadow: 0 20px 70px rgba(31,41,55,0.10);
   }
 
   .tg-globe {
@@ -823,16 +893,16 @@
     height: 70vh;
     min-height: 480px;
     background:
-      linear-gradient(rgba(147,160,182,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(147,160,182,0.04) 1px, transparent 1px),
-      radial-gradient(ellipse at top, #111b2d 0%, var(--tg-bg) 72%);
+      linear-gradient(rgba(100,116,139,0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100,116,139,0.10) 1px, transparent 1px),
+      radial-gradient(ellipse at top, #e9f6ff 0%, #ffffff 72%);
     background-size: 36px 36px, 36px 36px, auto;
   }
   .tg-projection.tg-active { display: block; }
   .tg-globe.tg-hidden-view { display: none; }
   .tg-map-svg { display: block; width: 100%; height: 100%; }
-  .tg-map-frame { fill: rgba(10,14,26,0.35); stroke: var(--tg-border); stroke-width: 1; }
-  .tg-map-graticule { fill: none; stroke: rgba(147,160,182,0.18); stroke-width: 0.6; }
+  .tg-map-frame { fill: rgba(226,240,249,0.64); stroke: var(--tg-border); stroke-width: 1; }
+  .tg-map-graticule { fill: none; stroke: rgba(100,116,139,0.24); stroke-width: 0.6; }
   .tg-map-route {
     fill: none;
     stroke-linecap: round;
@@ -849,7 +919,7 @@
   }
   .tg-map-point {
     fill: var(--tg-accent);
-    stroke: rgba(10,14,26,0.92);
+    stroke: rgba(255,255,255,0.92);
     stroke-width: 1;
     opacity: 0.86;
     transition: r 220ms ease, fill 220ms ease, opacity 220ms ease;
@@ -885,7 +955,7 @@
     display: flex; align-items: center; justify-content: center;
     color: var(--tg-text-dim); font-size: 14px;
     pointer-events: none;
-    background: var(--tg-bg);
+    background: rgba(248,250,252,0.90);
     z-index: 5;
   }
   .tg-loading.tg-hidden { display: none; }
@@ -895,14 +965,15 @@
     position: absolute;
     top: 12px; right: 12px;
     width: 320px;
-    background: rgba(18,24,38,0.92);
+    background: rgba(255,255,255,0.88);
     border: 1px solid var(--tg-border);
     border-radius: 10px;
     padding: 14px 14px 12px;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     font-size: 13px;
     z-index: 4;
+    box-shadow: 0 14px 36px rgba(31,41,55,0.12);
   }
   @media (max-width: 720px) {
     .tg-controls {
@@ -933,7 +1004,7 @@
     padding: 3px;
     border: 1px solid var(--tg-border);
     border-radius: 8px;
-    background: rgba(10,14,26,0.62);
+    background: rgba(226,232,240,0.52);
   }
   .tg-view-tab {
     border: 0;
@@ -946,27 +1017,27 @@
     cursor: pointer;
   }
   .tg-view-tab[aria-selected="true"] {
-    color: #06111c;
+    color: #ffffff;
     background: var(--tg-accent);
   }
 
   .tg-radio-list { display: grid; grid-template-columns: 1fr; gap: 6px; }
   .tg-radio-list label {
-    display: flex; align-items: center; gap: 6px;
-    min-height: 34px;
-    font-size: 13px;
+    display: flex; align-items: center; gap: 8px;
+    min-height: 38px;
+    font-size: 14.5px;
     font-weight: 650;
     color: var(--tg-text);
     cursor: pointer;
-    padding: 7px 8px;
-    border: 1px solid rgba(147,160,182,0.24);
+    padding: 8px 10px;
+    border: 1px solid rgba(148,163,184,0.42);
     border-radius: 8px;
-    background: rgba(10,14,26,0.42);
+    background: rgba(255,255,255,0.72);
   }
   .tg-radio-list label:hover { background: var(--tg-surface-2); border-color: var(--tg-text-dim); }
   .tg-radio-list label:has(input:checked) {
     border-color: var(--tg-accent);
-    background: rgba(34,211,238,0.14);
+    background: rgba(8,145,178,0.10);
     box-shadow: inset 3px 0 0 var(--tg-accent);
   }
   .tg-radio-list input[type=radio] { accent-color: var(--tg-accent); }
@@ -1023,6 +1094,7 @@
   }
   .tg-legend-dot.tg-new-dot {
     background: var(--tg-new);
+    border: 1px solid rgba(15,23,42,0.24);
     box-shadow: 0 0 8px var(--tg-new-soft);
   }
 
@@ -1049,9 +1121,9 @@
     gap: 10px;
     align-items: center;
     padding: 10px 12px;
-    border: 1px solid rgba(248,250,252,0.22);
+    border: 1px solid rgba(148,163,184,0.44);
     border-radius: 10px;
-    background: rgba(10,14,26,0.78);
+    background: rgba(255,255,255,0.88);
     color: var(--tg-text);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -1059,7 +1131,7 @@
     pointer-events: none;
   }
   .tg-delta[hidden] { display: none; }
-  .tg-delta strong { color: var(--tg-new); font-variant-numeric: tabular-nums; }
+  .tg-delta strong { color: var(--tg-accent); font-variant-numeric: tabular-nums; }
   .tg-delta span { color: var(--tg-text-dim); white-space: nowrap; }
   @media (max-width: 720px) {
     .tg-delta {
@@ -1074,9 +1146,9 @@
     }
   }
 
-  /* Globe.gl tooltip override (default is too bright) */
+  /* Globe.gl tooltip override */
   .tg-tooltip {
-    background: rgba(10,14,26,0.95);
+    background: rgba(255,255,255,0.96);
     border: 1px solid var(--tg-border);
     border-radius: 6px;
     padding: 6px 8px;
@@ -3137,6 +3209,574 @@ main { max-width: 1200px; margin: 0 auto; }
   .atp-qr.atp-qr-scanning .atp-qr-scan { animation: none; }
 }
 </style>
+<style>
+@media (prefers-color-scheme: light) {
+  body { background: #fafbfd; color: #1f2328; }
+}
+main { max-width: 1200px; margin: 0 auto; }
+
+/* ===========================================================
+   wc- = what-changed, namespaced.
+   =========================================================== */
+.wc-figure {
+  width: 100%;
+  --wc-fg:        #e6edf6;
+  --wc-fg-dim:    #93a0b6;
+  --wc-fg-faint:  #5c6a82;
+  --wc-border:    #2a3447;
+  --wc-rule:      #2a3447;
+  --wc-surface:   #121826;
+  --wc-surface-2: #1a2233;
+  --wc-cyan:      #22d3ee;
+  --wc-amber:     #f59e0b;
+  --wc-red:       #ef4444;
+  --wc-green:     #34d399;
+  --wc-purple:    #a855f7;
+  color: var(--wc-fg);
+}
+@media (prefers-color-scheme: light) {
+  .wc-figure {
+    --wc-fg:        #1f2328;
+    --wc-fg-dim:    #4a5060;
+    --wc-fg-faint:  #7a8090;
+    --wc-border:    #d8dde6;
+    --wc-rule:      #d8dde6;
+    --wc-surface:   #ffffff;
+    --wc-surface-2: #f3f5f8;
+  }
+}
+
+.wc-frame {
+  border: 1px solid var(--wc-border);
+  border-radius: 14px;
+  background: var(--wc-surface);
+  padding: 22px 22px 18px;
+}
+
+/* ---- header ---- */
+.wc-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wc-cyan);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.wc-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--wc-fg);
+  letter-spacing: -0.005em;
+}
+.wc-subtitle {
+  font-size: 14px;
+  color: var(--wc-fg-dim);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+
+/* ---- stage + step bar ---- */
+.wc-step-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  flex-wrap: wrap;
+}
+.wc-step-btn {
+  appearance: none;
+  border: 1px solid var(--wc-border);
+  background: var(--wc-surface-2);
+  color: var(--wc-fg-dim);
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.wc-step-btn:hover { color: var(--wc-fg); border-color: var(--wc-cyan); }
+.wc-step-btn.wc-step-active {
+  background: color-mix(in srgb, var(--wc-cyan) 18%, var(--wc-surface-2));
+  border-color: var(--wc-cyan);
+  color: var(--wc-cyan);
+  font-weight: 600;
+}
+.wc-step-progress {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--wc-fg-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.wc-pp-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--wc-border);
+  color: var(--wc-fg-dim);
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.wc-pp-btn:hover { color: var(--wc-fg); border-color: var(--wc-cyan); }
+
+.wc-stage {
+  position: relative;
+  border: 1px solid var(--wc-border);
+  border-radius: 12px;
+  background: var(--wc-surface-2);
+  min-height: 460px;
+  overflow: hidden;
+}
+.wc-state {
+  position: absolute;
+  inset: 0;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 360ms ease, transform 360ms ease;
+}
+.wc-state.wc-state-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+@media (max-width: 760px) {
+  .wc-state { grid-template-columns: 1fr; padding: 14px; }
+}
+
+/* ---- the chart (states 1, 2, 6) ---- */
+.wc-chart-host {
+  position: relative;
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  border-radius: 10px;
+  padding: 14px 16px 12px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wc-chart-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--wc-fg);
+  font-weight: 600;
+}
+.wc-chart-source {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--wc-fg-faint);
+  letter-spacing: 0.04em;
+}
+.wc-chart-svg { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; }
+.wc-chart-svg .wc-axis { stroke: var(--wc-fg-faint); stroke-width: 1; }
+.wc-chart-svg .wc-grid { stroke: var(--wc-fg-faint); stroke-width: 0.5; opacity: 0.18; stroke-dasharray: 2 3; }
+.wc-chart-svg .wc-tick { fill: var(--wc-fg-dim); font-size: 10.5px; font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+.wc-chart-svg .wc-axis-label { fill: var(--wc-fg-dim); font-size: 11.5px; }
+.wc-chart-svg path.wc-curve { fill: none; stroke-width: 2; transition: d 600ms cubic-bezier(0.4, 0.0, 0.2, 1); }
+.wc-chart-svg path.wc-curve.wc-curve-a { stroke: var(--wc-cyan); }
+.wc-chart-svg path.wc-curve.wc-curve-b { stroke: var(--wc-amber); }
+.wc-chart-svg circle.wc-pt { stroke: var(--wc-surface); stroke-width: 1.5; transition: cx 600ms cubic-bezier(0.4, 0.0, 0.2, 1), cy 600ms cubic-bezier(0.4, 0.0, 0.2, 1); }
+.wc-chart-svg circle.wc-pt-a { fill: var(--wc-cyan); }
+.wc-chart-svg circle.wc-pt-b { fill: var(--wc-amber); }
+
+.wc-chart-stamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--wc-fg-faint);
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-chart-stamp .wc-stamp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--wc-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wc-green) 15%, transparent);
+}
+.wc-chart-stamp.wc-stamp-stale .wc-stamp-dot {
+  background: var(--wc-red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wc-red) 15%, transparent);
+}
+.wc-chart-legend {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 11.5px;
+  color: var(--wc-fg-dim);
+  margin-top: 6px;
+}
+.wc-chart-legend span.wc-key {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ---- side card (right column of each state) ---- */
+.wc-side {
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+}
+.wc-side-eyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wc-cyan);
+  font-weight: 600;
+  margin: 0;
+}
+.wc-side-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--wc-fg);
+}
+.wc-side-body { font-size: 13px; line-height: 1.5; color: var(--wc-fg-dim); margin: 0; }
+.wc-side-body strong { color: var(--wc-fg); font-weight: 600; }
+.wc-side-body code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: var(--wc-amber);
+}
+
+/* ---- lineage tree (state 2) ---- */
+.wc-lineage-svg { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; }
+.wc-lineage-svg .wc-l-node {
+  fill: var(--wc-surface-2);
+  stroke: var(--wc-cyan);
+  stroke-width: 1.2;
+  rx: 6;
+  ry: 6;
+}
+.wc-lineage-svg .wc-l-node.wc-l-script {
+  stroke: var(--wc-purple);
+}
+.wc-lineage-svg .wc-l-node.wc-l-source {
+  stroke: var(--wc-amber);
+  stroke-dasharray: 4 3;
+}
+.wc-lineage-svg .wc-l-node-label {
+  fill: var(--wc-fg);
+  font-size: 11.5px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-lineage-svg .wc-l-node-sub {
+  fill: var(--wc-fg-faint);
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-lineage-svg .wc-l-edge {
+  stroke: var(--wc-fg-faint);
+  stroke-width: 1.4;
+  fill: none;
+  opacity: 0.6;
+}
+.wc-lineage-svg .wc-l-edge.wc-l-edge-pulse {
+  stroke: var(--wc-amber);
+  stroke-width: 2;
+  opacity: 1;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--wc-amber) 60%, transparent));
+}
+
+/* ---- inertia tensor (state 3) ---- */
+.wc-inertia {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  background: var(--wc-rule);
+  border: 1px solid var(--wc-border);
+  border-radius: 8px;
+  padding: 4px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-inertia-cell {
+  background: var(--wc-surface-2);
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--wc-fg);
+  border-radius: 4px;
+  transition: background 240ms ease, color 240ms ease;
+}
+.wc-inertia-cell.wc-inertia-changed {
+  background: color-mix(in srgb, var(--wc-amber) 32%, var(--wc-surface-2));
+  color: var(--wc-amber);
+  font-weight: 700;
+}
+.wc-cg-shift {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--wc-fg-dim);
+  margin-top: 6px;
+}
+.wc-cg-shift strong { color: var(--wc-amber); font-weight: 700; }
+
+.wc-commit-card {
+  background: var(--wc-surface-2);
+  border: 1px solid var(--wc-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.wc-commit-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--wc-fg-dim);
+  margin-bottom: 4px;
+}
+.wc-commit-author {
+  background: var(--wc-purple);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.wc-commit-msg { color: var(--wc-fg); font-weight: 500; }
+.wc-commit-hash {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--wc-fg-faint);
+  font-size: 11px;
+}
+
+/* ---- notification (state 4) ---- */
+.wc-notif {
+  background: color-mix(in srgb, var(--wc-amber) 8%, var(--wc-surface));
+  border: 1px solid color-mix(in srgb, var(--wc-amber) 50%, var(--wc-border));
+  border-left: 3px solid var(--wc-amber);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--wc-fg);
+}
+.wc-notif-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.wc-notif-badge {
+  background: var(--wc-amber);
+  color: #1a1100;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.wc-notif-body {
+  color: var(--wc-fg-dim);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.wc-notif-body code { color: var(--wc-amber); }
+.wc-notif-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.wc-notif-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--wc-surface-2);
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--wc-fg);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.wc-notif-list .wc-stale-tag {
+  background: var(--wc-red);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-left: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---- Slack DM (state 5) ---- */
+.wc-slack {
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+.wc-slack-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--wc-rule);
+  padding-bottom: 8px;
+  font-size: 11.5px;
+  color: var(--wc-fg-faint);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.wc-slack-head::before {
+  content: "#";
+  font-weight: 700;
+  color: var(--wc-fg);
+  letter-spacing: 0;
+}
+.wc-slack-msg { display: flex; gap: 10px; align-items: start; }
+.wc-slack-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  flex: 0 0 auto;
+}
+.wc-slack-avatar-bot { background: var(--wc-cyan); color: #062a31; }
+.wc-slack-avatar-aero { background: var(--wc-amber); color: #2a1900; }
+.wc-slack-body { flex: 1; min-width: 0; }
+.wc-slack-name {
+  font-weight: 700;
+  color: var(--wc-fg);
+  font-size: 12.5px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.wc-slack-time { color: var(--wc-fg-faint); font-weight: 400; font-size: 10.5px; }
+.wc-slack-bot-tag {
+  background: color-mix(in srgb, var(--wc-cyan) 25%, transparent);
+  color: var(--wc-cyan);
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.wc-slack-text { font-size: 12.5px; color: var(--wc-fg); margin-top: 2px; line-height: 1.45; }
+.wc-slack-text code { color: var(--wc-amber); }
+.wc-slack-actions { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; }
+.wc-slack-action {
+  appearance: none;
+  border: 1px solid var(--wc-border);
+  background: var(--wc-surface-2);
+  color: var(--wc-fg);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.wc-slack-action.wc-slack-action-primary {
+  background: var(--wc-cyan);
+  color: #062a31;
+  border-color: var(--wc-cyan);
+  font-weight: 600;
+}
+
+/* ---- toggle (state 6) ---- */
+.wc-toggle {
+  display: inline-flex;
+  border: 1px solid var(--wc-border);
+  background: var(--wc-surface-2);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 0;
+  margin-bottom: 8px;
+}
+.wc-toggle-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--wc-fg-dim);
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+}
+.wc-toggle-btn.wc-toggle-active {
+  background: var(--wc-cyan);
+  color: #062a31;
+}
+
+.wc-state-caption {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 14px;
+  font-size: 12.5px;
+  color: var(--wc-fg-dim);
+  font-style: italic;
+  pointer-events: none;
+  text-align: left;
+  line-height: 1.5;
+}
+.wc-state-caption strong { color: var(--wc-fg); font-weight: 600; font-style: normal; }
+
+.wc-caption {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--wc-fg-dim);
+  border-top: 1px solid var(--wc-rule);
+  padding-top: 12px;
+  line-height: 1.55;
+}
+.wc-caption strong { color: var(--wc-fg); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wc-state, .wc-chart-svg circle.wc-pt, .wc-chart-svg path.wc-curve {
+    transition: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .wc-state-caption { position: static; padding: 10px 4px 0; }
+  .wc-stage { min-height: 0; }
+  .wc-state { position: relative; padding: 14px; }
+  .wc-state:not(.wc-state-active) { display: none; }
+}
+</style>
 </head>
 <body>
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
@@ -3149,9 +3789,17 @@ main { max-width: 1200px; margin: 0 auto; }
     <span class="ti-mast-meta"><time datetime="2026-05">May 2026</time> &middot; ~25 min read</span>
   </header>
 
-  <section class="ti-hero ti-narrow" aria-labelledby="ti-title">
-    <p class="ti-hero-eyebrow">Aeronauty &middot; Harry Smith</p>
-    <h1 id="ti-title">I Don't Like Data Entry</h1>
+  <section class="ti-hero ti-hero-cinematic" aria-labelledby="ti-title">
+    <div class="ti-hero-media" aria-hidden="true">
+      <video src="figures/paradigm-globe-pan.mp4" autoplay muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="ti-hero-shade" aria-hidden="true"></div>
+    <div class="ti-hero-copy">
+      <p class="ti-hero-eyebrow">Aeronauty &middot; Harry Smith</p>
+      <h1 id="ti-title">I Don't Like Data Entry</h1>
+      <p class="ti-hero-kicker">A story about refusing to flatten engineering work into screenshots, spreadsheets, and human memory.</p>
+    </div>
+    <div class="ti-scroll-cue" aria-hidden="true">Scroll</div>
   </section>
 
   <main id="ti-main" class="ti-prose ti-narrow" role="main">
@@ -3194,7 +3842,7 @@ main { max-width: 1200px; margin: 0 auto; }
     </p>
   </div>
 </aside>
-<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-plotly-vs-powerpoint-morph-figcap">
+<figure class="ti-figure ti-figure-video ti-figure-fullbleed" aria-labelledby="ti-video-plotly-vs-powerpoint-morph-figcap">
   <div class="ti-video-wrap">
     <video src="figures/plotly-vs-powerpoint-morph.mp4" autoplay muted loop playsinline preload="metadata" aria-label="An old-timey photographer with a magnesium flash captures a complex evolving 3D wireframe of meshes, wind-tunnel readings, post-process versions and design revisions; the printed photo lands on a table while the lattice keeps changing behind it"></video>
   </div>
@@ -3211,7 +3859,13 @@ main { max-width: 1200px; margin: 0 auto; }
 <p>Stop optimising the fleet in isolation. Optimise the network the fleet flies on, and the fleet that network can support, jointly.</p>
 </blockquote>
 <p>Optimise aircraft alone, you get plans that depend on infrastructure that doesn&rsquo;t exist. Optimise infrastructure alone, you get upgrade lists with no connection to which aircraft will benefit. Coupled, the problem becomes: given a budget, a timeline, a fleet roadmap — <em>which airports do you upgrade, in which order, to maximise CO2 reduction?</em></p>
-<p>Which is to say: it&rsquo;s a problem well-suited for MILP. Mixed-integer linear programming. Decades-old, well-understood by the OR<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-12">*</sup><span class="ti-aside-content" id="ti-aside-12" role="tooltip">Operations Research</span></span> community, solvable to optimality with off-the-shelf solvers if you formulate it sensibly - these solvers were originally designed to solve things like <em>The Travelling Salesman Problem</em><insert a link ot the wiki page for this, as an asterisk with a preview>. Binary variables for whether each airport is upgraded; binary variables for whether each route is eligible (a route is eligible only if both endpoints are upgraded); a budget cap; an objective that maximises CO2 decarbonised across all eligible routes, using actual annual per-route CO2 from real flight data, not a great-circle proxy. Sequencing makes it interesting — you upgrade in stages, each with its own budget, and once an airport is upgraded it stays upgraded — so the stages chain into one combined MILP rather than a greedy step-by-step. Greedy is the obvious wrong answer; it&rsquo;ll happily spend stage one on the highest-CO2 airport in isolation and miss that stage two wanted that airport&rsquo;s neighbour first.<sup id="fnref:milp"><a class="footnote-ref" href="#fn:milp">1</a></sup></p>
+<p>Which is to say: it&rsquo;s a problem well-suited for MILP. Mixed-integer linear programming. Decades-old, well-understood by the OR<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-12">*</sup><span class="ti-aside-content" id="ti-aside-12" role="tooltip">Operations Research</span></span> community, solvable to optimality with off-the-shelf solvers if you formulate it sensibly - these solvers were originally designed to solve things like <em>The Travelling Salesman Problem</em><insert a link ot the wiki page for this, as an asterisk with a preview>. Binary variables for whether each airport is upgraded; binary variables for whether each route is eligible (a route is eligible only if both endpoints are upgraded); a budget cap; an objective that maximises CO2 decarbonised across all eligible routes, using actual annual per-route CO2 from real flight data, not a great-circle proxy. Sequencing makes it interesting — you upgrade in stages, each with its own budget, and once an airport is upgraded it stays upgraded — so the stages chain into one combined MILP rather than a greedy step-by-step. Greedy is the obvious wrong answer; it&rsquo;ll happily spend stage one on the highest-CO2 airport in isolation and miss that stage two wanted that airport&rsquo;s neighbour first.</p>
+<aside class="ti-callout ti-callout-asterisk" aria-label="MILP formulation aside">
+  <div class="ti-callout-mark" aria-hidden="true">*</div>
+  <div class="ti-callout-body">
+    <p><strong>Formulation note.</strong> I originally wrote the endpoint constraint as <code>R_ij ≤ (A_i + A_j)/2</code>, the averaged form. Both are correct for binary variables; the paired form gives a tighter LP relaxation and the solver prunes faster. An LLM pointed that out while I was drafting this article. Standard OR practice I picked up incompletely, because I came at MILP from engineering rather than optimisation. Hub location with phasing is a standard OR formulation, decades old; DLR, MIT and NASA have published on hydrogen infrastructure rollout. Paradigm sat in a gap — coupling aircraft to network with engineering-derived costs — without inventing the technique.</p>
+  </div>
+</aside>
 <p>I later than, under advisement from a specialist smarter than me<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-13">*</sup><span class="ti-aside-content" id="ti-aside-13" role="tooltip">Thanks Jeremy Harris<link to his LinkedIn></span></span> moved to CP-SAT, which enabled a LOT more that I won&rsquo;t bore you with.</p>
 <figure class="ti-figure ti-figure-milp" aria-labelledby="ti-milp-figcap">
   <div class="ti-milp-eq">
@@ -3225,12 +3879,6 @@ $$
 $$
   </div>
   <figcaption id="ti-milp-figcap" class="ti-figcap">The core MILP. Each <em>A<sub>i</sub></em> is a binary upgrade decision per airport; each <em>R<sub>ij</sub></em> is a binary route eligibility, gated by both endpoints being upgraded; <em>K</em> is the airport budget; the objective is route-weighted CO<sub>2</sub>.</figcaption>
-</figure>
-<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-paradigm-globe-pan-figcap">
-  <div class="ti-video-wrap">
-    <video src="figures/paradigm-globe-pan.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Slow cinematic pan over Earth from low orbit, with great-circle arcs drawing in across continents"></video>
-  </div>
-  <figcaption id="ti-video-paradigm-globe-pan-figcap" class="ti-figcap">The network the fleet flies on, before the demo lets you play with it.</figcaption>
 </figure>
 <aside class="ti-demo" aria-labelledby="ti-demo-title">
 <div class="tg-root">
@@ -3348,7 +3996,7 @@ $$
 </figure>
 <p>I&rsquo;m spelling it out at all is that I don&rsquo;t want anyone reading the rest of this post to think I&rsquo;m claiming exceptionalism. My understanding of infrastructure caught up to my instinct slowly, and I had many wrong steps along the way. The instinct was visible all along; the supporting tooling was the bit that took the years.</p>
 <p>If I had to put the through-line on a t-shirt: I have spent over a decade trying not to become the join<make join a true-type font so it looks like code>. The join between two formats. The join between a database and a paper form. The join between a fleet model and an airport model. The join between an analysis tool and a slide deck. Every time the system can&rsquo;t connect two things itself, a person has to. That person is an engineer who usually has to do this in lieu of their actual job, and it&rsquo;s the mundane bullshit that you&rsquo;re not taught in an actual engineering degree<span class="ti-aside"><sup class="ti-aside-mark" tabindex="0" role="button" aria-label="Aside" aria-describedby="ti-aside-21">*</sup><span class="ti-aside-content" id="ti-aside-21" role="tooltip">Case-in-point, my most watched YouTube video is &ldquo;How to loop over files in a directory using Python&rdquo;<Put this link along with the quote: https://www.youtube.com/watch?v=uhz_RKgCqe4></span></span>.</p>
-<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-post-it-onslaught-figcap">
+<figure class="ti-figure ti-figure-video ti-figure-fullbleed" aria-labelledby="ti-video-post-it-onslaught-figcap">
   <div class="ti-video-wrap">
     <video src="figures/post-it-onslaught.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Top-down stop-motion of a wooden desk being buried under an absurd flurry of yellow Post-it notes, with one cyan-teal note highlighted at the end"></video>
   </div>
@@ -3808,8 +4456,236 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 </aside>
 <p>That frees the user from the rectilinear constraints of pandas, polars, Excel, CSV. The original sin of computational workflows: the format you ship results in is the format you end up thinking about results in, and CSV in particular has been quietly limiting what people are willing to ask of their own data for thirty years.</p>
 <p>There&rsquo;s a second thing this buys you, harder to demonstrate in a screenshot but the bit users notice after a week of using it. <em>What changed</em> becomes a real question with a real answer. Two runs differ — and instead of squinting at numbers and filenames to guess why, you get <em>why</em> directly. That kind of query was technically possible before, in the same way that recovering the structure manually from a stack of CSVs is technically possible — but the cost per question was too high. Drop the cost per question and people start asking better questions, and that&rsquo;s most of the value.</p>
+<p>The bit that lands harder than the question, though, is the inverse: when something upstream changes, <em>every plot that depends on it gets flagged stale, automatically, in every place it&rsquo;s been used.</em> The structural group reinforces a wing spar; the inertia tensor moves; some short-period-frequency plot from three weeks ago, sitting in two slide decks and a memo, is now answering the wrong question. With Thread holding the connections, that&rsquo;s not &ldquo;did anyone notice&rdquo; — that&rsquo;s a notification, before the next review.</p>
+<aside class="ti-what-changed" aria-label="Walk through a real change cascade — a CG shift triggers stale flags on three downstream artefacts and pings the plot owners">
+<div class="wc-figure" id="wc-figure">
+    <div class="wc-frame">
+
+      <p class="wc-eyebrow">What changed?</p>
+      <h3 class="wc-title">A reinforced wing spar shifts the CG. Five plots go stale at once. Thread spots it.</h3>
+      <p class="wc-subtitle">Real workflow, mocked: a short-period pitching-frequency comparison for two tail sizes, used in three slide decks. Then structures commit a spar reinforcement, and the inertia tensor moves.</p>
+
+      <!-- Step bar -->
+      <div class="wc-step-bar" id="wc-step-bar">
+        <button class="wc-step-btn" data-step="0">1 · ship the plot</button>
+        <button class="wc-step-btn" data-step="1">2 · lineage</button>
+        <button class="wc-step-btn" data-step="2">3 · spar reinforced</button>
+        <button class="wc-step-btn" data-step="3">4 · stale flagged</button>
+        <button class="wc-step-btn" data-step="4">5 · owners pinged</button>
+        <button class="wc-step-btn" data-step="5">6 · embedded view catches up</button>
+        <span class="wc-step-progress">
+          <button class="wc-pp-btn" id="wc-pp-btn" aria-label="Pause / play auto-advance">
+            <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true" id="wc-pp-icon">
+              <rect x="2.5" y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/>
+              <rect x="7"   y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/>
+            </svg>
+          </button>
+        </span>
+      </div>
+
+      <!-- Stage -->
+      <div class="wc-stage" id="wc-stage">
+
+        <!-- ===== State 0: ship the plot ===== -->
+        <section class="wc-state wc-state-active" data-step="0">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>Short-period pitching freq · two tail sizes</span>
+              <span class="wc-chart-source">fly_qual.py · run 2026-04-12</span>
+            </div>
+            <svg class="wc-chart-svg" id="wc-chart-svg-0" viewBox="0 0 480 300" role="img"
+                 aria-label="Line chart of short-period pitching frequency versus airspeed for two tail sizes"></svg>
+            <div class="wc-chart-legend">
+              <span><span class="wc-key" style="background:var(--wc-cyan)"></span>tail A (small)</span>
+              <span><span class="wc-key" style="background:var(--wc-amber)"></span>tail B (large)</span>
+            </div>
+            <div class="wc-chart-stamp"><span class="wc-stamp-dot"></span> rendered 2026-04-12 14:23 · embedded in 3 decks</div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">As shipped</p>
+            <h4 class="wc-side-title">Aero closes out the plot</h4>
+            <p class="wc-side-body">Two tail-size sweeps. The plot lands in <strong>Q4 design review · slide 14</strong>, <strong>cert handover · slide 7</strong>, and the <strong>wing-redesign memo</strong>.</p>
+            <p class="wc-side-body" style="font-size:12px;">Aero moves on. The deck gets circulated. Looks fine.</p>
+          </aside>
+          <p class="wc-state-caption">A normal Friday. <strong>Three downstream artefacts now reference one plot.</strong></p>
+        </section>
+
+        <!-- ===== State 1: Thread knows the lineage ===== -->
+        <section class="wc-state" data-step="1">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>Lineage</span>
+              <span class="wc-chart-source">thread://airfoil-x57/plots/sp-freq-tails</span>
+            </div>
+            <svg class="wc-lineage-svg" id="wc-lineage-svg" viewBox="0 0 480 290" role="img"
+                 aria-label="Lineage tree showing the plot, the script, and its data sources"></svg>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Thread knows</p>
+            <h4 class="wc-side-title">Plot ← script ← (CFD + inertia)</h4>
+            <p class="wc-side-body">The plot is a derived view of <code>fly_qual.py</code>. The script reads <code>cfd_results/x57.h5</code> and <code>inertia_tensor.json</code>. Each link is an edge Thread keeps live.</p>
+            <p class="wc-side-body" style="font-size:12px;">If any of those upstream things moves, every plot downstream of it can be told.</p>
+          </aside>
+          <p class="wc-state-caption">The plot doesn't <em>contain</em> the data. It points at it.</p>
+        </section>
+
+        <!-- ===== State 2: structural commits a spar reinforce ===== -->
+        <section class="wc-state" data-step="2">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>inertia_tensor.json</span>
+              <span class="wc-chart-source">structures · commit · 22 minutes ago</span>
+            </div>
+            <div class="wc-inertia" id="wc-inertia">
+              <!-- 9 cells; values updated by JS as the commit lands -->
+            </div>
+            <div class="wc-cg-shift" id="wc-cg-shift">
+              <span>CG:</span>
+              <span id="wc-cg-old"  style="color:var(--wc-fg-faint);text-decoration:line-through;">x = 4.218 m</span>
+              <span style="color:var(--wc-fg-faint);">→</span>
+              <strong id="wc-cg-new">x = 4.262 m</strong>
+              <span style="color:var(--wc-amber);">(+44 mm aft)</span>
+            </div>
+            <div class="wc-commit-card">
+              <div class="wc-commit-meta">
+                <span class="wc-commit-author">structures</span>
+                <span>updated <code style="color:var(--wc-amber)">inertia_tensor.json</code></span>
+                <span class="wc-commit-hash">#1247 · 8a3f1c2</span>
+              </div>
+              <div class="wc-commit-msg">Reinforce wing spar (LE doubler + ply layup change)</div>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Source moves</p>
+            <h4 class="wc-side-title">A real engineering change, in another room</h4>
+            <p class="wc-side-body">The structural group thickens the spar. Mass redistributes. The diagonal terms of <code>I</code> shift; the CG moves <strong>44 mm aft</strong>.</p>
+            <p class="wc-side-body" style="font-size:12px;">They commit. Thread sees the source has moved.</p>
+          </aside>
+          <p class="wc-state-caption">Nobody told aero. Aero is at lunch. <strong>Thread is awake.</strong></p>
+        </section>
+
+        <!-- ===== State 3: stale flagged ===== -->
+        <section class="wc-state" data-step="3">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>downstream of <code style="color:var(--wc-amber)">inertia_tensor.json</code></span>
+              <span class="wc-chart-source">3 affected · flagged automatically</span>
+            </div>
+            <div class="wc-notif">
+              <div class="wc-notif-head">
+                <span class="wc-notif-badge">stale</span>
+                Three artefacts reference <code>inertia_tensor.json</code>
+              </div>
+              <p class="wc-notif-body">Thread walked the lineage from the just-changed source down to every plot, table, and report that depends on it (transitively). All three derived plots from <code>fly_qual.py</code> are now flagged stale until they re-render.</p>
+              <ul class="wc-notif-list">
+                <li>📑 Q4 design review · slide 14 <span class="wc-stale-tag">stale</span></li>
+                <li>📑 Cert handover · slide 7 <span class="wc-stale-tag">stale</span></li>
+                <li>📄 Wing-redesign memo · §3.2 <span class="wc-stale-tag">stale</span></li>
+              </ul>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Thread spots it</p>
+            <h4 class="wc-side-title">Every embed gets flagged</h4>
+            <p class="wc-side-body">Not just the plot — every <strong>place the plot is used</strong>. PowerPoint deck, Word memo, internal wiki. The lineage is bidirectional: change the source, every dependent gets the warning.</p>
+            <p class="wc-side-body" style="font-size:12px;">No "did anyone notice we changed the spar?" half a sprint later.</p>
+          </aside>
+          <p class="wc-state-caption">The cost per question dropped to zero. <strong>The question got asked anyway.</strong></p>
+        </section>
+
+        <!-- ===== State 4: owners pinged ===== -->
+        <section class="wc-state" data-step="4">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>#aero-fly-qual</span>
+              <span class="wc-chart-source">slack · just now</span>
+            </div>
+            <div class="wc-slack">
+              <div class="wc-slack-head">aero-fly-qual</div>
+
+              <div class="wc-slack-msg">
+                <div class="wc-slack-avatar wc-slack-avatar-bot">TR</div>
+                <div class="wc-slack-body">
+                  <div class="wc-slack-name">
+                    Thread <span class="wc-slack-bot-tag">APP</span>
+                    <span class="wc-slack-time">14:47</span>
+                  </div>
+                  <div class="wc-slack-text">
+                    Heads up @sarah — your <code>sp-freq-tails</code> plot is downstream of <code>inertia_tensor.json</code>, which structures just changed (commit <code>8a3f1c2</code>: "reinforce wing spar"). Three places use this plot — they're all flagged stale.
+                  </div>
+                  <div class="wc-slack-actions">
+                    <button class="wc-slack-action wc-slack-action-primary">Re-render with latest</button>
+                    <button class="wc-slack-action">View change</button>
+                    <button class="wc-slack-action">Snooze · 1d</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wc-slack-msg" id="wc-slack-msg-aero" style="opacity:0;transform:translateY(6px);transition:opacity 380ms ease,transform 380ms ease;">
+                <div class="wc-slack-avatar wc-slack-avatar-aero">SC</div>
+                <div class="wc-slack-body">
+                  <div class="wc-slack-name">
+                    Sarah Carmichael
+                    <span class="wc-slack-time">14:48</span>
+                  </div>
+                  <div class="wc-slack-text">
+                    On it. Re-rendering — also pinging cert because slide 7 is in their handover deck.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">Owners pinged</p>
+            <h4 class="wc-side-title">No more "I didn't know"</h4>
+            <p class="wc-side-body">The plot's owner — and the deck's owner, and the memo's owner — get told before they next open the artefact. <strong>Decision-makers find out now, not at the next review.</strong></p>
+            <p class="wc-side-body" style="font-size:12px;">If they're using PowerPoint, it's still a ping. We can't get people to stop using PowerPoint, but we can join them there.</p>
+          </aside>
+          <p class="wc-state-caption">Sarah finds out at <strong>14:47</strong>. Not three weeks later in a review.</p>
+        </section>
+
+        <!-- ===== State 5: embedded view toggles to latest data ===== -->
+        <section class="wc-state" data-step="5">
+          <div class="wc-chart-host">
+            <div class="wc-chart-bar">
+              <span>Short-period pitching freq · two tail sizes</span>
+              <span class="wc-chart-source" id="wc-chart-source-6">embedded view · live</span>
+            </div>
+            <div class="wc-toggle" id="wc-toggle">
+              <button class="wc-toggle-btn wc-toggle-active" data-mode="entered">as entered (Apr 12)</button>
+              <button class="wc-toggle-btn" data-mode="latest">latest data</button>
+            </div>
+            <svg class="wc-chart-svg" id="wc-chart-svg-5" viewBox="0 0 480 300" role="img"
+                 aria-label="Same chart with a toggle between as-entered and latest-data; the curves shift when latest is selected"></svg>
+            <div class="wc-chart-legend">
+              <span><span class="wc-key" style="background:var(--wc-cyan)"></span>tail A (small)</span>
+              <span><span class="wc-key" style="background:var(--wc-amber)"></span>tail B (large)</span>
+            </div>
+            <div class="wc-chart-stamp" id="wc-chart-stamp-5">
+              <span class="wc-stamp-dot"></span>
+              <span id="wc-chart-stamp-text-5">as entered · 2026-04-12 14:23</span>
+            </div>
+          </div>
+          <aside class="wc-side">
+            <p class="wc-side-eyebrow">If it's an embedded view</p>
+            <h4 class="wc-side-title">The truth catches up. The reader can see both.</h4>
+            <p class="wc-side-body">For embeds (live, not PNGs): a toggle. <strong>"As entered"</strong> is what the deck author saw. <strong>"Latest data"</strong> is what's true now. Reviewers can decide which to show.</p>
+            <p class="wc-side-body" style="font-size:12px;">PNGs need a human to chase down. Embeds don't.</p>
+          </aside>
+          <p class="wc-state-caption">A picture <em>is</em> worth a thousand words. <strong>A live one is worth fifty meetings.</strong></p>
+        </section>
+
+      </div>
+
+      <p class="wc-caption">
+        Same workflow most teams already have — a script, some inputs, a chart, and three places it ends up. <strong>The only difference is Thread holding onto the connections.</strong> When something upstream moves, every dependent already knows about it before anyone else has even noticed.
+      </p>
+
+    </div>
+  </div>
+</aside>
 <p>Thread is the topology instinct given proper tooling, and structurally the same complaint as the PowerPoint deck refusal: <em>data has structure, and the format you&rsquo;re forcing it through doesn&rsquo;t.</em> The difference is twenty years of catching up. Refuse the flattening. Store the topology. Let the user query the actual shape of their work. Stop making humans re-enter structure the system should have kept.</p>
-<figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-connections-by-hand-figcap">
+<figure class="ti-figure ti-figure-video ti-figure-fullbleed" aria-labelledby="ti-video-connections-by-hand-figcap">
   <div class="ti-video-wrap">
     <video src="figures/connections-by-hand.mp4" autoplay muted loop playsinline preload="metadata" aria-label="The same evolving 3D wireframe lattice from the photographer scene. A hand reaches in, plucks a few orbs, and places them onto a plot on a wooden easel. Thin cyan threads stay connected from each plot point back to its source node in the lattice — and pulses travel along them as the lattice keeps shifting."></video>
   </div>
@@ -3825,14 +4701,6 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 <p>Thread is the latest and most literal version of that refusal. Store the shape. Preserve the provenance. Let the flat view be a view, not the truth. Stop making humans re-enter structure the system should have kept.</p>
 <p>I don&rsquo;t think this is a particularly profound observation. It is, if anything, the opposite — most of the people I admire technically have an instinctive version of the same complaint, and the tooling response (databases, type systems, dependency graphs, build tools, even the version-control history of a file) is largely the same response across very different fields. The bit that took me two decades wasn&rsquo;t <em>having</em> the instinct. It was finding the right place to put it down. Plot dashboards were a place to put it down for a project. Paradigm was a place to put it down for a year. Postgres was a place to put it down with decent structure. Thread is, I think, the right place to put it down for the work I want to spend the rest of my career on.</p>
 <p>That is the thread. It was there the whole time.</p>
-<div class="footnote">
-<hr />
-<ol>
-<li id="fn:milp">
-<p>I originally wrote the endpoint constraint as <code>R_ij ≤ (A_i + A_j)/2</code>, the averaged form. Both are correct for binary variables; the paired form gives a tighter LP relaxation and the solver prunes faster. An LLM pointed that out while I was drafting this article. Standard OR practice I picked up incompletely, because I came at MILP from engineering rather than optimisation. Hub location with phasing is a standard OR formulation, decades old; DLR, MIT and NASA have published on hydrogen infrastructure rollout. Paradigm sat in a gap — coupling aircraft to network with engineering-derived costs — without inventing the technique.&#160;<a class="footnote-backref" href="#fnref:milp" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
-</ol>
-</div>
   </main>
 
   <footer class="ti-foot ti-narrow" role="contentinfo">
@@ -3858,7 +4726,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   update();
 
   const revealTargets = [
-    ...document.querySelectorAll('.ti-figure, .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
+    ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
   ];
   revealTargets.forEach(el => el.classList.add('ti-reveal'));
 
@@ -3914,13 +4782,27 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       camera:        { lat: 30, lng: -30, altitude: 2.5 },
       pointDimRadius: 0.18,
       pointBrightRadius: 0.55,
-      pointDimColor:  "#5c6a82",
-      pointBrightColor: "#22d3ee",
+      pointDimColor:  "#94a3b8",
+      pointBrightColor: "#0891b2",
+    },
+    performance: {
+      maxGlobeArcs: 2200,
+      maxAnimatedRoutes: 420,
+      maxNewHighlightRoutes: 700,
+      maxFaintRoutes: 1200,
     },
   };
 
   // ---- internal state ------------------------------------------------------
-  const state = { ...CONFIG.defaults, data: null, delta: null };
+  const state = {
+    ...CONFIG.defaults,
+    data: null,
+    delta: null,
+    airportById: null,
+    routeRows: [],
+    co2Max: 1,
+    renderStats: null,
+  };
 
   // ---- helpers -------------------------------------------------------------
   const fmtTonnes = (t) => {
@@ -3947,6 +4829,58 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     airports: new Set(sol ? sol.upgraded_airports : []),
     routes: new Set(sol ? sol.upgraded_route_ids : []),
   });
+
+  function stageFraction(year = state.year) {
+    const md = state.data ? state.data.metadata : null;
+    const frac = md && md.stage_fractions ? Number(md.stage_fractions[String(year)]) : NaN;
+    if (Number.isFinite(frac) && frac > 0) return frac;
+    if (year === 2030) return 1 / 3;
+    if (year === 2040) return 2 / 3;
+    return 1;
+  }
+
+  function interpolatedChartValue(strategy, year, finalBudget) {
+    const exactActive = Math.max(1, finalBudget * stageFraction(year));
+    const loActive = Math.max(1, Math.floor(exactActive));
+    const hiActive = Math.max(loActive, Math.ceil(exactActive));
+    const loSol = getSolution(strategy, 2050, loActive) || getSolution(strategy, year, finalBudget);
+    const hiSol = getSolution(strategy, 2050, hiActive) || loSol;
+    const growth = state.data && state.data.metadata && state.data.metadata.growth_factors
+      ? Number(state.data.metadata.growth_factors[String(year)])
+      : NaN;
+    const baseGrowth = state.data && state.data.metadata && state.data.metadata.growth_factors
+      ? Number(state.data.metadata.growth_factors["2050"])
+      : NaN;
+    const scale = Number.isFinite(growth) && Number.isFinite(baseGrowth) && baseGrowth > 0
+      ? growth / baseGrowth
+      : (year === 2030 ? 1.10 / 1.50 : year === 2040 ? 1.30 / 1.50 : 1);
+    if (!loSol && !hiSol) return 0;
+    if (loActive === hiActive || !hiSol) return loSol ? loSol.co2_captured_tonnes * scale : 0;
+    const alpha = exactActive - loActive;
+    return ((1 - alpha) * loSol.co2_captured_tonnes + alpha * hiSol.co2_captured_tonnes) * scale;
+  }
+
+  function prepareData(data) {
+    const airportById = Object.fromEntries(data.airports.map(a => [a.id, a]));
+    const co2Max = Math.max(1, ...data.routes.map(r => r.annual_co2_tonnes_2023));
+    const routeRows = data.routes
+      .map(r => {
+        const src = airportById[r.src];
+        const dst = airportById[r.dst];
+        if (!src || !dst) return null;
+        return {
+          ...r,
+          _srcAirport: src,
+          _dstAirport: dst,
+          _weight: r.annual_co2_tonnes_2023 / co2Max,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.annual_co2_tonnes_2023 - a.annual_co2_tonnes_2023);
+    state.airportById = airportById;
+    state.routeRows = routeRows;
+    state.co2Max = co2Max;
+  }
 
   function captureSelection() {
     return {
@@ -3988,7 +4922,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
 
     globe = Globe()(el)
       .backgroundColor(CONFIG.globe.bgColor)
-      .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-night.jpg")
+      .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg")
       .bumpImageUrl("https://unpkg.com/three-globe/example/img/earth-topology.png")
       .showAtmosphere(true)
       .atmosphereColor(CONFIG.globe.atmosphereCol)
@@ -4008,8 +4942,11 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       .arcEndLat(d => d._dstLat)
       .arcEndLng(d => d._dstLon)
       .arcColor(d => d._color)
-      .arcStroke(d => d._stroke)
+      .arcStroke(d => d._tubeStroke)
       .arcAltitudeAutoScale(0.5)
+      .arcCurveResolution(18)
+      .arcCircularResolution(3)
+      .arcsTransitionDuration(0)
       // Per-arc dash params — busier routes get tighter spacing & faster
       // cycles, so they look like a flow of flights rather than a single dot.
       .arcDashLength(d => d._dashLen)
@@ -4068,7 +5005,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     }
     const baseAlpha = 0.42 + 0.34 * weight;
     return {
-      color: `rgba(34, 211, 238, ${baseAlpha})`,
+      color: `rgba(8, 145, 178, ${baseAlpha})`,
       stroke: 0.22 + 0.36 * weight,
       dashLen: state.animateAircraft ? 0.025 : 1,
       dashGap: state.animateAircraft ? 0.50 - 0.42 * weight : 0,
@@ -4093,30 +5030,38 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     }));
     globe.pointsData(points);
 
-    // Build a coordinate lookup for arc endpoints.
-    const coords = Object.fromEntries(state.data.airports.map(a => [a.id, a]));
-
     // Arcs: each upgraded route is rendered as TWO arcs (forward + backward)
-    // with phase-offset dash animations, so the route looks like a stream of
-    // shooting-star flights flowing in both directions. Dash gap and animate
-    // time scale with the route's CO2 weight: heavier routes carry more
-    // visible "flights" and their cycle runs a bit faster.
+    // only when aircraft animation is enabled. Static routes use one arc,
+    // halving the normal Three.js/Globe.gl object count.
     //
     // Faint background routes (when the toggle is on) get a single thin
     // continuous arc with no animation — kept cheap.
-    const co2Max = Math.max(1, ...state.data.routes.map(r => r.annual_co2_tonnes_2023));
     const arcs = [];
-    for (const r of state.data.routes) {
-      const src = coords[r.src], dst = coords[r.dst];
-      if (!src || !dst) continue;
+    let selectedRoutes = 0;
+    let renderedRoutes = 0;
+    let highlightedNewRoutes = 0;
+    let faintRoutes = 0;
+    for (const r of state.routeRows) {
       const upgradedArc = upgradedRouteIds.has(r.id);
+      if (upgradedArc) selectedRoutes++;
       if (!upgradedArc && !state.showFaintRoutes) continue;
-      const weight = r.annual_co2_tonnes_2023 / co2Max; // 0..1
+      const rawIsNew = newRoutes.has(r.id);
+      const isNew = rawIsNew && highlightedNewRoutes < CONFIG.performance.maxNewHighlightRoutes;
+      if (upgradedArc && renderedRoutes >= CONFIG.performance.maxGlobeArcs && !isNew) continue;
+      if (!upgradedArc && faintRoutes >= CONFIG.performance.maxFaintRoutes) continue;
+      const weight = r._weight; // 0..1
       const co2 = r.annual_co2_tonnes_2023;
-      const isNew = newRoutes.has(r.id);
+      const src = r._srcAirport, dst = r._dstAirport;
 
       if (upgradedArc) {
         const style = routeStyle(r, weight, isNew);
+        renderedRoutes++;
+        if (isNew) highlightedNewRoutes++;
+        if (state.animateAircraft && renderedRoutes > CONFIG.performance.maxAnimatedRoutes) {
+          style.dashLen = 1;
+          style.dashGap = 0;
+          style.animTime = 0;
+        }
 
         // Forward direction
         arcs.push({
@@ -4126,28 +5071,33 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
           _co2: co2, _distance: r.distance_km,
           _faint: false, _isNew: isNew,
           _color: style.color, _stroke: style.stroke,
+          _tubeStroke: isNew ? style.stroke : null,
           _dashLen: style.dashLen,
           _dashGap: style.dashGap,
           _dashInitGap: 0,
           _animTime: style.animTime,
         });
-        // Backward direction — same arc, swapped endpoints, phase offset by
-        // half a (dash + gap) cycle so the two streams interleave rather than
-        // coincide.
-        arcs.push({
-          _src: r.dst, _dst: r.src,
-          _srcLat: dst.lat, _srcLon: dst.lon,
-          _dstLat: src.lat, _dstLon: src.lon,
-          _co2: co2, _distance: r.distance_km,
-          _faint: false, _isNew: isNew,
-          _color: style.color, _stroke: style.stroke,
-          _dashLen: style.dashLen,
-          _dashGap: style.dashGap,
-          _dashInitGap: 0.5 * (style.dashLen + style.dashGap),
-          _animTime: style.animTime,
-        });
+        if (state.animateAircraft && renderedRoutes <= CONFIG.performance.maxAnimatedRoutes) {
+          // Backward direction — same arc, swapped endpoints, phase offset by
+          // half a (dash + gap) cycle so the two streams interleave rather than
+          // coincide.
+          arcs.push({
+            _src: r.dst, _dst: r.src,
+            _srcLat: dst.lat, _srcLon: dst.lon,
+            _dstLat: src.lat, _dstLon: src.lon,
+            _co2: co2, _distance: r.distance_km,
+            _faint: false, _isNew: isNew,
+            _color: style.color, _stroke: style.stroke,
+            _tubeStroke: isNew ? style.stroke : null,
+            _dashLen: style.dashLen,
+            _dashGap: style.dashGap,
+            _dashInitGap: 0.5 * (style.dashLen + style.dashGap),
+            _animTime: style.animTime,
+          });
+        }
       } else {
         // Faint background — single non-animated arc.
+        faintRoutes++;
         arcs.push({
           _src: r.src, _dst: r.dst,
           _srcLat: src.lat, _srcLon: src.lon,
@@ -4156,10 +5106,19 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
           _faint: true,
           _color: `rgba(147, 160, 182, ${0.06 + 0.10 * weight})`,
           _stroke: 0.18 + 0.25 * weight,
+          _tubeStroke: null,
           _dashLen: 1, _dashGap: 0, _dashInitGap: 0, _animTime: 0,
         });
       }
     }
+    state.renderStats = {
+      selectedRoutes,
+      renderedRoutes,
+      highlightedNewRoutes,
+      faintRoutes,
+      arcs: arcs.length,
+      capped: renderedRoutes < selectedRoutes,
+    };
     globe.arcsData(arcs);
   }
 
@@ -4184,9 +5143,6 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     const upgradedRouteIds = new Set(sol ? sol.upgraded_route_ids : []);
     const newAirports = state.delta ? state.delta.airports : new Set();
     const newRoutes = state.delta ? state.delta.routes : new Set();
-    const coords = Object.fromEntries(state.data.airports.map(a => [a.id, a]));
-    const co2Max = Math.max(1, ...state.data.routes.map(r => r.annual_co2_tonnes_2023));
-
     svg.append("path")
       .attr("class", "tg-map-frame")
       .attr("d", path({ type: "Sphere" }));
@@ -4195,12 +5151,11 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       .attr("d", path(graticule));
 
     const routeRows = [];
-    for (const r of state.data.routes) {
-      const src = coords[r.src], dst = coords[r.dst];
-      if (!src || !dst) continue;
+    for (const r of state.routeRows) {
+      const src = r._srcAirport, dst = r._dstAirport;
       const upgradedRoute = upgradedRouteIds.has(r.id);
       if (!upgradedRoute && !state.showFaintRoutes) continue;
-      const weight = r.annual_co2_tonnes_2023 / co2Max;
+      const weight = r._weight;
       const isNew = newRoutes.has(r.id);
       const style = routeStyle(r, weight, isNew);
       routeRows.push({
@@ -4228,9 +5183,13 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       .attr("stroke-width", d => d.stroke)
       .attr("pathLength", d => d.isNew ? 1 : null);
 
+    const pointRows = state.data.airports
+      .map(d => ({ ...d, projected: projection([d.lon, d.lat]) }))
+      .filter(d => d.projected);
+
     svg.append("g")
       .selectAll("circle")
-      .data(state.data.airports, d => d.id)
+      .data(pointRows, d => d.id)
       .join("circle")
       .attr("class", d => {
         const classes = ["tg-map-point"];
@@ -4238,8 +5197,8 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
         if (newAirports.has(d.id)) classes.push("tg-new-airport");
         return classes.join(" ");
       })
-      .attr("cx", d => projection([d.lon, d.lat])[0])
-      .attr("cy", d => projection([d.lon, d.lat])[1])
+      .attr("cx", d => d.projected[0])
+      .attr("cy", d => d.projected[1])
       .attr("r", d => upgraded.has(d.id) ? (newAirports.has(d.id) ? 4.8 : 3.2) : 1.5);
 
     if (state.animateAircraft) {
@@ -4268,8 +5227,11 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   }
 
   function applyVisuals() {
-    applyToGlobe();
-    renderProjection();
+    if (state.viewMode === "globe") {
+      applyToGlobe();
+    } else {
+      renderProjection();
+    }
     renderDelta();
   }
 
@@ -4487,7 +5449,11 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
       color: stratColor[s],
       points: budgets.map(b => {
         const sol = getSolution(s, state.year, b);
-        return { K: b, value: sol ? sol.co2_captured_tonnes : 0 };
+        return {
+          K: b,
+          value: interpolatedChartValue(s, state.year, b),
+          actualValue: sol ? sol.co2_captured_tonnes : 0,
+        };
       }),
     }));
 
@@ -4537,7 +5503,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     const line = d3.line()
       .x(p => x(p.K))
       .y(p => y(p.value))
-      .curve(d3.curveMonotoneX);
+      .curve(d3.curveLinear);
 
     // Draw non-selected series first so the selected one sits on top.
     const sortedSeries = [...series].sort((a, b) =>
@@ -4613,6 +5579,7 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
     projectionResizeObserver.observe(document.getElementById("tg-projection"));
     try {
       state.data = await loadData();
+      prepareData(state.data);
     } catch (err) {
       const loading = document.getElementById("tg-loading");
       loading.textContent = "Could not load optimisation data. See console.";
@@ -4895,10 +5862,11 @@ window.PlotlyVsPP = (function () {
   const RANS_X    = [430, 490, 550, 610, 670]; // α-RANS artifacts (per row, separate copies — same condition different consumer)
   const RANS_OPX  = [430, 490, 550, 610, 670];
   const RANS_ARTX = [430, 490, 550, 610, 670];
+  const GRAPH_ROWS = ROWS.slice(0, AVL_X.length);
 
   // For each row, we also need a per-row α artifact in the AVL lane and another in the RANS lane.
   // (They share the conceptual α value but each consumer has its own input artifact.)
-  ROWS.forEach((r, i) => {
+  GRAPH_ROWS.forEach((r, i) => {
     const rid = String(i);
     nodes.push(art('fv-a-avl-' + rid,  AVL_X[i],  ALPHA_Y, 'α', r.alpha + '°', 'art'));
     nodes.push(art('fv-a-rans-' + rid, RANS_X[i], ALPHA_Y, 'α', r.alpha + '°', 'art'));
@@ -4913,7 +5881,7 @@ window.PlotlyVsPP = (function () {
   });
 
   // edges: AVL side
-  ROWS.forEach((r, i) => {
+  GRAPH_ROWS.forEach((r, i) => {
     const rid = String(i);
     if (r.avl_cla != null) {
       // α(AVL) -> AVL_op
@@ -6440,6 +7408,342 @@ window.PlotlyVsPP = (function () {
   }, { passive: true });
 
   return { setActivePoint };
+})();</script>
+<script>window.WhatChanged = (function () {
+  'use strict';
+
+  const figure = document.getElementById('wc-figure');
+  if (!figure) return null;
+
+  // ---- Chart data ------------------------------------------------------
+  // Short-period pitching natural frequency (rad/s) vs airspeed (kts).
+  // Two tail sizes; CG shift makes the airframe slightly less stable, so
+  // both curves drop a touch when "latest data" is selected.
+  const AIRSPEEDS = [60, 90, 120, 150, 180];
+  const DATA = {
+    entered: {
+      a: [1.6, 2.1, 2.5, 2.9, 3.2],
+      b: [1.9, 2.5, 3.0, 3.4, 3.8],
+    },
+    latest: {
+      a: [1.4, 1.8, 2.2, 2.5, 2.8],
+      b: [1.7, 2.2, 2.6, 3.0, 3.4],
+    },
+  };
+
+  // ---- SVG chart helpers -----------------------------------------------
+  const VB = { w: 480, h: 300 };
+  const PAD = { l: 44, r: 12, t: 14, b: 36 };
+  const xMin = 50, xMax = 190;
+  const yMin = 1.0, yMax = 4.2;
+  const xPx = v => PAD.l + (v - xMin) / (xMax - xMin) * (VB.w - PAD.l - PAD.r);
+  const yPx = v => (VB.h - PAD.b) - (v - yMin) / (yMax - yMin) * (VB.h - PAD.t - PAD.b);
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, kids) {
+    const n = document.createElementNS(NS, tag);
+    if (attrs) for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (kids) kids.forEach(c => n.appendChild(c));
+    return n;
+  }
+
+  function drawAxes(svg) {
+    svg.appendChild(el('line', { class: 'wc-axis', x1: PAD.l, y1: PAD.t, x2: PAD.l, y2: VB.h - PAD.b }));
+    svg.appendChild(el('line', { class: 'wc-axis', x1: PAD.l, y1: VB.h - PAD.b, x2: VB.w - PAD.r, y2: VB.h - PAD.b }));
+    [60, 90, 120, 150, 180].forEach(v => {
+      svg.appendChild(el('line', { class: 'wc-grid', x1: xPx(v), x2: xPx(v), y1: PAD.t, y2: VB.h - PAD.b }));
+      const t = el('text', { class: 'wc-tick', x: xPx(v), y: VB.h - PAD.b + 14, 'text-anchor': 'middle' });
+      t.textContent = String(v);
+      svg.appendChild(t);
+    });
+    [1.5, 2.0, 2.5, 3.0, 3.5, 4.0].forEach(v => {
+      svg.appendChild(el('line', { class: 'wc-grid', x1: PAD.l, x2: VB.w - PAD.r, y1: yPx(v), y2: yPx(v) }));
+      const t = el('text', { class: 'wc-tick', x: PAD.l - 6, y: yPx(v) + 3, 'text-anchor': 'end' });
+      t.textContent = v.toFixed(1);
+      svg.appendChild(t);
+    });
+    const xL = el('text', { class: 'wc-axis-label', x: (PAD.l + VB.w - PAD.r) / 2, y: VB.h - 6, 'text-anchor': 'middle' });
+    xL.textContent = 'airspeed (kts)';
+    svg.appendChild(xL);
+    const yL = el('text', { class: 'wc-axis-label', x: 12, y: (PAD.t + VB.h - PAD.b) / 2, 'text-anchor': 'middle', transform: `rotate(-90 12 ${(PAD.t + VB.h - PAD.b) / 2})` });
+    yL.textContent = 'ωₙ (rad/s)';
+    svg.appendChild(yL);
+  }
+
+  function pathFor(seriesY) {
+    return AIRSPEEDS.map((x, i) => (i === 0 ? 'M' : 'L') + xPx(x).toFixed(2) + ',' + yPx(seriesY[i]).toFixed(2)).join(' ');
+  }
+
+  function buildChart(svgId, data) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return null;
+    svg.innerHTML = '';
+    drawAxes(svg);
+    const pa = el('path', { class: 'wc-curve wc-curve-a', d: pathFor(data.a) });
+    const pb = el('path', { class: 'wc-curve wc-curve-b', d: pathFor(data.b) });
+    svg.appendChild(pa);
+    svg.appendChild(pb);
+    const ptsA = AIRSPEEDS.map((x, i) => {
+      const c = el('circle', { class: 'wc-pt wc-pt-a', cx: xPx(x), cy: yPx(data.a[i]), r: 4 });
+      svg.appendChild(c);
+      return c;
+    });
+    const ptsB = AIRSPEEDS.map((x, i) => {
+      const c = el('circle', { class: 'wc-pt wc-pt-b', cx: xPx(x), cy: yPx(data.b[i]), r: 4 });
+      svg.appendChild(c);
+      return c;
+    });
+    return { pa, pb, ptsA, ptsB };
+  }
+  function updateChart(refs, data) {
+    if (!refs) return;
+    refs.pa.setAttribute('d', pathFor(data.a));
+    refs.pb.setAttribute('d', pathFor(data.b));
+    AIRSPEEDS.forEach((x, i) => {
+      refs.ptsA[i].setAttribute('cx', xPx(x));
+      refs.ptsA[i].setAttribute('cy', yPx(data.a[i]));
+      refs.ptsB[i].setAttribute('cx', xPx(x));
+      refs.ptsB[i].setAttribute('cy', yPx(data.b[i]));
+    });
+  }
+
+  // Build the static state-0 chart and the toggle-driven state-5 chart.
+  buildChart('wc-chart-svg-0', DATA.entered);
+  const chart5 = buildChart('wc-chart-svg-5', DATA.entered);
+
+  // ---- Lineage tree (state 1) ------------------------------------------
+  (function buildLineage() {
+    const svg = document.getElementById('wc-lineage-svg');
+    if (!svg) return;
+    // Layout: plot -> script -> {cfd, inertia}
+    // Position nodes left-to-right.
+    const nodes = [
+      { id: 'plot',    x: 60,  y: 110, w: 96, h: 50, label: 'sp-freq-tails',   sub: 'plot · 3 embeds', cls: '' },
+      { id: 'script',  x: 200, y: 110, w: 96, h: 50, label: 'fly_qual.py',     sub: 'script',          cls: 'wc-l-script' },
+      { id: 'cfd',     x: 340, y: 50,  w: 110, h: 50, label: 'cfd_results.h5', sub: 'CFD',             cls: 'wc-l-source' },
+      { id: 'inertia', x: 340, y: 170, w: 110, h: 50, label: 'inertia_tensor', sub: 'mass · CG · I',   cls: 'wc-l-source' },
+    ];
+    const edges = [
+      ['plot', 'script', false],
+      ['script', 'cfd', false],
+      ['script', 'inertia', false],
+    ];
+    const map = Object.fromEntries(nodes.map(n => [n.id, n]));
+    edges.forEach(([from, to, pulse]) => {
+      const a = map[from], b = map[to];
+      const x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      const x2 = b.x,        y2 = b.y + b.h / 2;
+      const cx = (x1 + x2) / 2;
+      const path = el('path', {
+        class: 'wc-l-edge' + (pulse ? ' wc-l-edge-pulse' : ''),
+        d: `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`,
+      });
+      svg.appendChild(path);
+    });
+    nodes.forEach(n => {
+      const r = el('rect', {
+        class: 'wc-l-node ' + n.cls,
+        x: n.x, y: n.y, width: n.w, height: n.h,
+      });
+      svg.appendChild(r);
+      const tl = el('text', { class: 'wc-l-node-label', x: n.x + n.w / 2, y: n.y + 22, 'text-anchor': 'middle' });
+      tl.textContent = n.label;
+      svg.appendChild(tl);
+      const ts = el('text', { class: 'wc-l-node-sub', x: n.x + n.w / 2, y: n.y + 36, 'text-anchor': 'middle' });
+      ts.textContent = n.sub;
+      svg.appendChild(ts);
+    });
+  })();
+
+  // ---- Inertia tensor (state 2) ----------------------------------------
+  // Pre-change values; on the state-2 reveal, three diagonal entries
+  // tick to the post-change values and gain the "changed" highlight.
+  const I_PRE  = [
+    [3220.4,    0.0,  -82.5],
+    [   0.0, 4815.6,    0.0],
+    [ -82.5,    0.0, 5210.7],
+  ];
+  const I_POST = [
+    [3268.1,    0.0,  -83.4],
+    [   0.0, 4862.9,    0.0],
+    [ -83.4,    0.0, 5298.2],
+  ];
+  const I_CHANGED = [
+    [true, false, true],
+    [false, true, false],
+    [true, false, true],
+  ];
+
+  (function buildInertia() {
+    const host = document.getElementById('wc-inertia');
+    if (!host) return;
+    const cells = [];
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const c = document.createElement('div');
+        c.className = 'wc-inertia-cell';
+        c.dataset.i = i; c.dataset.j = j;
+        c.textContent = I_PRE[i][j].toFixed(1);
+        host.appendChild(c);
+        cells.push({ el: c, i, j });
+      }
+    }
+    host._cells = cells;
+  })();
+  function setInertia(post) {
+    const host = document.getElementById('wc-inertia');
+    if (!host || !host._cells) return;
+    const M = post ? I_POST : I_PRE;
+    host._cells.forEach(({ el, i, j }) => {
+      el.textContent = M[i][j].toFixed(1);
+      el.classList.toggle('wc-inertia-changed', !!post && I_CHANGED[i][j]);
+    });
+    const cgOld = document.getElementById('wc-cg-old');
+    const cgNew = document.getElementById('wc-cg-new');
+    if (cgOld && cgNew) {
+      cgOld.style.opacity = post ? '1' : '0.45';
+      cgNew.style.opacity = post ? '1' : '0.45';
+    }
+  }
+  setInertia(false);
+
+  // ---- Toggle (state 5) ------------------------------------------------
+  let mode = 'entered';
+  const toggle = document.getElementById('wc-toggle');
+  const stampText5 = document.getElementById('wc-chart-stamp-text-5');
+  const stamp5 = document.getElementById('wc-chart-stamp-5');
+  function setMode(m) {
+    mode = m;
+    if (!toggle) return;
+    toggle.querySelectorAll('.wc-toggle-btn').forEach(b => {
+      b.classList.toggle('wc-toggle-active', b.dataset.mode === m);
+    });
+    updateChart(chart5, DATA[m]);
+    if (stampText5) stampText5.textContent = m === 'entered' ? 'as entered · 2026-04-12 14:23' : 'latest data · just now (re-rendered after #1247)';
+    if (stamp5) stamp5.classList.toggle('wc-stamp-stale', false);
+  }
+  if (toggle) {
+    toggle.querySelectorAll('.wc-toggle-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        userTookOver = true;
+        setMode(b.dataset.mode);
+      });
+    });
+  }
+
+  // ---- State machine ---------------------------------------------------
+  const states  = Array.from(figure.querySelectorAll('.wc-state'));
+  const buttons = Array.from(figure.querySelectorAll('.wc-step-btn'));
+  let stepIdx   = 0;
+  let demoTimer = null;
+  let userTookOver = false;
+  let paused = false;
+
+  function setStep(n) {
+    stepIdx = ((n % states.length) + states.length) % states.length;
+    states.forEach((s, i) => s.classList.toggle('wc-state-active', i === stepIdx));
+    buttons.forEach((b, i) => b.classList.toggle('wc-step-active', i === stepIdx));
+    // Per-step side effects.
+    if (stepIdx === 2) {
+      // Trigger the inertia-tensor commit reveal shortly after the
+      // state lands so the reader sees the values "tick".
+      setInertia(false);
+      setTimeout(() => { if (stepIdx === 2) setInertia(true); }, 700);
+    } else {
+      // Keep the post values once the state has been visited (it's
+      // "the truth now") for the rest of the cycle.
+      if (stepIdx > 2) setInertia(true);
+    }
+    if (stepIdx === 4) {
+      const a = document.getElementById('wc-slack-msg-aero');
+      if (a) {
+        a.style.opacity = '0';
+        a.style.transform = 'translateY(6px)';
+        setTimeout(() => {
+          if (stepIdx !== 4) return;
+          a.style.opacity = '1';
+          a.style.transform = 'translateY(0)';
+        }, 1400);
+      }
+    }
+    if (stepIdx === 5) {
+      // Auto-demo the toggle: start as-entered, then flip to latest
+      // after a beat.
+      setMode('entered');
+      setTimeout(() => {
+        if (stepIdx === 5 && !userTookOver) setMode('latest');
+      }, 1800);
+    }
+  }
+
+  buttons.forEach((b, i) => {
+    b.addEventListener('click', () => {
+      userTookOver = true;
+      pauseAuto();
+      setStep(i);
+    });
+  });
+
+  // ---- Auto-advance ----------------------------------------------------
+  // Each step has a different dwell so the reader has time on the dense
+  // ones (lineage, notification) and breezes through the obvious ones.
+  const DWELLS = [4200, 5800, 5200, 5800, 6200, 6800];
+
+  function scheduleNext() {
+    if (paused || userTookOver) return;
+    if (demoTimer) clearTimeout(demoTimer);
+    demoTimer = setTimeout(() => {
+      if (paused || userTookOver) return;
+      setStep(stepIdx + 1);
+      scheduleNext();
+    }, DWELLS[stepIdx] || 5000);
+  }
+  function startAuto() { paused = false; scheduleNext(); updatePpIcon(); }
+  function pauseAuto() { paused = true; if (demoTimer) { clearTimeout(demoTimer); demoTimer = null; } updatePpIcon(); }
+
+  const ppBtn  = document.getElementById('wc-pp-btn');
+  const ppIcon = document.getElementById('wc-pp-icon');
+  function updatePpIcon() {
+    if (!ppIcon) return;
+    if (paused) {
+      // play triangle
+      ppIcon.innerHTML = '<polygon points="3,2 3,10 10,6" fill="currentColor"/>';
+    } else {
+      // pause bars
+      ppIcon.innerHTML = '<rect x="2.5" y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/><rect x="7" y="2" width="2.5" height="8" fill="currentColor" rx="0.5"/>';
+    }
+  }
+  if (ppBtn) ppBtn.addEventListener('click', () => {
+    userTookOver = true;
+    if (paused) startAuto(); else pauseAuto();
+  });
+
+  // Reduced motion: don't auto-advance; just show the first state.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setStep(0);
+    return { setStep, setMode };
+  }
+
+  // Trigger when the figure enters the viewport.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !userTookOver) startAuto();
+        else pauseAuto();
+      });
+    }, { threshold: 0.25 });
+    io.observe(figure);
+  } else {
+    setTimeout(() => { if (!userTookOver) startAuto(); }, 1500);
+  }
+
+  // Hover the stage to pause auto-advance — reading-friendly.
+  const stage = document.getElementById('wc-stage');
+  if (stage) {
+    stage.addEventListener('mouseenter', pauseAuto);
+    stage.addEventListener('mouseleave', () => { if (!userTookOver) startAuto(); });
+  }
+
+  return { setStep, setMode };
 })();</script>
 
 </body>

@@ -51,6 +51,7 @@ ATOMIC_HTML  = ROOT / "figures" / "atomic-row.html"
 PV_HTML      = ROOT / "figures" / "plotly-vs-powerpoint.html"
 DBM_HTML     = ROOT / "figures" / "data-black-market.html"
 ATP_HTML     = ROOT / "figures" / "ask-the-plot.html"
+WC_HTML      = ROOT / "figures" / "what-changed.html"
 FV_FIG_HTML  = ROOT / "figures" / "flat-view.html"
 VA_FIG_HTML  = ROOT / "figures" / "vera-applet.html"
 HOMER_GIF    = ROOT / "figures" / "homer-ice-cream.gif"
@@ -195,6 +196,10 @@ def plotly_vs_pp_assets() -> tuple[str, str, str]:
 
 def ask_the_plot_assets() -> tuple[str, str, str]:
     return _iife_assets(ATP_HTML, "AskThePlot", '<div class="atp-figure"')
+
+
+def what_changed_assets() -> tuple[str, str, str]:
+    return _iife_assets(WC_HTML, "WhatChanged", '<div class="wc-figure"')
 
 
 def data_black_market_assets() -> tuple[str, str, str]:
@@ -377,6 +382,20 @@ def substitute_ask_the_plot(html: str, atp_structure: str) -> str:
     )
 
 
+def substitute_what_changed(html: str, wc_structure: str) -> str:
+    block = (
+        '<aside class="ti-what-changed" aria-label="Walk through a real change cascade — a CG shift triggers stale flags on three downstream artefacts and pings the plot owners">\n'
+        f"{wc_structure}\n"
+        "</aside>"
+    )
+    return re.sub(
+        r"<p>\[FIGURE:\s*what-changed\]</p>",
+        block,
+        html,
+        count=1,
+    )
+
+
 
 
 def substitute_runway_video(
@@ -486,6 +505,37 @@ def substitute_asides(html: str) -> str:
             f'</span>'
         )
     return re.sub(r"\[asterisk:\s*([^\[\]]+?)\]", repl, html)
+
+
+def substitute_callouts(html: str) -> str:
+    """Replace paragraph-level callout markers with anchored inline asides."""
+    milp_body = (
+        'I originally wrote the endpoint constraint as '
+        '<code>R_ij ≤ (A_i + A_j)/2</code>, the averaged form. Both are correct '
+        'for binary variables; the paired form gives a tighter LP relaxation '
+        'and the solver prunes faster. An LLM pointed that out while I was '
+        'drafting this article. Standard OR practice I picked up incompletely, '
+        'because I came at MILP from engineering rather than optimisation. '
+        'Hub location with phasing is a standard OR formulation, decades old; '
+        'DLR, MIT and NASA have published on hydrogen infrastructure rollout. '
+        'Paradigm sat in a gap — coupling aircraft to network with '
+        'engineering-derived costs — without inventing the technique.'
+    )
+    block = (
+        '<aside class="ti-callout ti-callout-asterisk" aria-label="MILP formulation aside">\n'
+        '  <div class="ti-callout-mark" aria-hidden="true">*</div>\n'
+        '  <div class="ti-callout-body">\n'
+        '    <p><strong>Formulation note.</strong> '
+        f'{milp_body}</p>\n'
+        '  </div>\n'
+        '</aside>'
+    )
+    return re.sub(
+        r"<p>\[CALLOUT:\s*milp-relaxation\]</p>",
+        block,
+        html,
+        count=1,
+    )
 
 
 def substitute_cartoon_normal_things(html: str) -> str:
@@ -802,7 +852,7 @@ ARTICLE_CSS = r"""
   }
   .ti-mast a { color: inherit; text-decoration: none; }
   .ti-mast a:hover { color: var(--ti-fg); }
-  .ti-mast-brand { font-weight: 600; letter-spacing: -0.01em; }
+  .ti-mast-brand { font-weight: 600; letter-spacing: 0; }
   .ti-mast-meta { font-variant-numeric: tabular-nums; }
 
   /* ---- hero ---- */
@@ -862,7 +912,7 @@ ARTICLE_CSS = r"""
     -webkit-text-fill-color: currentColor;
     text-shadow: 0 4px 32px rgba(0,0,0,0.45);
     font-size: clamp(42px, 8.6vw, 112px);
-    letter-spacing: -0.055em;
+    letter-spacing: 0;
     line-height: 0.88;
     margin-bottom: 24px;
   }
@@ -903,7 +953,7 @@ ARTICLE_CSS = r"""
   .ti-hero h1 {
     font-size: clamp(32px, 5vw, 56px);
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     line-height: 1.08;
     margin: 0 0 22px;
     background: linear-gradient(135deg,
@@ -915,6 +965,12 @@ ARTICLE_CSS = r"""
     -webkit-text-fill-color: transparent;
     color: transparent;
     /* fallback for browsers without -webkit-text-fill-color */
+  }
+  .ti-hero-cinematic h1 {
+    color: #ffffff;
+    background: none;
+    -webkit-text-fill-color: #ffffff;
+    text-shadow: 0 4px 32px rgba(0,0,0,0.45);
   }
   @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
     .ti-hero h1 { color: var(--ti-fg); background: none; -webkit-text-fill-color: var(--ti-fg); }
@@ -985,7 +1041,7 @@ ARTICLE_CSS = r"""
     font-weight: 600;
     margin: 32px 0 8px;
     color: var(--ti-fg);
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
   }
   .ti-prose p {
     margin: 0 0 1.15em;
@@ -1118,6 +1174,51 @@ ARTICLE_CSS = r"""
      right rather than centred. CSS-only — uses a class the JS can toggle if
      needed; for now, default centred positioning is fine for narrow column. */
 
+  /* ---- paragraph-level callouts ---- */
+  .ti-callout {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+    margin: 22px 0 28px;
+    padding: 15px 17px 15px 14px;
+    border: 1px solid var(--ti-border);
+    border-left: 3px solid var(--ti-accent);
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--ti-accent) 9%, transparent), transparent 48%),
+      var(--ti-surface);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
+  }
+  .ti-callout-mark {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid color-mix(in srgb, var(--ti-accent) 54%, var(--ti-border));
+    border-radius: 999px;
+    color: var(--ti-accent);
+    background: color-mix(in srgb, var(--ti-accent) 12%, transparent);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .ti-callout-body {
+    min-width: 0;
+    color: var(--ti-fg-dim);
+    font-size: 15px;
+    line-height: 1.62;
+  }
+  .ti-callout-body p {
+    margin: 0;
+  }
+  .ti-callout-body strong {
+    color: var(--ti-fg);
+    font-weight: 650;
+  }
+  .ti-callout-body code {
+    font-size: 0.9em;
+  }
+
   /* ---- eyebrow tags between sections ---- */
   .ti-eyebrow {
     font-size: 11px;
@@ -1161,9 +1262,9 @@ ARTICLE_CSS = r"""
     transition: opacity 520ms ease, transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
   }
   html.ti-js .ti-reveal {
-    opacity: 0.18;
-    transform: translateY(42px) scale(0.985);
-    filter: saturate(0.72);
+    opacity: 0.66;
+    transform: translateY(28px) scale(0.992);
+    filter: saturate(0.86);
   }
   html.ti-js .ti-reveal.ti-inview {
     opacity: 1;
@@ -1171,8 +1272,22 @@ ARTICLE_CSS = r"""
     filter: saturate(1);
   }
   html.ti-js .ti-reveal.ti-dimmed {
-    opacity: 0.30;
-    transform: translateY(-14px) scale(0.992);
+    opacity: 0.72;
+    transform: translateY(-10px) scale(0.996);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal {
+    transform: translateX(-50%) translateY(28px) scale(0.992);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal.ti-inview {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+    transform: translateX(-50%) translateY(-10px) scale(0.996);
+  }
+  html.ti-js .ti-figure-milp.ti-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
   @media (max-width: 480px) {
     .ti-figure { padding: 12px; margin: 28px 0; }
@@ -1226,8 +1341,8 @@ ARTICLE_CSS = r"""
   @media (min-width: 1000px) {
     .ti-demo {
       width: min(100vw - 32px, 1320px);
-      margin-left: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
-      margin-right: calc(50% - min(50vw - 16px, var(--ti-wide-w) / 2));
+      margin-left: calc(50% - min(50vw - 16px, 660px));
+      margin-right: calc(50% - min(50vw - 16px, 660px));
     }
   }
   .ti-demo .tg-root { padding: 0; }
@@ -1298,19 +1413,21 @@ ARTICLE_CSS = r"""
     width: min(680px, calc(100% - 32px));
     margin: 14px auto 0;
   }
-  @media (min-width: 980px) {
-    .ti-figure-fullbleed {
-      position: sticky;
-      top: 20px;
-      z-index: 1;
-    }
-  }
   @media (max-width: 720px) {
     .ti-figure-fullbleed {
       width: 100%;
       margin: 42px 0;
       transform: none;
       border-radius: 12px;
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal {
+      transform: translateY(24px) scale(0.992);
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal.ti-inview {
+      transform: translateY(0) scale(1);
+    }
+    html.ti-js .ti-figure-fullbleed.ti-reveal.ti-dimmed {
+      transform: translateY(-8px) scale(0.996);
     }
     .ti-figure-fullbleed .ti-video-wrap,
     .ti-figure-fullbleed img { border-radius: 12px; }
@@ -1428,7 +1545,7 @@ PROGRESS_JS = r"""
   update();
 
   const revealTargets = [
-    ...document.querySelectorAll('.ti-figure, .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
+    ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
   ];
   revealTargets.forEach(el => el.classList.add('ti-reveal'));
 
@@ -1479,6 +1596,7 @@ HTML_TEMPLATE = """<!doctype html>
 <style>{fv_css}</style>
 <style>{va_css}</style>
 <style>{atp_css}</style>
+<style>{wc_css}</style>
 </head>
 <body>
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
@@ -1491,9 +1609,17 @@ HTML_TEMPLATE = """<!doctype html>
     <span class="ti-mast-meta"><time datetime="2026-05">May 2026</time> &middot; ~25 min read</span>
   </header>
 
-  <section class="ti-hero ti-narrow" aria-labelledby="ti-title">
-    <p class="ti-hero-eyebrow">Aeronauty &middot; Harry Smith</p>
-    <h1 id="ti-title">{title}</h1>
+  <section class="ti-hero ti-hero-cinematic" aria-labelledby="ti-title">
+    <div class="ti-hero-media" aria-hidden="true">
+      <video src="figures/paradigm-globe-pan.mp4" autoplay muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="ti-hero-shade" aria-hidden="true"></div>
+    <div class="ti-hero-copy">
+      <p class="ti-hero-eyebrow">Aeronauty &middot; Harry Smith</p>
+      <h1 id="ti-title">{title}</h1>
+      <p class="ti-hero-kicker">A story about refusing to flatten engineering work into screenshots, spreadsheets, and human memory.</p>
+    </div>
+    <div class="ti-scroll-cue" aria-hidden="true">Scroll</div>
   </section>
 
   <main id="ti-main" class="ti-prose ti-narrow" role="main">
@@ -1515,6 +1641,7 @@ HTML_TEMPLATE = """<!doctype html>
 <script>{fv_js}</script>
 <script>{va_js}</script>
 <script>{atp_js}</script>
+<script>{wc_js}</script>
 
 </body>
 </html>
@@ -1566,6 +1693,7 @@ def main() -> None:
         "plotly_vs_pp": marker_present(prose_html, "FIGURE", "plotly-vs-powerpoint"),
         "data_black_market": marker_present(prose_html, "FIGURE", "data-black-market"),
         "ask_the_plot": marker_present(prose_html, "FIGURE", "ask-the-plot"),
+        "what_changed": marker_present(prose_html, "FIGURE", "what-changed"),
         "milp": marker_present(prose_html, "FIGURE", "milp-equations"),
     }
 
@@ -1577,6 +1705,7 @@ def main() -> None:
     pv_css = pv_js = pv_struct = ""
     dbm_css = dbm_js = dbm_struct = ""
     atp_css = atp_js = atp_struct = ""
+    wc_css  = wc_js  = wc_struct  = ""
 
     if needs["globe"]:
         print("Extracting globe demo assets...")
@@ -1610,8 +1739,13 @@ def main() -> None:
         print("Extracting ask-the-plot assets...")
         atp_css, atp_js, atp_struct = ask_the_plot_assets()
 
+    if needs["what_changed"]:
+        print("Extracting what-changed assets...")
+        wc_css, wc_js, wc_struct = what_changed_assets()
+
     print("Substituting placeholders...")
     prose_html = substitute_asides(prose_html)
+    prose_html = substitute_callouts(prose_html)
     prose_html = substitute_excel_solari_video(prose_html)
     prose_html = substitute_homer(prose_html)
     if needs["plotly_vs_pp"]:
@@ -1628,6 +1762,8 @@ def main() -> None:
         prose_html = substitute_flat_view(prose_html, fv_struct)
     if needs["ask_the_plot"]:
         prose_html = substitute_ask_the_plot(prose_html, atp_struct)
+    if needs["what_changed"]:
+        prose_html = substitute_what_changed(prose_html, wc_struct)
     if needs["vera"]:
         prose_html = substitute_vera_applet(prose_html, va_struct)
     prose_html = substitute_cartoon_normal_things(prose_html)
@@ -1648,6 +1784,7 @@ def main() -> None:
         mp4_filename="paradigm-globe-pan.mp4",
         aria_label="Slow cinematic pan over Earth from low orbit, with great-circle arcs drawing in across continents",
         caption="The network the fleet flies on, before the demo lets you play with it.",
+        fullbleed=True,
     )
     prose_html = substitute_runway_video(
         prose_html,
@@ -1655,6 +1792,7 @@ def main() -> None:
         mp4_filename="plotly-vs-powerpoint-morph.mp4",
         aria_label="An old-timey photographer with a magnesium flash captures a complex evolving 3D wireframe of meshes, wind-tunnel readings, post-process versions and design revisions; the printed photo lands on a table while the lattice keeps changing behind it",
         caption="A PNG is a snapshot. The data was already moving by the time the flash went off.",
+        fullbleed=True,
     )
     prose_html = substitute_runway_video(
         prose_html,
@@ -1662,6 +1800,7 @@ def main() -> None:
         mp4_filename="connections-by-hand.mp4",
         aria_label="The same evolving 3D wireframe lattice from the photographer scene. A hand reaches in, plucks a few orbs, and places them onto a plot on a wooden easel. Thin cyan threads stay connected from each plot point back to its source node in the lattice — and pulses travel along them as the lattice keeps shifting.",
         caption="The connections were always meant to be first-class. Engineering data just got there last.",
+        fullbleed=True,
     )
     prose_html = substitute_runway_video(
         prose_html,
@@ -1676,6 +1815,7 @@ def main() -> None:
         mp4_filename="post-it-onslaught.mp4",
         aria_label="Top-down stop-motion of a wooden desk being buried under an absurd flurry of yellow Post-it notes, with one cyan-teal note highlighted at the end",
         caption="Twenty years of being the join, one Post-it at a time.",
+        fullbleed=True,
     )
     prose_html = substitute_runway_video(
         prose_html,
@@ -1712,6 +1852,7 @@ def main() -> None:
         fv_css=fv_css,
         va_css=va_css,
         atp_css=atp_css,
+        wc_css=wc_css,
         prose=prose_html,
         progress_js=PROGRESS_JS,
         globe_js=globe_js,
@@ -1722,6 +1863,7 @@ def main() -> None:
         fv_js=fv_js,
         va_js=va_js,
         atp_js=atp_js,
+        wc_js=wc_js,
     )
 
     OUT.write_text(out)
