@@ -110,6 +110,7 @@
   .ti-prose .ti-ask-the-plot,
   .ti-prose .ti-data-black-market,
   .ti-prose .ti-what-changed,
+  .ti-prose .ti-twenty-years,
   .ti-prose .ti-flowchart-scrolly,
   .ti-prose .ti-orch-scrolly {
     margin-left: calc(50% - 50vw + 8px);
@@ -157,7 +158,8 @@
     .ti-prose .ti-flat-view,
     .ti-prose .ti-ask-the-plot,
     .ti-prose .ti-data-black-market,
-    .ti-prose .ti-what-changed {
+    .ti-prose .ti-what-changed,
+    .ti-prose .ti-twenty-years {
       left: auto;
       margin-left: 0;
       margin-right: 0;
@@ -578,6 +580,53 @@
     }
   }
 
+  /* ---- in-flow bridge link ----
+     A lighter cross-article bridge placed next to the exact argument it
+     continues, not just at the end of the piece. */
+  .ti-prose .ti-bridge-link {
+    display: block;
+    margin: 34px auto 38px;
+    max-width: 580px;
+    padding: 18px 22px 20px;
+    border-left: 3px solid var(--ti-accent);
+    background: color-mix(in srgb, var(--ti-surface) 76%, transparent);
+  }
+  .ti-prose .ti-bridge-eyebrow {
+    margin: 0 0 6px;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ti-accent);
+    font-weight: 800;
+  }
+  .ti-prose .ti-bridge-copy {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ti-fg-dim);
+  }
+  .ti-prose .ti-bridge-action {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 700;
+  }
+  .ti-prose .ti-bridge-action a {
+    color: var(--ti-fg);
+    text-decoration: none;
+    border-bottom: 2px solid var(--ti-accent);
+    padding-bottom: 1px;
+  }
+  .ti-prose .ti-bridge-action a:hover {
+    color: var(--ti-accent);
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-bridge-link {
+      margin: 28px auto 32px;
+      padding: 16px 18px 18px;
+    }
+  }
+
   /* ---- final line (closing emphasis) ----
      The last line of the essay: larger, italic, generous whitespace
      above. Wired via <p class="ti-final"> in the markdown. */
@@ -680,12 +729,14 @@
     line-height: 1.55;
     text-align: left;
     z-index: 60;
+    display: none;
     opacity: 0;
     pointer-events: none;
     transition: opacity 140ms ease;
   }
   .ti-aside:hover .ti-aside-content,
   .ti-aside:focus-within .ti-aside-content {
+    display: block;
     opacity: 1;
     pointer-events: auto;
   }
@@ -715,6 +766,25 @@
   /* If the asterisk sits near the right edge, anchor the tooltip from the
      right rather than centred. CSS-only — uses a class the JS can toggle if
      needed; for now, default centred positioning is fine for narrow column. */
+  @media (max-width: 640px) {
+    .ti-aside {
+      position: static;
+    }
+    .ti-aside-content {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      width: auto;
+      max-width: none;
+      transform: none;
+      z-index: 100;
+    }
+    .ti-aside-content::before,
+    .ti-aside-content::after {
+      display: none;
+    }
+  }
 
   /* ---- paragraph-level callouts ---- */
   .ti-callout {
@@ -1756,22 +1826,26 @@
 <style></style>
 <style></style>
 <style></style>
+<style></style>
 </head>
 <body>
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
 <div class="ti-progress" aria-hidden="true"></div>
 
 <aside class="ti-map" aria-label="Article map" data-article-id="2">
-  <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
-    <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q61.599999999999994,150.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="why-now" />
-    <path class="ti-map-edge" d="M31,90 Q66.6,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q61.599999999999994,210.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="swarm-cant" />
-    <path class="ti-map-edge" d="M31,150 Q66.6,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="how-made" />
-    <path class="ti-map-edge" d="M31,150 Q50.8,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="why-now" />
-    <path class="ti-map-edge" d="M31,270 Q57.39999999999999,330.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="swarm-cant" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q66.6,150.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="swarm-cant" />
-    <path class="ti-map-edge" d="M31,210 Q58.8,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="why-now" data-edge-to="how-made" />
+  <svg class="ti-map-svg" viewBox="0 0 110 480" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
+    <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385 M28,395 L28,445" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
+    <path class="ti-map-edge" d="M31,90 Q73.6,180.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="why-now" />
+    <path class="ti-map-edge" d="M31,90 Q73.6,270.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q48.0,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="problem-class" />
+    <path class="ti-map-edge" d="M31,150 Q68.0,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,150 Q65.2,270.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="how-made" />
+    <path class="ti-map-edge" d="M31,150 Q58.8,210.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="why-now" />
+    <path class="ti-map-edge" d="M31,210 Q60.199999999999996,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="problem-class" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,210 Q65.2,330.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="problem-class" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,330 Q64.39999999999999,390.0 31,450" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="swarm-cant" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q65.2,180.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,270 Q57.39999999999999,330.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="why-now" data-edge-to="how-made" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Up front: Cold open: this is about the person who kept noticing.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -1787,30 +1861,35 @@
       <circle cx="28" cy="150" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
       <circle cx="28" cy="150" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
     </g>
-    <g class="ti-map-node" data-node-id="why-now" tabindex="0" role="link" aria-label="Why this didn’t exist before: Meds + agents arrived at roughly the same time — the pair is what works.">
+    <g class="ti-map-node" data-node-id="problem-class" tabindex="0" role="link" aria-label="The problem class: Aeroelasticity clicked because coupled problems reward the refusal to decouple.">
       <circle cx="28" cy="210" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="210" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
       <circle cx="28" cy="210" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
     </g>
-    <g class="ti-map-node" data-node-id="swarm-cant" tabindex="0" role="link" aria-label="The thing the swarm can’t do: Cross-domain taste: noticing two communities are arguing the same shape.">
+    <g class="ti-map-node" data-node-id="why-now" tabindex="0" role="link" aria-label="Why this didn’t exist before: Meds + agents arrived at roughly the same time — the pair is what works.">
       <circle cx="28" cy="270" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="270" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
       <circle cx="28" cy="270" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
     </g>
-    <g class="ti-map-node" data-node-id="how-made" tabindex="0" role="link" aria-label="How this article got made: Form follows content: the configuration produced the article you’re reading.">
+    <g class="ti-map-node" data-node-id="swarm-cant" tabindex="0" role="link" aria-label="The thing the swarm can’t do: Cross-domain taste: noticing two communities are arguing the same shape.">
       <circle cx="28" cy="330" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="330" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
       <circle cx="28" cy="330" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
     </g>
-    <g class="ti-map-node" data-node-id="thread-close" tabindex="0" role="link" aria-label="The thread: Closer: the brain that was a tax is now an asset.">
+    <g class="ti-map-node" data-node-id="how-made" tabindex="0" role="link" aria-label="How this article got made: Form follows content: the configuration produced the article you’re reading.">
       <circle cx="28" cy="390" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="390" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
       <circle cx="28" cy="390" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
     </g>
+    <g class="ti-map-node" data-node-id="thread-close" tabindex="0" role="link" aria-label="The thread: Closer: the brain that was a tax is now an asset.">
+      <circle cx="28" cy="450" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="450" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="450" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
   </svg>
   <div class="ti-map-tooltip" role="tooltip" aria-hidden="true"><span class="ti-map-tooltip-title"></span><span class="ti-map-tooltip-summary"></span></div>
   <script type="application/json" class="ti-map-data">{
-"intro":{"title":"Up front","summary":"Cold open: this is about the person who kept noticing."},"meds":{"title":"What the meds changed","summary":"The unfinished loop became visible; the through-line became legible."},"configuration":{"title":"The configuration","summary":"One generalist orchestrator routing a swarm of fast cheap specialists."},"why-now":{"title":"Why this didn’t exist before","summary":"Meds + agents arrived at roughly the same time — the pair is what works."},"swarm-cant":{"title":"The thing the swarm can’t do","summary":"Cross-domain taste: noticing two communities are arguing the same shape."},"how-made":{"title":"How this article got made","summary":"Form follows content: the configuration produced the article you’re reading."},"thread-close":{"title":"The thread","summary":"Closer: the brain that was a tax is now an asset."}
+"intro":{"title":"Up front","summary":"Cold open: this is about the person who kept noticing."},"meds":{"title":"What the meds changed","summary":"The unfinished loop became visible; the through-line became legible."},"configuration":{"title":"The configuration","summary":"One generalist orchestrator routing a swarm of fast cheap specialists."},"problem-class":{"title":"The problem class","summary":"Aeroelasticity clicked because coupled problems reward the refusal to decouple."},"why-now":{"title":"Why this didn’t exist before","summary":"Meds + agents arrived at roughly the same time — the pair is what works."},"swarm-cant":{"title":"The thing the swarm can’t do","summary":"Cross-domain taste: noticing two communities are arguing the same shape."},"how-made":{"title":"How this article got made","summary":"Form follows content: the configuration produced the article you’re reading."},"thread-close":{"title":"The thread","summary":"Closer: the brain that was a tax is now an asset."}
   }</script>
 </aside>
 
@@ -1950,7 +2029,7 @@
 </figure>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="why-now" data-node-id="why-now">
-<span class="ti-section-numeral" aria-hidden="true">03</span>
+<span class="ti-section-numeral" aria-hidden="true">04</span>
 <h2 class="ti-section-h2">Why this configuration didn&rsquo;t exist before</h2>
 <p class="ti-section-stand">Neither alone would have done it.</p>
 </section>
@@ -1972,7 +2051,7 @@
 </figure>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="swarm-cant" data-node-id="swarm-cant">
-<span class="ti-section-numeral" aria-hidden="true">04</span>
+<span class="ti-section-numeral" aria-hidden="true">05</span>
 <h2 class="ti-section-h2">The thing the swarm can&rsquo;t do</h2>
 <p class="ti-section-stand">The bridges live in the heads of generalists.</p>
 </section>
@@ -1985,7 +2064,7 @@
 <p>What I&rsquo;ll say with more confidence is that the configuration didn&rsquo;t exist before. Now the same wiring that used to be a tax is the bit the orchestrator role rewards, because the swarm picks up the grind tax that used to compound on you alone. Unfinished projects are something the swarm finishes. Scattered interests are something the swarm follows up on. The connection-noticing — the bit I was always actually doing, even when I didn&rsquo;t know it — is the bit no specialist in the swarm can do for me, because the connection requires having been all of those specialists, badly, at once.</p>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="how-made" data-node-id="how-made">
-<span class="ti-section-numeral" aria-hidden="true">05</span>
+<span class="ti-section-numeral" aria-hidden="true">06</span>
 <h2 class="ti-section-h2">How this article got made</h2>
 <p class="ti-section-stand">The shape decision was the human bit. The grind around it wasn’t.</p>
 </section>
@@ -2008,7 +2087,7 @@
 </figure>
 <div class="ti-divider" aria-hidden="true">✦</div>
 <section class="ti-section" id="thread-close" data-node-id="thread-close">
-<span class="ti-section-numeral" aria-hidden="true">06</span>
+<span class="ti-section-numeral" aria-hidden="true">07</span>
 <h2 class="ti-section-h2">The thread</h2>
 <p class="ti-section-stand">Maybe AI compresses the role later. In 2026, it is real.</p>
 </section>
@@ -2053,7 +2132,7 @@
   update();
 
   const revealTargets = [
-    ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
+    ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market, .ti-twenty-years')
   ];
   revealTargets.forEach(el => el.classList.add('ti-reveal'));
 
@@ -2767,6 +2846,7 @@
 
       return { goToStep: goToStep, disableAutoAdvance: disableAutoAdvance };
     })();</script>
+<script></script>
 <script></script>
 <script></script>
 <script></script>

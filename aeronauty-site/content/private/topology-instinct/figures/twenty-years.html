@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Twenty years of being the join — five short videos, scroll to advance</title>
+<!--
+  Self-contained scrollytelling figure. The article-level build extracts:
+    - this <style> block
+    - the IIFE script containing the token "TwentyYears"
+    - the ty-figure root <div>
+
+  Pattern matches the other scrolly figures (data-black-market, what-changed,
+  ask-the-plot). Five short videos cross-fade in a sticky stage on the right
+  while the prose beats scroll past on the left.
+-->
+<style>
+body {
+  margin: 0;
+  padding: 60px 20px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: #f7f4ef;
+  color: #172033;
+}
+main { max-width: 1280px; margin: 0 auto; }
+
+/* ===========================================================
+   ty- = twenty-years, namespaced.
+   =========================================================== */
+.ty-figure {
+  width: 100%;
+  --ty-ink:    #172033;
+  --ty-muted:  #687387;
+  --ty-faint:  #96a0af;
+  --ty-paper:  #f7f8fb;
+  --ty-line:   #d8dde7;
+  --ty-cyan:   #0891b2;
+  --ty-cyan-2: #22d3ee;
+  --ty-navy:   #101827;
+  color: var(--ty-ink);
+}
+
+.ty-frame {
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 14px;
+  background: var(--ty-paper);
+  padding: 22px 22px 20px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.10);
+}
+
+.ty-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ty-cyan);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.ty-title {
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--ty-ink);
+  letter-spacing: -0.005em;
+  line-height: 1.18;
+}
+.ty-subtitle {
+  font-size: 14px;
+  color: var(--ty-muted);
+  margin: 0 0 18px;
+  line-height: 1.55;
+  max-width: 64ch;
+}
+
+/* Two-column scrolly: prose beats left, sticky video stage right. */
+.ty-scroll {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 0.58fr);
+  gap: 26px;
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .ty-scroll { grid-template-columns: 1fr; }
+}
+
+.ty-prose {
+  display: grid;
+  gap: 0;
+  align-content: start;
+}
+
+.ty-beat {
+  min-height: 78vh;
+  display: grid;
+  align-content: center;
+  padding: 22px 18px;
+  border-left: 3px solid transparent;
+  color: var(--ty-ink);
+  opacity: 0.46;
+  transform: translateY(8px);
+  transition: opacity 240ms ease, transform 240ms ease, border-color 240ms ease;
+}
+.ty-beat.ty-active {
+  opacity: 1;
+  transform: translateY(0);
+  border-left-color: var(--ty-cyan);
+}
+.ty-beat-kicker {
+  margin: 0 0 9px;
+  color: var(--ty-cyan);
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ty-beat h3 {
+  margin: 0 0 12px;
+  color: var(--ty-ink);
+  font-size: clamp(20px, 2.4vw, 30px);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+}
+.ty-beat p {
+  margin: 0;
+  color: var(--ty-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 36ch;
+}
+.ty-beat strong { color: var(--ty-ink); font-weight: 700; }
+
+/* Sticky stage on the right. Holds the 5 videos stacked, cross-faded. */
+.ty-stage-shell {
+  position: sticky;
+  top: 22px;
+  align-self: start;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0a0e1a;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.22);
+}
+.ty-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #0a0e1a;
+}
+.ty-vid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 800ms ease;
+  background: #0a0e1a;
+  pointer-events: none;
+}
+.ty-vid.ty-vid-active { opacity: 1; }
+
+/* Tiny progress chip beneath the stage */
+.ty-stage-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255,255,255,0.92);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ty-muted);
+}
+.ty-stage-meta strong {
+  color: var(--ty-cyan);
+  font-weight: 700;
+}
+.ty-progress {
+  display: inline-flex;
+  gap: 5px;
+}
+.ty-progress span {
+  width: 16px; height: 4px;
+  border-radius: 2px;
+  background: var(--ty-line);
+  transition: background 240ms ease, width 240ms ease;
+}
+.ty-progress span.ty-on {
+  background: var(--ty-cyan);
+  width: 24px;
+}
+
+/* Caption beneath the whole figure. */
+.ty-caption {
+  margin: 18px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ty-muted);
+  border-top: 1px solid var(--ty-line);
+  padding-top: 14px;
+}
+.ty-caption strong { color: var(--ty-ink); font-weight: 600; }
+.ty-caption em { color: var(--ty-ink); font-style: italic; }
+
+@media (max-width: 880px) {
+  .ty-stage-shell { position: relative; top: 0; }
+  .ty-beat { min-height: 56vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ty-vid { transition: none; }
+  .ty-beat { transition: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1 style="font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;">
+    Twenty years of being the join (preview)
+  </h1>
+  <p style="text-align:center;font-size:12px;color:#6b7280;margin-top:0;">
+    Standalone preview file. The build lifts the
+    <code>ty-figure</code> block plus the inline script at the bottom.
+  </p>
+
+  <!-- =========================================================
+       The figure itself.
+       ========================================================= -->
+  <div class="ty-figure" id="ty-figure">
+    <div class="ty-frame">
+
+      <p class="ty-eyebrow">Twenty years of being the join</p>
+      <h3 class="ty-title">All of this stops if your data carries its own connections.</h3>
+      <p class="ty-subtitle">Five small loops. Each one is the same shape: a human re&mdash;entering structure the system already knew.</p>
+
+      <div class="ty-scroll">
+
+        <!-- Prose beats. One per video. -->
+        <div class="ty-prose">
+          <div class="ty-beat" data-ty-step="1">
+            <p class="ty-beat-kicker">01 &middot; the wind tunnel</p>
+            <h3>Re-typing yesterday&rsquo;s run sheet.</h3>
+            <p>AOA, BETA, RPM, MASS_FLOW, RUN_NUM, DATE, COMMENT &mdash; <strong>every field the same value as the run an hour ago.</strong> The system that recorded those numbers is sitting one rack over. It already knows.</p>
+          </div>
+          <div class="ty-beat" data-ty-step="2">
+            <p class="ty-beat-kicker">02 &middot; the doctor&rsquo;s office</p>
+            <h3>Same name, same date of birth, same phone number, again.</h3>
+            <p>The receptionist watches you fill it in. The form goes into a folder she will never open. Your details have not changed since the last visit. <strong>Nor have hers.</strong></p>
+          </div>
+          <div class="ty-beat" data-ty-step="3">
+            <p class="ty-beat-kicker">03 &middot; the email reply</p>
+            <h3>&ldquo;Can you regen the chart with the new mesh?&rdquo;</h3>
+            <p>Subject line: <em>Re: Re: Re:</em>. The plot is a PNG. The mesh is in someone else&rsquo;s git. The connection between them is in <strong>your inbox</strong>, where it has lived for three weeks.</p>
+          </div>
+          <div class="ty-beat" data-ty-step="4">
+            <p class="ty-beat-kicker">04 &middot; the Teams ping</p>
+            <h3>Slide 14 still has the November plot.</h3>
+            <p>Cert deck went out this morning. The plot it&rsquo;s built on was superseded in February. Nobody told the slide. <strong>Of course they didn&rsquo;t &mdash; the slide isn&rsquo;t connected to anything.</strong></p>
+          </div>
+          <div class="ty-beat" data-ty-step="5">
+            <p class="ty-beat-kicker">05 &middot; the post-it</p>
+            <h3>&ldquo;Where did this CL come from? Ask Marsh??&rdquo;</h3>
+            <p>The most honest provenance system in the building. A square of yellow paper, one human&rsquo;s memory, and a question mark. <strong>This is the join, finally rendered visible.</strong></p>
+          </div>
+        </div>
+
+        <!-- Sticky stage with cross-fading videos. -->
+        <div class="ty-stage-shell" aria-label="Five short scenes of the same loop, blending across as you scroll">
+          <div class="ty-stage" id="ty-stage">
+            <video class="ty-vid ty-vid-active" data-ty-vid="1" src="twenty-years/scene-1.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Wind-tunnel DAQ terminal: cursor advances through the COMMENT field"></video>
+            <video class="ty-vid" data-ty-vid="2" src="twenty-years/scene-2.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Doctor's office form on a clipboard: a hand writes one more line"></video>
+            <video class="ty-vid" data-ty-vid="3" src="twenty-years/scene-3.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Outlook reply: cursor moves to Send and clicks"></video>
+            <video class="ty-vid" data-ty-vid="4" src="twenty-years/scene-4.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Teams DM: a new bubble slides in, a check-mark reaction ticks on"></video>
+            <video class="ty-vid" data-ty-vid="5" src="twenty-years/scene-5.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Yellow Post-it on a desk: lifts slightly in a draught, a coffee ring glistens"></video>
+          </div>
+          <div class="ty-stage-meta">
+            <span><strong id="ty-step-num">01</strong> / 05</span>
+            <span class="ty-progress" id="ty-progress" aria-hidden="true">
+              <span class="ty-on"></span><span></span><span></span><span></span><span></span>
+            </span>
+            <span id="ty-step-label">the wind tunnel</span>
+          </div>
+        </div>
+
+      </div>
+
+      <p class="ty-caption">
+        <strong>Twenty years of being the join</strong> &mdash; and all of it stops the moment your engineering data carries the connections itself.
+      </p>
+
+    </div>
+  </div>
+</main>
+
+<script>
+window.TwentyYears = (function () {
+  'use strict';
+
+  const figure = document.getElementById('ty-figure');
+  if (!figure) return null;
+
+  const beats = Array.from(figure.querySelectorAll('.ty-beat'));
+  const vids  = Array.from(figure.querySelectorAll('.ty-vid'));
+  const dots  = Array.from(figure.querySelectorAll('#ty-progress span'));
+  const stepNum = figure.querySelector('#ty-step-num');
+  const stepLabel = figure.querySelector('#ty-step-label');
+
+  const LABELS = [
+    'the wind tunnel',
+    'the doctor’s office',
+    'the email reply',
+    'the Teams ping',
+    'the post-it',
+  ];
+
+  let active = 1;
+
+  function setStep(n) {
+    if (n === active) return;
+    active = n;
+    beats.forEach(b => b.classList.toggle('ty-active', Number(b.dataset.tyStep) === n));
+    vids.forEach(v => v.classList.toggle('ty-vid-active', Number(v.dataset.tyVid) === n));
+    dots.forEach((d, i) => d.classList.toggle('ty-on', (i + 1) === n));
+    if (stepNum)   stepNum.textContent   = String(n).padStart(2, '0');
+    if (stepLabel) stepLabel.textContent = LABELS[n - 1] || '';
+  }
+
+  // First beat starts active.
+  beats[0] && beats[0].classList.add('ty-active');
+
+  // Be tolerant of autoplay refusal (Safari, etc.) — still works as a
+  // poster while the user can tap-to-play. We keep the videos muted so
+  // most browsers will autoplay them silently.
+  vids.forEach(v => {
+    const tryPlay = () => { try { v.play().catch(() => {}); } catch (e) {} };
+    v.addEventListener('canplay', tryPlay, { once: true });
+    tryPlay();
+  });
+
+  // IntersectionObserver: pick whichever beat is closest to the
+  // reader's middle band as the active one. Mirrors the data-black-market
+  // / what-changed / ask-the-plot pattern.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      // Aggregate: pick the entry whose centre is closest to viewport
+      // mid-line and is intersecting.
+      let best = null;
+      let bestDist = Infinity;
+      const mid = window.innerHeight * 0.5;
+      // Re-evaluate against all beats, not just entries this fire — the
+      // entries set is partial.
+      beats.forEach(b => {
+        const r = b.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) return;
+        const c = (r.top + r.bottom) / 2;
+        const d = Math.abs(c - mid);
+        if (d < bestDist) { bestDist = d; best = b; }
+      });
+      if (best) setStep(Number(best.dataset.tyStep));
+    }, {
+      threshold: [0, 0.25, 0.5, 0.75, 1],
+      rootMargin: '-30% 0px -30% 0px',
+    });
+    beats.forEach(b => io.observe(b));
+    // Also re-evaluate on scroll (cheap), since IO doesn't always fire
+    // densely enough for a five-beat scroll.
+    let raf = 0;
+    window.addEventListener('scroll', () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        let best = null, bestDist = Infinity;
+        const mid = window.innerHeight * 0.5;
+        beats.forEach(b => {
+          const r = b.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > window.innerHeight) return;
+          const c = (r.top + r.bottom) / 2;
+          const d = Math.abs(c - mid);
+          if (d < bestDist) { bestDist = d; best = b; }
+        });
+        if (best) setStep(Number(best.dataset.tyStep));
+      });
+    }, { passive: true });
+  }
+
+  return { setStep };
+})();
+</script>
+</body>
+</html>

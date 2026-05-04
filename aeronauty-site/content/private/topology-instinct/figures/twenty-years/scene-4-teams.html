@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Scene 4 — Teams DM</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #f5f5f5; height: 720px; min-height: 720px; }
+  body {
+    width: 1280px;
+    height: 720px;
+    min-height: 720px;
+    overflow: hidden;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #252423;
+  }
+  .app { height: 720px !important; }
+  .app { width: 1280px; height: 720px; display: flex; flex-direction: column; background: #f5f5f5; }
+  /* Lavender top chrome */
+  .titlebar {
+    height: 48px;
+    background: #4b53bc;
+    display: flex; align-items: center; padding: 0 18px;
+    gap: 18px;
+    color: #fff;
+  }
+  .titlebar .logo {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #6264a7, #464775);
+    border-radius: 4px;
+    color: #fff; font-weight: 800; font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    letter-spacing: -0.04em;
+  }
+  .titlebar .name { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; opacity: 0.96; }
+  /* fill bottom area cleanly */
+  .titlebar .search {
+    flex: 1;
+    margin: 0 28px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 4px;
+    height: 30px;
+    padding: 0 14px;
+    color: #e6e6f5;
+    display: flex; align-items: center;
+    font-size: 13px;
+  }
+  .titlebar .me {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #ffb900;
+    color: #5a3d00;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .body { flex: 1; min-height: 0; display: grid; grid-template-columns: 80px 280px 1fr; }
+  html, body { height: 720px; }
+  /* left rail */
+  .rail {
+    background: #ebebf6;
+    display: flex; flex-direction: column;
+    align-items: center; padding-top: 14px; gap: 18px;
+    border-right: 1px solid #d8d8e2;
+  }
+  .rail .icon {
+    width: 40px; height: 40px;
+    background: #fff;
+    border-radius: 4px;
+    color: #6264a7;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+  }
+  .rail .icon.cur { background: #6264a7; color: #fff; }
+  .rail .icon.lbl { font-size: 10px; }
+  /* channels list */
+  .channels {
+    background: #f5f5fb;
+    border-right: 1px solid #e1e1ec;
+    padding: 16px 12px;
+    font-size: 13.5px;
+  }
+  .channels h3 { margin: 0 8px 10px; font-size: 14px; color: #252423; }
+  .channels .team { margin-bottom: 14px; }
+  .channels .team .name {
+    font-weight: 600; padding: 6px 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .channels .team .name::before {
+    content: ""; display: inline-block; width: 22px; height: 22px;
+    background: #6264a7; border-radius: 4px; color: #fff;
+    text-align: center; font-size: 12px; line-height: 22px;
+    color: #fff; font-weight: 700;
+  }
+  .channels .ch {
+    padding: 5px 12px 5px 40px;
+    color: #4b4a48;
+  }
+  .channels .ch.cur {
+    background: #e9e9f6;
+    border-left: 3px solid #6264a7;
+    padding-left: 37px;
+    color: #6264a7; font-weight: 600;
+  }
+  /* main pane */
+  .main { background: #fff; display: flex; flex-direction: column; }
+  .ch-head {
+    border-bottom: 1px solid #e1e1ec;
+    padding: 14px 22px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .ch-head .hash {
+    color: #6264a7; font-size: 22px; font-weight: 800;
+    margin-right: 4px;
+  }
+  .ch-head h2 { margin: 0; font-size: 17px; }
+  .ch-head .tabs { display: flex; gap: 18px; margin-left: auto; font-size: 13px; color: #605e5c; }
+  .ch-head .tabs .t.active { color: #252423; font-weight: 600; border-bottom: 2px solid #6264a7; padding-bottom: 8px; }
+  .feed { flex: 1; padding: 26px 38px; display: flex; flex-direction: column; gap: 18px; overflow: hidden; }
+  .day-divider {
+    text-align: center; color: #605e5c; font-size: 12px;
+    border-bottom: 1px solid #e1e1ec; line-height: 0; margin: 6px 0 14px;
+  }
+  .day-divider span { background: #fff; padding: 0 14px; }
+  .msg {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .msg .av {
+    width: 36px; height: 36px; border-radius: 50%;
+    color: #fff; font-size: 13px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .msg .av.kr { background: #d83b01; }
+  .msg .av.you { background: #0b6a0b; }
+  .msg .av.mr { background: #5c2d91; }
+  .msg .who { font-size: 13.5px; font-weight: 700; color: #252423; }
+  .msg .when { font-size: 11.5px; color: #605e5c; margin-left: 8px; font-weight: 400; }
+  .msg .bubble {
+    margin-top: 4px;
+    padding: 10px 14px;
+    background: #f3f2fb;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #252423;
+    max-width: 760px;
+  }
+  .msg.new .bubble {
+    background: #fff7e0;
+    border-left: 3px solid #ffb900;
+    animation: none;
+  }
+  .mention { color: #6264a7; font-weight: 600; }
+  .reactions {
+    margin-top: 6px;
+    display: inline-flex; gap: 6px;
+    background: #fff;
+    border: 1px solid #e1e1ec;
+    border-radius: 14px;
+    padding: 2px 8px;
+    font-size: 12px;
+    color: #605e5c;
+  }
+  .reactions .r { display: inline-flex; align-items: center; gap: 4px; }
+  .reactions .check {
+    width: 16px; height: 16px;
+    background: #22d3ee;
+    border-radius: 50%;
+    color: #06303a;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.35);
+  }
+  /* compose box at bottom */
+  .compose {
+    border-top: 1px solid #e1e1ec;
+    padding: 14px 24px;
+    background: #fff;
+  }
+  .compose .input {
+    border: 1px solid #d8d8e2; border-radius: 4px;
+    padding: 10px 14px; font-size: 13.5px; color: #a19f9d;
+    height: 18px;
+  }
+  .compose .icons {
+    margin-top: 6px;
+    display: flex; gap: 10px; color: #6264a7; font-size: 13px;
+  }
+  .compose .icons span { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar">
+      <span class="logo">C</span>
+      <span class="name">Channels</span>
+      <span class="search">Search</span>
+      <span class="me">HT</span>
+    </div>
+    <div class="body">
+      <div class="rail">
+        <div class="icon">A</div>
+        <div class="icon cur">C</div>
+        <div class="icon">T</div>
+        <div class="icon">F</div>
+        <div class="icon">M</div>
+        <div class="icon">+</div>
+      </div>
+      <div class="channels">
+        <h3>Teams</h3>
+        <div class="team">
+          <div class="name">Aero</div>
+          <div class="ch">general</div>
+          <div class="ch">cert&mdash;dossier</div>
+          <div class="ch cur"># aero&mdash;fly&mdash;qual</div>
+          <div class="ch">hinge&mdash;moment&mdash;wg</div>
+          <div class="ch">stability</div>
+        </div>
+        <div class="team">
+          <div class="name">Cert</div>
+          <div class="ch">general</div>
+          <div class="ch">audit&mdash;trail</div>
+          <div class="ch">deck&mdash;reviews</div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="ch-head">
+          <span class="hash">#</span>
+          <h2>aero&mdash;fly&mdash;qual</h2>
+          <div class="tabs">
+            <span class="t active">Posts</span>
+            <span class="t">Files</span>
+            <span class="t">Wiki</span>
+            <span class="t">+</span>
+          </div>
+        </div>
+        <div class="feed">
+          <div class="day-divider"><span>Today</span></div>
+
+          <div class="msg">
+            <div class="av mr">MR</div>
+            <div>
+              <span class="who">Marsh Ronquist</span><span class="when">14:02</span>
+              <div class="bubble">Cert deck draft posted to the channel files. Ping me with comments by EOD.</div>
+            </div>
+          </div>
+
+          <div class="msg">
+            <div class="av you">HT</div>
+            <div>
+              <span class="who">Harriet Thompson</span><span class="when">14:11</span>
+              <div class="bubble">On it. Cross&mdash;referencing slide 14 against the latest hinge moment run now.</div>
+            </div>
+          </div>
+
+          <div class="msg new">
+            <div class="av kr">KR</div>
+            <div>
+              <span class="who">Kira Rao</span><span class="when">14:18</span>
+              <div class="bubble"><span class="mention">@aero</span> &mdash; slide 14 of the cert deck still has the Nov plot. Can you regen and re&mdash;paste?</div>
+              <div class="reactions">
+                <span class="r"><span class="check">&check;</span> 1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="compose">
+          <div class="input">Type a new message</div>
+          <div class="icons"><span>B</span><span>I</span><span>U</span><span>&#128206;</span><span>&#128512;</span><span>@</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

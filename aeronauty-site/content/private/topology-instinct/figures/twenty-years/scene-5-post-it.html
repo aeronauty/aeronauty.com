@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Scene 5 — Post-it on a desk</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    font-family: "Caveat", "Marker Felt", "Segoe Print", "Comic Sans MS", cursive;
+  }
+  .scene {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    background:
+      radial-gradient(ellipse at 75% 18%, rgba(255, 218, 150, 0.55), rgba(0,0,0,0) 50%),
+      radial-gradient(ellipse at 30% 90%, rgba(0, 0, 0, 0.45) 0%, rgba(0,0,0,0) 60%),
+      repeating-linear-gradient(
+        92deg,
+        #7a4f29 0px,
+        #7a4f29 3px,
+        #6a4422 4px,
+        #7a4f29 7px,
+        #855a35 11px
+      );
+    overflow: hidden;
+  }
+  /* Late afternoon warm wash */
+  .scene::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(120deg, rgba(255, 200, 130, 0.18) 0%, rgba(255,140,80,0.08) 60%, rgba(0,0,0,0.45) 100%);
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  /* Edge of monitor at top of frame */
+  .monitor {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 200px;
+    background: linear-gradient(180deg, #1a1a1c 0%, #1f1f22 92%, #2c2c30 100%);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 -3px 0 rgba(0,0,0,0.6);
+  }
+  .monitor::after {
+    content: "";
+    position: absolute; left: 0; right: 0; top: 8px; bottom: 18px;
+    background:
+      linear-gradient(180deg, rgba(70,90,120,0.4), rgba(20,30,50,0.55)),
+      radial-gradient(ellipse at 50% 30%, rgba(140,180,230,0.18), rgba(0,0,0,0) 60%);
+  }
+  /* Post-it */
+  .stickit {
+    position: absolute;
+    left: 480px; top: 195px;
+    width: 360px; height: 360px;
+    background:
+      linear-gradient(160deg, #fff5a3 0%, #fcdf5e 100%);
+    transform: rotate(-3.5deg);
+    box-shadow:
+      0 22px 30px rgba(0,0,0,0.45),
+      0 8px 12px rgba(0,0,0,0.25),
+      inset 0 -8px 0 rgba(180, 140, 0, 0.18);
+    color: #3a2b03;
+    padding: 50px 38px 32px;
+    box-sizing: border-box;
+    font-size: 38px;
+    line-height: 1.18;
+    letter-spacing: 0.005em;
+  }
+  /* curl shadow on the bottom edge implies the lift */
+  .stickit::after {
+    content: "";
+    position: absolute;
+    left: -8px; right: -8px; bottom: -22px;
+    height: 30px;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.45), rgba(0,0,0,0) 70%);
+    filter: blur(2px);
+  }
+  /* tape strip across the top */
+  .tape {
+    position: absolute;
+    left: 110px; top: -18px;
+    width: 140px; height: 36px;
+    background: rgba(255, 255, 255, 0.55);
+    border-left: 1px dashed rgba(255,255,255,0.7);
+    border-right: 1px dashed rgba(255,255,255,0.7);
+    transform: rotate(-2deg);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.18);
+  }
+  /* cyan accent — tiny highlight on the corner */
+  .corner-glow {
+    position: absolute;
+    right: -10px; top: -8px;
+    width: 56px; height: 56px;
+    background: radial-gradient(circle at 30% 30%, rgba(34,211,238,0.95) 0%, rgba(34,211,238,0.4) 35%, rgba(34,211,238,0) 70%);
+    pointer-events: none;
+    border-radius: 50%;
+    filter: blur(0.5px);
+  }
+  .corner-fold {
+    position: absolute;
+    right: 0; top: 0;
+    width: 0; height: 0;
+    border-left: 32px solid transparent;
+    border-top: 32px solid #f5d040;
+    filter: drop-shadow(-2px 2px 2px rgba(0,0,0,0.25));
+  }
+  .scribble {
+    font-family: "Caveat", "Marker Felt", "Segoe Print", "Comic Sans MS", cursive;
+    transform: rotate(-1deg);
+  }
+  .scribble .l1 { display: block; margin-bottom: 12px; }
+  .scribble .l2 { display: block; }
+  .scribble .underline {
+    border-bottom: 3px solid #2a1f02;
+    padding-bottom: 1px;
+  }
+  /* second post-it, slightly hidden behind */
+  .stickit-back {
+    position: absolute;
+    left: 522px; top: 224px;
+    width: 360px; height: 360px;
+    background: linear-gradient(160deg, #ffe07a 0%, #f6c732 100%);
+    transform: rotate(2deg);
+    box-shadow: 0 16px 24px rgba(0,0,0,0.35);
+    z-index: -1;
+  }
+  /* coffee ring + mug */
+  .ring {
+    position: absolute;
+    left: 880px; top: 360px;
+    width: 240px; height: 60px;
+    border-radius: 50%;
+    border: 5px solid rgba(78, 38, 18, 0.55);
+    box-shadow:
+      inset 0 0 0 2px rgba(78,38,18,0.20),
+      0 1px 1px rgba(0,0,0,0.4);
+    transform: rotate(-7deg) scaleY(0.42);
+    background: radial-gradient(ellipse at center, rgba(78,38,18,0.05), rgba(78,38,18,0));
+  }
+  .ring.r2 {
+    left: 940px; top: 480px;
+    width: 200px; height: 50px;
+    border-color: rgba(78, 38, 18, 0.42);
+    transform: rotate(4deg) scaleY(0.45);
+  }
+  .ring-glint {
+    position: absolute;
+    left: 920px; top: 358px;
+    width: 60px; height: 14px;
+    background: linear-gradient(90deg, rgba(255,240,200,0) 0%, rgba(255,240,200,0.85) 50%, rgba(255,240,200,0) 100%);
+    border-radius: 8px;
+    transform: rotate(-7deg);
+    filter: blur(1px);
+    opacity: 0.7;
+  }
+  /* a stray pencil */
+  .pencil {
+    position: absolute;
+    left: 80px; top: 580px;
+    width: 280px; height: 14px;
+    background: linear-gradient(90deg, #2a2a2a 0%, #2a2a2a 8%, #d2a23a 8%, #f3c95a 22%, #d8a23a 28%, #f3c95a 36%, #c2933a 60%, #f3c95a 70%, #f3e0a5 96%, #fff 100%);
+    border-radius: 2px;
+    transform: rotate(-12deg);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.4);
+  }
+  .pencil::after {
+    content: ""; position: absolute; right: -10px; top: -1px;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 14px solid #1a1a1a;
+  }
+  /* paperclip */
+  .clip {
+    position: absolute;
+    left: 230px; top: 470px;
+    width: 26px; height: 60px;
+    border: 3px solid #b9bcc3;
+    border-radius: 12px / 24px;
+    transform: rotate(28deg);
+    background: transparent;
+  }
+  .clip::after {
+    content: ""; position: absolute; left: 4px; top: 8px;
+    width: 14px; height: 36px;
+    border: 3px solid #b9bcc3;
+    border-radius: 6px / 18px;
+    border-bottom-color: transparent;
+  }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="monitor"></div>
+
+    <!-- coffee + ring -->
+    <div class="ring"></div>
+    <div class="ring r2"></div>
+    <div class="ring-glint"></div>
+
+    <!-- secondary post-it tucked behind -->
+    <div class="stickit-back"></div>
+
+    <!-- pencil + paperclip -->
+    <div class="pencil"></div>
+    <div class="clip"></div>
+
+    <!-- main post-it -->
+    <div class="stickit">
+      <div class="tape"></div>
+      <div class="corner-fold"></div>
+      <div class="corner-glow"></div>
+      <div class="scribble">
+        <span class="l1">Where did this <span class="underline">CL</span></span>
+        <span class="l1">come from?</span>
+        <span class="l2">Ask Marsh??</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

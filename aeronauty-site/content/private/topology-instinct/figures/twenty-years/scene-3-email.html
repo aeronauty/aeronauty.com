@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Scene 3 — Outlook reply</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #f3f2f1; height: 720px; min-height: 720px; }
+  body {
+    width: 1280px;
+    height: 720px;
+    min-height: 720px;
+    overflow: hidden;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #201f1e;
+  }
+  .container, .app { height: 720px !important; }
+  /* Outlook-style chrome */
+  .app { width: 1280px; height: 720px; display: flex; flex-direction: column; background: #faf9f8; }
+  html, body { height: 720px; }
+  .titlebar {
+    height: 32px;
+    background: #0078d4;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px;
+    color: #fff;
+    font-size: 13px;
+  }
+  .titlebar .lhs { display: flex; gap: 14px; align-items: center; }
+  .titlebar .dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; opacity: 0.7; }
+  .titlebar .rhs { display: flex; gap: 18px; opacity: 0.9; font-weight: 300; }
+  .ribbon {
+    height: 64px;
+    background: #fff;
+    border-bottom: 1px solid #edebe9;
+    display: flex; align-items: center; padding: 0 22px;
+    gap: 28px;
+  }
+  .ribbon .tab { font-size: 14px; color: #3b3a39; padding: 8px 12px; border-radius: 4px; }
+  .ribbon .tab.active { background: #f3f2f1; font-weight: 600; color: #0078d4; }
+  .compose {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    background: #fff;
+  }
+  .container > .app { height: 720px; }
+  /* sidebar w/ folders */
+  .side {
+    background: #faf9f8;
+    border-right: 1px solid #edebe9;
+    padding: 16px 14px;
+    font-size: 13.5px;
+    color: #605e5c;
+  }
+  .side .folder {
+    padding: 8px 10px; border-radius: 4px; cursor: default;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .side .folder.cur { background: #e1efff; color: #0078d4; font-weight: 600; }
+  .side .folder .ic { width: 14px; height: 14px; background: #c5c4c2; border-radius: 2px; }
+  .side .folder.cur .ic { background: #0078d4; }
+  .side .hdr {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #a19f9d; margin: 18px 6px 6px;
+  }
+  /* Compose pane */
+  .pane {
+    display: flex; flex-direction: column;
+    padding: 0;
+  }
+  .pane-head {
+    padding: 18px 28px 10px;
+    border-bottom: 1px solid #edebe9;
+  }
+  .pane-head h1 {
+    font-size: 20px; margin: 0 0 12px; font-weight: 600; color: #201f1e;
+  }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .send-btn {
+    background: #0078d4; color: #fff; border: 0; border-radius: 3px;
+    padding: 8px 22px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .send-btn.cyan {
+    background: #22d3ee; color: #0a2e3a;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.35);
+    transform: scale(1.04);
+  }
+  .send-btn .arrow { display: inline-block; width: 14px; height: 14px; border-right: 2px solid currentColor; border-top: 2px solid currentColor; transform: rotate(45deg); margin-right: -2px; }
+  .pill {
+    background: #fff; border: 1px solid #d2d0ce; border-radius: 3px;
+    padding: 6px 12px; font-size: 13px; color: #323130;
+  }
+  .pill.icon { padding: 6px 8px; }
+  .form { padding: 4px 28px 0; display: grid; gap: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    align-items: center;
+    border-bottom: 1px solid #edebe9;
+    padding: 10px 0;
+    font-size: 14px;
+  }
+  .row .lbl { color: #605e5c; }
+  .row .val { color: #201f1e; }
+  .recipient {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #f3f2f1; border-radius: 14px; padding: 3px 12px 3px 4px; font-size: 13px;
+  }
+  .av { width: 22px; height: 22px; border-radius: 50%; background: #d83b01; color: #fff; display:inline-flex; align-items:center; justify-content:center; font-size: 11px; font-weight: 700; }
+  .body {
+    padding: 22px 32px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #201f1e;
+  }
+  .body p { margin: 0 0 14px; }
+  .sig {
+    color: #605e5c; font-size: 13px;
+    border-top: 1px solid #edebe9;
+    padding-top: 10px;
+    margin-top: 16px;
+  }
+  /* fake mouse cursor hovering over Send */
+  .cursor {
+    position: absolute;
+    left: 386px; top: 192px;
+    width: 22px; height: 22px;
+    pointer-events: none;
+    z-index: 5;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
+  }
+  .cursor svg { width: 100%; height: 100%; }
+  .container { position: relative; width: 1280px; height: 720px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="app">
+      <div class="titlebar">
+        <span class="lhs"><span class="dot"></span> Outlook &nbsp;&middot;&nbsp; Inbox &mdash; harriet.t@example.com</span>
+        <span class="rhs"><span>&minus;</span><span>&square;</span><span>&times;</span></span>
+      </div>
+      <div class="ribbon">
+        <span class="tab">File</span>
+        <span class="tab active">Message</span>
+        <span class="tab">Insert</span>
+        <span class="tab">Format</span>
+        <span class="tab">Review</span>
+        <span class="tab">Help</span>
+      </div>
+      <div class="compose">
+        <div class="side">
+          <div class="folder"><span class="ic"></span> Favourites</div>
+          <div class="hdr">Folders</div>
+          <div class="folder cur"><span class="ic"></span> Inbox <span style="margin-left:auto;font-weight:700;">142</span></div>
+          <div class="folder"><span class="ic"></span> Drafts <span style="margin-left:auto;color:#a19f9d;">7</span></div>
+          <div class="folder"><span class="ic"></span> Sent Items</div>
+          <div class="folder"><span class="ic"></span> Deleted Items</div>
+          <div class="folder"><span class="ic"></span> Junk Email</div>
+          <div class="folder"><span class="ic"></span> Archive</div>
+          <div class="hdr">Groups</div>
+          <div class="folder"><span class="ic"></span> aero&mdash;fly&mdash;qual</div>
+          <div class="folder"><span class="ic"></span> cert&mdash;dossier</div>
+          <div class="folder"><span class="ic"></span> hinge&mdash;moment&mdash;wg</div>
+        </div>
+        <div class="pane">
+          <div class="pane-head">
+            <h1>Re: Re: Re: Q4 plot &mdash; please update with the new mesh</h1>
+            <div class="toolbar">
+              <button class="send-btn cyan"><span class="arrow"></span>Send</button>
+              <span class="pill icon">&#128206;</span>
+              <span class="pill">Attach file</span>
+              <span class="pill">!</span>
+              <span class="pill">Discard</span>
+            </div>
+          </div>
+          <div class="form">
+            <div class="row"><span class="lbl">From</span><span class="val">harriet.t@example.com</span></div>
+            <div class="row"><span class="lbl">To</span><span class="val">
+              <span class="recipient"><span class="av">SK</span> Sarah Kavanagh</span>
+            </span></div>
+            <div class="row"><span class="lbl">Cc</span><span class="val">
+              <span class="recipient"><span class="av" style="background:#0b6a0b">MR</span> Marsh Ronquist</span>
+            </span></div>
+            <div class="row"><span class="lbl">Subject</span><span class="val">Re: Re: Re: Q4 plot &mdash; please update with the new mesh</span></div>
+          </div>
+          <div class="body">
+            <p>Hi Sarah,</p>
+            <p>Can you regen the hinge&mdash;moment chart with the new geometry? Thanks.</p>
+            <div class="sig">Harriet&nbsp;&middot;&nbsp;Aero / Fly Qual<br/>sent from Outlook</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- cursor near Send -->
+    <div class="cursor">
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M2 2 L14 8.6 L8.4 9.4 L9.4 14.6 L7.4 14.9 L6 9.7 L2 9.6 Z"
+              fill="#fff" stroke="#000" stroke-width="0.9" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Scene 1 — Wind-tunnel DAQ terminal</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #000; }
+  body {
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    font-family: "Courier New", "Courier Prime", ui-monospace, monospace;
+  }
+  /* Fortran-era CRT — phosphor green on black, scanlines, vignette. */
+  .crt {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    background:
+      radial-gradient(ellipse at 50% 52%, rgba(20, 60, 25, 0.55), rgba(0,0,0,0) 65%),
+      #000;
+    color: #4ee04e;
+    overflow: hidden;
+    text-shadow: 0 0 2px rgba(110, 255, 110, 0.85), 0 0 6px rgba(40, 180, 50, 0.55);
+  }
+  /* faint scanlines */
+  .crt::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0.22) 3px,
+      rgba(0, 0, 0, 0) 4px
+    );
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    opacity: 0.85;
+  }
+  /* edge vignette */
+  .crt::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.85) 100%);
+    pointer-events: none;
+  }
+  .frame {
+    position: absolute;
+    inset: 36px 60px 36px 60px;
+    border: 1px solid #2c8a2c;
+    padding: 28px 36px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .hdr {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    color: #6dff6d;
+    border-bottom: 1px solid #2c8a2c;
+    padding-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .title {
+    font-size: 24px;
+    letter-spacing: 0.18em;
+    text-align: center;
+    color: #9affa0;
+    margin: 4px 0 10px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #4ee04e;
+    text-align: center;
+    letter-spacing: 0.16em;
+    opacity: 0.7;
+    margin-bottom: 14px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 22px;
+    font-size: 26px;
+    line-height: 1.55;
+    align-items: baseline;
+  }
+  .label {
+    color: #6dff6d;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .val {
+    color: #4ee04e;
+    border-bottom: 1px dotted #2c8a2c;
+    padding-bottom: 2px;
+    min-height: 1.4em;
+  }
+  .row.active .val { color: #aaffaa; }
+  .cur {
+    display: inline-block;
+    width: 14px;
+    height: 26px;
+    background: #22d3ee;
+    box-shadow: 0 0 6px #22d3ee, 0 0 14px rgba(34, 211, 238, 0.7);
+    vertical-align: -4px;
+    margin-left: 2px;
+  }
+  .footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #6dff6d;
+    border-top: 1px solid #2c8a2c;
+    padding-top: 10px;
+    letter-spacing: 0.12em;
+    opacity: 0.85;
+  }
+  .blink-bar {
+    width: 14px; height: 26px;
+    display: inline-block;
+    background: #4ee04e;
+    margin-left: 4px;
+    vertical-align: -4px;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+  <div class="crt">
+    <div class="frame">
+      <div class="hdr">
+        <span>WTNL DAQ V3.7</span>
+        <span>TERMINAL 04 / SECT B</span>
+        <span>RUN ENTRY</span>
+      </div>
+      <div class="title">RUN METRIC ENTRY</div>
+      <div class="subtitle">--- COMPLETE ALL FIELDS / PRESS RETURN TO ADVANCE ---</div>
+
+      <div class="row"><span class="label">AOA</span><span class="val">  6.000  DEG</span></div>
+      <div class="row"><span class="label">BETA</span><span class="val">  0.000  DEG</span></div>
+      <div class="row"><span class="label">RPM</span><span class="val">  2400</span></div>
+      <div class="row"><span class="label">MASS_FLOW</span><span class="val">  0.482  KG/S</span></div>
+      <div class="row"><span class="label">RUN_NUM</span><span class="val">  00417</span></div>
+      <div class="row"><span class="label">DATE</span><span class="val">  03 MAY 2026</span></div>
+      <div class="row active"><span class="label">COMMENT</span><span class="val">REPEAT OF RUN 0041<span class="cur"></span></span></div>
+
+      <div class="footer">
+        <span>F1=HELP  F4=PREV  F5=SUBMIT</span>
+        <span>BUF: 7/7</span>
+        <span>OK<span class="blink-bar"></span></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

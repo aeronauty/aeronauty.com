@@ -52,6 +52,7 @@ PV_HTML      = ROOT / "figures" / "plotly-vs-powerpoint.html"
 DBM_HTML     = ROOT / "figures" / "data-black-market.html"
 ATP_HTML     = ROOT / "figures" / "ask-the-plot.html"
 WC_HTML      = ROOT / "figures" / "what-changed.html"
+TY_HTML      = ROOT / "figures" / "twenty-years.html"
 FV_FIG_HTML  = ROOT / "figures" / "flat-view.html"
 VA_FIG_HTML  = ROOT / "figures" / "vera-applet.html"
 HOMER_GIF    = ROOT / "figures" / "homer-ice-cream.gif"
@@ -139,25 +140,31 @@ ARTICLE_MAPS: dict[int, dict] = {
             {"id": "configuration","title": "The configuration",
              "summary": "One generalist orchestrator routing a swarm of fast cheap specialists.",
              "numeral": "02", "stand": "Hold the shape; route the bounded sub-problems out; integrate the answers back."},
+            {"id": "problem-class","title": "The problem class",
+             "summary": "Aeroelasticity clicked because coupled problems reward the refusal to decouple.",
+             "numeral": "03", "stand": "The question isn’t tax or superpower; it’s whether the work fits the architecture."},
             {"id": "why-now",    "title": "Why this didn’t exist before",
              "summary": "Meds + agents arrived at roughly the same time — the pair is what works.",
-             "numeral": "03", "stand": "Neither alone would have done it."},
+             "numeral": "04", "stand": "Neither alone would have done it."},
             {"id": "swarm-cant", "title": "The thing the swarm can’t do",
              "summary": "Cross-domain taste: noticing two communities are arguing the same shape.",
-             "numeral": "04", "stand": "The bridges live in the heads of generalists."},
+             "numeral": "05", "stand": "The bridges live in the heads of generalists."},
             {"id": "how-made",   "title": "How this article got made",
              "summary": "Form follows content: the configuration produced the article you’re reading.",
-             "numeral": "05", "stand": "The shape decision was the human bit. The grind around it wasn’t."},
+             "numeral": "06", "stand": "The shape decision was the human bit. The grind around it wasn’t."},
             {"id": "thread-close","title": "The thread",
              "summary": "Closer: the brain that was a tax is now an asset.",
-             "numeral": "06", "stand": "Maybe AI compresses the role later. In 2026, it is real."},
+             "numeral": "07", "stand": "Maybe AI compresses the role later. In 2026, it is real."},
         ],
         "edges": [
             ("meds",          "why-now"),     # meds-as-half-the-pair
             ("meds",          "thread-close"),# brain-tax-asset bookend
+            ("configuration", "problem-class"),# taste as fit-for-coupled-problems
             ("configuration", "swarm-cant"),  # orchestrator role + bridge
             ("configuration", "how-made"),    # the article *is* the configuration
             ("configuration", "why-now"),     # configuration ↔ why-it-couldn't-exist
+            ("problem-class", "swarm-cant"),  # coupled taste ↔ cross-domain bridges
+            ("problem-class", "thread-close"),# asset/tax depends on problem class
             ("swarm-cant",    "thread-close"),# what remains for the human
             ("intro",         "swarm-cant"),  # cross-domain generalist thesis
             ("why-now",       "how-made"),    # demonstrated, not asserted
@@ -195,6 +202,7 @@ H2_TO_NODE_ID: dict[int, dict[str, str]] = {
     2: {
         "what-the-meds-actually-changed":            "meds",
         "the-configuration":                         "configuration",
+        "the-problem-class":                          "problem-class",
         "why-this-configuration-didnt-exist-before": "why-now",
         "the-thing-the-swarm-cant-do":               "swarm-cant",
         "how-this-article-got-made":                 "how-made",
@@ -377,6 +385,18 @@ def plotly_vs_pp_assets() -> tuple[str, str, str]:
 
 def ask_the_plot_assets() -> tuple[str, str, str]:
     return _iife_assets(ATP_HTML, "AskThePlot", '<div class="atp-figure"')
+
+
+def twenty_years_assets() -> tuple[str, str, str]:
+    css, iife, structure = _iife_assets(TY_HTML, "TwentyYears", '<div class="ty-figure"')
+    # Standalone preview references the per-scene mp4s relative to figures/
+    # (so the preview works when served from figures/). When integrated into
+    # index.html at the article root, the same paths need a "figures/" prefix.
+    structure = structure.replace(
+        'src="twenty-years/',
+        'src="figures/twenty-years/',
+    )
+    return css, iife, structure
 
 
 def what_changed_assets() -> tuple[str, str, str]:
@@ -675,6 +695,24 @@ def substitute_what_changed(html: str, wc_structure: str) -> str:
     )
     return re.sub(
         r"<p>\[FIGURE:\s*what-changed\]</p>",
+        block,
+        html,
+        count=1,
+    )
+
+
+def substitute_twenty_years(html: str, ty_structure: str) -> str:
+    # Five short videos cross-fading on a sticky stage as the prose beats
+    # scroll past — same scrolly pattern as data-black-market and
+    # what-changed. Replaces the older single-video [VIDEO: post-it-onslaught]
+    # placeholder at the "Twenty years of being the join" beat.
+    block = (
+        '<aside class="ti-twenty-years" aria-label="Twenty years of being the join — five short scenes of the same loop, blending across as you scroll">\n'
+        f"{ty_structure}\n"
+        "</aside>"
+    )
+    return re.sub(
+        r"<p>\[FIGURE:\s*twenty-years\]</p>",
         block,
         html,
         count=1,
@@ -1323,6 +1361,7 @@ ARTICLE_CSS = r"""
   .ti-prose .ti-ask-the-plot,
   .ti-prose .ti-data-black-market,
   .ti-prose .ti-what-changed,
+  .ti-prose .ti-twenty-years,
   .ti-prose .ti-flowchart-scrolly,
   .ti-prose .ti-orch-scrolly {
     margin-left: calc(50% - 50vw + 8px);
@@ -1370,7 +1409,8 @@ ARTICLE_CSS = r"""
     .ti-prose .ti-flat-view,
     .ti-prose .ti-ask-the-plot,
     .ti-prose .ti-data-black-market,
-    .ti-prose .ti-what-changed {
+    .ti-prose .ti-what-changed,
+    .ti-prose .ti-twenty-years {
       left: auto;
       margin-left: 0;
       margin-right: 0;
@@ -1791,6 +1831,53 @@ ARTICLE_CSS = r"""
     }
   }
 
+  /* ---- in-flow bridge link ----
+     A lighter cross-article bridge placed next to the exact argument it
+     continues, not just at the end of the piece. */
+  .ti-prose .ti-bridge-link {
+    display: block;
+    margin: 34px auto 38px;
+    max-width: 580px;
+    padding: 18px 22px 20px;
+    border-left: 3px solid var(--ti-accent);
+    background: color-mix(in srgb, var(--ti-surface) 76%, transparent);
+  }
+  .ti-prose .ti-bridge-eyebrow {
+    margin: 0 0 6px;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ti-accent);
+    font-weight: 800;
+  }
+  .ti-prose .ti-bridge-copy {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ti-fg-dim);
+  }
+  .ti-prose .ti-bridge-action {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 700;
+  }
+  .ti-prose .ti-bridge-action a {
+    color: var(--ti-fg);
+    text-decoration: none;
+    border-bottom: 2px solid var(--ti-accent);
+    padding-bottom: 1px;
+  }
+  .ti-prose .ti-bridge-action a:hover {
+    color: var(--ti-accent);
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-bridge-link {
+      margin: 28px auto 32px;
+      padding: 16px 18px 18px;
+    }
+  }
+
   /* ---- final line (closing emphasis) ----
      The last line of the essay: larger, italic, generous whitespace
      above. Wired via <p class="ti-final"> in the markdown. */
@@ -1893,12 +1980,14 @@ ARTICLE_CSS = r"""
     line-height: 1.55;
     text-align: left;
     z-index: 60;
+    display: none;
     opacity: 0;
     pointer-events: none;
     transition: opacity 140ms ease;
   }
   .ti-aside:hover .ti-aside-content,
   .ti-aside:focus-within .ti-aside-content {
+    display: block;
     opacity: 1;
     pointer-events: auto;
   }
@@ -1928,6 +2017,25 @@ ARTICLE_CSS = r"""
   /* If the asterisk sits near the right edge, anchor the tooltip from the
      right rather than centred. CSS-only — uses a class the JS can toggle if
      needed; for now, default centred positioning is fine for narrow column. */
+  @media (max-width: 640px) {
+    .ti-aside {
+      position: static;
+    }
+    .ti-aside-content {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      width: auto;
+      max-width: none;
+      transform: none;
+      z-index: 100;
+    }
+    .ti-aside-content::before,
+    .ti-aside-content::after {
+      display: none;
+    }
+  }
 
   /* ---- paragraph-level callouts ---- */
   .ti-callout {
@@ -2929,7 +3037,7 @@ PROGRESS_JS = r"""
   update();
 
   const revealTargets = [
-    ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market')
+    ...document.querySelectorAll('.ti-figure:not(.ti-figure-milp), .ti-demo, .ti-flat-view, .ti-ask-the-plot, .ti-data-black-market, .ti-twenty-years')
   ];
   revealTargets.forEach(el => el.classList.add('ti-reveal'));
 
@@ -2981,6 +3089,7 @@ HTML_TEMPLATE = """<!doctype html>
 <style>{va_css}</style>
 <style>{atp_css}</style>
 <style>{wc_css}</style>
+<style>{ty_css}</style>
 </head>
 <body>
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
@@ -3028,6 +3137,7 @@ HTML_TEMPLATE = """<!doctype html>
 <script>{va_js}</script>
 <script>{atp_js}</script>
 <script>{wc_js}</script>
+<script>{ty_js}</script>
 <script>{flowchart_scrolly_js}</script>
 <script>{orch_scrolly_js}</script>
 <script>{map_js}</script>
@@ -3083,6 +3193,7 @@ def main() -> None:
         "data_black_market": marker_present(prose_html, "FIGURE", "data-black-market"),
         "ask_the_plot": marker_present(prose_html, "FIGURE", "ask-the-plot"),
         "what_changed": marker_present(prose_html, "FIGURE", "what-changed"),
+        "twenty_years": marker_present(prose_html, "FIGURE", "twenty-years"),
         "milp": marker_present(prose_html, "FIGURE", "milp-equations"),
     }
 
@@ -3095,6 +3206,7 @@ def main() -> None:
     dbm_css = dbm_js = dbm_struct = ""
     atp_css = atp_js = atp_struct = ""
     wc_css  = wc_js  = wc_struct  = ""
+    ty_css  = ty_js  = ty_struct  = ""
 
     if needs["globe"]:
         print("Extracting globe demo assets...")
@@ -3132,6 +3244,10 @@ def main() -> None:
         print("Extracting what-changed assets...")
         wc_css, wc_js, wc_struct = what_changed_assets()
 
+    if needs["twenty_years"]:
+        print("Extracting twenty-years assets...")
+        ty_css, ty_js, ty_struct = twenty_years_assets()
+
     print("Substituting placeholders...")
     prose_html = substitute_asides(prose_html)
     prose_html = substitute_callouts(prose_html)
@@ -3153,6 +3269,8 @@ def main() -> None:
         prose_html = substitute_ask_the_plot(prose_html, atp_struct)
     if needs["what_changed"]:
         prose_html = substitute_what_changed(prose_html, wc_struct)
+    if needs["twenty_years"]:
+        prose_html = substitute_twenty_years(prose_html, ty_struct)
     if needs["vera"]:
         prose_html = substitute_vera_applet(prose_html, va_struct)
     prose_html = substitute_cartoon_normal_things(prose_html)
@@ -3244,6 +3362,7 @@ def main() -> None:
         va_css=va_css,
         atp_css=atp_css,
         wc_css=wc_css,
+        ty_css=ty_css,
         article_map=article_map_html,
         prose=prose_html,
         progress_js=PROGRESS_JS,
@@ -3256,6 +3375,7 @@ def main() -> None:
         va_js=va_js,
         atp_js=atp_js,
         wc_js=wc_js,
+        ty_js=ty_js,
         flowchart_scrolly_js=FLOWCHART_SCROLLY_JS,
         orch_scrolly_js=ORCH_SCROLLY_JS,
         map_js=MAP_JS,
