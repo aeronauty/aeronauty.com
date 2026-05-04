@@ -115,10 +115,18 @@
     margin-inline: auto;
   }
   .ti-prose .ti-what-changed {
-    width: calc(100vw - 32px);
-    max-width: 1180px;
-    margin-left: calc(50% - min(50vw - 16px, 590px));
-    margin-right: auto;
+    position: relative;
+    left: 50%;
+    width: min(1180px, calc(100vw - 40px));
+    max-width: none;
+    margin: 64px 0;
+    transform: translateX(-50%);
+  }
+  .ti-prose .ti-what-changed .wc-scroll {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
     transform: none;
   }
   @media (min-width: 1100px) {
@@ -130,20 +138,16 @@
       transform: translateX(-50%);
     }
     .ti-prose .ti-what-changed {
-      width: calc(100vw - 64px);
-      max-width: 1180px;
-      margin-left: calc(50% - min(50vw - 32px, 590px));
-      margin-right: auto;
-      transform: none;
+      width: min(1180px, calc(100vw - 64px));
     }
   }
   @media (min-width: 760px) and (max-width: 1099px) {
     .ti-prose .ti-what-changed {
       width: calc(100vw - 32px);
-      max-width: 980px;
-      margin-left: calc(50% - min(50vw - 16px, 490px));
-      margin-right: auto;
-      transform: none;
+    }
+    .ti-prose .ti-what-changed .wc-scroll {
+      grid-template-columns: minmax(220px, 0.32fr) minmax(0, 0.68fr);
+      gap: 16px;
     }
   }
   @media (max-width: 720px) {
@@ -151,9 +155,11 @@
     .ti-prose .ti-ask-the-plot,
     .ti-prose .ti-data-black-market,
     .ti-prose .ti-what-changed {
+      left: auto;
       margin-left: 0;
       margin-right: 0;
       width: 100%;
+      transform: none;
     }
   }
   .ti-wide   { max-width: var(--ti-wide-w);   margin: 0 auto; }
@@ -888,6 +894,355 @@
     .ti-hero h1 { background: none; -webkit-text-fill-color: #000; color: #000; }
   }
 
+  /* ---- section anchors + opener typographic moments ---- */
+  .ti-prose .ti-section {
+    /* Each section opens with a thin rule + generous breathing room. The
+       <section> itself is a logical wrapper; the visual break is on the
+       divider that precedes it. */
+    margin: 88px 0 36px;
+    padding: 0;
+  }
+  .ti-prose .ti-section-numeral {
+    display: block;
+    font-family: var(--ti-font-sans);
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    color: var(--ti-accent);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+  .ti-prose .ti-section-h2 {
+    font-family: var(--ti-font-sans);
+    font-size: clamp(26px, 3.4vw, 34px);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.005em;
+    margin: 0 0 14px;
+    color: var(--ti-fg);
+    text-wrap: balance;
+  }
+  .ti-prose .ti-section-stand {
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.42;
+    color: var(--ti-fg-dim);
+    margin: 0 0 28px;
+    max-width: 38ch;
+    text-wrap: balance;
+    border-left: 2px solid color-mix(in srgb, var(--ti-accent) 70%, transparent);
+    padding-left: 14px;
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-section { margin: 56px 0 24px; }
+    .ti-prose .ti-section-stand { font-size: 17px; padding-left: 11px; }
+  }
+  /* Bigger, breathier section break. Replaces the old tight ✦ rule with
+     a long thin horizontal rule with the bullet centred, plus more
+     vertical space. Magazine-length, not wiki-tight. */
+  .ti-prose .ti-divider {
+    color: var(--ti-fg-faint);
+    text-align: center;
+    font-size: 13px;
+    margin: 96px auto 0;
+    letter-spacing: 0;
+    line-height: 1;
+    opacity: 0.5;
+    position: relative;
+  }
+  .ti-prose .ti-divider::before,
+  .ti-prose .ti-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 32%;
+    height: 1px;
+    background: var(--ti-rule);
+  }
+  .ti-prose .ti-divider::before { left: 6%; }
+  .ti-prose .ti-divider::after  { right: 6%; }
+  /* The new ti-section block already supplies the post-heading whitespace,
+     so we don't need a divider+eyebrow pair anymore. Hide the legacy
+     eyebrow paragraph if a ti-section follows it. */
+  .ti-prose .ti-eyebrow + .ti-section { margin-top: 32px; }
+
+  /* ---- closing held beat ----
+     ti-final is now a section-tall, centred, alone presentation. The
+     reader scrolls into it and nothing competes. */
+  .ti-prose .ti-final {
+    display: grid;
+    place-items: center;
+    min-height: 60vh;
+    margin: 96px 0 24px;
+    padding: 24px;
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.18;
+    text-align: center;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+    border-top: 1px solid var(--ti-rule);
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-final {
+      min-height: 50vh;
+      font-size: 24px;
+      margin: 56px 0 16px;
+      padding: 18px;
+    }
+  }
+
+  /* ---- ADHD flowchart sticky scrolly ---- */
+  .ti-flowchart-scrolly {
+    display: block;
+    margin: 72px 0;
+  }
+  .af-scroll {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 36px;
+    align-items: start;
+  }
+  .af-scroll-prose {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+  }
+  .af-scroll-beat {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px 0;
+    opacity: 0.36;
+    transition: opacity 280ms ease;
+  }
+  .af-scroll-beat.af-scroll-active {
+    opacity: 1;
+  }
+  .af-scroll-beat-eyebrow {
+    display: block;
+    font-family: var(--ti-font-sans);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ti-accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .af-scroll-beat p {
+    margin: 0;
+    font-family: var(--ti-font-serif);
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ti-fg);
+    max-width: 36ch;
+  }
+  .af-scroll-stage {
+    position: sticky;
+    top: 8vh;
+    height: 84vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .af-scroll-stage .ti-flowchart {
+    width: 100%;
+    margin: 0;
+    max-height: 84vh;
+    overflow: hidden;
+  }
+  /* In the sticky stage, hide the figure's auto-advance hint + replay button
+     since scroll drives the state now. */
+  .ti-flowchart-scrolly .af-controls { display: none; }
+  @media (max-width: 880px) {
+    .af-scroll {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .af-scroll-stage {
+      position: relative;
+      top: auto;
+      height: auto;
+      margin: 24px 0;
+    }
+    .af-scroll-beat { min-height: 0; padding: 16px 0; opacity: 1; }
+  }
+
+  /* ---- Orchestrator sticky scrolly (article 2) ---- */
+  .ti-orch-scrolly {
+    display: block;
+    margin: 72px 0;
+  }
+  .ti-orch-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 40px;
+    align-items: start;
+  }
+  .ti-orch-stage {
+    position: sticky;
+    top: 10vh;
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ti-orch-stage .ti-orch-figure {
+    margin: 0;
+    max-width: 520px;
+    width: 100%;
+  }
+  .ti-orch-prose {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .ti-orch-beat {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 0;
+    opacity: 0.5;
+    transition: opacity 320ms ease;
+  }
+  .ti-orch-beat.af-scroll-active { opacity: 1; }
+  .ti-orch-beat p {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.6;
+    max-width: 38ch;
+  }
+  @media (max-width: 880px) {
+    .ti-orch-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .ti-orch-stage {
+      position: relative;
+      top: auto;
+      height: auto;
+      margin: 24px 0;
+    }
+    .ti-orch-beat { min-height: 0; padding: 12px 0; opacity: 1; }
+  }
+
+  /* ---- Article-map sidebar ----
+     Pen-and-ink, monochrome with a single cyan-teal active accent. Sticky
+     to the left edge of the viewport, hidden on narrow screens. */
+  .ti-map {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 110px;
+    height: 100vh;
+    z-index: 40;
+    pointer-events: none;          /* enable on children */
+    color: var(--ti-fg-faint);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+  }
+  .ti-map-svg {
+    max-height: calc(100vh - 24px);
+    max-width: 100%;
+    height: auto;
+    width: 100%;
+    overflow: visible;
+    pointer-events: auto;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+  }
+  .ti-map-spine,
+  .ti-map-edge {
+    transition: stroke-opacity 180ms ease, stroke 180ms ease;
+  }
+  .ti-map-edge.ti-map-edge-active {
+    stroke: var(--ti-accent);
+    stroke-opacity: 0.75;
+  }
+  .ti-map-node {
+    cursor: pointer;
+    pointer-events: auto;
+    outline: none;
+  }
+  .ti-map-dot {
+    transition: r 180ms ease, fill 180ms ease, stroke 180ms ease, stroke-width 180ms ease;
+    color: var(--ti-fg-faint);
+  }
+  .ti-map-node[data-state="visited"] .ti-map-dot {
+    color: var(--ti-accent);
+    stroke: var(--ti-accent);
+    stroke-width: 1.2;
+    r: 4.2;
+    fill: var(--ti-bg);
+  }
+  .ti-map-node[data-state="active"] .ti-map-dot {
+    color: var(--ti-accent);
+    stroke: var(--ti-accent);
+    stroke-width: 1.4;
+    r: 5.6;
+    fill: var(--ti-accent);
+  }
+  .ti-map-node:hover .ti-map-halo,
+  .ti-map-node:focus-visible .ti-map-halo {
+    stroke-opacity: 0.75;
+    color: var(--ti-accent);
+  }
+  .ti-map-node[data-state="active"] .ti-map-halo {
+    stroke-opacity: 0.55;
+    color: var(--ti-accent);
+  }
+  .ti-map-tooltip {
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 0;
+    transform: translateY(-50%);
+    pointer-events: none;
+    background: var(--ti-surface);
+    color: var(--ti-fg);
+    border: 1px solid var(--ti-border);
+    border-radius: 6px;
+    padding: 8px 11px;
+    width: 230px;
+    font-family: var(--ti-font-sans);
+    font-size: 12.5px;
+    line-height: 1.42;
+    opacity: 0;
+    transition: opacity 140ms ease;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+    z-index: 41;
+  }
+  .ti-map-tooltip.ti-map-tooltip-on { opacity: 1; }
+  .ti-map-tooltip-title {
+    display: block;
+    font-weight: 650;
+    color: var(--ti-fg);
+    margin-bottom: 3px;
+    letter-spacing: 0;
+  }
+  .ti-map-tooltip-summary {
+    display: block;
+    color: var(--ti-fg-dim);
+  }
+  /* Hide on phones — reading on a phone you don't need a sidebar. */
+  @media (max-width: 880px) {
+    .ti-map { display: none; }
+  }
+  /* Slightly inset on smaller desktop screens so the map doesn't crowd the
+     prose column. The body padding above already gives enough room. */
+  @media (min-width: 881px) and (max-width: 1280px) {
+    .ti-map { width: 88px; }
+  }
+
   /* ---- accessibility ---- */
   :focus-visible {
     outline: 2px solid var(--ti-accent);
@@ -1202,6 +1557,59 @@
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
 <div class="ti-progress" aria-hidden="true"></div>
 
+<aside class="ti-map" aria-label="Article map" data-article-id="2">
+  <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
+    <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
+    <path class="ti-map-edge" d="M31,90 Q61.599999999999994,150.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="why-now" />
+    <path class="ti-map-edge" d="M31,90 Q73.6,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q67.19999999999999,210.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,150 Q72.2,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="how-made" />
+    <path class="ti-map-edge" d="M31,150 Q53.599999999999994,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="why-now" />
+    <path class="ti-map-edge" d="M31,270 Q62.99999999999999,330.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="swarm-cant" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q66.6,150.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,210 Q61.599999999999994,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="why-now" data-edge-to="how-made" />
+    <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Up front: Cold open: this is about the person who kept noticing.">
+      <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="30" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
+    <g class="ti-map-node" data-node-id="meds" tabindex="0" role="link" aria-label="What the meds changed: The unfinished loop became visible; the through-line became legible.">
+      <circle cx="28" cy="90" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="90" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="90" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
+    <g class="ti-map-node" data-node-id="configuration" tabindex="0" role="link" aria-label="The configuration: One generalist orchestrator routing a swarm of fast cheap specialists.">
+      <circle cx="28" cy="150" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="150" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="150" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
+    <g class="ti-map-node" data-node-id="why-now" tabindex="0" role="link" aria-label="Why this didn’t exist before: Meds + agents arrived at roughly the same time — the pair is what works.">
+      <circle cx="28" cy="210" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="210" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="210" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
+    <g class="ti-map-node" data-node-id="swarm-cant" tabindex="0" role="link" aria-label="The thing the swarm can’t do: Cross-domain taste: noticing two communities are arguing the same shape.">
+      <circle cx="28" cy="270" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="270" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="270" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
+    <g class="ti-map-node" data-node-id="how-made" tabindex="0" role="link" aria-label="How this article got made: Form follows content: the configuration produced the article you’re reading.">
+      <circle cx="28" cy="330" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="330" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="330" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
+    <g class="ti-map-node" data-node-id="thread-close" tabindex="0" role="link" aria-label="The thread: Closer: the brain that was a tax is now an asset.">
+      <circle cx="28" cy="390" r="14" fill="transparent" class="ti-map-hit" />
+      <circle cx="28" cy="390" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
+      <circle cx="28" cy="390" r="9" class="ti-map-halo" fill="none" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.0" />
+    </g>
+  </svg>
+  <div class="ti-map-tooltip" role="tooltip" aria-hidden="true"><span class="ti-map-tooltip-title"></span><span class="ti-map-tooltip-summary"></span></div>
+  <script type="application/json" class="ti-map-data">{
+"intro":{"title":"Up front","summary":"Cold open: this is about the person who kept noticing."},"meds":{"title":"What the meds changed","summary":"The unfinished loop became visible; the through-line became legible."},"configuration":{"title":"The configuration","summary":"One generalist orchestrator routing a swarm of fast cheap specialists."},"why-now":{"title":"Why this didn’t exist before","summary":"Meds + agents arrived at roughly the same time — the pair is what works."},"swarm-cant":{"title":"The thing the swarm can’t do","summary":"Cross-domain taste: noticing two communities are arguing the same shape."},"how-made":{"title":"How this article got made","summary":"Form follows content: the configuration produced the article you’re reading."},"thread-close":{"title":"The thread","summary":"Closer: the brain that was a tax is now an asset."}
+  }</script>
+</aside>
+
 <div class="ti-page">
 
   <header class="ti-mast ti-narrow" role="banner">
@@ -1223,15 +1631,34 @@
   </section>
 
   <main id="ti-main" class="ti-prose ti-narrow" role="main">
-    <p>In an earlier version of this essay, this was the point where the article quietly became a different article. The first one was about data entry — about systems losing the shape of the work and making people put it back by hand. It ended at a thing called Thread. If you haven&rsquo;t read it, the short version is: I have spent twenty years noticing the same wrong-frame thing across very different jobs, mostly without realising it was the same thing.</p>
+    <span id="intro" class="ti-anchor" data-node-id="intro" aria-hidden="true"></span>
+<p>In an earlier version of this essay, this was the point where the article quietly became a different article. The first one was about data entry — about systems losing the shape of the work and making people put it back by hand. It ended at a thing called Thread. If you haven&rsquo;t read it, the short version is: I have spent twenty years noticing the same wrong-frame thing across very different jobs, mostly without realising it was the same thing.</p>
 <p>This one is about the person who kept noticing. About why he kept losing tools, abandoning projects at 80%, and looking, on paper, scattered. And about what happened when prescribed ADHD medication and a swarm of cheap fast AI agents arrived more or less at the same time.</p>
 <p>The thesis, stated up front so I don&rsquo;t have to dance around it: <strong>ADHD plus medication plus AI agents changed the economics of being a cross-domain generalist.</strong> The same wiring that used to produce unfinished projects, dropped tools, and a CV that read as scattered can now be useful, <em>for now</em>, when paired with specialist agents that absorb the boring grind. I don&rsquo;t know how long the <em>for now</em> lasts. I&rsquo;ll get to that.</p>
-<h2>What the meds actually changed</h2>
+<div class="ti-divider" aria-hidden="true">✦</div>
+<section class="ti-section" id="meds" data-node-id="meds">
+<span class="ti-section-numeral" aria-hidden="true">01</span>
+<h2 class="ti-section-h2">What the meds actually changed</h2>
+<p class="ti-section-stand">The brain doesn’t get fixed. It gets supplemented.</p>
+</section>
 <p>Worth flagging up front: the technical through-line in the previous article existed in my subconscious for twenty years. The conscious experience was chaos. The two facts coexisted, and I&rsquo;d like to talk about how, because the way they coexisted is the bit that just stopped being permanent.</p>
 <p>A few months ago I started on prescribed ADHD medication. It has been the most useful single intervention I&rsquo;ve had in my professional life. (Yes, a Director of Flight Sciences blogging about ADHD meds is a deliberate exposure decision; half-strength is worse than either fully in or fully out, so it&rsquo;s fully in.) The reason it earns a paragraph here, beyond the personal, is that the meds let me see <em>why</em> AI is a good fit for the way my brain works. The AI&rsquo;s job is the boring grind I&rsquo;m bad at; the meds gave me enough executive function to actually hand the grind over rather than abandoning the project at the same point I always did before.</p>
 <p>The thing the meds clarified, which I hadn&rsquo;t expected: I always thought ADHD meds would stop me jumping between things. What I learned is I was never that good at it. I&rsquo;d drop tools when I was done with them like they ceased to exist. I&rsquo;d start a thing, work on it intensely, get it to a state I considered &ldquo;essentially done,&rdquo; and never come back to harden, document, productionise, or in some cases even commit it. The boring grind at the end of a project wasn&rsquo;t visible to me — not as in &ldquo;I avoided it,&rdquo; more as in &ldquo;I didn&rsquo;t perceive it as a thing that existed.&rdquo;</p>
 <p>The meds didn&rsquo;t kill the through-line. Topology, refusing to flatten, network-shaped problems — that was always there. What the meds turned down was the chaos around it. I can now look at a half-finished thing, see that it&rsquo;s half-finished, and finish it. That sounds embarrassingly basic. It is.</p>
-<aside class="ti-flowchart" aria-label="ADHD flowchart, then and now">
+<aside class="ti-flowchart-scrolly" aria-label="ADHD flowchart, then and now — scroll to advance">
+  <div class="af-scroll">
+    <div class="af-scroll-prose">
+      <div class="af-scroll-beat" data-af-step="1"><span class="af-scroll-beat-eyebrow">step 01 &middot; the meme</span><p>Phase one of the meme everyone with an ADHD diagnosis has seen forty times. <strong>Get a new idea.</strong> The bit my brain is good at — it ran on its own for two decades.</p></div>
+      <div class="af-scroll-beat" data-af-step="2"><span class="af-scroll-beat-eyebrow">step 02 &middot; the meme</span><p><strong>Start a new project.</strong> Intensely, immediately, and at a tempo nobody asked for. The interesting bit is the only bit that exists.</p></div>
+      <div class="af-scroll-beat" data-af-step="3"><span class="af-scroll-beat-eyebrow">step 03 &middot; the meme · loop closes</span><p><strong>Tell everyone.</strong> The loop closes here. Saying the thing out loud is, briefly, indistinguishable from doing it.</p></div>
+      <div class="af-scroll-beat" data-af-step="4"><span class="af-scroll-beat-eyebrow">step 04 &middot; the orphan</span><p>And then, faded off to the side: <strong>finish project.</strong> Not failed. Not abandoned, exactly. Just never connected back to the loop in the first place.</p></div>
+      <div class="af-scroll-beat" data-af-step="5"><span class="af-scroll-beat-eyebrow">step 05 &middot; the subversion</span><p>What the meds turned down was the chaos around the loop, not the loop. Now: <strong>recognise it’s connected to three previous ideas.</strong> The through-line becomes legible in real time.</p></div>
+      <div class="af-scroll-beat" data-af-step="6"><span class="af-scroll-beat-eyebrow">step 06 &middot; the subversion</span><p><strong>Hand the boring bits to a swarm of agents.</strong> Tests, docstrings, edge cases, the literature sweep. The 80%-to-100% used to be the bit that killed the project; now it isn’t.</p></div>
+      <div class="af-scroll-beat" data-af-step="7"><span class="af-scroll-beat-eyebrow">step 07 &middot; the subversion</span><p><strong>Stay at the connection level.</strong> The job is to hold the shape. Routing the bounded sub-problems out, integrating the answers back. Cross-domain taste, in operation.</p></div>
+      <div class="af-scroll-beat" data-af-step="8"><span class="af-scroll-beat-eyebrow">step 08 &middot; the subversion · finish</span><p><strong>Actually finish.</strong> Same brain, same loop — the difference is the route through the swarm now closes back into a green node instead of an orphan.</p></div>
+    </div>
+    <div class="af-scroll-stage">
+      <aside class="ti-flowchart" aria-label="ADHD flowchart, then and now">
 <div class="af-figure" id="af-figure">
 
       <p class="af-stepbar-meta">
@@ -1279,21 +1706,37 @@
 
       </div>
     </div>
+      </aside>
+    </div>
+  </div>
 </aside>
 <p>The flowchart is a two-state animation. State one is the meme everyone with an ADHD diagnosis has seen forty times: get new idea → start new project → tell everyone → loop, with &ldquo;finish project&rdquo; floating off to the side, disconnected. State two is my actual flowchart now: get new idea → recognise it&rsquo;s connected to three previous ideas → hand the boring bits to a swarm of agents → stay at the connection level → actually finish. The original loop is preserved, because that bit didn&rsquo;t go away and I don&rsquo;t want to pretend it did. What&rsquo;s new is the connection to the AI swarm that does the boring grind, and the connection from that swarm back to &ldquo;finish project,&rdquo; now a green node instead of an orphan.</p>
 <p>The brain doesn&rsquo;t get fixed. It gets supplemented. I&rsquo;m not going to extend that into self-help — half the internet is doing that already — but I need it on record for what comes next, because the configuration the meds enabled is the configuration the rest of this post is about.</p>
 <aside class="ti-pullquote">The brain doesn&rsquo;t get fixed. It gets supplemented.</aside>
 
-<h2>The configuration</h2>
+<div class="ti-divider" aria-hidden="true">✦</div>
+<section class="ti-section" id="configuration" data-node-id="configuration">
+<span class="ti-section-numeral" aria-hidden="true">02</span>
+<h2 class="ti-section-h2">The configuration</h2>
+<p class="ti-section-stand">Hold the shape; route the bounded sub-problems out; integrate the answers back.</p>
+</section>
 <p>The current AI configuration that works for me, in 2026, is one person with cross-domain taste running a swarm of fast cheap specialists.</p>
-<figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-cartoon-orchestrator-figcap">
+<aside class="ti-orch-scrolly" aria-label="The orchestrator and the swarm">
+  <div class="ti-orch-grid">
+    <div class="ti-orch-stage">
+      <figure class="ti-figure ti-figure-cartoon ti-orch-figure" aria-labelledby="ti-cartoon-orchestrator-figcap">
   <img src="figures/cartoon-orchestrator.png" alt="A person at a desk routing work to several specialist agent figures around them, holding a notebook rather than a tool" loading="lazy" />
   <figcaption id="ti-cartoon-orchestrator-figcap" class="ti-figcap">Holding the shape of the problem, routing the bounded sub-problems out, integrating the answers back.</figcaption>
 </figure>
-<p>The specialists are good — really good, on bounded problems, at speeds and costs that didn&rsquo;t exist eighteen months ago. They write boilerplate, do schema migrations, run literature sweeps, draft tests, regenerate boring sections of articles in the right voice if you give them the voice file. What they don&rsquo;t do, reliably, is notice that two problems in different communities are the same problem.</p>
-<p>That&rsquo;s the role I&rsquo;ve ended up in. Generalist orchestrator. Hold the shape of the problem, route the bounded sub-problems out to the swarm, integrate the answers back, decide when an answer is wrong. Exactly the role my PhD supervisor played for me, and exactly the role I had no idea I&rsquo;d been training for.</p>
-<p>It&rsquo;s worth being precise about what <em>cross-domain taste</em> means here, because the phrase gets used loosely. It isn&rsquo;t being a polymath. I&rsquo;m not a polymath. I&rsquo;m someone who has been a mediocre specialist in a slightly unusual number of communities — flight dynamics, controls, optimisation, software engineering, databases, scientific viz, OR — and the <em>badly, in all of them</em> is doing the work. The thing you can do, after enough of that, is recognise when a problem in one community is structurally the same as a problem you&rsquo;ve already seen in another. You don&rsquo;t need to be the best in the room at any of them. You need to have wandered through enough rooms to recognise the furniture.</p>
-<p>That&rsquo;s what the swarm can&rsquo;t do. Each specialist is excellent at the room it lives in. Almost none of them have wandered.</p>
+    </div>
+    <div class="ti-orch-prose">
+      <div class="ti-orch-beat"><p>The specialists are good — really good, on bounded problems, at speeds and costs that didn&rsquo;t exist eighteen months ago. They write boilerplate, do schema migrations, run literature sweeps, draft tests, regenerate boring sections of articles in the right voice if you give them the voice file. What they don&rsquo;t do, reliably, is notice that two problems in different communities are the same problem.</p></div>
+      <div class="ti-orch-beat"><p>That&rsquo;s the role I&rsquo;ve ended up in. Generalist orchestrator. Hold the shape of the problem, route the bounded sub-problems out to the swarm, integrate the answers back, decide when an answer is wrong. Exactly the role my PhD supervisor played for me, and exactly the role I had no idea I&rsquo;d been training for.</p></div>
+      <div class="ti-orch-beat"><p>It&rsquo;s worth being precise about what <em>cross-domain taste</em> means here, because the phrase gets used loosely. It isn&rsquo;t being a polymath. I&rsquo;m not a polymath. I&rsquo;m someone who has been a mediocre specialist in a slightly unusual number of communities — flight dynamics, controls, optimisation, software engineering, databases, scientific viz, OR — and the <em>badly, in all of them</em> is doing the work. The thing you can do, after enough of that, is recognise when a problem in one community is structurally the same as a problem you&rsquo;ve already seen in another. You don&rsquo;t need to be the best in the room at any of them. You need to have wandered through enough rooms to recognise the furniture.</p></div>
+      <div class="ti-orch-beat"><p>That&rsquo;s what the swarm can&rsquo;t do. Each specialist is excellent at the room it lives in. Almost none of them have wandered.</p></div>
+    </div>
+  </div>
+</aside>
 <p>The PhD supervisor analogy is the closest thing I have to an honest description of what the orchestrator role looks like day to day. A good supervisor doesn&rsquo;t write the thesis. They don&rsquo;t run the simulations either. They notice that the result you&rsquo;re stuck on connects to a chapter from somebody else&rsquo;s group last year, send you a paper, ask the right next question, kick you off the dead end you&rsquo;d have stayed on for three more weeks. Their value is almost entirely about routing and shape-recognition, and almost none of it is about doing the bounded work. Anyone who&rsquo;s had a good one will know what I mean. Anyone who&rsquo;s had a bad one will know what I mean even more clearly.</p>
 <figure class="ti-figure ti-figure-video" aria-labelledby="ti-video-notebook-flip-figcap">
   <div class="ti-video-wrap">
@@ -1301,7 +1744,12 @@
   </div>
   <figcaption id="ti-video-notebook-flip-figcap" class="ti-figcap">A good supervisor pauses on the right page.</figcaption>
 </figure>
-<h2>Why this configuration didn&rsquo;t exist before</h2>
+<div class="ti-divider" aria-hidden="true">✦</div>
+<section class="ti-section" id="why-now" data-node-id="why-now">
+<span class="ti-section-numeral" aria-hidden="true">03</span>
+<h2 class="ti-section-h2">Why this configuration didn&rsquo;t exist before</h2>
+<p class="ti-section-stand">Neither alone would have done it.</p>
+</section>
 <p>A brain wired the way mine is — refusing to flatten, jumping between problems, holding loose connections across communities, pathologically uninterested in the boring grind — was previously an engineering tax. You paid it in unfinished projects, dropped tools, and a CV that read as &ldquo;scattered&rdquo; to anyone whose filter rewarded coherence over connection. There was no operational answer to the grind. You either ground through it yourself, badly, eventually, or you didn&rsquo;t, and the work didn&rsquo;t ship.</p>
 <p>Two things changed at roughly the same time.</p>
 <p>The meds made the unfinished loop visible. Before, &ldquo;essentially done&rdquo; felt like done. Now it doesn&rsquo;t. I can see the gap between &ldquo;the interesting bit works&rdquo; and &ldquo;this is a thing other humans can use,&rdquo; and I can stay in the room long enough to close it.</p>
@@ -1318,7 +1766,12 @@
   </div>
   <figcaption id="ti-video-coffee-rings-figcap" class="ti-figcap">Normal things, observed at the right pace.</figcaption>
 </figure>
-<h2>The thing the swarm can&rsquo;t do</h2>
+<div class="ti-divider" aria-hidden="true">✦</div>
+<section class="ti-section" id="swarm-cant" data-node-id="swarm-cant">
+<span class="ti-section-numeral" aria-hidden="true">04</span>
+<h2 class="ti-section-h2">The thing the swarm can&rsquo;t do</h2>
+<p class="ti-section-stand">The bridges live in the heads of generalists.</p>
+</section>
 <p>Use the previous article as the worked example. I told the LLM about Plotly, Paradigm, Postgres, Thread. It saw the surface pattern (refusing to flatten data) early and confidently. It did not see the deeper one (topology as first-class) until I named it. We had four beats fitted into a &ldquo;data richness&rdquo; frame before I noticed the frame was wrong.</p>
 <p>Asked afterwards why it missed it, the LLM gave me a useful answer: almost no one is a specialist in two of those communities at once. DAGs in software engineering, graphs in OR, network topology in telecoms, provenance in databases and archaeology — same mathematical object, different folklore. The cross-walk papers don&rsquo;t get written, because the people who&rsquo;d write them are too busy doing the cross-walks.</p>
 <p>Even a model that has read more about graph theory and CFD provenance than I ever will didn&rsquo;t bridge them, because the bridge isn&rsquo;t in the corpus. The bridge was in my head. <strong>The bridges live in the heads of generalists</strong> and there isn&rsquo;t currently a substitute, which is fragile, and which, for now, is rare and valuable.</p>
@@ -1326,7 +1779,12 @@
 
 <p>I want to be careful not to oversell that. AI may develop something taste-shaped — something that holds problem shape across communities and notices when their vocabularies are pointing at the same underlying thing. If it does, the orchestrator role compresses, possibly hard. The honest version: <em>right now, in 2026, this configuration is real and rare. The window depends on how fast taste-shaped AI arrives, and I don&rsquo;t know how fast that is.</em></p>
 <p>What I&rsquo;ll say with more confidence is that the configuration didn&rsquo;t exist before. Now the same wiring that used to be a tax is the bit the orchestrator role rewards, because the swarm picks up the grind tax that used to compound on you alone. Unfinished projects are something the swarm finishes. Scattered interests are something the swarm follows up on. The connection-noticing — the bit I was always actually doing, even when I didn&rsquo;t know it — is the bit no specialist in the swarm can do for me, because the connection requires having been all of those specialists, badly, at once.</p>
-<h2>How this article got made</h2>
+<div class="ti-divider" aria-hidden="true">✦</div>
+<section class="ti-section" id="how-made" data-node-id="how-made">
+<span class="ti-section-numeral" aria-hidden="true">05</span>
+<h2 class="ti-section-h2">How this article got made</h2>
+<p class="ti-section-stand">The shape decision was the human bit. The grind around it wasn’t.</p>
+</section>
 <p>I should be transparent about something. This article was written this way.</p>
 <p>I wrote prompts. A swarm drafted. I edited. The LLM had a copy of <code>Writing Style - Harry Smith.md</code> and tried, with mixed success, to sound like me. I rewrote the bits where it didn&rsquo;t. The voice you&rsquo;ve just read is mine, not because the LLM wrote in my voice, but because I rewrote until it did. The orchestrator-and-swarm configuration in this article isn&rsquo;t a thesis I&rsquo;m asserting at you in the abstract — it&rsquo;s the thing that produced the article you&rsquo;re reading. Form follows content one more time. That&rsquo;s the post.</p>
 <p>The bit the swarm couldn&rsquo;t do, here, was the same bit it couldn&rsquo;t do with Paradigm and Thread. It could draft any individual section in roughly the right voice. It could not, on its own, notice that two articles were tangled together inside one and decide where to cut. The shape decision was the human bit. The grind around the shape decision wasn&rsquo;t, and I&rsquo;m grateful for that, because I would otherwise have abandoned this draft at the same point I usually abandon drafts.</p>
@@ -1344,7 +1802,12 @@
   </div>
   <figcaption id="ti-plot-video-figcap" class="ti-figcap"><em>Where did that plot come from?</em> &mdash; the video version of this argument. Same shape, different medium.</figcaption>
 </figure>
-<h2>The thread</h2>
+<div class="ti-divider" aria-hidden="true">✦</div>
+<section class="ti-section" id="thread-close" data-node-id="thread-close">
+<span class="ti-section-numeral" aria-hidden="true">06</span>
+<h2 class="ti-section-h2">The thread</h2>
+<p class="ti-section-stand">Maybe AI compresses the role later. In 2026, it is real.</p>
+</section>
 <p>So here&rsquo;s where this lands.</p>
 <p>The brain didn&rsquo;t get fixed. It got supplemented. The meds made the unfinished loop visible. The agents pick up the grind that used to kill the project at 80%. What remains for me is the part I was apparently doing all along: holding the shape, noticing the bridge, deciding which specialist answer belongs where.</p>
 <p>Maybe AI compresses that role later. I don&rsquo;t know. In 2026, it is real.</p>
@@ -2077,6 +2540,231 @@
 <script></script>
 <script></script>
 <script></script>
+<script>
+(function () {
+  // Replace the ADHD flowchart's auto-advance loop with scroll-driven
+  // state: the figure becomes a sticky stage; eight prose beats sit
+  // beside it; whichever beat is in the reader's band drives goToStep.
+  const wrap = document.querySelector('.ti-flowchart-scrolly');
+  if (!wrap) return;
+
+  // Wait until AdhdFlowchart has booted (it's loaded after this script in
+  // the document, so we poll briefly).
+  function whenReady(cb, tries) {
+    if (window.AdhdFlowchart && typeof window.AdhdFlowchart.goToStep === 'function') {
+      cb(window.AdhdFlowchart);
+      return;
+    }
+    if ((tries || 0) > 80) return;
+    setTimeout(() => whenReady(cb, (tries || 0) + 1), 60);
+  }
+
+  // Disable the figure's hover-pause + auto-advance by clobbering its
+  // internal scheduler. The IIFE doesn't expose stop(), so the cheapest
+  // intervention is to clear the dwell timer by re-calling goToStep on
+  // every tick (no-op visually) and override the hint copy.
+  whenReady(api => {
+    const HINT = wrap.querySelector('#af-hint');
+    if (HINT) HINT.textContent = 'scroll to advance';
+
+    const beats = Array.from(wrap.querySelectorAll('.af-scroll-beat'));
+    if (!beats.length) return;
+
+    function setActive(idx) {
+      beats.forEach((b, i) => {
+        b.classList.toggle('af-scroll-active', i === idx);
+      });
+      const step = parseInt(beats[idx].dataset.afStep, 10) || (idx + 1);
+      try { api.goToStep(step, true); } catch (e) {}
+    }
+
+    if ('IntersectionObserver' in window) {
+      const visible = new Map();
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          visible.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
+        });
+        let bestIdx = -1;
+        let bestRatio = 0;
+        beats.forEach((b, i) => {
+          const r = visible.get(b) || 0;
+          if (r > bestRatio) { bestIdx = i; bestRatio = r; }
+        });
+        if (bestIdx >= 0) setActive(bestIdx);
+      }, { rootMargin: '-40% 0px -40% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+      beats.forEach(b => io.observe(b));
+    } else {
+      // Fallback: first beat.
+      setActive(0);
+    }
+  });
+})();
+</script>
+<script>
+(function () {
+  // Mark the active orchestrator-scrolly beat as the reader scrolls.
+  // Visual only — the figure itself is plain HTML.
+  const wrap = document.querySelector('.ti-orch-scrolly');
+  if (!wrap) return;
+  const beats = Array.from(wrap.querySelectorAll('.ti-orch-beat'));
+  if (!beats.length) return;
+
+  if ('IntersectionObserver' in window) {
+    const visible = new Map();
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        visible.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
+      });
+      let bestIdx = -1;
+      let bestRatio = 0;
+      beats.forEach((b, i) => {
+        const r = visible.get(b) || 0;
+        if (r > bestRatio) { bestIdx = i; bestRatio = r; }
+      });
+      beats.forEach((b, i) => b.classList.toggle('af-scroll-active', i === bestIdx));
+    }, { rootMargin: '-35% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+    beats.forEach(b => io.observe(b));
+  } else {
+    beats.forEach(b => b.classList.add('af-scroll-active'));
+  }
+})();
+</script>
+<script>
+(function () {
+  // Article-map sidebar: IO-driven active node, click-to-scroll, hover tooltip.
+  const map = document.querySelector('.ti-map');
+  if (!map) return;
+
+  const dataNode = map.querySelector('script.ti-map-data');
+  const NODE_DATA = dataNode ? (function () {
+    try { return JSON.parse(dataNode.textContent || '{}'); }
+    catch (e) { return {}; }
+  })() : {};
+
+  const nodes  = Array.from(map.querySelectorAll('.ti-map-node'));
+  const edges  = Array.from(map.querySelectorAll('.ti-map-edge'));
+  const tooltip = map.querySelector('.ti-map-tooltip');
+  const tipTitle = tooltip ? tooltip.querySelector('.ti-map-tooltip-title') : null;
+  const tipSummary = tooltip ? tooltip.querySelector('.ti-map-tooltip-summary') : null;
+
+  // Article-map node ids in scroll order — populated by document order of
+  // section anchors with [data-node-id]. Lets us mark visited ids when
+  // scrolling past.
+  const SECTION_TARGETS = Array.from(
+    document.querySelectorAll('[data-node-id]')
+  );
+
+  // Click any node → smooth-scroll its target into view.
+  nodes.forEach(g => {
+    const id = g.getAttribute('data-node-id');
+    g.addEventListener('click', () => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    g.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        g.dispatchEvent(new Event('click'));
+      }
+    });
+    // Hover tooltip
+    g.addEventListener('mouseenter', () => showTooltip(id, g));
+    g.addEventListener('focus',      () => showTooltip(id, g));
+    g.addEventListener('mouseleave', hideTooltip);
+    g.addEventListener('blur',       hideTooltip);
+  });
+
+  function showTooltip(id, anchorEl) {
+    if (!tooltip || !tipTitle || !tipSummary) return;
+    const data = NODE_DATA[id];
+    if (!data) return;
+    tipTitle.textContent = data.title || '';
+    tipSummary.textContent = data.summary || '';
+    // Position vertically aligned with the node on the spine.
+    const dot = anchorEl.querySelector('.ti-map-dot');
+    if (dot) {
+      const mapBox = map.getBoundingClientRect();
+      const dotBox = dot.getBoundingClientRect();
+      const top = dotBox.top + dotBox.height / 2 - mapBox.top;
+      tooltip.style.top = top + 'px';
+    }
+    tooltip.classList.add('ti-map-tooltip-on');
+    tooltip.setAttribute('aria-hidden', 'false');
+  }
+  function hideTooltip() {
+    if (!tooltip) return;
+    tooltip.classList.remove('ti-map-tooltip-on');
+    tooltip.setAttribute('aria-hidden', 'true');
+  }
+
+  // Track the active section. Nodes that have *been* active stay 'visited'
+  // even after the reader scrolls past them.
+  const visited = new Set();
+  let activeId = null;
+
+  function setActive(id) {
+    if (id === activeId) return;
+    activeId = id;
+    if (id) visited.add(id);
+    nodes.forEach(g => {
+      const nid = g.getAttribute('data-node-id');
+      if (nid === id) {
+        g.setAttribute('data-state', 'active');
+      } else if (visited.has(nid)) {
+        g.setAttribute('data-state', 'visited');
+      } else {
+        g.removeAttribute('data-state');
+      }
+    });
+    // Light up edges that touch the active node.
+    edges.forEach(e => {
+      const a = e.getAttribute('data-edge-from');
+      const b = e.getAttribute('data-edge-to');
+      e.classList.toggle('ti-map-edge-active', a === id || b === id);
+    });
+  }
+
+  // IO: pick the section whose top is currently nearest the viewport's
+  // upper third. We observe each anchor and recompute on intersect; cheap
+  // and stable.
+  if ('IntersectionObserver' in window) {
+    const seen = new Map();
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        seen.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
+      });
+      // Pick the most-intersecting target.
+      let best = null;
+      let bestRatio = 0;
+      seen.forEach((ratio, el) => {
+        if (ratio > bestRatio) { best = el; bestRatio = ratio; }
+      });
+      if (best) {
+        const id = best.getAttribute('data-node-id');
+        if (id) setActive(id);
+      }
+    }, { rootMargin: '-30% 0px -50% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+    SECTION_TARGETS.forEach(t => io.observe(t));
+  } else {
+    // Fallback: pick the anchor closest to the top of the viewport on scroll.
+    const onScroll = () => {
+      let best = null;
+      let bestDist = Infinity;
+      SECTION_TARGETS.forEach(t => {
+        const r = t.getBoundingClientRect();
+        const d = Math.abs(r.top - 80);
+        if (r.top < window.innerHeight && d < bestDist) {
+          best = t; bestDist = d;
+        }
+      });
+      if (best) setActive(best.getAttribute('data-node-id'));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+})();
+</script>
 
 </body>
 </html>

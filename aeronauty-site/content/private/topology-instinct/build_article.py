@@ -72,6 +72,142 @@ EYEBROWS = {
 
 
 # ---------------------------------------------------------------------------
+# Article-map sidebar configuration
+# ---------------------------------------------------------------------------
+# Each article has a list of section nodes (in scroll order, top-to-bottom)
+# and a list of *thematic* edges (non-sequential connections that argue the
+# same point). Sequential edges are drawn implicitly down the spine.
+#
+# Node fields:
+#   id      — slug used as the in-DOM anchor target (also the SVG node id)
+#   title   — short label for the hover tooltip (~ 5 words)
+#   summary — one-sentence summary for the hover tooltip
+#   numeral — the small numeral printed in the section-opener moment
+#   stand   — italic stand-first line printed under the heading at section open
+#
+# Edges are ordered pairs of node ids. The renderer routes them as curves
+# off the right side of the spine.
+
+ARTICLE_MAPS: dict[int, dict] = {
+    1: {
+        "nodes": [
+            {"id": "intro",      "title": "Ice cream van",
+             "summary": "Cold open: the personal trigger for noticing the through-line.",
+             "numeral": "00", "stand": "A doctor, a phone call, an ice cream van, and a diagnosis that re-read twenty years."},
+            {"id": "plot-form",  "title": "The instinct in plot form",
+             "summary": "Refusing PowerPoint: a flat projection loses what makes data rich.",
+             "numeral": "01", "stand": "Why I sent the dashboard, not the deck."},
+            {"id": "paradigm",   "title": "Paradigm",
+             "summary": "Coupling the fleet and the network it flies on, jointly, as one MILP.",
+             "numeral": "02", "stand": "Two coupled systems, one model — and a prize that didn’t move the system."},
+            {"id": "join",       "title": "Twenty years of migrations",
+             "summary": "Pickles → HDF5 → SQL → Postgres: refusing to be the human join operation.",
+             "numeral": "03", "stand": "Trying, mildly annoyed, to put graph-shaped data somewhere a bit less wrong."},
+            {"id": "vera",       "title": "Vera",
+             "summary": "Two organisations with different filters, looking at the same instinct.",
+             "numeral": "04", "stand": "One filter graded the work; the other graded the thinking."},
+            {"id": "thread",     "title": "Thread",
+             "summary": "Thread: store the topology, project the flat view, keep the connections live.",
+             "numeral": "05", "stand": "The view is a projection. The connections are the truth."},
+            {"id": "thread-close","title": "The thread",
+             "summary": "Closer: it’s one thing, really. I don’t like data entry.",
+             "numeral": "06", "stand": "One thing, twenty years, one sentence."},
+        ],
+        # Curated thematic edges — read the article and decide which sections
+        # argue the same point. Sequential edges (i → i+1) are drawn implicitly
+        # down the spine, so we only declare the cross-cutting ones here.
+        "edges": [
+            ("plot-form",  "thread"),       # projection-vs-truth: PNG snapshot ↔ Thread flat-view
+            ("plot-form",  "thread-close"), # the original "drop the structure" complaint, restated
+            ("paradigm",   "join"),         # two coupled systems, a human as the join
+            ("paradigm",   "thread"),       # coupling-as-model: the same move scaled
+            ("join",       "thread"),       # storage caught up to instinct
+            ("vera",       "thread"),       # two filters; one of them named Thread
+            ("vera",       "paradigm"),     # external valuation of the same work
+            ("intro",      "thread-close"), # personal bookend
+            ("intro",      "join"),         # avoiding boring work = avoiding being the join
+        ],
+    },
+    2: {
+        "nodes": [
+            {"id": "intro",      "title": "Up front",
+             "summary": "Cold open: this is about the person who kept noticing.",
+             "numeral": "00", "stand": "ADHD, medication, agents — and what changes when they arrive together."},
+            {"id": "meds",       "title": "What the meds changed",
+             "summary": "The unfinished loop became visible; the through-line became legible.",
+             "numeral": "01", "stand": "The brain doesn’t get fixed. It gets supplemented."},
+            {"id": "configuration","title": "The configuration",
+             "summary": "One generalist orchestrator routing a swarm of fast cheap specialists.",
+             "numeral": "02", "stand": "Hold the shape; route the bounded sub-problems out; integrate the answers back."},
+            {"id": "why-now",    "title": "Why this didn’t exist before",
+             "summary": "Meds + agents arrived at roughly the same time — the pair is what works.",
+             "numeral": "03", "stand": "Neither alone would have done it."},
+            {"id": "swarm-cant", "title": "The thing the swarm can’t do",
+             "summary": "Cross-domain taste: noticing two communities are arguing the same shape.",
+             "numeral": "04", "stand": "The bridges live in the heads of generalists."},
+            {"id": "how-made",   "title": "How this article got made",
+             "summary": "Form follows content: the configuration produced the article you’re reading.",
+             "numeral": "05", "stand": "The shape decision was the human bit. The grind around it wasn’t."},
+            {"id": "thread-close","title": "The thread",
+             "summary": "Closer: the brain that was a tax is now an asset.",
+             "numeral": "06", "stand": "Maybe AI compresses the role later. In 2026, it is real."},
+        ],
+        "edges": [
+            ("meds",          "why-now"),     # meds-as-half-the-pair
+            ("meds",          "thread-close"),# brain-tax-asset bookend
+            ("configuration", "swarm-cant"),  # orchestrator role + bridge
+            ("configuration", "how-made"),    # the article *is* the configuration
+            ("configuration", "why-now"),     # configuration ↔ why-it-couldn't-exist
+            ("swarm-cant",    "thread-close"),# what remains for the human
+            ("intro",         "swarm-cant"),  # cross-domain generalist thesis
+            ("why-now",       "how-made"),    # demonstrated, not asserted
+        ],
+    },
+}
+
+
+def _slugify_heading(text: str) -> str:
+    """Lower-case, hyphen-separated slug used for h2 anchors.
+
+    Smarty's typographic substitutions (curly quotes, em-dashes) arrive
+    here as named HTML entities; strip both tags and entities before
+    flattening to ascii so the slugs match the H2_TO_NODE_ID keys.
+    """
+    s = text or ""
+    s = re.sub(r"<[^>]+>", "", s)
+    s = re.sub(r"&[a-zA-Z]+;|&#[0-9]+;|&#x[0-9a-fA-F]+;", "", s)
+    s = s.strip().lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return s
+
+
+# Hand-curated map from rendered h2 text → article-map node id.
+# Keep it as plain ASCII so the typographer (smarty) doesn't break the keys.
+H2_TO_NODE_ID: dict[int, dict[str, str]] = {
+    1: {
+        "the-instinct-in-plot-form":              "plot-form",
+        "paradigm":                                "paradigm",
+        "twenty-years-of-trying-not-to-be-the-human-join-operation": "join",
+        "vera":                                    "vera",
+        "thread":                                  "thread",
+        "the-thread":                              "thread-close",
+    },
+    2: {
+        "what-the-meds-actually-changed":            "meds",
+        "the-configuration":                         "configuration",
+        "why-this-configuration-didnt-exist-before": "why-now",
+        "the-thing-the-swarm-cant-do":               "swarm-cant",
+        "how-this-article-got-made":                 "how-made",
+        "the-thread":                                "thread-close",
+    },
+}
+
+# The article id of the build currently in progress — module-level so helpers
+# can pick the right map without threading the value through every call.
+CURRENT_ARTICLE_ID: int = 1
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -199,7 +335,12 @@ def ask_the_plot_assets() -> tuple[str, str, str]:
 
 
 def what_changed_assets() -> tuple[str, str, str]:
-    return _iife_assets(WC_HTML, "WhatChanged", '<div class="wc-figure"')
+    css, iife, structure = _iife_assets(WC_HTML, "WhatChanged", '<div class="wc-figure"')
+    css = css.replace(
+        'url("short-period-design-review-slide.png")',
+        'url("figures/short-period-design-review-slide.png")',
+    )
+    return css, iife, structure
 
 
 def data_black_market_assets() -> tuple[str, str, str]:
@@ -262,6 +403,52 @@ def render_prose() -> tuple[str, str]:
         return divider.rstrip()
 
     html = re.sub(r"<h2>Beat (\d+):[^<]*</h2>", _h2_replacer, html)
+
+    # ------------------------------------------------------------------
+    # Section anchors + opener typographic moments.
+    #
+    # Each <h2> is rewritten into an anchored block carrying:
+    #   - id="<node-id>"   — the article-map sidebar IO target
+    #   - a thin rule + breath above (Guardian-style section break)
+    #   - a small numeral and an italic stand-first under the heading
+    #     (one consistent move per section per article)
+    # ------------------------------------------------------------------
+    nodes_by_id = {n["id"]: n for n in ARTICLE_MAPS[CURRENT_ARTICLE_ID]["nodes"]}
+    h2_to_node = H2_TO_NODE_ID[CURRENT_ARTICLE_ID]
+
+    def _h2_anchor(match: re.Match[str]) -> str:
+        text = match.group(1)
+        slug = _slugify_heading(text)
+        node_id = h2_to_node.get(slug, slug)
+        node = nodes_by_id.get(node_id)
+        numeral = node["numeral"] if node else ""
+        stand = node["stand"] if node else ""
+        bits: list[str] = []
+        bits.append('<div class="ti-divider" aria-hidden="true">✦</div>')
+        bits.append(f'<section class="ti-section" id="{node_id}" data-node-id="{node_id}">')
+        if numeral:
+            bits.append(f'<span class="ti-section-numeral" aria-hidden="true">{numeral}</span>')
+        bits.append(f'<h2 class="ti-section-h2">{text}</h2>')
+        if stand:
+            bits.append(f'<p class="ti-section-stand">{stand}</p>')
+        bits.append('</section>')
+        return "\n".join(bits)
+
+    html = re.sub(r"<h2>([^<]+)</h2>", _h2_anchor, html)
+
+    # Inject an anchor wrapper for the cold-open ("intro") so the sidebar
+    # has somewhere to scroll to and the IO has a target for the first node.
+    # We wrap nothing visible — just an anchor ahead of the first paragraph.
+    html = '<span id="intro" class="ti-anchor" data-node-id="intro" aria-hidden="true"></span>\n' + html
+
+    # Promote the closing paragraph of article 1 to a held final beat. The
+    # second article already wraps its closer in <p class="ti-final"> in the
+    # markdown, so this is a no-op there.
+    html = html.replace(
+        "<p>That is the thread. It was there the whole time.</p>",
+        '<p class="ti-final">That is the thread. It was there the whole time.</p>',
+    )
+
     return html, title
 
 
@@ -281,10 +468,54 @@ def substitute_demo(html: str, globe_structure: str) -> str:
 
 
 def substitute_flowchart(html: str, flowchart_structure: str) -> str:
+    """Wrap the ADHD flowchart figure in a scroll-driven sticky stage.
+
+    Eight prose beats sit on the left; the flowchart is sticky on the right.
+    Each beat carries a `data-af-step` index. An IntersectionObserver in the
+    article's bottom JS calls AdhdFlowchart.goToStep(n) when each beat enters
+    the reading band — replacing the figure's old auto-advance loop.
+    """
+    beats = [
+        "Phase one of the meme everyone with an ADHD diagnosis has seen forty times. <strong>Get a new idea.</strong> The bit my brain is good at — it ran on its own for two decades.",
+        "<strong>Start a new project.</strong> Intensely, immediately, and at a tempo nobody asked for. The interesting bit is the only bit that exists.",
+        "<strong>Tell everyone.</strong> The loop closes here. Saying the thing out loud is, briefly, indistinguishable from doing it.",
+        "And then, faded off to the side: <strong>finish project.</strong> Not failed. Not abandoned, exactly. Just never connected back to the loop in the first place.",
+        "What the meds turned down was the chaos around the loop, not the loop. Now: <strong>recognise it’s connected to three previous ideas.</strong> The through-line becomes legible in real time.",
+        "<strong>Hand the boring bits to a swarm of agents.</strong> Tests, docstrings, edge cases, the literature sweep. The 80%-to-100% used to be the bit that killed the project; now it isn’t.",
+        "<strong>Stay at the connection level.</strong> The job is to hold the shape. Routing the bounded sub-problems out, integrating the answers back. Cross-domain taste, in operation.",
+        "<strong>Actually finish.</strong> Same brain, same loop — the difference is the route through the swarm now closes back into a green node instead of an orphan.",
+    ]
+    captions = [
+        "the meme",
+        "the meme",
+        "the meme · loop closes",
+        "the orphan",
+        "the subversion",
+        "the subversion",
+        "the subversion",
+        "the subversion · finish",
+    ]
+
+    beats_html = "\n".join(
+        f'      <div class="af-scroll-beat" data-af-step="{i+1}">'
+        f'<span class="af-scroll-beat-eyebrow">step {i+1:02d} &middot; {captions[i]}</span>'
+        f'<p>{text}</p></div>'
+        for i, text in enumerate(beats)
+    )
+
     block = (
-        '<aside class="ti-flowchart" aria-label="ADHD flowchart, then and now">\n'
-        f"{flowchart_structure}\n"
-        "</aside>"
+        '<aside class="ti-flowchart-scrolly" aria-label="ADHD flowchart, then and now — scroll to advance">\n'
+        '  <div class="af-scroll">\n'
+        '    <div class="af-scroll-prose">\n'
+        f'{beats_html}\n'
+        '    </div>\n'
+        '    <div class="af-scroll-stage">\n'
+        '      <aside class="ti-flowchart" aria-label="ADHD flowchart, then and now">\n'
+        f'{flowchart_structure}\n'
+        '      </aside>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '</aside>'
     )
     return re.sub(
         r"<p>\[FIGURE:\s*subverted-adhd-flowchart\]</p>",
@@ -577,8 +808,15 @@ def substitute_cartoon_ip_printer(html: str) -> str:
 
 
 def substitute_cartoon_orchestrator(html: str) -> str:
-    block = (
-        '<figure class="ti-figure ti-figure-cartoon" aria-labelledby="ti-cartoon-orchestrator-figcap">\n'
+    """In article 2, promote the orchestrator panel to a sticky-stage scrolly.
+
+    The cartoon sticks on one side; three short paragraphs (cross-domain
+    taste, swarm-can't-do-this, PhD-supervisor analogy) flow past on the
+    other. Article 1 is unaffected — its orchestrator slot, if present,
+    keeps the inline figure rendering.
+    """
+    figure_block = (
+        '<figure class="ti-figure ti-figure-cartoon ti-orch-figure" aria-labelledby="ti-cartoon-orchestrator-figcap">\n'
         '  <img src="figures/cartoon-orchestrator.png" '
         'alt="A person at a desk routing work to several specialist agent figures around them, holding a notebook rather than a tool" '
         'loading="lazy" />\n'
@@ -587,12 +825,55 @@ def substitute_cartoon_orchestrator(html: str) -> str:
         "</figcaption>\n"
         "</figure>"
     )
-    return re.sub(
-        r"<p>\[FIGURE:\s*cartoon-orchestrator\]</p>",
-        block,
-        html,
-        count=1,
+
+    if CURRENT_ARTICLE_ID != 2:
+        return re.sub(
+            r"<p>\[FIGURE:\s*cartoon-orchestrator\]</p>",
+            figure_block,
+            html,
+            count=1,
+        )
+
+    # Article 2 only: pull the next three paragraphs after the placeholder
+    # into a sticky-stage scrolly with the figure. The paragraphs are the
+    # ones that argue (a) what specialists are good at, (b) cross-domain
+    # taste / mediocre-specialist, (c) the PhD supervisor analogy.
+    placeholder_re = re.compile(
+        r"<p>\[FIGURE:\s*cartoon-orchestrator\]</p>\s*"
+        r"(<p>(?:(?!</p>).)*</p>)\s*"  # p1: what specialists are good at
+        r"(<p>(?:(?!</p>).)*</p>)\s*"  # p2: orchestrator role
+        r"(<p>(?:(?!</p>).)*</p>)\s*"  # p3: cross-domain taste
+        r"(<p>(?:(?!</p>).)*</p>)",    # p4: that's what the swarm can't do
+        re.DOTALL,
     )
+    def _wrap(m: re.Match[str]) -> str:
+        beats = [m.group(1), m.group(2), m.group(3), m.group(4)]
+        beats_html = "\n".join(
+            f'      <div class="ti-orch-beat">{p}</div>' for p in beats
+        )
+        return (
+            '<aside class="ti-orch-scrolly" aria-label="The orchestrator and the swarm">\n'
+            '  <div class="ti-orch-grid">\n'
+            '    <div class="ti-orch-stage">\n'
+            f'      {figure_block}\n'
+            '    </div>\n'
+            '    <div class="ti-orch-prose">\n'
+            f'{beats_html}\n'
+            '    </div>\n'
+            '  </div>\n'
+            '</aside>'
+        )
+    new_html, n = placeholder_re.subn(_wrap, html, count=1)
+    if n == 0:
+        # Fallback: at least render the figure inline if the surrounding
+        # prose changed shape.
+        return re.sub(
+            r"<p>\[FIGURE:\s*cartoon-orchestrator\]</p>",
+            figure_block,
+            html,
+            count=1,
+        )
+    return new_html
 
 
 def substitute_cartoon_storage_migrations(html: str) -> str:
@@ -734,6 +1015,161 @@ def substitute_milp_equations(html: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Article-map sidebar renderer
+# ---------------------------------------------------------------------------
+
+def render_article_map(article_id: int) -> str:
+    """Build the per-article sidebar map: nodes flow top-to-bottom on a
+    vertical spine; thematic edges arc off to the right side.
+
+    The SVG sits inside an <aside class="ti-map">. The IO + click handlers
+    are wired by MAP_JS at the bottom of the page.
+    """
+    cfg = ARTICLE_MAPS[article_id]
+    nodes = cfg["nodes"]
+    edges = cfg["edges"]
+
+    n = len(nodes)
+    # Layout — narrow column SVG, vertical spine on the left, thematic
+    # edges curve into the right gutter.
+    width = 110
+    top_pad = 30
+    bot_pad = 30
+    spacing = 60                          # vertical px between nodes
+    height = top_pad + bot_pad + spacing * (n - 1)
+    spine_x = 28                          # x-coord of the spine
+    gutter_x = 88                         # outer x for thematic edge arcs
+
+    pos: dict[str, tuple[float, float]] = {}
+    for i, node in enumerate(nodes):
+        pos[node["id"]] = (spine_x, top_pad + spacing * i)
+
+    parts: list[str] = []
+    parts.append(
+        f'<aside class="ti-map" aria-label="Article map" data-article-id="{article_id}">'
+    )
+    parts.append(
+        f'  <svg class="ti-map-svg" viewBox="0 0 {width} {height}" '
+        f'preserveAspectRatio="xMidYMid meet" role="img" '
+        f'aria-label="A map of the article — sections as nodes, thematic edges as curves">'
+    )
+
+    # Spine — sequential edges between consecutive nodes.
+    spine_d_parts = []
+    for i in range(n - 1):
+        ax, ay = pos[nodes[i]["id"]]
+        bx, by = pos[nodes[i + 1]["id"]]
+        spine_d_parts.append(f"M{ax},{ay+5} L{bx},{by-5}")
+    spine_d = " ".join(spine_d_parts)
+    parts.append(
+        f'    <path class="ti-map-spine" d="{spine_d}" fill="none" '
+        f'stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />'
+    )
+
+    # Thematic (non-sequential) edges — quadratic curves arcing off the
+    # right side of the spine. Curve depth scales gently with the vertical
+    # span so longer arcs bow further out.
+    for src_id, dst_id in edges:
+        if src_id not in pos or dst_id not in pos:
+            continue
+        ax, ay = pos[src_id]
+        bx, by = pos[dst_id]
+        if ay == by:
+            continue
+        span = abs(by - ay)
+        bow = min(40.0, 12.0 + span * 0.18)
+        cx = spine_x + bow
+        cy = (ay + by) / 2.0
+        # Slight stagger by hashing the pair so overlapping arcs separate.
+        stagger = ((hash((src_id, dst_id)) >> 3) & 7) - 3
+        cx += stagger * 1.4
+        d = f"M{ax+3},{ay} Q{cx},{cy} {bx+3},{by}"
+        parts.append(
+            f'    <path class="ti-map-edge" d="{d}" fill="none" '
+            f'stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" '
+            f'data-edge-from="{src_id}" data-edge-to="{dst_id}" />'
+        )
+
+    # Nodes — small circle + invisible touch target. Each is also a link
+    # for keyboard navigation.
+    for node in nodes:
+        nid = node["id"]
+        cx, cy = pos[nid]
+        title = node["title"].replace('"', "&quot;")
+        summary = node["summary"].replace('"', "&quot;")
+        parts.append(
+            f'    <g class="ti-map-node" data-node-id="{nid}" '
+            f'tabindex="0" role="link" aria-label="{title}: {summary}">'
+        )
+        # Big invisible touch target so the click radius is generous.
+        parts.append(
+            f'      <circle cx="{cx}" cy="{cy}" r="14" fill="transparent" '
+            f'class="ti-map-hit" />'
+        )
+        parts.append(
+            f'      <circle cx="{cx}" cy="{cy}" r="3.6" '
+            f'class="ti-map-dot" stroke="currentColor" stroke-width="1" '
+            f'fill="var(--ti-bg)" />'
+        )
+        # Hover/focus halo (rendered, but only visible via CSS on hover).
+        parts.append(
+            f'      <circle cx="{cx}" cy="{cy}" r="9" class="ti-map-halo" '
+            f'fill="none" stroke="currentColor" stroke-width="0.8" '
+            f'stroke-opacity="0.0" />'
+        )
+        parts.append('    </g>')
+
+    parts.append('  </svg>')
+
+    # Hover tooltip (single shared element, populated by JS).
+    parts.append(
+        '  <div class="ti-map-tooltip" role="tooltip" aria-hidden="true">'
+        '<span class="ti-map-tooltip-title"></span>'
+        '<span class="ti-map-tooltip-summary"></span>'
+        '</div>'
+    )
+
+    # Hidden node-data table that the JS reads (so we don't need to
+    # restate the strings in the JS).
+    parts.append('  <script type="application/json" class="ti-map-data">{')
+    json_nodes = ",".join(
+        '"%s":{"title":%s,"summary":%s}' % (
+            node["id"],
+            _json_str(node["title"]),
+            _json_str(node["summary"]),
+        )
+        for node in nodes
+    )
+    parts.append(json_nodes)
+    parts.append('  }</script>')
+
+    parts.append('</aside>')
+    return "\n".join(parts)
+
+
+def _json_str(s: str) -> str:
+    """Minimal JSON string escape (no third-party json module needed for our content)."""
+    out = ['"']
+    for ch in s:
+        if ch == '"':
+            out.append('\\"')
+        elif ch == "\\":
+            out.append("\\\\")
+        elif ch == "\n":
+            out.append("\\n")
+        elif ch == "\r":
+            out.append("\\r")
+        elif ch == "\t":
+            out.append("\\t")
+        elif ord(ch) < 0x20:
+            out.append("\\u%04x" % ord(ch))
+        else:
+            out.append(ch)
+    out.append('"')
+    return "".join(out)
+
+
+# ---------------------------------------------------------------------------
 # Master template
 # ---------------------------------------------------------------------------
 
@@ -838,10 +1274,18 @@ ARTICLE_CSS = r"""
     margin-inline: auto;
   }
   .ti-prose .ti-what-changed {
-    width: calc(100vw - 32px);
-    max-width: 1180px;
-    margin-left: calc(50% - min(50vw - 16px, 590px));
-    margin-right: auto;
+    position: relative;
+    left: 50%;
+    width: min(1180px, calc(100vw - 40px));
+    max-width: none;
+    margin: 64px 0;
+    transform: translateX(-50%);
+  }
+  .ti-prose .ti-what-changed .wc-scroll {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
     transform: none;
   }
   @media (min-width: 1100px) {
@@ -853,20 +1297,16 @@ ARTICLE_CSS = r"""
       transform: translateX(-50%);
     }
     .ti-prose .ti-what-changed {
-      width: calc(100vw - 64px);
-      max-width: 1180px;
-      margin-left: calc(50% - min(50vw - 32px, 590px));
-      margin-right: auto;
-      transform: none;
+      width: min(1180px, calc(100vw - 64px));
     }
   }
   @media (min-width: 760px) and (max-width: 1099px) {
     .ti-prose .ti-what-changed {
       width: calc(100vw - 32px);
-      max-width: 980px;
-      margin-left: calc(50% - min(50vw - 16px, 490px));
-      margin-right: auto;
-      transform: none;
+    }
+    .ti-prose .ti-what-changed .wc-scroll {
+      grid-template-columns: minmax(220px, 0.32fr) minmax(0, 0.68fr);
+      gap: 16px;
     }
   }
   @media (max-width: 720px) {
@@ -874,9 +1314,11 @@ ARTICLE_CSS = r"""
     .ti-prose .ti-ask-the-plot,
     .ti-prose .ti-data-black-market,
     .ti-prose .ti-what-changed {
+      left: auto;
       margin-left: 0;
       margin-right: 0;
       width: 100%;
+      transform: none;
     }
   }
   .ti-wide   { max-width: var(--ti-wide-w);   margin: 0 auto; }
@@ -1611,6 +2053,355 @@ ARTICLE_CSS = r"""
     .ti-hero h1 { background: none; -webkit-text-fill-color: #000; color: #000; }
   }
 
+  /* ---- section anchors + opener typographic moments ---- */
+  .ti-prose .ti-section {
+    /* Each section opens with a thin rule + generous breathing room. The
+       <section> itself is a logical wrapper; the visual break is on the
+       divider that precedes it. */
+    margin: 88px 0 36px;
+    padding: 0;
+  }
+  .ti-prose .ti-section-numeral {
+    display: block;
+    font-family: var(--ti-font-sans);
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    color: var(--ti-accent);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+  .ti-prose .ti-section-h2 {
+    font-family: var(--ti-font-sans);
+    font-size: clamp(26px, 3.4vw, 34px);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.005em;
+    margin: 0 0 14px;
+    color: var(--ti-fg);
+    text-wrap: balance;
+  }
+  .ti-prose .ti-section-stand {
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.42;
+    color: var(--ti-fg-dim);
+    margin: 0 0 28px;
+    max-width: 38ch;
+    text-wrap: balance;
+    border-left: 2px solid color-mix(in srgb, var(--ti-accent) 70%, transparent);
+    padding-left: 14px;
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-section { margin: 56px 0 24px; }
+    .ti-prose .ti-section-stand { font-size: 17px; padding-left: 11px; }
+  }
+  /* Bigger, breathier section break. Replaces the old tight ✦ rule with
+     a long thin horizontal rule with the bullet centred, plus more
+     vertical space. Magazine-length, not wiki-tight. */
+  .ti-prose .ti-divider {
+    color: var(--ti-fg-faint);
+    text-align: center;
+    font-size: 13px;
+    margin: 96px auto 0;
+    letter-spacing: 0;
+    line-height: 1;
+    opacity: 0.5;
+    position: relative;
+  }
+  .ti-prose .ti-divider::before,
+  .ti-prose .ti-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 32%;
+    height: 1px;
+    background: var(--ti-rule);
+  }
+  .ti-prose .ti-divider::before { left: 6%; }
+  .ti-prose .ti-divider::after  { right: 6%; }
+  /* The new ti-section block already supplies the post-heading whitespace,
+     so we don't need a divider+eyebrow pair anymore. Hide the legacy
+     eyebrow paragraph if a ti-section follows it. */
+  .ti-prose .ti-eyebrow + .ti-section { margin-top: 32px; }
+
+  /* ---- closing held beat ----
+     ti-final is now a section-tall, centred, alone presentation. The
+     reader scrolls into it and nothing competes. */
+  .ti-prose .ti-final {
+    display: grid;
+    place-items: center;
+    min-height: 60vh;
+    margin: 96px 0 24px;
+    padding: 24px;
+    font-family: var(--ti-font-serif);
+    font-style: italic;
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.18;
+    text-align: center;
+    color: var(--ti-fg);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+    border-top: 1px solid var(--ti-rule);
+  }
+  @media (max-width: 480px) {
+    .ti-prose .ti-final {
+      min-height: 50vh;
+      font-size: 24px;
+      margin: 56px 0 16px;
+      padding: 18px;
+    }
+  }
+
+  /* ---- ADHD flowchart sticky scrolly ---- */
+  .ti-flowchart-scrolly {
+    display: block;
+    margin: 72px 0;
+  }
+  .af-scroll {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 36px;
+    align-items: start;
+  }
+  .af-scroll-prose {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+  }
+  .af-scroll-beat {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px 0;
+    opacity: 0.36;
+    transition: opacity 280ms ease;
+  }
+  .af-scroll-beat.af-scroll-active {
+    opacity: 1;
+  }
+  .af-scroll-beat-eyebrow {
+    display: block;
+    font-family: var(--ti-font-sans);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ti-accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .af-scroll-beat p {
+    margin: 0;
+    font-family: var(--ti-font-serif);
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ti-fg);
+    max-width: 36ch;
+  }
+  .af-scroll-stage {
+    position: sticky;
+    top: 8vh;
+    height: 84vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .af-scroll-stage .ti-flowchart {
+    width: 100%;
+    margin: 0;
+    max-height: 84vh;
+    overflow: hidden;
+  }
+  /* In the sticky stage, hide the figure's auto-advance hint + replay button
+     since scroll drives the state now. */
+  .ti-flowchart-scrolly .af-controls { display: none; }
+  @media (max-width: 880px) {
+    .af-scroll {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .af-scroll-stage {
+      position: relative;
+      top: auto;
+      height: auto;
+      margin: 24px 0;
+    }
+    .af-scroll-beat { min-height: 0; padding: 16px 0; opacity: 1; }
+  }
+
+  /* ---- Orchestrator sticky scrolly (article 2) ---- */
+  .ti-orch-scrolly {
+    display: block;
+    margin: 72px 0;
+  }
+  .ti-orch-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 40px;
+    align-items: start;
+  }
+  .ti-orch-stage {
+    position: sticky;
+    top: 10vh;
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ti-orch-stage .ti-orch-figure {
+    margin: 0;
+    max-width: 520px;
+    width: 100%;
+  }
+  .ti-orch-prose {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .ti-orch-beat {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 0;
+    opacity: 0.5;
+    transition: opacity 320ms ease;
+  }
+  .ti-orch-beat.af-scroll-active { opacity: 1; }
+  .ti-orch-beat p {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.6;
+    max-width: 38ch;
+  }
+  @media (max-width: 880px) {
+    .ti-orch-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .ti-orch-stage {
+      position: relative;
+      top: auto;
+      height: auto;
+      margin: 24px 0;
+    }
+    .ti-orch-beat { min-height: 0; padding: 12px 0; opacity: 1; }
+  }
+
+  /* ---- Article-map sidebar ----
+     Pen-and-ink, monochrome with a single cyan-teal active accent. Sticky
+     to the left edge of the viewport, hidden on narrow screens. */
+  .ti-map {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 110px;
+    height: 100vh;
+    z-index: 40;
+    pointer-events: none;          /* enable on children */
+    color: var(--ti-fg-faint);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+  }
+  .ti-map-svg {
+    max-height: calc(100vh - 24px);
+    max-width: 100%;
+    height: auto;
+    width: 100%;
+    overflow: visible;
+    pointer-events: auto;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+  }
+  .ti-map-spine,
+  .ti-map-edge {
+    transition: stroke-opacity 180ms ease, stroke 180ms ease;
+  }
+  .ti-map-edge.ti-map-edge-active {
+    stroke: var(--ti-accent);
+    stroke-opacity: 0.75;
+  }
+  .ti-map-node {
+    cursor: pointer;
+    pointer-events: auto;
+    outline: none;
+  }
+  .ti-map-dot {
+    transition: r 180ms ease, fill 180ms ease, stroke 180ms ease, stroke-width 180ms ease;
+    color: var(--ti-fg-faint);
+  }
+  .ti-map-node[data-state="visited"] .ti-map-dot {
+    color: var(--ti-accent);
+    stroke: var(--ti-accent);
+    stroke-width: 1.2;
+    r: 4.2;
+    fill: var(--ti-bg);
+  }
+  .ti-map-node[data-state="active"] .ti-map-dot {
+    color: var(--ti-accent);
+    stroke: var(--ti-accent);
+    stroke-width: 1.4;
+    r: 5.6;
+    fill: var(--ti-accent);
+  }
+  .ti-map-node:hover .ti-map-halo,
+  .ti-map-node:focus-visible .ti-map-halo {
+    stroke-opacity: 0.75;
+    color: var(--ti-accent);
+  }
+  .ti-map-node[data-state="active"] .ti-map-halo {
+    stroke-opacity: 0.55;
+    color: var(--ti-accent);
+  }
+  .ti-map-tooltip {
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 0;
+    transform: translateY(-50%);
+    pointer-events: none;
+    background: var(--ti-surface);
+    color: var(--ti-fg);
+    border: 1px solid var(--ti-border);
+    border-radius: 6px;
+    padding: 8px 11px;
+    width: 230px;
+    font-family: var(--ti-font-sans);
+    font-size: 12.5px;
+    line-height: 1.42;
+    opacity: 0;
+    transition: opacity 140ms ease;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+    z-index: 41;
+  }
+  .ti-map-tooltip.ti-map-tooltip-on { opacity: 1; }
+  .ti-map-tooltip-title {
+    display: block;
+    font-weight: 650;
+    color: var(--ti-fg);
+    margin-bottom: 3px;
+    letter-spacing: 0;
+  }
+  .ti-map-tooltip-summary {
+    display: block;
+    color: var(--ti-fg-dim);
+  }
+  /* Hide on phones — reading on a phone you don't need a sidebar. */
+  @media (max-width: 880px) {
+    .ti-map { display: none; }
+  }
+  /* Slightly inset on smaller desktop screens so the map doesn't crowd the
+     prose column. The body padding above already gives enough room. */
+  @media (min-width: 881px) and (max-width: 1280px) {
+    .ti-map { width: 88px; }
+  }
+
   /* ---- accessibility ---- */
   :focus-visible {
     outline: 2px solid var(--ti-accent);
@@ -1627,6 +2418,237 @@ ARTICLE_CSS = r"""
     border-radius: 0 0 4px 0;
   }
   .ti-skip-link:focus { top: 0; }
+"""
+
+
+MAP_JS = r"""
+(function () {
+  // Article-map sidebar: IO-driven active node, click-to-scroll, hover tooltip.
+  const map = document.querySelector('.ti-map');
+  if (!map) return;
+
+  const dataNode = map.querySelector('script.ti-map-data');
+  const NODE_DATA = dataNode ? (function () {
+    try { return JSON.parse(dataNode.textContent || '{}'); }
+    catch (e) { return {}; }
+  })() : {};
+
+  const nodes  = Array.from(map.querySelectorAll('.ti-map-node'));
+  const edges  = Array.from(map.querySelectorAll('.ti-map-edge'));
+  const tooltip = map.querySelector('.ti-map-tooltip');
+  const tipTitle = tooltip ? tooltip.querySelector('.ti-map-tooltip-title') : null;
+  const tipSummary = tooltip ? tooltip.querySelector('.ti-map-tooltip-summary') : null;
+
+  // Article-map node ids in scroll order — populated by document order of
+  // section anchors with [data-node-id]. Lets us mark visited ids when
+  // scrolling past.
+  const SECTION_TARGETS = Array.from(
+    document.querySelectorAll('[data-node-id]')
+  );
+
+  // Click any node → smooth-scroll its target into view.
+  nodes.forEach(g => {
+    const id = g.getAttribute('data-node-id');
+    g.addEventListener('click', () => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    g.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        g.dispatchEvent(new Event('click'));
+      }
+    });
+    // Hover tooltip
+    g.addEventListener('mouseenter', () => showTooltip(id, g));
+    g.addEventListener('focus',      () => showTooltip(id, g));
+    g.addEventListener('mouseleave', hideTooltip);
+    g.addEventListener('blur',       hideTooltip);
+  });
+
+  function showTooltip(id, anchorEl) {
+    if (!tooltip || !tipTitle || !tipSummary) return;
+    const data = NODE_DATA[id];
+    if (!data) return;
+    tipTitle.textContent = data.title || '';
+    tipSummary.textContent = data.summary || '';
+    // Position vertically aligned with the node on the spine.
+    const dot = anchorEl.querySelector('.ti-map-dot');
+    if (dot) {
+      const mapBox = map.getBoundingClientRect();
+      const dotBox = dot.getBoundingClientRect();
+      const top = dotBox.top + dotBox.height / 2 - mapBox.top;
+      tooltip.style.top = top + 'px';
+    }
+    tooltip.classList.add('ti-map-tooltip-on');
+    tooltip.setAttribute('aria-hidden', 'false');
+  }
+  function hideTooltip() {
+    if (!tooltip) return;
+    tooltip.classList.remove('ti-map-tooltip-on');
+    tooltip.setAttribute('aria-hidden', 'true');
+  }
+
+  // Track the active section. Nodes that have *been* active stay 'visited'
+  // even after the reader scrolls past them.
+  const visited = new Set();
+  let activeId = null;
+
+  function setActive(id) {
+    if (id === activeId) return;
+    activeId = id;
+    if (id) visited.add(id);
+    nodes.forEach(g => {
+      const nid = g.getAttribute('data-node-id');
+      if (nid === id) {
+        g.setAttribute('data-state', 'active');
+      } else if (visited.has(nid)) {
+        g.setAttribute('data-state', 'visited');
+      } else {
+        g.removeAttribute('data-state');
+      }
+    });
+    // Light up edges that touch the active node.
+    edges.forEach(e => {
+      const a = e.getAttribute('data-edge-from');
+      const b = e.getAttribute('data-edge-to');
+      e.classList.toggle('ti-map-edge-active', a === id || b === id);
+    });
+  }
+
+  // IO: pick the section whose top is currently nearest the viewport's
+  // upper third. We observe each anchor and recompute on intersect; cheap
+  // and stable.
+  if ('IntersectionObserver' in window) {
+    const seen = new Map();
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        seen.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
+      });
+      // Pick the most-intersecting target.
+      let best = null;
+      let bestRatio = 0;
+      seen.forEach((ratio, el) => {
+        if (ratio > bestRatio) { best = el; bestRatio = ratio; }
+      });
+      if (best) {
+        const id = best.getAttribute('data-node-id');
+        if (id) setActive(id);
+      }
+    }, { rootMargin: '-30% 0px -50% 0px', threshold: [0, 0.05, 0.25, 0.5, 1] });
+    SECTION_TARGETS.forEach(t => io.observe(t));
+  } else {
+    // Fallback: pick the anchor closest to the top of the viewport on scroll.
+    const onScroll = () => {
+      let best = null;
+      let bestDist = Infinity;
+      SECTION_TARGETS.forEach(t => {
+        const r = t.getBoundingClientRect();
+        const d = Math.abs(r.top - 80);
+        if (r.top < window.innerHeight && d < bestDist) {
+          best = t; bestDist = d;
+        }
+      });
+      if (best) setActive(best.getAttribute('data-node-id'));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+})();
+"""
+
+
+FLOWCHART_SCROLLY_JS = r"""
+(function () {
+  // Replace the ADHD flowchart's auto-advance loop with scroll-driven
+  // state: the figure becomes a sticky stage; eight prose beats sit
+  // beside it; whichever beat is in the reader's band drives goToStep.
+  const wrap = document.querySelector('.ti-flowchart-scrolly');
+  if (!wrap) return;
+
+  // Wait until AdhdFlowchart has booted (it's loaded after this script in
+  // the document, so we poll briefly).
+  function whenReady(cb, tries) {
+    if (window.AdhdFlowchart && typeof window.AdhdFlowchart.goToStep === 'function') {
+      cb(window.AdhdFlowchart);
+      return;
+    }
+    if ((tries || 0) > 80) return;
+    setTimeout(() => whenReady(cb, (tries || 0) + 1), 60);
+  }
+
+  // Disable the figure's hover-pause + auto-advance by clobbering its
+  // internal scheduler. The IIFE doesn't expose stop(), so the cheapest
+  // intervention is to clear the dwell timer by re-calling goToStep on
+  // every tick (no-op visually) and override the hint copy.
+  whenReady(api => {
+    const HINT = wrap.querySelector('#af-hint');
+    if (HINT) HINT.textContent = 'scroll to advance';
+
+    const beats = Array.from(wrap.querySelectorAll('.af-scroll-beat'));
+    if (!beats.length) return;
+
+    function setActive(idx) {
+      beats.forEach((b, i) => {
+        b.classList.toggle('af-scroll-active', i === idx);
+      });
+      const step = parseInt(beats[idx].dataset.afStep, 10) || (idx + 1);
+      try { api.goToStep(step, true); } catch (e) {}
+    }
+
+    if ('IntersectionObserver' in window) {
+      const visible = new Map();
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          visible.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
+        });
+        let bestIdx = -1;
+        let bestRatio = 0;
+        beats.forEach((b, i) => {
+          const r = visible.get(b) || 0;
+          if (r > bestRatio) { bestIdx = i; bestRatio = r; }
+        });
+        if (bestIdx >= 0) setActive(bestIdx);
+      }, { rootMargin: '-40% 0px -40% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+      beats.forEach(b => io.observe(b));
+    } else {
+      // Fallback: first beat.
+      setActive(0);
+    }
+  });
+})();
+"""
+
+
+ORCH_SCROLLY_JS = r"""
+(function () {
+  // Mark the active orchestrator-scrolly beat as the reader scrolls.
+  // Visual only — the figure itself is plain HTML.
+  const wrap = document.querySelector('.ti-orch-scrolly');
+  if (!wrap) return;
+  const beats = Array.from(wrap.querySelectorAll('.ti-orch-beat'));
+  if (!beats.length) return;
+
+  if ('IntersectionObserver' in window) {
+    const visible = new Map();
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        visible.set(en.target, en.isIntersecting ? en.intersectionRatio : 0);
+      });
+      let bestIdx = -1;
+      let bestRatio = 0;
+      beats.forEach((b, i) => {
+        const r = visible.get(b) || 0;
+        if (r > bestRatio) { bestIdx = i; bestRatio = r; }
+      });
+      beats.forEach((b, i) => b.classList.toggle('af-scroll-active', i === bestIdx));
+    }, { rootMargin: '-35% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+    beats.forEach(b => io.observe(b));
+  } else {
+    beats.forEach(b => b.classList.add('af-scroll-active'));
+  }
+})();
 """
 
 
@@ -1704,6 +2726,8 @@ HTML_TEMPLATE = """<!doctype html>
 <a href="#ti-main" class="ti-skip-link">Skip to article</a>
 <div class="ti-progress" aria-hidden="true"></div>
 
+{article_map}
+
 <div class="ti-page">
 
   <header class="ti-mast ti-narrow" role="banner">
@@ -1744,6 +2768,9 @@ HTML_TEMPLATE = """<!doctype html>
 <script>{va_js}</script>
 <script>{atp_js}</script>
 <script>{wc_js}</script>
+<script>{flowchart_scrolly_js}</script>
+<script>{orch_scrolly_js}</script>
+<script>{map_js}</script>
 
 </body>
 </html>
@@ -1943,6 +2970,7 @@ def main() -> None:
     )
 
     print("Rendering article...")
+    article_map_html = render_article_map(CURRENT_ARTICLE_ID)
     out = HTML_TEMPLATE.format(
         title=page_title,
         library_tags=required_library_tags(needs),
@@ -1956,6 +2984,7 @@ def main() -> None:
         va_css=va_css,
         atp_css=atp_css,
         wc_css=wc_css,
+        article_map=article_map_html,
         prose=prose_html,
         progress_js=PROGRESS_JS,
         globe_js=globe_js,
@@ -1967,6 +2996,9 @@ def main() -> None:
         va_js=va_js,
         atp_js=atp_js,
         wc_js=wc_js,
+        flowchart_scrolly_js=FLOWCHART_SCROLLY_JS,
+        orch_scrolly_js=ORCH_SCROLLY_JS,
+        map_js=MAP_JS,
     )
 
     OUT.write_text(out)
@@ -1988,10 +3020,11 @@ def main() -> None:
 
 
 def _build_one(article_id: int) -> None:
-    global PROSE_MD, OUT
+    global PROSE_MD, OUT, CURRENT_ARTICLE_ID
     spec = ARTICLES[article_id]
     PROSE_MD = spec["md"]
     OUT      = spec["out"]
+    CURRENT_ARTICLE_ID = article_id
     print(f"\n=== Building article {article_id} → {OUT.name} ===")
     main()
 
