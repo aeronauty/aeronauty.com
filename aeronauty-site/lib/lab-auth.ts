@@ -4,7 +4,7 @@ export const LAB_SESSION_COOKIE = "__Host-aeronauty-lab-session";
 
 const MAGIC_LINK_TTL = "15m";
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
-const BUILT_IN_ALLOWED_EMAILS = ["sunnyholme@google.com"];
+const BUILT_IN_ALLOWED_EMAILS = ["sunnyholme@google.com", "lorrainejean@gmail.com"];
 
 type LabTokenPayload = {
   email: string;
