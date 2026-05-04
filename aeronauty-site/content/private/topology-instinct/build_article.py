@@ -1322,10 +1322,12 @@ ARTICLE_CSS = r"""
   .ti-prose .ti-flat-view,
   .ti-prose .ti-ask-the-plot,
   .ti-prose .ti-data-black-market,
-  .ti-prose .ti-what-changed {
+  .ti-prose .ti-what-changed,
+  .ti-prose .ti-flowchart-scrolly,
+  .ti-prose .ti-orch-scrolly {
     margin-left: calc(50% - 50vw + 8px);
     margin-right: calc(50% - 50vw + 8px);
-    max-width: clamp(1240px, 92vw, 1480px);   /* fluid cap — uses available width on big monitors */
+    max-width: clamp(1240px, 92vw, 1520px);   /* fluid cap — uses available width on big monitors */
     margin-inline: auto;
   }
   .ti-prose .ti-what-changed {
@@ -2345,13 +2347,23 @@ ARTICLE_CSS = r"""
   /* ---- ADHD flowchart sticky scrolly ---- */
   .ti-flowchart-scrolly {
     display: block;
-    margin: 72px 0;
+    margin: 72px auto;
+    padding: 0 16px;
   }
   .af-scroll {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: 36px;
+    /* Keep prose at reading width (~480 px) on the left; let the
+       sticky stage swallow the rest of the breakout width. */
+    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+    gap: 48px;
     align-items: start;
+    max-width: 100%;
+  }
+  @media (min-width: 1200px) {
+    .af-scroll {
+      grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
+      gap: 64px;
+    }
   }
   .af-scroll-prose {
     display: flex;
@@ -2391,8 +2403,8 @@ ARTICLE_CSS = r"""
   }
   .af-scroll-stage {
     position: sticky;
-    top: 8vh;
-    height: 84vh;
+    top: 6vh;
+    height: 88vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2400,12 +2412,48 @@ ARTICLE_CSS = r"""
   .af-scroll-stage .ti-flowchart {
     width: 100%;
     margin: 0;
-    max-height: 84vh;
+    max-height: 88vh;
     overflow: hidden;
+  }
+  /* Inside the figure, give the cartoon panel + flowchart the full
+     stage width — they were constrained for the narrow column case. */
+  .af-scroll-stage .af-figure,
+  .af-scroll-stage .af-frame {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px 18px;
+  }
+  .af-scroll-stage .af-cartoon-pane,
+  .af-scroll-stage .af-cartoon-pane img {
+    max-width: 100%;
+    width: 100%;
   }
   /* In the sticky stage, hide the figure's auto-advance hint + replay button
      since scroll drives the state now. */
   .ti-flowchart-scrolly .af-controls { display: none; }
+  /* Make the figure's internal stage fill the sticky-stage height so
+     the cartoon panel + flowchart actually use the room they have. */
+  .af-scroll-stage .af-stage {
+    height: 100%;
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1.0fr) minmax(0, 1.1fr);
+    gap: 22px;
+  }
+  .af-scroll-stage .af-svg-pane,
+  .af-scroll-stage .af-cartoon-pane {
+    min-height: 0;
+    height: 100%;
+  }
+  .af-scroll-stage .af-cartoon-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;             /* fill the pane — the cartoons are 16:9, the pane is taller now */
+  }
+  /* On very wide screens, lean further into the cartoon — it carries
+     the human moment. */
+  @media (min-width: 1400px) {
+    .af-scroll-stage .af-stage { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr); }
+  }
   @media (max-width: 880px) {
     .af-scroll {
       grid-template-columns: 1fr;

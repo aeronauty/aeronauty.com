@@ -109,10 +109,12 @@
   .ti-prose .ti-flat-view,
   .ti-prose .ti-ask-the-plot,
   .ti-prose .ti-data-black-market,
-  .ti-prose .ti-what-changed {
+  .ti-prose .ti-what-changed,
+  .ti-prose .ti-flowchart-scrolly,
+  .ti-prose .ti-orch-scrolly {
     margin-left: calc(50% - 50vw + 8px);
     margin-right: calc(50% - 50vw + 8px);
-    max-width: clamp(1240px, 92vw, 1480px);   /* fluid cap — uses available width on big monitors */
+    max-width: clamp(1240px, 92vw, 1520px);   /* fluid cap — uses available width on big monitors */
     margin-inline: auto;
   }
   .ti-prose .ti-what-changed {
@@ -1132,13 +1134,23 @@
   /* ---- ADHD flowchart sticky scrolly ---- */
   .ti-flowchart-scrolly {
     display: block;
-    margin: 72px 0;
+    margin: 72px auto;
+    padding: 0 16px;
   }
   .af-scroll {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: 36px;
+    /* Keep prose at reading width (~480 px) on the left; let the
+       sticky stage swallow the rest of the breakout width. */
+    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+    gap: 48px;
     align-items: start;
+    max-width: 100%;
+  }
+  @media (min-width: 1200px) {
+    .af-scroll {
+      grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
+      gap: 64px;
+    }
   }
   .af-scroll-prose {
     display: flex;
@@ -1178,8 +1190,8 @@
   }
   .af-scroll-stage {
     position: sticky;
-    top: 8vh;
-    height: 84vh;
+    top: 6vh;
+    height: 88vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1187,12 +1199,48 @@
   .af-scroll-stage .ti-flowchart {
     width: 100%;
     margin: 0;
-    max-height: 84vh;
+    max-height: 88vh;
     overflow: hidden;
+  }
+  /* Inside the figure, give the cartoon panel + flowchart the full
+     stage width — they were constrained for the narrow column case. */
+  .af-scroll-stage .af-figure,
+  .af-scroll-stage .af-frame {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px 18px;
+  }
+  .af-scroll-stage .af-cartoon-pane,
+  .af-scroll-stage .af-cartoon-pane img {
+    max-width: 100%;
+    width: 100%;
   }
   /* In the sticky stage, hide the figure's auto-advance hint + replay button
      since scroll drives the state now. */
   .ti-flowchart-scrolly .af-controls { display: none; }
+  /* Make the figure's internal stage fill the sticky-stage height so
+     the cartoon panel + flowchart actually use the room they have. */
+  .af-scroll-stage .af-stage {
+    height: 100%;
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1.0fr) minmax(0, 1.1fr);
+    gap: 22px;
+  }
+  .af-scroll-stage .af-svg-pane,
+  .af-scroll-stage .af-cartoon-pane {
+    min-height: 0;
+    height: 100%;
+  }
+  .af-scroll-stage .af-cartoon-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;             /* fill the pane — the cartoons are 16:9, the pane is taller now */
+  }
+  /* On very wide screens, lean further into the cartoon — it carries
+     the human moment. */
+  @media (min-width: 1400px) {
+    .af-scroll-stage .af-stage { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr); }
+  }
   @media (max-width: 880px) {
     .af-scroll {
       grid-template-columns: 1fr;
@@ -1692,13 +1740,13 @@
 <aside class="ti-map" aria-label="Article map" data-article-id="2">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q62.99999999999999,150.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="why-now" />
-    <path class="ti-map-edge" d="M31,90 Q69.4,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q60.199999999999996,210.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,90 Q61.599999999999994,150.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="why-now" />
+    <path class="ti-map-edge" d="M31,90 Q72.2,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="meds" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q57.39999999999999,210.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="swarm-cant" />
     <path class="ti-map-edge" d="M31,150 Q66.6,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="how-made" />
-    <path class="ti-map-edge" d="M31,150 Q53.599999999999994,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="why-now" />
-    <path class="ti-map-edge" d="M31,270 Q65.8,330.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="swarm-cant" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q66.6,150.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="swarm-cant" />
+    <path class="ti-map-edge" d="M31,150 Q55.0,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="configuration" data-edge-to="why-now" />
+    <path class="ti-map-edge" d="M31,270 Q57.39999999999999,330.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="swarm-cant" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q69.4,150.0 31,270" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="swarm-cant" />
     <path class="ti-map-edge" d="M31,210 Q64.39999999999999,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="why-now" data-edge-to="how-made" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Up front: Cold open: this is about the person who kept noticing.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
