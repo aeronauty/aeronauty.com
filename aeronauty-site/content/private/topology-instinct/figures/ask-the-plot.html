@@ -119,6 +119,7 @@ main { max-width: 1200px; margin: 0 auto; }
   stroke: var(--atp-surface-2);
   stroke-width: 2;
   cursor: pointer;
+  pointer-events: all;
   transition: r 180ms ease, fill 180ms ease;
 }
 .atp-plot-svg .atp-pt.atp-pt-hover,
@@ -176,6 +177,12 @@ main { max-width: 1200px; margin: 0 auto; }
   .atp-plot-host {
     overflow: visible;
     min-height: 0;
+  }
+  .atp-plot-svg .atp-pt {
+    stroke-width: 8;
+  }
+  .atp-plot-svg .atp-pt.atp-pt-active {
+    r: 10;
   }
   .atp-qr {
     right: 8px;
@@ -848,10 +855,28 @@ window.AskThePlot = (function () {
   // (or until the auto-play opens it).
   setActivePoint(3);
 
-  // ---- User hover + right-click handling -------------------------------
-  // Hovering a point updates the active dot + tooltip. Right-clicking
-  // opens the "ask Thread" menu on that point. Auto-play steps aside on
-  // either interaction.
+  function nearestPointIndexFromEvent(ev) {
+    const svg = host.querySelector('.atp-plot-svg');
+    if (!svg) return -1;
+    const rect = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal;
+    const x = ((ev.clientX - rect.left) / rect.width) * vb.width + vb.x;
+    const y = ((ev.clientY - rect.top) / rect.height) * vb.height + vb.y;
+    let bestIdx = -1;
+    let bestDist = Infinity;
+    ptEls.forEach((pt, i) => {
+      const cx = Number(pt.getAttribute('cx'));
+      const cy = Number(pt.getAttribute('cy'));
+      const d = Math.hypot(cx - x, cy - y);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    });
+    return bestDist < 42 ? bestIdx : -1;
+  }
+
+  // ---- User hover/tap + right-click handling ---------------------------
+  // Hovering or tapping a point updates the active dot + tooltip.
+  // Right-clicking opens the "ask Thread" menu on that point. Auto-play
+  // steps aside on either interaction.
   let userTookOver = false;
   function onPointHover(idx) {
     userTookOver = true;
@@ -870,8 +895,15 @@ window.AskThePlot = (function () {
   ptEls.forEach((e, i) => {
     e.addEventListener('mouseenter',  () => onPointHover(i));
     e.addEventListener('focus',       () => onPointHover(i));
-    e.addEventListener('click',       (ev) => { onPointHover(i); });
+    e.addEventListener('click',       (ev) => { ev.stopPropagation(); onPointHover(i); });
     e.addEventListener('contextmenu', (ev) => onPointRightClick(i, ev));
+  });
+  host.addEventListener('pointerup', (ev) => {
+    if (ev.pointerType === 'mouse') return;
+    const idx = nearestPointIndexFromEvent(ev);
+    if (idx < 0) return;
+    ev.preventDefault();
+    onPointHover(idx);
   });
   host.addEventListener('mouseleave', () => { hideTooltip(); });
   // Close the contextual menu on outside-click, Escape, or scroll.
@@ -893,6 +925,14 @@ window.AskThePlot = (function () {
     userTookOver = true;
     stopDemo();
     qrEl.classList.add('atp-qr-active');
+    revealEphemerality();
+  });
+  qrEl.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    userTookOver = true;
+    stopDemo();
+    qrEl.classList.add('atp-qr-active');
+    fireQrScan();
     revealEphemerality();
   });
   qrEl.addEventListener('mouseleave', () => qrEl.classList.remove('atp-qr-active'));

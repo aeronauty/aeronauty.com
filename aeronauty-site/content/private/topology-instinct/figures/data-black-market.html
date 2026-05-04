@@ -448,23 +448,52 @@ main { max-width: 1160px; margin: 0 auto; }
     width: fit-content;
   }
   .dbm-grid {
-    grid-template-columns: 1fr;
+    display: block;
+    padding: 18px 18px 28px;
   }
-  .dbm-trail {
-    order: 2;
+  .dbm-trail,
+  .dbm-step,
+  .dbm-trigger,
+  .dbm-mobile-stage-slot,
+  .dbm-stage {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
   .dbm-stage {
+    display: none;
+  }
+  .dbm-mobile-stage-slot {
+    display: block;
+    height: 52svh;
+    min-height: 320px;
+    margin: 18px 0 0;
+    border: 1px solid var(--dbm-border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(8, 13, 24, 0.72);
+  }
+  .dbm-mobile-stage-slot:empty {
+    display: none;
+  }
+  .dbm-mobile-stage-slot .dbm-panel {
     position: relative;
-    top: auto;
-    order: 1;
-    height: auto;
-    min-height: 0;
-    aspect-ratio: 16 / 11;
-    margin-bottom: 6px;
+    inset: auto;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .dbm-mobile-stage-slot .dbm-panel-img-wrap,
+  .dbm-mobile-stage-slot .dbm-panel img {
+    min-width: 0;
   }
   .dbm-step {
-    min-height: 0;
-    padding: 8px 0;
+    min-height: 100svh;
+    display: block;
+    padding: 8svh 0 0;
   }
 }
 
@@ -620,7 +649,28 @@ window.DataBlackMarket = (function () {
   const panels = Array.from(figure.querySelectorAll('[data-dbm-panel]'));
   const jumps = Array.from(figure.querySelectorAll('[data-dbm-jump]'));
   const status = figure.querySelector('[data-dbm-status]');
+  const stage = figure.querySelector('.dbm-stage');
+  const stageHome = stage ? stage.parentNode : null;
+  const stageNext = stage ? stage.nextSibling : null;
+  const mobileMq = window.matchMedia('(max-width: 900px)');
   let active = 1;
+
+  steps.forEach((step) => {
+    if (step.querySelector('.dbm-mobile-stage-slot')) return;
+    const slot = document.createElement('div');
+    slot.className = 'dbm-mobile-stage-slot';
+    const panel = panels.find((item) => item.dataset.dbmPanel === step.dataset.dbmStep);
+    if (panel) slot.appendChild(panel.cloneNode(true));
+    step.appendChild(slot);
+  });
+
+  function placeStage() {
+    if (!stage || !stageHome) return;
+    if (mobileMq.matches) {
+      return;
+    }
+    if (stage.parentNode !== stageHome) stageHome.insertBefore(stage, stageNext);
+  }
 
   function show(index) {
     active = Math.max(1, Math.min(4, Number(index) || 1));
@@ -642,6 +692,8 @@ window.DataBlackMarket = (function () {
       jump.classList.toggle('dbm-active', isActive);
       jump.setAttribute('aria-current', isActive ? 'step' : 'false');
     });
+
+    placeStage();
   }
 
   steps.forEach((step) => {
@@ -676,6 +728,7 @@ window.DataBlackMarket = (function () {
   }
 
   show(1);
+  mobileMq.addEventListener('change', placeStage);
 
   return { show };
 })();

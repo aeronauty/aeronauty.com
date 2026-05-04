@@ -489,7 +489,9 @@ main { max-width: 980px; margin: 0 auto; }
   margin: 8px 0 0;
 }
 @media (max-width: 800px) {
-  .fv-scrolly { grid-template-columns: 1fr; gap: 14px; }
+  .fv-scrolly {
+    display: block;
+  }
 }
 .fv-scrolly-beats { display: flex; flex-direction: column; gap: 0; }
 .fv-scrolly-beat {
@@ -551,10 +553,21 @@ main { max-width: 980px; margin: 0 auto; }
   overflow: hidden;
 }
 @media (max-width: 800px) {
+  .fv-scrolly-beat {
+    min-height: 100svh;
+    justify-content: flex-start;
+    padding: 8svh 0 0;
+    opacity: 1;
+  }
+  .fv-mobile-stage-slot {
+    display: block;
+    margin-top: 18px;
+  }
   .fv-scrolly-stage {
     position: static;
-    height: auto;
+    height: 52svh;
     min-height: 360px;
+    max-height: 560px;
   }
 }
 .fv-panel {
@@ -1436,10 +1449,11 @@ window.FlatView = (function () {
   // ---- Wire interactions --------------------------------------------------
   const tooltip = document.getElementById('fv-empty-tooltip');
 
-  tbody.querySelectorAll('td').forEach(td => {
+  function selectCell(td) {
     const rowIdx = +td.dataset.run;
     const col = td.dataset.col;
-    td.addEventListener('mouseenter', (ev) => {
+    if (!Number.isFinite(rowIdx) || !col) return;
+
       tbody.querySelectorAll('td.fv-lit').forEach(c => c.classList.remove('fv-lit'));
       td.classList.add('fv-lit');
 
@@ -1460,6 +1474,14 @@ window.FlatView = (function () {
       } else {
         tooltip.classList.remove('fv-show');
       }
+  }
+
+  tbody.querySelectorAll('td').forEach(td => {
+    td.addEventListener('mouseenter', () => selectCell(td));
+    td.addEventListener('focus', () => selectCell(td));
+    td.addEventListener('click', (ev) => {
+      selectCell(td);
+      ev.stopPropagation();
     });
   });
 
@@ -1597,11 +1619,13 @@ window.FlatView = (function () {
 
     // First user hover anywhere on the table → step the demo aside for
     // good. Reader takes the wheel.
-    tbody.addEventListener('pointerenter', () => {
+    function takeOverDemo() {
       userTookOver = true;
       stopDemo();
       // Don't clear the user's hover state — let normal hover handlers run.
-    }, { capture: true, once: true });
+    }
+    tbody.addEventListener('pointerenter', takeOverDemo, { capture: true, once: true });
+    tbody.addEventListener('click', takeOverDemo, { capture: true, once: true });
 
     // Reduced motion: don't animate; just place the cursor on the
     // first cell with the highlights applied, leave it static.
@@ -1672,14 +1696,37 @@ window.FlatView = (function () {
     const stage  = document.getElementById('fv-scrolly-stage');
     const beats  = Array.from(figure.querySelectorAll('.fv-scrolly-beat'));
     const panels = Array.from(figure.querySelectorAll('.fv-panel'));
+    const stageHome = stage ? stage.parentNode : null;
+    const stageNext = stage ? stage.nextSibling : null;
+    const mobileMq = window.matchMedia('(max-width: 800px)');
+    beats.forEach(beat => {
+      if (beat.querySelector('.fv-mobile-stage-slot')) return;
+      const slot = document.createElement('div');
+      slot.className = 'fv-mobile-stage-slot';
+      beat.appendChild(slot);
+    });
 
     function setState(state) {
       stage.dataset.state = state;
       panels.forEach(p => p.classList.toggle('fv-panel-active', p.dataset.state === state));
     }
+    function placeStage(beat) {
+      if (!stage || !stageHome) return;
+      if (mobileMq.matches && beat) {
+        const slot = beat.querySelector('.fv-mobile-stage-slot');
+        if (slot && stage.parentNode !== slot) slot.appendChild(stage);
+        return;
+      }
+      if (stage.parentNode !== stageHome) {
+        stageHome.insertBefore(stage, stageNext);
+      }
+    }
     function setActiveBeat(beat) {
       beats.forEach(b => b.classList.toggle('fv-active', b === beat));
-      if (beat) setState(beat.dataset.state);
+      if (beat) {
+        setState(beat.dataset.state);
+        placeStage(beat);
+      }
     }
 
     // Initialise: first beat active, Excel panel showing.
@@ -1705,6 +1752,11 @@ window.FlatView = (function () {
       beats.forEach(b => b.classList.add('fv-active'));
       setState('thread');
     }
+
+    mobileMq.addEventListener('change', () => {
+      const activeBeat = beats.find(b => b.classList.contains('fv-active')) || beats[0];
+      placeStage(activeBeat);
+    });
   })();
 
   // ---- Right-click context menu — "ask the DAG" --------------------------
@@ -1866,6 +1918,13 @@ window.FlatView = (function () {
   // Wire contextmenu events on every non-empty cell.
   tbody.querySelectorAll('td').forEach(td => {
     td.addEventListener('contextmenu', (ev) => {
+      if (td.classList.contains('fv-empty')) return;
+      if (td.dataset.col === 'run')          return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      showCtxMenu(+td.dataset.run, td.dataset.col, ev.clientX, ev.clientY);
+    });
+    td.addEventListener('dblclick', (ev) => {
       if (td.classList.contains('fv-empty')) return;
       if (td.dataset.col === 'run')          return;
       ev.preventDefault();

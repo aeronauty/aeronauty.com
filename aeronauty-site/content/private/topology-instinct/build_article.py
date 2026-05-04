@@ -2593,6 +2593,18 @@ ARTICLE_CSS = r"""
     html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
       transform: translateY(-8px) scale(0.996);
     }
+    html.ti-js .ti-flat-view.ti-reveal,
+    html.ti-js .ti-ask-the-plot.ti-reveal {
+      transform: translateY(24px) scale(0.992);
+    }
+    html.ti-js .ti-flat-view.ti-reveal.ti-inview,
+    html.ti-js .ti-ask-the-plot.ti-reveal.ti-inview {
+      transform: translateY(0) scale(1);
+    }
+    html.ti-js .ti-flat-view.ti-reveal.ti-dimmed,
+    html.ti-js .ti-ask-the-plot.ti-reveal.ti-dimmed {
+      transform: translateY(-8px) scale(0.996);
+    }
     .ti-figure-fullbleed .ti-video-wrap,
     .ti-figure-fullbleed img { border-radius: 12px; }
     .ti-figure-fullbleed .ti-figcap {
@@ -2898,10 +2910,18 @@ ARTICLE_CSS = r"""
   }
   @media (max-width: 520px) {
     .ti-thread-logo { min-height: 116px; }
-    .ti-thread-cinematic { gap: 14px; }
+    .ti-thread-cinematic {
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .ti-thread-cinematic-mark {
+      width: clamp(92px, 28vw, 132px);
+    }
     .ti-thread-wordmark {
       font-size: clamp(30px, 12vw, 44px);
-      letter-spacing: 0.11em;
+      letter-spacing: 0.08em;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -3282,17 +3302,34 @@ ARTICLE_CSS = r"""
       padding: 0;
     }
     .af-scroll {
-      grid-template-columns: 1fr;
-      gap: 0;
+      display: block;
     }
     .af-graph-rail,
     .af-cartoon-rail {
       position: relative;
       top: auto;
-      height: 60vh;
-      margin: 16px 0;
+      height: 100%;
+      margin: 0;
     }
-    .af-scroll-beat { min-height: 0; padding: 16px 0; opacity: 1; }
+    .af-scroll-prose {
+      display: block;
+    }
+    .af-scroll-beat {
+      min-height: 100svh;
+      padding: 8svh 0 0;
+      opacity: 1;
+    }
+    .af-mobile-stage-slot {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 10px;
+      height: 52svh;
+      margin-top: 18px;
+      overflow: hidden;
+    }
+    .af-mobile-stage-slot:empty {
+      display: none;
+    }
   }
 
   /* ---- Orchestrator sticky scrolly (article 2) ---- */
@@ -3342,16 +3379,25 @@ ARTICLE_CSS = r"""
   }
   @media (max-width: 880px) {
     .ti-orch-grid {
-      grid-template-columns: 1fr;
-      gap: 8px;
+      display: block;
     }
     .ti-orch-stage {
       position: relative;
       top: auto;
-      height: auto;
-      margin: 24px 0;
+      height: 52svh;
+      margin: 18px 0 0;
     }
-    .ti-orch-beat { min-height: 0; padding: 12px 0; opacity: 1; }
+    .ti-orch-stage .ti-orch-figure {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .ti-orch-beat {
+      min-height: 100svh;
+      padding: 8svh 0 0;
+      opacity: 1;
+    }
+    .ti-orch-mobile-stage-slot:empty { display: none; }
   }
 
   /* ---- Article-map sidebar ----
@@ -4322,13 +4368,42 @@ FLOWCHART_SCROLLY_JS = r"""
 
     const beats = Array.from(wrap.querySelectorAll('.af-scroll-beat'));
     if (!beats.length) return;
+    const mobileMq = window.matchMedia('(max-width: 880px)');
+    const graphHome = graphRail ? graphRail.parentNode : null;
+    const graphNext = graphRail ? graphRail.nextSibling : null;
+    const cartoonHome = cartoonRail ? cartoonRail.parentNode : null;
+    const cartoonNext = cartoonRail ? cartoonRail.nextSibling : null;
+    let activeIdx = 0;
+
+    beats.forEach(beat => {
+      if (beat.querySelector('.af-mobile-stage-slot')) return;
+      const slot = document.createElement('div');
+      slot.className = 'af-mobile-stage-slot';
+      beat.appendChild(slot);
+    });
+
+    function placeRails(idx) {
+      if (!graphRail || !cartoonRail || !graphHome || !cartoonHome) return;
+      if (mobileMq.matches) {
+        const slot = beats[idx] && beats[idx].querySelector('.af-mobile-stage-slot');
+        if (slot) {
+          if (graphRail.parentNode !== slot) slot.appendChild(graphRail);
+          if (cartoonRail.parentNode !== slot) slot.appendChild(cartoonRail);
+        }
+        return;
+      }
+      if (graphRail.parentNode !== graphHome) graphHome.insertBefore(graphRail, graphNext);
+      if (cartoonRail.parentNode !== cartoonHome) cartoonHome.insertBefore(cartoonRail, cartoonNext);
+    }
 
     function setActive(idx) {
+      activeIdx = idx;
       beats.forEach((b, i) => {
         b.classList.toggle('af-scroll-active', i === idx);
       });
       const step = parseInt(beats[idx].dataset.afStep, 10) || (idx + 1);
       try { api.goToStep(step, true); } catch (e) {}
+      placeRails(idx);
     }
 
     if ('IntersectionObserver' in window) {
@@ -4350,6 +4425,8 @@ FLOWCHART_SCROLLY_JS = r"""
       // Fallback: first beat.
       setActive(0);
     }
+    setActive(0);
+    mobileMq.addEventListener('change', () => placeRails(activeIdx));
   });
 })();
 """
@@ -4363,6 +4440,34 @@ ORCH_SCROLLY_JS = r"""
   if (!wrap) return;
   const beats = Array.from(wrap.querySelectorAll('.ti-orch-beat'));
   if (!beats.length) return;
+  const stage = wrap.querySelector('.ti-orch-stage');
+  const stageHome = stage ? stage.parentNode : null;
+  const stageNext = stage ? stage.nextSibling : null;
+  const mobileMq = window.matchMedia('(max-width: 880px)');
+  let activeIdx = 0;
+
+  beats.forEach(beat => {
+    if (beat.querySelector('.ti-orch-mobile-stage-slot')) return;
+    const slot = document.createElement('div');
+    slot.className = 'ti-orch-mobile-stage-slot';
+    beat.appendChild(slot);
+  });
+
+  function placeStage(idx) {
+    if (!stage || !stageHome) return;
+    if (mobileMq.matches) {
+      const slot = beats[idx] && beats[idx].querySelector('.ti-orch-mobile-stage-slot');
+      if (slot && stage.parentNode !== slot) slot.appendChild(stage);
+      return;
+    }
+    if (stage.parentNode !== stageHome) stageHome.insertBefore(stage, stageNext);
+  }
+
+  function setActive(idx) {
+    activeIdx = Math.max(0, idx);
+    beats.forEach((b, i) => b.classList.toggle('af-scroll-active', i === activeIdx));
+    placeStage(activeIdx);
+  }
 
   if ('IntersectionObserver' in window) {
     const visible = new Map();
@@ -4376,12 +4481,14 @@ ORCH_SCROLLY_JS = r"""
         const r = visible.get(b) || 0;
         if (r > bestRatio) { bestIdx = i; bestRatio = r; }
       });
-      beats.forEach((b, i) => b.classList.toggle('af-scroll-active', i === bestIdx));
+      if (bestIdx >= 0) setActive(bestIdx);
     }, { rootMargin: '-35% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
     beats.forEach(b => io.observe(b));
   } else {
-    beats.forEach(b => b.classList.add('af-scroll-active'));
+    setActive(0);
   }
+  setActive(0);
+  mobileMq.addEventListener('change', () => placeStage(activeIdx));
 })();
 """
 

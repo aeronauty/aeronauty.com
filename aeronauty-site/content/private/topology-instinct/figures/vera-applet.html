@@ -333,7 +333,7 @@ main { max-width: 980px; margin: 0 auto; }
           </defs>
           <g id="va-scene"></g>
         </svg>
-        <div class="va-hint">drag to pan &middot; scroll to zoom</div>
+        <div class="va-hint">drag to pan &middot; click, then wheel to zoom</div>
       </div>
 
       <div class="va-legend" aria-label="Legend">
@@ -348,7 +348,7 @@ main { max-width: 980px; margin: 0 auto; }
         The interactive flight-dynamics explainer at
         <a href="https://aircraftflightmechanics.com/" target="_blank" rel="noopener">aircraftflightmechanics.com</a>
         &mdash; the kind of artefact Vera was looking for when she found me.
-        <em>Drag</em> to pan, <em>scroll</em> to zoom. The aircraft, CG, ICR
+        <em>Drag</em> to pan, <em>click</em> the plot then use the wheel to zoom. The aircraft, CG, ICR
         and velocity arrow are all the originals.
       </p>
 
@@ -723,8 +723,34 @@ window.VeraApplet = (function () {
     readout.textContent = 'Zoom: 1.0×';
   });
 
+  let wheelZoomArmed = false;
+  let wheelZoomArmTimer = 0;
+  let lastPageScrollAt = 0;
+  function armWheelZoom() {
+    wheelZoomArmed = true;
+  }
+  function scheduleWheelZoomArm() {
+    clearTimeout(wheelZoomArmTimer);
+    wheelZoomArmTimer = setTimeout(() => {
+      if (performance.now() - lastPageScrollAt > 420) armWheelZoom();
+    }, 420);
+  }
+  function disarmWheelZoom() {
+    clearTimeout(wheelZoomArmTimer);
+    wheelZoomArmed = false;
+    lastPageScrollAt = performance.now();
+  }
+  wrap.addEventListener('pointerdown', armWheelZoom);
+  wrap.addEventListener('click', armWheelZoom);
+  wrap.addEventListener('pointerenter', scheduleWheelZoomArm);
+  wrap.addEventListener('pointerleave', disarmWheelZoom);
+  document.addEventListener('scroll', disarmWheelZoom, { passive: true });
+
   // Wheel zoom — mirrors the source: deltaY > 0 → 0.9×, else 1.1×.
+  // The plot only consumes the wheel after an explicit click/drag. If the
+  // reader is already scrolling the page, the event falls through to the page.
   wrap.addEventListener('wheel', function (ev) {
+    if (!wheelZoomArmed || performance.now() - lastPageScrollAt < 260) return;
     const factor = ev.deltaY > 0 ? 0.9 : 1.1;
     setZoom(VIEW.zoom * factor);
     ev.preventDefault();

@@ -1214,6 +1214,18 @@
     html.ti-js .ti-data-black-market.ti-reveal.ti-dimmed {
       transform: translateY(-8px) scale(0.996);
     }
+    html.ti-js .ti-flat-view.ti-reveal,
+    html.ti-js .ti-ask-the-plot.ti-reveal {
+      transform: translateY(24px) scale(0.992);
+    }
+    html.ti-js .ti-flat-view.ti-reveal.ti-inview,
+    html.ti-js .ti-ask-the-plot.ti-reveal.ti-inview {
+      transform: translateY(0) scale(1);
+    }
+    html.ti-js .ti-flat-view.ti-reveal.ti-dimmed,
+    html.ti-js .ti-ask-the-plot.ti-reveal.ti-dimmed {
+      transform: translateY(-8px) scale(0.996);
+    }
     .ti-figure-fullbleed .ti-video-wrap,
     .ti-figure-fullbleed img { border-radius: 12px; }
     .ti-figure-fullbleed .ti-figcap {
@@ -1519,10 +1531,18 @@
   }
   @media (max-width: 520px) {
     .ti-thread-logo { min-height: 116px; }
-    .ti-thread-cinematic { gap: 14px; }
+    .ti-thread-cinematic {
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .ti-thread-cinematic-mark {
+      width: clamp(92px, 28vw, 132px);
+    }
     .ti-thread-wordmark {
       font-size: clamp(30px, 12vw, 44px);
-      letter-spacing: 0.11em;
+      letter-spacing: 0.08em;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1903,17 +1923,34 @@
       padding: 0;
     }
     .af-scroll {
-      grid-template-columns: 1fr;
-      gap: 0;
+      display: block;
     }
     .af-graph-rail,
     .af-cartoon-rail {
       position: relative;
       top: auto;
-      height: 60vh;
-      margin: 16px 0;
+      height: 100%;
+      margin: 0;
     }
-    .af-scroll-beat { min-height: 0; padding: 16px 0; opacity: 1; }
+    .af-scroll-prose {
+      display: block;
+    }
+    .af-scroll-beat {
+      min-height: 100svh;
+      padding: 8svh 0 0;
+      opacity: 1;
+    }
+    .af-mobile-stage-slot {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 10px;
+      height: 52svh;
+      margin-top: 18px;
+      overflow: hidden;
+    }
+    .af-mobile-stage-slot:empty {
+      display: none;
+    }
   }
 
   /* ---- Orchestrator sticky scrolly (article 2) ---- */
@@ -1963,16 +2000,25 @@
   }
   @media (max-width: 880px) {
     .ti-orch-grid {
-      grid-template-columns: 1fr;
-      gap: 8px;
+      display: block;
     }
     .ti-orch-stage {
       position: relative;
       top: auto;
-      height: auto;
-      margin: 24px 0;
+      height: 52svh;
+      margin: 18px 0 0;
     }
-    .ti-orch-beat { min-height: 0; padding: 12px 0; opacity: 1; }
+    .ti-orch-stage .ti-orch-figure {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .ti-orch-beat {
+      min-height: 100svh;
+      padding: 8svh 0 0;
+      opacity: 1;
+    }
+    .ti-orch-mobile-stage-slot:empty { display: none; }
   }
 
   /* ---- Article-map sidebar ----
@@ -3105,23 +3151,52 @@ main { max-width: 1160px; margin: 0 auto; }
     width: fit-content;
   }
   .dbm-grid {
-    grid-template-columns: 1fr;
+    display: block;
+    padding: 18px 18px 28px;
   }
-  .dbm-trail {
-    order: 2;
+  .dbm-trail,
+  .dbm-step,
+  .dbm-trigger,
+  .dbm-mobile-stage-slot,
+  .dbm-stage {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
   .dbm-stage {
+    display: none;
+  }
+  .dbm-mobile-stage-slot {
+    display: block;
+    height: 52svh;
+    min-height: 320px;
+    margin: 18px 0 0;
+    border: 1px solid var(--dbm-border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(8, 13, 24, 0.72);
+  }
+  .dbm-mobile-stage-slot:empty {
+    display: none;
+  }
+  .dbm-mobile-stage-slot .dbm-panel {
     position: relative;
-    top: auto;
-    order: 1;
-    height: auto;
-    min-height: 0;
-    aspect-ratio: 16 / 11;
-    margin-bottom: 6px;
+    inset: auto;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .dbm-mobile-stage-slot .dbm-panel-img-wrap,
+  .dbm-mobile-stage-slot .dbm-panel img {
+    min-width: 0;
   }
   .dbm-step {
-    min-height: 0;
-    padding: 8px 0;
+    min-height: 100svh;
+    display: block;
+    padding: 8svh 0 0;
   }
 }
 
@@ -3630,7 +3705,9 @@ main { max-width: 980px; margin: 0 auto; }
   margin: 8px 0 0;
 }
 @media (max-width: 800px) {
-  .fv-scrolly { grid-template-columns: 1fr; gap: 14px; }
+  .fv-scrolly {
+    display: block;
+  }
 }
 .fv-scrolly-beats { display: flex; flex-direction: column; gap: 0; }
 .fv-scrolly-beat {
@@ -3692,10 +3769,21 @@ main { max-width: 980px; margin: 0 auto; }
   overflow: hidden;
 }
 @media (max-width: 800px) {
+  .fv-scrolly-beat {
+    min-height: 100svh;
+    justify-content: flex-start;
+    padding: 8svh 0 0;
+    opacity: 1;
+  }
+  .fv-mobile-stage-slot {
+    display: block;
+    margin-top: 18px;
+  }
   .fv-scrolly-stage {
     position: static;
-    height: auto;
+    height: 52svh;
     min-height: 360px;
+    max-height: 560px;
   }
 }
 .fv-panel {
@@ -4325,6 +4413,7 @@ main { max-width: 1200px; margin: 0 auto; }
   stroke: var(--atp-surface-2);
   stroke-width: 2;
   cursor: pointer;
+  pointer-events: all;
   transition: r 180ms ease, fill 180ms ease;
 }
 .atp-plot-svg .atp-pt.atp-pt-hover,
@@ -4382,6 +4471,12 @@ main { max-width: 1200px; margin: 0 auto; }
   .atp-plot-host {
     overflow: visible;
     min-height: 0;
+  }
+  .atp-plot-svg .atp-pt {
+    stroke-width: 8;
+  }
+  .atp-plot-svg .atp-pt.atp-pt-active {
+    r: 10;
   }
   .atp-qr {
     right: 8px;
@@ -5649,9 +5744,40 @@ main { max-width: 1280px; margin: 0 auto; }
 .ty-caption strong { color: var(--ty-ink); font-weight: 600; }
 .ty-caption em { color: var(--ty-ink); font-style: italic; }
 
+.ty-mobile-stage {
+  display: none;
+}
+
 @media (max-width: 880px) {
-  .ty-stage-shell { position: relative; top: 0; }
-  .ty-beat { min-height: 56vh; }
+  .ty-stage-shell { display: none; }
+  .ty-mobile-stage {
+    display: block;
+    width: 100%;
+    height: 50svh;
+    min-height: 280px;
+    margin-top: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0a0e1a;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+  }
+  .ty-mobile-stage video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .ty-beat {
+    min-height: 100svh;
+    align-content: start;
+    padding: 9svh 0 0 14px;
+    opacity: 1;
+    transform: none;
+  }
+  .ty-beat p {
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5667,15 +5793,15 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q63.8,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q63.8,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,90 Q72.2,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q70.8,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
     <path class="ti-map-edge" d="M31,150 Q50.8,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q70.8,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,210 Q60.199999999999996,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q52.199999999999996,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q65.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q63.8,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,30 Q72.2,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q63.8,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,210 Q58.8,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q53.599999999999994,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q58.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q72.2,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,30 Q66.6,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
       <circle cx="28" cy="30" r="3.6" class="ti-map-dot" stroke="currentColor" stroke-width="1" fill="var(--ti-bg)" />
@@ -6018,26 +6144,31 @@ $$
             <p class="ty-beat-kicker">01 &middot; the wind tunnel</p>
             <h3>Re-typing yesterday&rsquo;s run sheet.</h3>
             <p>AOA, BETA, RPM, MASS_FLOW, RUN_NUM, DATE, COMMENT &mdash; <strong>every field the same value as the run an hour ago.</strong> The system that recorded those numbers is sitting one rack over. It already knows.</p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="figures/twenty-years/scene-1.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="2">
             <p class="ty-beat-kicker">02 &middot; the doctor&rsquo;s office</p>
             <h3>Same name, same date of birth, same phone number, again.</h3>
             <p>The receptionist watches you fill it in. The form goes into a folder she will never open. Your details have not changed since the last visit. <strong>Nor have hers.</strong></p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="figures/twenty-years/scene-2.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="3">
             <p class="ty-beat-kicker">03 &middot; the email reply</p>
             <h3>&ldquo;Can you regen the chart with the new mesh?&rdquo;</h3>
             <p>Subject line: <em>Re: Re: Re:</em>. The plot is a PNG. The mesh is in someone else&rsquo;s git. The connection between them is in <strong>your inbox</strong>, where it has lived for three weeks.</p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="figures/twenty-years/scene-3.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="4">
             <p class="ty-beat-kicker">04 &middot; the Teams ping</p>
             <h3>Slide 14 still has the November plot.</h3>
             <p>Cert deck went out this morning. The plot it&rsquo;s built on was superseded in February. Nobody told the slide. <strong>Of course they didn&rsquo;t &mdash; the slide isn&rsquo;t connected to anything.</strong></p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="figures/twenty-years/scene-4.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="5">
             <p class="ty-beat-kicker">05 &middot; the post-it</p>
             <h3>&ldquo;Where did this CL come from? Ask Marsh??&rdquo;</h3>
             <p>The most honest provenance system in the building. A square of yellow paper, one human&rsquo;s memory, and a question mark. <strong>This is the join, finally rendered visible.</strong></p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="figures/twenty-years/scene-5.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
         </div>
 
@@ -6101,7 +6232,7 @@ $$
           </defs>
           <g id="va-scene"></g>
         </svg>
-        <div class="va-hint">drag to pan &middot; scroll to zoom</div>
+        <div class="va-hint">drag to pan &middot; click, then wheel to zoom</div>
       </div>
 
       <div class="va-legend" aria-label="Legend">
@@ -6116,7 +6247,7 @@ $$
         The interactive flight-dynamics explainer at
         <a href="https://aircraftflightmechanics.com/" target="_blank" rel="noopener">aircraftflightmechanics.com</a>
         &mdash; the kind of artefact Vera was looking for when she found me.
-        <em>Drag</em> to pan, <em>scroll</em> to zoom. The aircraft, CG, ICR
+        <em>Drag</em> to pan, <em>click</em> the plot then use the wheel to zoom. The aircraft, CG, ICR
         and velocity arrow are all the originals.
       </p>
 
@@ -8057,7 +8188,28 @@ window.PlotlyVsPP = (function () {
   const panels = Array.from(figure.querySelectorAll('[data-dbm-panel]'));
   const jumps = Array.from(figure.querySelectorAll('[data-dbm-jump]'));
   const status = figure.querySelector('[data-dbm-status]');
+  const stage = figure.querySelector('.dbm-stage');
+  const stageHome = stage ? stage.parentNode : null;
+  const stageNext = stage ? stage.nextSibling : null;
+  const mobileMq = window.matchMedia('(max-width: 900px)');
   let active = 1;
+
+  steps.forEach((step) => {
+    if (step.querySelector('.dbm-mobile-stage-slot')) return;
+    const slot = document.createElement('div');
+    slot.className = 'dbm-mobile-stage-slot';
+    const panel = panels.find((item) => item.dataset.dbmPanel === step.dataset.dbmStep);
+    if (panel) slot.appendChild(panel.cloneNode(true));
+    step.appendChild(slot);
+  });
+
+  function placeStage() {
+    if (!stage || !stageHome) return;
+    if (mobileMq.matches) {
+      return;
+    }
+    if (stage.parentNode !== stageHome) stageHome.insertBefore(stage, stageNext);
+  }
 
   function show(index) {
     active = Math.max(1, Math.min(4, Number(index) || 1));
@@ -8079,6 +8231,8 @@ window.PlotlyVsPP = (function () {
       jump.classList.toggle('dbm-active', isActive);
       jump.setAttribute('aria-current', isActive ? 'step' : 'false');
     });
+
+    placeStage();
   }
 
   steps.forEach((step) => {
@@ -8113,6 +8267,7 @@ window.PlotlyVsPP = (function () {
   }
 
   show(1);
+  mobileMq.addEventListener('change', placeStage);
 
   return { show };
 })();</script>
@@ -8521,10 +8676,11 @@ window.PlotlyVsPP = (function () {
   // ---- Wire interactions --------------------------------------------------
   const tooltip = document.getElementById('fv-empty-tooltip');
 
-  tbody.querySelectorAll('td').forEach(td => {
+  function selectCell(td) {
     const rowIdx = +td.dataset.run;
     const col = td.dataset.col;
-    td.addEventListener('mouseenter', (ev) => {
+    if (!Number.isFinite(rowIdx) || !col) return;
+
       tbody.querySelectorAll('td.fv-lit').forEach(c => c.classList.remove('fv-lit'));
       td.classList.add('fv-lit');
 
@@ -8545,6 +8701,14 @@ window.PlotlyVsPP = (function () {
       } else {
         tooltip.classList.remove('fv-show');
       }
+  }
+
+  tbody.querySelectorAll('td').forEach(td => {
+    td.addEventListener('mouseenter', () => selectCell(td));
+    td.addEventListener('focus', () => selectCell(td));
+    td.addEventListener('click', (ev) => {
+      selectCell(td);
+      ev.stopPropagation();
     });
   });
 
@@ -8682,11 +8846,13 @@ window.PlotlyVsPP = (function () {
 
     // First user hover anywhere on the table → step the demo aside for
     // good. Reader takes the wheel.
-    tbody.addEventListener('pointerenter', () => {
+    function takeOverDemo() {
       userTookOver = true;
       stopDemo();
       // Don't clear the user's hover state — let normal hover handlers run.
-    }, { capture: true, once: true });
+    }
+    tbody.addEventListener('pointerenter', takeOverDemo, { capture: true, once: true });
+    tbody.addEventListener('click', takeOverDemo, { capture: true, once: true });
 
     // Reduced motion: don't animate; just place the cursor on the
     // first cell with the highlights applied, leave it static.
@@ -8757,14 +8923,37 @@ window.PlotlyVsPP = (function () {
     const stage  = document.getElementById('fv-scrolly-stage');
     const beats  = Array.from(figure.querySelectorAll('.fv-scrolly-beat'));
     const panels = Array.from(figure.querySelectorAll('.fv-panel'));
+    const stageHome = stage ? stage.parentNode : null;
+    const stageNext = stage ? stage.nextSibling : null;
+    const mobileMq = window.matchMedia('(max-width: 800px)');
+    beats.forEach(beat => {
+      if (beat.querySelector('.fv-mobile-stage-slot')) return;
+      const slot = document.createElement('div');
+      slot.className = 'fv-mobile-stage-slot';
+      beat.appendChild(slot);
+    });
 
     function setState(state) {
       stage.dataset.state = state;
       panels.forEach(p => p.classList.toggle('fv-panel-active', p.dataset.state === state));
     }
+    function placeStage(beat) {
+      if (!stage || !stageHome) return;
+      if (mobileMq.matches && beat) {
+        const slot = beat.querySelector('.fv-mobile-stage-slot');
+        if (slot && stage.parentNode !== slot) slot.appendChild(stage);
+        return;
+      }
+      if (stage.parentNode !== stageHome) {
+        stageHome.insertBefore(stage, stageNext);
+      }
+    }
     function setActiveBeat(beat) {
       beats.forEach(b => b.classList.toggle('fv-active', b === beat));
-      if (beat) setState(beat.dataset.state);
+      if (beat) {
+        setState(beat.dataset.state);
+        placeStage(beat);
+      }
     }
 
     // Initialise: first beat active, Excel panel showing.
@@ -8790,6 +8979,11 @@ window.PlotlyVsPP = (function () {
       beats.forEach(b => b.classList.add('fv-active'));
       setState('thread');
     }
+
+    mobileMq.addEventListener('change', () => {
+      const activeBeat = beats.find(b => b.classList.contains('fv-active')) || beats[0];
+      placeStage(activeBeat);
+    });
   })();
 
   // ---- Right-click context menu — "ask the DAG" --------------------------
@@ -8951,6 +9145,13 @@ window.PlotlyVsPP = (function () {
   // Wire contextmenu events on every non-empty cell.
   tbody.querySelectorAll('td').forEach(td => {
     td.addEventListener('contextmenu', (ev) => {
+      if (td.classList.contains('fv-empty')) return;
+      if (td.dataset.col === 'run')          return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      showCtxMenu(+td.dataset.run, td.dataset.col, ev.clientX, ev.clientY);
+    });
+    td.addEventListener('dblclick', (ev) => {
       if (td.classList.contains('fv-empty')) return;
       if (td.dataset.col === 'run')          return;
       ev.preventDefault();
@@ -9335,8 +9536,34 @@ window.PlotlyVsPP = (function () {
     readout.textContent = 'Zoom: 1.0×';
   });
 
+  let wheelZoomArmed = false;
+  let wheelZoomArmTimer = 0;
+  let lastPageScrollAt = 0;
+  function armWheelZoom() {
+    wheelZoomArmed = true;
+  }
+  function scheduleWheelZoomArm() {
+    clearTimeout(wheelZoomArmTimer);
+    wheelZoomArmTimer = setTimeout(() => {
+      if (performance.now() - lastPageScrollAt > 420) armWheelZoom();
+    }, 420);
+  }
+  function disarmWheelZoom() {
+    clearTimeout(wheelZoomArmTimer);
+    wheelZoomArmed = false;
+    lastPageScrollAt = performance.now();
+  }
+  wrap.addEventListener('pointerdown', armWheelZoom);
+  wrap.addEventListener('click', armWheelZoom);
+  wrap.addEventListener('pointerenter', scheduleWheelZoomArm);
+  wrap.addEventListener('pointerleave', disarmWheelZoom);
+  document.addEventListener('scroll', disarmWheelZoom, { passive: true });
+
   // Wheel zoom — mirrors the source: deltaY > 0 → 0.9×, else 1.1×.
+  // The plot only consumes the wheel after an explicit click/drag. If the
+  // reader is already scrolling the page, the event falls through to the page.
   wrap.addEventListener('wheel', function (ev) {
+    if (!wheelZoomArmed || performance.now() - lastPageScrollAt < 260) return;
     const factor = ev.deltaY > 0 ? 0.9 : 1.1;
     setZoom(VIEW.zoom * factor);
     ev.preventDefault();
@@ -9666,10 +9893,28 @@ window.PlotlyVsPP = (function () {
   // (or until the auto-play opens it).
   setActivePoint(3);
 
-  // ---- User hover + right-click handling -------------------------------
-  // Hovering a point updates the active dot + tooltip. Right-clicking
-  // opens the "ask Thread" menu on that point. Auto-play steps aside on
-  // either interaction.
+  function nearestPointIndexFromEvent(ev) {
+    const svg = host.querySelector('.atp-plot-svg');
+    if (!svg) return -1;
+    const rect = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal;
+    const x = ((ev.clientX - rect.left) / rect.width) * vb.width + vb.x;
+    const y = ((ev.clientY - rect.top) / rect.height) * vb.height + vb.y;
+    let bestIdx = -1;
+    let bestDist = Infinity;
+    ptEls.forEach((pt, i) => {
+      const cx = Number(pt.getAttribute('cx'));
+      const cy = Number(pt.getAttribute('cy'));
+      const d = Math.hypot(cx - x, cy - y);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    });
+    return bestDist < 42 ? bestIdx : -1;
+  }
+
+  // ---- User hover/tap + right-click handling ---------------------------
+  // Hovering or tapping a point updates the active dot + tooltip.
+  // Right-clicking opens the "ask Thread" menu on that point. Auto-play
+  // steps aside on either interaction.
   let userTookOver = false;
   function onPointHover(idx) {
     userTookOver = true;
@@ -9688,8 +9933,15 @@ window.PlotlyVsPP = (function () {
   ptEls.forEach((e, i) => {
     e.addEventListener('mouseenter',  () => onPointHover(i));
     e.addEventListener('focus',       () => onPointHover(i));
-    e.addEventListener('click',       (ev) => { onPointHover(i); });
+    e.addEventListener('click',       (ev) => { ev.stopPropagation(); onPointHover(i); });
     e.addEventListener('contextmenu', (ev) => onPointRightClick(i, ev));
+  });
+  host.addEventListener('pointerup', (ev) => {
+    if (ev.pointerType === 'mouse') return;
+    const idx = nearestPointIndexFromEvent(ev);
+    if (idx < 0) return;
+    ev.preventDefault();
+    onPointHover(idx);
   });
   host.addEventListener('mouseleave', () => { hideTooltip(); });
   // Close the contextual menu on outside-click, Escape, or scroll.
@@ -9711,6 +9963,14 @@ window.PlotlyVsPP = (function () {
     userTookOver = true;
     stopDemo();
     qrEl.classList.add('atp-qr-active');
+    revealEphemerality();
+  });
+  qrEl.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    userTookOver = true;
+    stopDemo();
+    qrEl.classList.add('atp-qr-active');
+    fireQrScan();
     revealEphemerality();
   });
   qrEl.addEventListener('mouseleave', () => qrEl.classList.remove('atp-qr-active'));
@@ -10033,13 +10293,42 @@ window.PlotlyVsPP = (function () {
 
     const beats = Array.from(wrap.querySelectorAll('.af-scroll-beat'));
     if (!beats.length) return;
+    const mobileMq = window.matchMedia('(max-width: 880px)');
+    const graphHome = graphRail ? graphRail.parentNode : null;
+    const graphNext = graphRail ? graphRail.nextSibling : null;
+    const cartoonHome = cartoonRail ? cartoonRail.parentNode : null;
+    const cartoonNext = cartoonRail ? cartoonRail.nextSibling : null;
+    let activeIdx = 0;
+
+    beats.forEach(beat => {
+      if (beat.querySelector('.af-mobile-stage-slot')) return;
+      const slot = document.createElement('div');
+      slot.className = 'af-mobile-stage-slot';
+      beat.appendChild(slot);
+    });
+
+    function placeRails(idx) {
+      if (!graphRail || !cartoonRail || !graphHome || !cartoonHome) return;
+      if (mobileMq.matches) {
+        const slot = beats[idx] && beats[idx].querySelector('.af-mobile-stage-slot');
+        if (slot) {
+          if (graphRail.parentNode !== slot) slot.appendChild(graphRail);
+          if (cartoonRail.parentNode !== slot) slot.appendChild(cartoonRail);
+        }
+        return;
+      }
+      if (graphRail.parentNode !== graphHome) graphHome.insertBefore(graphRail, graphNext);
+      if (cartoonRail.parentNode !== cartoonHome) cartoonHome.insertBefore(cartoonRail, cartoonNext);
+    }
 
     function setActive(idx) {
+      activeIdx = idx;
       beats.forEach((b, i) => {
         b.classList.toggle('af-scroll-active', i === idx);
       });
       const step = parseInt(beats[idx].dataset.afStep, 10) || (idx + 1);
       try { api.goToStep(step, true); } catch (e) {}
+      placeRails(idx);
     }
 
     if ('IntersectionObserver' in window) {
@@ -10061,6 +10350,8 @@ window.PlotlyVsPP = (function () {
       // Fallback: first beat.
       setActive(0);
     }
+    setActive(0);
+    mobileMq.addEventListener('change', () => placeRails(activeIdx));
   });
 })();
 </script>
@@ -10072,6 +10363,34 @@ window.PlotlyVsPP = (function () {
   if (!wrap) return;
   const beats = Array.from(wrap.querySelectorAll('.ti-orch-beat'));
   if (!beats.length) return;
+  const stage = wrap.querySelector('.ti-orch-stage');
+  const stageHome = stage ? stage.parentNode : null;
+  const stageNext = stage ? stage.nextSibling : null;
+  const mobileMq = window.matchMedia('(max-width: 880px)');
+  let activeIdx = 0;
+
+  beats.forEach(beat => {
+    if (beat.querySelector('.ti-orch-mobile-stage-slot')) return;
+    const slot = document.createElement('div');
+    slot.className = 'ti-orch-mobile-stage-slot';
+    beat.appendChild(slot);
+  });
+
+  function placeStage(idx) {
+    if (!stage || !stageHome) return;
+    if (mobileMq.matches) {
+      const slot = beats[idx] && beats[idx].querySelector('.ti-orch-mobile-stage-slot');
+      if (slot && stage.parentNode !== slot) slot.appendChild(stage);
+      return;
+    }
+    if (stage.parentNode !== stageHome) stageHome.insertBefore(stage, stageNext);
+  }
+
+  function setActive(idx) {
+    activeIdx = Math.max(0, idx);
+    beats.forEach((b, i) => b.classList.toggle('af-scroll-active', i === activeIdx));
+    placeStage(activeIdx);
+  }
 
   if ('IntersectionObserver' in window) {
     const visible = new Map();
@@ -10085,12 +10404,14 @@ window.PlotlyVsPP = (function () {
         const r = visible.get(b) || 0;
         if (r > bestRatio) { bestIdx = i; bestRatio = r; }
       });
-      beats.forEach((b, i) => b.classList.toggle('af-scroll-active', i === bestIdx));
+      if (bestIdx >= 0) setActive(bestIdx);
     }, { rootMargin: '-35% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
     beats.forEach(b => io.observe(b));
   } else {
-    beats.forEach(b => b.classList.add('af-scroll-active'));
+    setActive(0);
   }
+  setActive(0);
+  mobileMq.addEventListener('change', () => placeStage(activeIdx));
 })();
 </script>
 <script>

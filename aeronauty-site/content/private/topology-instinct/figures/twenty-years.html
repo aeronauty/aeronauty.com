@@ -205,9 +205,40 @@ main { max-width: 1280px; margin: 0 auto; }
 .ty-caption strong { color: var(--ty-ink); font-weight: 600; }
 .ty-caption em { color: var(--ty-ink); font-style: italic; }
 
+.ty-mobile-stage {
+  display: none;
+}
+
 @media (max-width: 880px) {
-  .ty-stage-shell { position: relative; top: 0; }
-  .ty-beat { min-height: 56vh; }
+  .ty-stage-shell { display: none; }
+  .ty-mobile-stage {
+    display: block;
+    width: 100%;
+    height: 50svh;
+    min-height: 280px;
+    margin-top: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0a0e1a;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+  }
+  .ty-mobile-stage video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .ty-beat {
+    min-height: 100svh;
+    align-content: start;
+    padding: 9svh 0 0 14px;
+    opacity: 1;
+    transform: none;
+  }
+  .ty-beat p {
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -244,26 +275,31 @@ main { max-width: 1280px; margin: 0 auto; }
             <p class="ty-beat-kicker">01 &middot; the wind tunnel</p>
             <h3>Re-typing yesterday&rsquo;s run sheet.</h3>
             <p>AOA, BETA, RPM, MASS_FLOW, RUN_NUM, DATE, COMMENT &mdash; <strong>every field the same value as the run an hour ago.</strong> The system that recorded those numbers is sitting one rack over. It already knows.</p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="twenty-years/scene-1.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="2">
             <p class="ty-beat-kicker">02 &middot; the doctor&rsquo;s office</p>
             <h3>Same name, same date of birth, same phone number, again.</h3>
             <p>The receptionist watches you fill it in. The form goes into a folder she will never open. Your details have not changed since the last visit. <strong>Nor have hers.</strong></p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="twenty-years/scene-2.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="3">
             <p class="ty-beat-kicker">03 &middot; the email reply</p>
             <h3>&ldquo;Can you regen the chart with the new mesh?&rdquo;</h3>
             <p>Subject line: <em>Re: Re: Re:</em>. The plot is a PNG. The mesh is in someone else&rsquo;s git. The connection between them is in <strong>your inbox</strong>, where it has lived for three weeks.</p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="twenty-years/scene-3.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="4">
             <p class="ty-beat-kicker">04 &middot; the Teams ping</p>
             <h3>Slide 14 still has the November plot.</h3>
             <p>Cert deck went out this morning. The plot it&rsquo;s built on was superseded in February. Nobody told the slide. <strong>Of course they didn&rsquo;t &mdash; the slide isn&rsquo;t connected to anything.</strong></p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="twenty-years/scene-4.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
           <div class="ty-beat" data-ty-step="5">
             <p class="ty-beat-kicker">05 &middot; the post-it</p>
             <h3>&ldquo;Where did this CL come from? Ask Marsh??&rdquo;</h3>
             <p>The most honest provenance system in the building. A square of yellow paper, one human&rsquo;s memory, and a question mark. <strong>This is the join, finally rendered visible.</strong></p>
+            <div class="ty-mobile-stage" aria-hidden="true"><video src="twenty-years/scene-5.mp4" autoplay muted loop playsinline preload="metadata"></video></div>
           </div>
         </div>
 
