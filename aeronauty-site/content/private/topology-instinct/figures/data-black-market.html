@@ -3,274 +3,448 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Data black market — engineering archaeology, in eight beats</title>
+<title>Data black market — traceability breaks in four steps</title>
 <!-- Test: cd /Users/harry/aeronauty.com/aeronauty-site/public/articles/topology-instinct/figures && python3 -m http.server 8765 && open http://localhost:8765/data-black-market.html -->
 <!--
-  Guardian-style scrolly. Single readable column of prose with cartoons
-  breaking out wider at narrative beats. Beat 1 iframes the chat-simulator
-  in Slack mode for the inbound message that kicks off the story. Beat 8
-  is full-bleed with an overlay pull-quote.
-
   The article-level build (build_article.py) extracts the style block,
   the IIFE script (DataBlackMarket token), and the dbm-figure root
-  element below into the article's index.html.
+  element below into the article HTML.
 
   Image paths are written src="data-black-market/<file>.png" so the
   standalone preview works when serving from figures/. The build rewrites
   them to src="figures/data-black-market/<file>.png" when inlining into
-  index.html at the article root. Same for the iframe src.
+  index.html at the article root.
 -->
 
 <style>
-/* Page chrome — only used for standalone viewing.
-   The integration step lifts the .dbm-figure block, not this. */
 body {
   margin: 0;
-  padding: 60px 20px;
+  padding: 56px 20px;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   background: #0a0e1a;
   color: #e6edf6;
 }
-@media (prefers-color-scheme: light) {
-  body { background: #fafbfd; color: #1f2328; }
-}
-main { max-width: 1080px; margin: 0 auto; }
+main { max-width: 1160px; margin: 0 auto; }
 
-/* ===========================================================
-   dbm- = data-black-market, namespaced.
-   Guardian-style longform: single readable prose column with
-   cartoons breaking out wider at narrative beats.
-   =========================================================== */
 .dbm-figure {
   width: 100%;
-  --dbm-fg:        #e6edf6;
-  --dbm-fg-dim:    #93a0b6;
-  --dbm-fg-faint:  #5c6a82;
-  --dbm-border:    #2a3447;
-  --dbm-surface:   #121826;
-  --dbm-surface-2: #1a2233;
-  --dbm-orange:    #f97316;
-  --dbm-amber:     #f59e0b;
-  --dbm-red:       #ef4444;
-  --dbm-rule:      #2a3447;
-  --dbm-prose-w:   680px;
-  --dbm-shot-w:    1024px;
-}
-@media (prefers-color-scheme: light) {
-  .dbm-figure {
-    --dbm-fg:        #1f2328;
-    --dbm-fg-dim:    #4a5060;
-    --dbm-fg-faint:  #7a8090;
-    --dbm-border:    #d8dde6;
-    --dbm-surface:   #ffffff;
-    --dbm-surface-2: #f3f5f8;
-  }
-}
-
-/* Header block — small, quiet, Guardian-y. */
-.dbm-figure header.dbm-head {
-  max-width: var(--dbm-prose-w);
-  margin: 0 auto 24px;
-  padding: 0 20px;
-}
-.dbm-eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--dbm-orange);
-  margin: 0 0 8px;
-  font-weight: 600;
-}
-.dbm-title {
-  font-size: 26px;
-  line-height: 1.18;
-  font-weight: 700;
-  margin: 0 0 10px;
-  color: var(--dbm-fg);
-  letter-spacing: -0.01em;
-}
-.dbm-subtitle {
-  font-size: 16px;
-  color: var(--dbm-fg-dim);
-  margin: 0;
-  line-height: 1.55;
-}
-
-/* Beat = one section: prose + visual. Stacked vertically. */
-.dbm-beat {
-  margin: 0 auto;
-  padding: 22px 20px 0;
-  /* Fade-up on viewport entry — cleared by JS via .dbm-seen */
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 700ms ease-out, transform 700ms ease-out;
-}
-.dbm-beat.dbm-seen {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Prose column inside a beat. Capped at reading width. */
-.dbm-beat .dbm-prose {
-  max-width: var(--dbm-prose-w);
-  margin: 0 auto;
-  font-size: 17px;
-  line-height: 1.62;
+  --dbm-bg: #0d1424;
+  --dbm-panel: #121b2d;
+  --dbm-panel-2: #172238;
+  --dbm-border: rgba(148, 163, 184, 0.24);
+  --dbm-rule: rgba(148, 163, 184, 0.18);
+  --dbm-fg: #e8edf6;
+  --dbm-muted: #9aa8bd;
+  --dbm-faint: #68758c;
+  --dbm-cyan: #22d3ee;
+  --dbm-orange: #f97316;
+  --dbm-red: #ef4444;
+  --dbm-green: #34d399;
+  --dbm-shadow: 0 26px 80px rgba(3, 7, 18, 0.42);
   color: var(--dbm-fg);
 }
-.dbm-beat .dbm-prose p { margin: 0 0 12px; }
-.dbm-beat .dbm-prose strong { font-weight: 600; }
-.dbm-beat .dbm-prose em { color: var(--dbm-fg); }
-.dbm-beat .dbm-prose code {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 0.92em;
-  background: color-mix(in srgb, var(--dbm-fg) 8%, transparent);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-.dbm-beat .dbm-who {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 600;
-  color: var(--dbm-orange);
-  margin: 0 0 6px;
-}
-.dbm-beat.dbm-warn .dbm-who { color: var(--dbm-amber); }
-.dbm-beat.dbm-dead .dbm-who { color: var(--dbm-red); }
 
-/* Visual breakout — image or iframe — sits between prose blocks,
-   wider than the prose column on desktops, capped. */
-.dbm-shot {
-  margin: 18px auto 0;
-  max-width: var(--dbm-shot-w);
-  padding: 0 12px;
-  box-sizing: border-box;
-}
-.dbm-shot figure { margin: 0; }
-.dbm-shot img,
-.dbm-shot iframe,
-.dbm-shot video {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
-  border-radius: 10px;
-  background: var(--dbm-surface-2);
-  box-shadow: 0 8px 28px color-mix(in srgb, #000 22%, transparent);
-}
-.dbm-shot iframe {
-  aspect-ratio: auto;        /* iframe sets its own height */
-  object-fit: unset;
-}
-.dbm-fullbleed img,
-.dbm-fullbleed video {
-  aspect-ratio: auto;        /* let the asset's own ratio drive the box */
-  object-fit: contain;       /* show the whole frame; the dark vignette overlay handles the close */
-}
-.dbm-shot iframe {
-  border: 0;
-  height: 380px;
-  background: transparent;
-  box-shadow: 0 8px 28px color-mix(in srgb, #000 16%, transparent);
-}
-.dbm-shot figcaption.dbm-caption {
-  margin: 8px 0 0;
-  font-size: 13px;
-  font-style: italic;
-  color: var(--dbm-fg-dim);
-  text-align: left;
-  line-height: 1.5;
-  max-width: var(--dbm-prose-w);
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* The full-bleed close — beat 8. Edge-to-edge, dark vignette,
-   single italic pull-quote sitting on it. */
-.dbm-fullbleed {
+.dbm-board {
   position: relative;
-  margin: 28px 0 0;
-  padding: 0;
-  max-width: none;
-  width: 100%;
-  border-radius: 0;
   overflow: hidden;
+  border: 1px solid var(--dbm-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(34, 211, 238, 0.12), transparent 30%),
+    linear-gradient(145deg, rgba(18, 27, 45, 0.98), rgba(9, 14, 25, 0.98));
+  box-shadow: var(--dbm-shadow);
 }
-.dbm-fullbleed img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 0;
-  box-shadow: none;
-  filter: brightness(0.78) saturate(0.92);
-}
-.dbm-fullbleed::after {
+
+.dbm-board::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(8,12,22,0.10) 0%,
-    rgba(8,12,22,0.40) 60%,
-    rgba(8,12,22,0.78) 100%
-  );
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.08));
   pointer-events: none;
 }
-.dbm-fullbleed .dbm-pullquote {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 7%;
-  margin: 0;
-  font-size: clamp(18px, 2.4vw, 28px);
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1.32;
-  color: #fff;
-  letter-spacing: -0.005em;
-  max-width: 760px;
-  text-shadow: 0 2px 18px rgba(0,0,0,0.45);
-  z-index: 2;
+
+.dbm-head {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+  padding: 26px 28px 20px;
+  border-bottom: 1px solid var(--dbm-rule);
 }
-.dbm-fullbleed .dbm-pullquote span.dbm-attrib {
-  display: block;
-  margin-top: 10px;
-  font-size: 12px;
+
+.dbm-eyebrow {
+  margin: 0 0 8px;
+  color: var(--dbm-orange);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.dbm-title {
+  margin: 0;
+  max-width: 720px;
+  color: var(--dbm-fg);
+  font-size: clamp(24px, 3.2vw, 38px);
+  line-height: 1.08;
+  font-weight: 760;
+  letter-spacing: 0;
+}
+
+.dbm-subtitle {
+  margin: 10px 0 0;
+  max-width: 680px;
+  color: var(--dbm-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.dbm-status {
+  display: grid;
+  gap: 7px;
+  min-width: 168px;
+  padding: 12px 13px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 10px;
+  background: rgba(8, 13, 24, 0.72);
+}
+
+.dbm-status-label {
+  color: var(--dbm-faint);
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-style: normal;
-  color: color-mix(in srgb, #fff 80%, transparent);
 }
 
-/* Closing line under the full-bleed — back inside the prose column. */
-.dbm-coda {
-  max-width: var(--dbm-prose-w);
-  margin: 22px auto 0;
-  padding: 0 20px;
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: var(--dbm-fg-dim);
-  border-top: 1px solid var(--dbm-rule);
-  padding-top: 18px;
+.dbm-status-value {
+  color: var(--dbm-cyan);
+  font-size: 18px;
+  font-weight: 760;
 }
-.dbm-coda strong { color: var(--dbm-fg); font-weight: 600; }
-.dbm-coda em { color: var(--dbm-fg); }
+
+.dbm-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.86fr) minmax(420px, 1.14fr);
+  gap: 22px;
+  padding: 24px 28px 28px;
+}
+
+.dbm-trail {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  margin: 0;
+  padding: 0 0 0 24px;
+  list-style: none;
+}
+
+.dbm-trail::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 13px;
+  bottom: 13px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--dbm-cyan), var(--dbm-orange), var(--dbm-red));
+  opacity: 0.55;
+}
+
+.dbm-step {
+  position: relative;
+  margin: 0;
+}
+
+.dbm-step::before {
+  content: "";
+  position: absolute;
+  left: -22px;
+  top: 17px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--dbm-cyan);
+  border-radius: 999px;
+  background: var(--dbm-bg);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.08);
+}
+
+.dbm-step[data-state="warn"]::before {
+  border-color: var(--dbm-orange);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.08);
+}
+
+.dbm-step[data-state="dead"]::before {
+  border-color: var(--dbm-red);
+  background: var(--dbm-red);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.10);
+}
+
+.dbm-trigger {
+  display: block;
+  width: 100%;
+  min-height: 116px;
+  padding: 14px 15px 13px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.dbm-trigger:hover,
+.dbm-trigger:focus-visible,
+.dbm-step.dbm-active .dbm-trigger {
+  border-color: var(--dbm-border);
+  background: rgba(255, 255, 255, 0.045);
+  outline: none;
+}
+
+.dbm-step.dbm-active .dbm-trigger {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.10), rgba(255, 255, 255, 0.035));
+}
+
+.dbm-step:not(.dbm-active) .dbm-trigger:hover {
+  transform: translateX(2px);
+}
+
+.dbm-who {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 7px;
+  color: var(--dbm-cyan);
+  font-size: 11px;
+  font-weight: 760;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.dbm-step[data-state="warn"] .dbm-who { color: var(--dbm-orange); }
+.dbm-step[data-state="dead"] .dbm-who { color: var(--dbm-red); }
+
+.dbm-index {
+  color: var(--dbm-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.dbm-msg {
+  margin: 0;
+  color: var(--dbm-fg);
+  font-size: 15px;
+  line-height: 1.43;
+}
+
+.dbm-detail {
+  margin: 7px 0 0;
+  color: var(--dbm-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dbm-detail code {
+  color: #fed7aa;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+
+.dbm-stage {
+  position: relative;
+  min-height: 458px;
+  border: 1px solid var(--dbm-border);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 26%),
+    rgba(8, 13, 24, 0.72);
+  overflow: hidden;
+}
+
+.dbm-image-stack {
+  position: absolute;
+  inset: 0;
+}
+
+.dbm-panel {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  opacity: 0;
+  transform: translateY(8px) scale(0.985);
+  pointer-events: none;
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.dbm-panel.dbm-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.dbm-panel-img-wrap {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 22px 22px 12px;
+}
+
+.dbm-panel img {
+  display: block;
+  max-width: 100%;
+  max-height: 342px;
+  width: auto;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: #0b1020;
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.34);
+}
+
+.dbm-panel-note {
+  margin: 0;
+  padding: 14px 18px 16px;
+  border-top: 1px solid var(--dbm-rule);
+  color: var(--dbm-muted);
+  font-size: 13px;
+  line-height: 1.48;
+}
+
+.dbm-panel-note strong {
+  color: var(--dbm-fg);
+}
+
+.dbm-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 0 18px 18px;
+}
+
+.dbm-progress button {
+  height: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  cursor: pointer;
+}
+
+.dbm-progress button.dbm-active {
+  background: var(--dbm-cyan);
+}
+
+.dbm-coda {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 28px 22px;
+  border-top: 1px solid var(--dbm-rule);
+  color: var(--dbm-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.dbm-coda p {
+  margin: 0;
+}
+
+.dbm-coda strong {
+  color: var(--dbm-fg);
+}
+
+.dbm-query {
+  white-space: nowrap;
+  color: var(--dbm-cyan);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+@media (prefers-color-scheme: light) {
+  body { background: #f7f8fb; color: #1f2328; }
+  .dbm-figure {
+    --dbm-bg: #f8fafc;
+    --dbm-panel: #ffffff;
+    --dbm-panel-2: #f1f5f9;
+    --dbm-border: rgba(71, 85, 105, 0.24);
+    --dbm-rule: rgba(71, 85, 105, 0.16);
+    --dbm-fg: #111827;
+    --dbm-muted: #4b5563;
+    --dbm-faint: #7c8797;
+    --dbm-shadow: 0 24px 70px rgba(15, 23, 42, 0.16);
+  }
+  .dbm-board {
+    background:
+      radial-gradient(circle at 16% 0%, rgba(34, 211, 238, 0.12), transparent 30%),
+      linear-gradient(145deg, #ffffff, #f4f7fb);
+  }
+  .dbm-stage {
+    background: rgba(255, 255, 255, 0.74);
+  }
+}
+
+@media (max-width: 900px) {
+  .dbm-head,
+  .dbm-coda {
+    grid-template-columns: 1fr;
+  }
+  .dbm-status {
+    width: fit-content;
+  }
+  .dbm-grid {
+    grid-template-columns: 1fr;
+  }
+  .dbm-stage {
+    min-height: 438px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dbm-board {
+    border-radius: 10px;
+  }
+  .dbm-head,
+  .dbm-grid,
+  .dbm-coda {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .dbm-grid {
+    gap: 16px;
+  }
+  .dbm-trigger {
+    min-height: 0;
+  }
+  .dbm-stage {
+    min-height: 390px;
+  }
+  .dbm-panel-img-wrap {
+    padding: 14px 14px 10px;
+  }
+  .dbm-panel img {
+    max-height: 250px;
+  }
+  .dbm-query {
+    white-space: normal;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .dbm-beat { opacity: 1; transform: none; transition: none; }
-}
-
-/* On phones the visual just slots between paragraphs at column width. */
-@media (max-width: 720px) {
-  .dbm-figure header.dbm-head { padding: 0 16px; }
-  .dbm-beat { padding: 18px 16px 0; }
-  .dbm-shot { padding: 0; }
-  .dbm-shot iframe { height: 420px; }
-  .dbm-fullbleed .dbm-pullquote {
-    font-size: 16px;
-    left: 5%; right: 5%; bottom: 6%;
+  .dbm-trigger,
+  .dbm-panel {
+    transition: none;
   }
 }
 </style>
@@ -286,141 +460,93 @@ main { max-width: 1080px; margin: 0 auto; }
     <code>&lt;script&gt;</code> at the bottom into the article.
   </p>
 
-  <!-- =========================================================
-       The figure itself.
-       ========================================================= -->
   <div class="dbm-figure" id="dbm-figure">
+    <section class="dbm-board" aria-label="The data black market">
+      <header class="dbm-head">
+        <div>
+          <p class="dbm-eyebrow">A straightforward traceability question</p>
+          <h3 class="dbm-title">One plot, four artefacts, no proof.</h3>
+          <p class="dbm-subtitle">The slide sequence worked because it showed the failure as a chain, not a mood board. Each click below advances the same small disaster: the answer exists, but the connection to it has been flattened away.</p>
+        </div>
+        <div class="dbm-status" aria-live="polite">
+          <span class="dbm-status-label">Current state</span>
+          <span class="dbm-status-value" data-dbm-status>Question asked</span>
+        </div>
+      </header>
 
-    <header class="dbm-head">
-      <p class="dbm-eyebrow">A program manager asks one question</p>
-      <h3 class="dbm-title">Watch what happens on most teams.</h3>
-      <p class="dbm-subtitle">A flat-file storage layer &mdash; CSVs, <code>.png</code> plots, scripts in folders, results in spreadsheets &mdash; gives you the <em>illusion</em> of connectivity. Same data is in there somewhere; the connections aren&rsquo;t.</p>
-    </header>
+      <div class="dbm-grid">
+        <ol class="dbm-trail">
+          <li class="dbm-step dbm-active" data-dbm-step="1" data-state="live" data-status="Question asked">
+            <button class="dbm-trigger" type="button">
+              <span class="dbm-who">Cert / Flight Controls <span class="dbm-index">01</span></span>
+              <p class="dbm-msg">“We need traceability for this hinge-moment plot. Is this still valid after the latest configuration change?”</p>
+              <p class="dbm-detail">A reasonable question, asked at the exact moment the artefact has to become evidence.</p>
+            </button>
+          </li>
+          <li class="dbm-step" data-dbm-step="2" data-state="warn" data-status="PNG found">
+            <button class="dbm-trigger" type="button">
+              <span class="dbm-who">Aero lead <span class="dbm-index">02</span></span>
+              <p class="dbm-msg">Pulls up last month’s design review. The plot is there.</p>
+              <p class="dbm-detail">It is also just a <code>.png</code>: no run, no mesh, no script, no queryable lineage.</p>
+            </button>
+          </li>
+          <li class="dbm-step" data-dbm-step="3" data-state="warn" data-status="Script found">
+            <button class="dbm-trigger" type="button">
+              <span class="dbm-who">CFD engineer <span class="dbm-index">03</span></span>
+              <p class="dbm-msg">Searches the cluster and finds the script that probably made it.</p>
+              <p class="dbm-detail">The hard-coded path points at <code>config_v2_old/</code>, not the geometry under review.</p>
+            </button>
+          </li>
+          <li class="dbm-step" data-dbm-step="4" data-state="dead" data-status="Evidence gone">
+            <button class="dbm-trigger" type="button">
+              <span class="dbm-who">Engineering archaeology <span class="dbm-index">04</span></span>
+              <p class="dbm-msg">The data existed. No one could prove what it meant.</p>
+              <p class="dbm-detail">Two engineers, a week, same answer: the numbers were real, but for the wrong configuration.</p>
+            </button>
+          </li>
+        </ol>
 
-    <!-- Beat 1 — the question lands. Slack chat simulator iframe. -->
-    <section class="dbm-beat" data-beat="1">
-      <div class="dbm-prose">
-        <p class="dbm-who">01 &middot; Friday 14:18 &middot; Slack</p>
-        <p>Sarah&rsquo;s working through a stress check when the message lands. The hinge-moment plot in the design package is the one Marsh produced last November. Configuration&rsquo;s changed twice since. <strong>Is the plot still valid?</strong></p>
+        <div class="dbm-stage">
+          <div class="dbm-image-stack">
+            <figure class="dbm-panel dbm-active" data-dbm-panel="1">
+              <div class="dbm-panel-img-wrap">
+                <img src="data-black-market/01-der-question.png" alt="A cert engineer asks whether a hinge-moment plot is still valid after the latest configuration change." />
+              </div>
+              <figcaption class="dbm-panel-note"><strong>The failure starts innocently:</strong> a plot that looked good in a deck is suddenly asked to remember where it came from.</figcaption>
+            </figure>
+            <figure class="dbm-panel" data-dbm-panel="2">
+              <div class="dbm-panel-img-wrap">
+                <img src="data-black-market/02-slide-just-a-png.png" alt="The plot is only a PNG in a design review slide, with no metadata or provenance." />
+              </div>
+              <figcaption class="dbm-panel-note"><strong>The artefact survived the meeting.</strong> The relationship between plot, run, mesh, configuration, and script did not.</figcaption>
+            </figure>
+            <figure class="dbm-panel" data-dbm-panel="3">
+              <div class="dbm-panel-img-wrap">
+                <img src="data-black-market/03-script-found.png" alt="A script is found, but its data path points to an old configuration directory." />
+              </div>
+              <figcaption class="dbm-panel-note"><strong>This is the expensive bit:</strong> reconstructing context by reading file paths, commit dates, folder names, and people’s memories.</figcaption>
+            </figure>
+            <figure class="dbm-panel" data-dbm-panel="4">
+              <div class="dbm-panel-img-wrap">
+                <img src="data-black-market/04-archaeology.png" alt="Two engineers spend a week reconstructing provenance and discover the answer was for the wrong configuration." />
+              </div>
+              <figcaption class="dbm-panel-note"><strong>Nothing here is corrupt.</strong> It is worse than that. Every individual file is plausible, and the missing thing is the chain between them.</figcaption>
+            </figure>
+          </div>
+          <div class="dbm-progress" aria-label="Figure steps">
+            <button class="dbm-active" type="button" data-dbm-jump="1" aria-label="Show step 1"></button>
+            <button type="button" data-dbm-jump="2" aria-label="Show step 2"></button>
+            <button type="button" data-dbm-jump="3" aria-label="Show step 3"></button>
+            <button type="button" data-dbm-jump="4" aria-label="Show step 4"></button>
+          </div>
+        </div>
       </div>
-      <div class="dbm-shot">
-        <figure>
-          <iframe src="data-black-market/chat-the-question.html"
-                  loading="lazy"
-                  title="Slack DM: program manager asks Sarah whether the hinge-moment plot is still valid"
-                  aria-label="Animated Slack message exchange"></iframe>
-          <figcaption class="dbm-caption">Priya, program management. The flight-controls package needs an answer before Friday&rsquo;s gate review.</figcaption>
-        </figure>
-      </div>
+
+      <footer class="dbm-coda">
+        <p><strong>The data black market:</strong> everyone can trade screenshots, spreadsheets, scripts and folder paths. The thing nobody can reliably trade is provenance.</p>
+        <span class="dbm-query">trace(plot) → run → mesh → config → decision</span>
+      </footer>
     </section>
-
-    <!-- Beat 2 — last month's deck. The plot is a PNG. -->
-    <section class="dbm-beat" data-beat="2">
-      <div class="dbm-prose">
-        <p class="dbm-who">02 &middot; Last month&rsquo;s design review</p>
-        <p>Sarah opens the deck. Slide 14, three-quarters of the way down, there&rsquo;s the plot. <strong>It&rsquo;s a PNG.</strong> No metadata. No link to a solver run, no line to the script that drew it, no hint of which mesh produced the underlying numbers. Just an image, dropped into a slide, surrounded by a caption a reviewer once nodded at.</p>
-      </div>
-      <div class="dbm-shot">
-        <figure>
-          <img src="data-black-market/02-just-a-png.png"
-               alt="Sarah at her desk, reviewing a slide deck on her monitor; the chart on the slide is clearly a flat PNG screenshot." />
-          <figcaption class="dbm-caption">The plot exists. The provenance doesn&rsquo;t.</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- Beat 3 — hunting in folders. -->
-    <section class="dbm-beat dbm-warn" data-beat="3">
-      <div class="dbm-prose">
-        <p class="dbm-who">03 &middot; Cluster &middot; <code>~/shared/aero/</code></p>
-        <p>So she goes hunting. The shared cluster volume opens onto a wall of subdirectories: <code>wing-redesign/</code>, <code>wing-redesign-v2/</code>, <code>wing-redesign-v2-FINAL/</code>, <code>wing-redesign-v2-FINAL-marsh/</code>, <code>wing-redesign-v2-FINAL-2/</code>, <code>archive_dec/</code>, <code>do-not-use/</code>. She opens four of them in tabs. Each one contains a different number of Python scripts and a different convention for naming them.</p>
-      </div>
-      <div class="dbm-shot">
-        <figure>
-          <img src="data-black-market/03-folders.png"
-               alt="A file browser view: a long list of similarly-named subdirectories, the kind that accumulates when nobody owns the naming." />
-          <figcaption class="dbm-caption">Eight directories, four naming conventions, one missing person.</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- Beat 4 — the script, with author header. -->
-    <section class="dbm-beat dbm-warn" data-beat="4">
-      <div class="dbm-prose">
-        <p class="dbm-who">04 &middot; <code>compute_hinge_moments.py</code></p>
-        <p>She finds it. Forty-eight lines of Python, the kind that does the actual work. The header comment names the author and a date. <strong>T. Marsh, Technical Fellow.</strong> Last modified eight months ago, two months before he left. The git log on the file is six commits long, the latest unsigned, the comments terse. There is no README in the directory.</p>
-      </div>
-      <div class="dbm-shot">
-        <figure>
-          <img src="data-black-market/04-script-found.png"
-               alt="Code editor open on a Python file. The header comment shows 'Author: T. Marsh, Technical Fellow' and a date eight months in the past." />
-          <figcaption class="dbm-caption">The script is honest about who wrote it. It cannot be honest about what it consumed.</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- Beat 5 — user no longer in workspace. -->
-    <section class="dbm-beat dbm-warn" data-beat="5">
-      <div class="dbm-prose">
-        <p class="dbm-who">05 &middot; Slack &middot; @tmarsh</p>
-        <p>Sarah pivots to Slack to ping him &mdash; a quick <em>hey, where did you point this script for the November DR?</em> The avatar is greyed-out. <strong>User no longer in workspace.</strong> She tries Outlook. The mail bounces. There&rsquo;s a forwarding note that says &ldquo;please contact your account manager,&rdquo; which she does not do.</p>
-      </div>
-      <div class="dbm-shot">
-        <figure>
-          <img src="data-black-market/05-no-longer-in-workspace.png"
-               alt="Sarah at her desk, screen showing a Slack profile card for T. Marsh with the avatar greyed out and the 'user no longer in workspace' notice visible." />
-          <figcaption class="dbm-caption">The author is contactable, in principle. Just not by anyone here.</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- Beat 6 — the data path. -->
-    <section class="dbm-beat dbm-warn" data-beat="6">
-      <div class="dbm-prose">
-        <p class="dbm-who">06 &middot; Line 8</p>
-        <p>Back to the script. Line 8: <code>DATA_DIR = "/projects/wing-redesign/config_v2_old/"</code>. The pre-update geometry. Six months stale at the time the plot was made. Eight months stale now. The script is correct. It just isn&rsquo;t reading what anyone in this conversation thinks it&rsquo;s reading.</p>
-      </div>
-      <div class="dbm-shot">
-        <figure>
-          <img src="data-black-market/06-stale-path.png"
-               alt="Code editor close-up on line 8 of the script: a hardcoded data path pointing at a config_v2_old directory, highlighted in cyan-teal." />
-          <figcaption class="dbm-caption">The number was right. It was right about a configuration that no longer exists.</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- Beat 7 — the realisation. -->
-    <section class="dbm-beat dbm-dead" data-beat="7">
-      <div class="dbm-prose">
-        <p class="dbm-who">07 &middot; The reckoning</p>
-        <p>Sarah sits back. The plot in the design package is honest about its numbers. The script that made it is honest about its inputs. The slide is honest about being a slide. <strong>Each artefact, alone, is fine.</strong> What&rsquo;s missing is the connection from one to the next, which never lived in any of them &mdash; it lived in Marsh&rsquo;s head, and walked out the door at six o&rsquo;clock, eight months ago.</p>
-      </div>
-      <div class="dbm-shot">
-        <figure>
-          <img src="data-black-market/07-realisation.png"
-               alt="Close on Sarah's face, screen-glow reflected in her glasses, the moment she works out that the data was right but answered the wrong configuration." />
-          <figcaption class="dbm-caption">Engineering archaeology, in the moment of recognition.</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- Beat 8 — full-bleed close, pull-quote overlaid. -->
-    <section class="dbm-beat" data-beat="8">
-      <div class="dbm-shot dbm-fullbleed">
-        <figure>
-          <img src="data-black-market/08-archaeology.png"
-               alt="Wide shot: dim office at end of day, Sarah's desk with two coffee cups, scattered printouts, the monitor still glowing on the open script. Engineering archaeology made visible." />
-          <p class="dbm-pullquote">
-            The data was always there. The connections walked out the door at six o&rsquo;clock &mdash; eight months ago.
-            <span class="dbm-attrib">&mdash; what most teams call &ldquo;due diligence&rdquo;</span>
-          </p>
-        </figure>
-      </div>
-      <p class="dbm-coda">
-        Same dataset throughout. The artefacts &mdash; <code>.png</code>, <code>.xlsx</code>, <code>.csv</code>, <code>plot.py</code>, the cluster directory tree &mdash; <strong>look</strong> connected. They&rsquo;re not. The connections lived in someone&rsquo;s head and walked out the door at six o&rsquo;clock. <em>Keep the connections, not just the artefacts, and that gap closes.</em>
-      </p>
-    </section>
-
   </div>
 </main>
 
@@ -431,38 +557,64 @@ window.DataBlackMarket = (function () {
   const figure = document.getElementById('dbm-figure');
   if (!figure) return null;
 
-  const beats = Array.from(figure.querySelectorAll('.dbm-beat'));
-  if (beats.length === 0) return null;
+  const steps = Array.from(figure.querySelectorAll('[data-dbm-step]'));
+  const panels = Array.from(figure.querySelectorAll('[data-dbm-panel]'));
+  const jumps = Array.from(figure.querySelectorAll('[data-dbm-jump]'));
+  const status = figure.querySelector('[data-dbm-status]');
+  let active = 1;
+  let timer = null;
 
-  // Reduced-motion: just show everything immediately.
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    beats.forEach(b => b.classList.add('dbm-seen'));
-    return { reveal: () => {} };
+  function show(index, userInitiated) {
+    active = Math.max(1, Math.min(4, Number(index) || 1));
+
+    steps.forEach((step) => {
+      const isActive = Number(step.dataset.dbmStep) === active;
+      step.classList.toggle('dbm-active', isActive);
+      const trigger = step.querySelector('.dbm-trigger');
+      if (trigger) trigger.setAttribute('aria-current', isActive ? 'step' : 'false');
+      if (isActive && status) status.textContent = step.dataset.status || '';
+    });
+
+    panels.forEach((panel) => {
+      panel.classList.toggle('dbm-active', Number(panel.dataset.dbmPanel) === active);
+    });
+
+    jumps.forEach((jump) => {
+      const isActive = Number(jump.dataset.dbmJump) === active;
+      jump.classList.toggle('dbm-active', isActive);
+      jump.setAttribute('aria-current', isActive ? 'step' : 'false');
+    });
+
+    if (userInitiated) stopAutoplay();
   }
 
-  // Each beat fades up the first time its top edge crosses ~80% of the
-  // viewport. One-shot — once seen, it stays.
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('dbm-seen');
-          io.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: "0px 0px -10% 0px" });
-    beats.forEach(b => io.observe(b));
-  } else {
-    // No IO — fall back to all-visible.
-    beats.forEach(b => b.classList.add('dbm-seen'));
+  function stopAutoplay() {
+    if (timer) {
+      window.clearInterval(timer);
+      timer = null;
+    }
   }
 
-  return {
-    reveal: (n) => {
-      const b = beats[Math.max(0, Math.min(beats.length - 1, n - 1))];
-      if (b) b.classList.add('dbm-seen');
-    },
-  };
+  steps.forEach((step) => {
+    const trigger = step.querySelector('.dbm-trigger');
+    if (!trigger) return;
+    trigger.addEventListener('click', () => show(step.dataset.dbmStep, true));
+    trigger.addEventListener('mouseenter', () => show(step.dataset.dbmStep, true));
+  });
+
+  jumps.forEach((jump) => {
+    jump.addEventListener('click', () => show(jump.dataset.dbmJump, true));
+  });
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    timer = window.setInterval(() => show(active === 4 ? 1 : active + 1, false), 4200);
+    figure.addEventListener('focusin', stopAutoplay);
+    figure.addEventListener('pointerdown', stopAutoplay);
+  }
+
+  show(1, false);
+
+  return { show };
 })();
 </script>
 </body>
