@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKnownUser, getRecentActivity, hasActivityStore } from "@/lib/activity-store";
-import { isAllowedLabEmail } from "@/lib/lab-auth";
+import { isLabOwnerEmail } from "@/lib/lab-auth";
 
 export async function GET(req: NextRequest) {
   const { email } = await getKnownUser(req);
 
-  if (!email || !isAllowedLabEmail(email)) {
+  if (!email || !isLabOwnerEmail(email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

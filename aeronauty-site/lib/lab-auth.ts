@@ -5,6 +5,7 @@ export const LAB_SESSION_COOKIE = "__Host-aeronauty-lab-session";
 const MAGIC_LINK_TTL = "15m";
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 const BUILT_IN_ALLOWED_EMAILS = ["sunnyholme@google.com", "lorrainejean@gmail.com"];
+const LAB_OWNER_EMAILS = ["smith.harry@gmail.com", "harry.smith@flexcompute.com"];
 
 type LabTokenPayload = {
   email: string;
@@ -42,6 +43,11 @@ export function isAllowedLabEmail(email: string): boolean {
     }
     return entry === normalized;
   });
+}
+
+export function isLabOwnerEmail(email: string): boolean {
+  const normalized = normalizeEmail(email);
+  return LAB_OWNER_EMAILS.includes(normalized);
 }
 
 export async function createLabMagicLinkToken(email: string): Promise<string> {
