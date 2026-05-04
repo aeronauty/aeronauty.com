@@ -10,7 +10,7 @@ I'm midway through telling the doctor my diet is genuinely excellent and I do ex
 COME BACK MR ICE CREAM VAN MAN.
 [/EPIQUOTE]
 
-I'm sharing this partly because it's about to be load-bearing and is the life even that precipitated everything that follows coming together, but mostly because it's a genuinely funny story that I know I need to share.
+I'm sharing this partly because it's about to become load-bearing for everything that follows, and partly because it's the life event that set all of this in motion. Mostly, though, I'm sharing it because it's a genuinely funny story and I know I need to tell it.
 
 [FIGURE: homer-ice-cream]
 
