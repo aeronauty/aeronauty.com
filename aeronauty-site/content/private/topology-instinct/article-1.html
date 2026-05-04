@@ -5827,14 +5827,14 @@ main { max-width: 1280px; margin: 0 auto; }
 <aside class="ti-map" aria-label="Article map" data-article-id="1">
   <svg class="ti-map-svg" viewBox="0 0 110 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A map of the article — sections as nodes, thematic edges as curves">
     <path class="ti-map-spine" d="M28,35 L28,85 M28,95 L28,145 M28,155 L28,205 M28,215 L28,265 M28,275 L28,325 M28,335 L28,385" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.32" />
-    <path class="ti-map-edge" d="M31,90 Q63.8,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,90 Q72.2,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
-    <path class="ti-map-edge" d="M31,150 Q48.0,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
-    <path class="ti-map-edge" d="M31,150 Q66.6,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q72.2,210.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,90 Q70.8,240.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="plot-form" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,150 Q50.8,180.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="join" />
+    <path class="ti-map-edge" d="M31,150 Q73.6,240.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="paradigm" data-edge-to="thread" />
     <path class="ti-map-edge" d="M31,210 Q61.599999999999994,270.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="join" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q50.8,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="thread" />
-    <path class="ti-map-edge" d="M31,270 Q58.8,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="paradigm" />
-    <path class="ti-map-edge" d="M31,30 Q73.6,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
+    <path class="ti-map-edge" d="M31,270 Q48.0,300.0 31,330" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="thread" />
+    <path class="ti-map-edge" d="M31,270 Q61.599999999999994,210.0 31,150" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="flexcompute" data-edge-to="paradigm" />
+    <path class="ti-map-edge" d="M31,30 Q72.2,210.0 31,390" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="thread-close" />
     <path class="ti-map-edge" d="M31,30 Q73.6,120.0 31,210" fill="none" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.30" data-edge-from="intro" data-edge-to="join" />
     <g class="ti-map-node" data-node-id="intro" tabindex="0" role="link" aria-label="Ice cream van: Cold open: the personal trigger for noticing the through-line.">
       <circle cx="28" cy="30" r="14" fill="transparent" class="ti-map-hit" />
@@ -7273,6 +7273,38 @@ df.loc[(df.alpha == <span class="pc-num">3</span>) &amp; (df.beta == <span class
   } else {
     init();
   }
+})();
+</script>
+<script>
+(function () {
+  // Articles are served inside the public/lab Next.js wrapper iframe.
+  // Internal article links must navigate the top window; otherwise /writing/...
+  // loads the whole wrapper inside this iframe and duplicates the wrapper banner.
+  if (window.self === window.top) return;
+
+  const escapePrefixes = ['/writing/', '/lab/articles/'];
+
+  document.addEventListener('click', event => {
+    const link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+    if (!link) return;
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const rawHref = link.getAttribute('href') || '';
+    if (!rawHref || rawHref.startsWith('#')) return;
+
+    let url;
+    try {
+      url = new URL(rawHref, window.location.href);
+    } catch (error) {
+      return;
+    }
+
+    if (url.origin !== window.location.origin) return;
+    if (!escapePrefixes.some(prefix => url.pathname.startsWith(prefix))) return;
+
+    event.preventDefault();
+    window.top.location.href = url.pathname + url.search + url.hash;
+  });
 })();
 </script>
 <script>window.TopologyGlobe = (() => {

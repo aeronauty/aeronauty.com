@@ -15,6 +15,7 @@ Writes:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -1307,8 +1308,10 @@ def render_article_map(article_id: int) -> str:
         bow = min(40.0, 12.0 + span * 0.18)
         cx = spine_x + bow
         cy = (ay + by) / 2.0
-        # Slight stagger by hashing the pair so overlapping arcs separate.
-        stagger = ((hash((src_id, dst_id)) >> 3) & 7) - 3
+        # Slight deterministic stagger so overlapping arcs separate without
+        # changing every time Python randomizes its hash seed.
+        edge_key = f"{src_id}->{dst_id}".encode("utf-8")
+        stagger = (hashlib.sha1(edge_key).digest()[0] & 7) - 3
         cx += stagger * 1.4
         d = f"M{ax+3},{ay} Q{cx},{cy} {bx+3},{by}"
         parts.append(
@@ -4517,6 +4520,40 @@ ORCH_SCROLLY_JS = r"""
 """
 
 
+IFRAME_LINK_JS = r"""
+(function () {
+  // Articles are served inside the public/lab Next.js wrapper iframe.
+  // Internal article links must navigate the top window; otherwise /writing/...
+  // loads the whole wrapper inside this iframe and duplicates the wrapper banner.
+  if (window.self === window.top) return;
+
+  const escapePrefixes = ['/writing/', '/lab/articles/'];
+
+  document.addEventListener('click', event => {
+    const link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+    if (!link) return;
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const rawHref = link.getAttribute('href') || '';
+    if (!rawHref || rawHref.startsWith('#')) return;
+
+    let url;
+    try {
+      url = new URL(rawHref, window.location.href);
+    } catch (error) {
+      return;
+    }
+
+    if (url.origin !== window.location.origin) return;
+    if (!escapePrefixes.some(prefix => url.pathname.startsWith(prefix))) return;
+
+    event.preventDefault();
+    window.top.location.href = url.pathname + url.search + url.hash;
+  });
+})();
+"""
+
+
 PROGRESS_JS = r"""
 (function () {
   // Scroll-progress bar — width tracks how far through the article you are.
@@ -4901,6 +4938,7 @@ HTML_TEMPLATE = """<!doctype html>
 </div>
 
 <script>{progress_js}</script>
+<script>{iframe_link_js}</script>
 <script>{globe_js}</script>
 <script>{flowchart_js}</script>
 <script>{atomic_js}</script>
@@ -5145,6 +5183,7 @@ def main() -> None:
         article_map=article_map_html,
         prose=prose_html,
         progress_js=PROGRESS_JS,
+        iframe_link_js=IFRAME_LINK_JS,
         globe_js=globe_js,
         flowchart_js=flow_js,
         atomic_js=atomic_js,
