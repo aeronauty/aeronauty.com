@@ -1,0 +1,12 @@
+- Theodore Theodorsen, *General Theory of Aerodynamic Instability and the Mechanism of Flutter*, NACA Report 496, 1935. NASA NTRS record: <https://ntrs.nasa.gov/citations/19930090935>. Archival UNT copy: <https://digital.library.unt.edu/ark:/67531/metadc53413/>.
+- NASA/Boeing flutter-related wing testing video, NASA Langley Transonic Dynamics Tunnel: <https://www.nasa.gov/aeronautics/nasa-boeing-test-aircraft-wings/>.
+- NASA DAST flutter failure still, public domain, DVIDS/NASA: <https://www.dvidshub.net/image/699105/dast-flight-showing-diverging-wingtip-oscillations>.
+- NASA Glenn Beginner's Guide, "Shed Vorticity": <https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/shed-vorticity/>.
+- NASA Glenn Beginner's Guide, conformal mapping, circulation, and Kutta condition: <https://www.grc.nasa.gov/www/k-12/airplane/map.html>.
+- NASA NTRS bibliographic record for Mehta and Lavan, "Starting vortex, separation bubbles and stall - A numerical study of laminar unsteady flow around an airfoil": <https://ntrs.nasa.gov/citations/19750042140>.
+- NASA images and media usage guidance: <https://www.nasa.gov/nasa-brand-center/images-and-media/>.
+- Wagner, H. (1925). *Uber die Entstehung des dynamischen Auftriebes von Tragflugeln*. Zeitschrift fur Angewandte Mathematik und Mechanik.
+- Garrick, I. E. (1936). *Propulsion of a Flapping and Oscillating Airfoil*. NACA Report 567.
+- Bisplinghoff, R. L., Ashley, H., and Halfman, R. L. (1955). *Aeroelasticity*. Addison-Wesley.
+- Fung, Y. C. (1955). *An Introduction to the Theory of Aeroelasticity*. Wiley.
+- Katz, J., and Plotkin, A. (2001). *Low-Speed Aerodynamics*. Cambridge University Press.

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Harmonic Collapse</title>
+  <style>
+    :root{--ink:#171717;--muted:#60646c;--rule:#d9d9d4;--paper:#fbfaf7;--teal:#0f766e;--blue:#2563eb;--amber:#bd6b00}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .widget{width:min(1040px,100%);margin:0 auto;padding:16px}.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}h1{margin:0;font-size:24px;letter-spacing:0}
+    button{border:1px solid var(--rule);background:#fff;border-radius:6px;padding:7px 10px;cursor:pointer}button.active{border-color:var(--teal);background:#ecfdf5}
+    .panel{border:1px solid var(--rule);border-radius:8px;background:#fff;padding:16px}.annotation{margin:0 0 12px;color:var(--muted);line-height:1.55}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}svg{width:100%;height:auto;display:block}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body data-mode="analogy">
+  <main class="widget"><div class="bar"><h1>Harmonic collapse</h1><div><button data-set-mode="analogy" class="active">Analogy</button><button data-set-mode="maths">Maths</button></div></div><section class="panel"><p id="annotation" class="annotation"></p><div class="grid"><div id="raw"></div><div id="collapsed"></div></div></section></main>
+  <script>
+    const DATA_URL='../data/theodorsen_article_data.json', colors={ink:'#171717',muted:'#60646c',rule:'#e4e4df',teal:'#0f766e',blue:'#2563eb',amber:'#bd6b00'}; let data;
+    const annotations={analogy:'The raw cycles disagree because the wake changes both loudness and timing. After compensation, they reveal the same underlying sinusoid.',maths:'Each harmonic case is generated as CL=a0 alpha0 |C(k)| sin(theta+arg C). Collapse normalizes amplitude and phase by the stored C(k) values.'};
+    function setMode(m){document.body.dataset.mode=m;document.querySelectorAll('[data-set-mode]').forEach(b=>b.classList.toggle('active',b.dataset.setMode===m));render()} function scale(v,a,b,c,d){return c+(v-a)/(b-a)*(d-c)}
+    function draw(el, collapsed){const w=520,h=320,p=42,xd=[0,1],yd=[-0.55,0.55]; const palette=['#0f766e','#2563eb','#bd6b00','#7c3aed','#be123c','#475569']; const paths=data.harmonicCollapse.cases.map((c,i)=>{const rows=c.samples; const d=rows.map((r,j)=>{const x=r.cycle; const y=collapsed ? r.phaseCorrectedCl : r.theodorsenCl; return `${j?'L':'M'}${scale(x,0,1,p,w-p).toFixed(1)} ${scale(y,yd[0],yd[1],h-p,p).toFixed(1)}`}).join(' '); return `<path d="${d}" fill="none" stroke="${palette[i]}" stroke-width="2.2" opacity=".85"><title>k=${c.k}</title></path>`}).join(''); el.innerHTML=`<svg viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="8" fill="#fbfbf8"/><line x1="${p}" x2="${w-p}" y1="${(h)/2}" y2="${(h)/2}" stroke="${colors.rule}"/><line x1="${p}" x2="${w-p}" y1="${h-p}" y2="${h-p}" stroke="#aaa"/><line x1="${p}" x2="${p}" y1="${p}" y2="${h-p}" stroke="#aaa"/>${paths}<text x="${p+8}" y="${p+18}" font-size="13" fill="${colors.ink}">${collapsed?'amplitude and phase corrected':'raw Theodorsen lift'}</text><text x="${w/2}" y="${h-9}" text-anchor="middle" font-size="12" fill="${colors.muted}">cycle</text></svg>`}
+    function render(){if(!data)return;document.getElementById('annotation').textContent=annotations[document.body.dataset.mode||'analogy'];draw(document.getElementById('raw'),false);draw(document.getElementById('collapsed'),true)}
+    window.addEventListener('message',e=>{if(e.data&&e.data.type==='theodorsen-mode')setMode(e.data.mode==='maths'?'maths':'analogy')});
+    document.querySelectorAll('[data-set-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.setMode)));fetch(DATA_URL).then(r=>r.json()).then(j=>{data=j;render()});
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starting Vortex Memory</title>
+  <style>
+    :root { --ink:#171717; --muted:#5f6368; --rule:#d7d7d2; --paper:#fbfaf7; --panel:#fff; --teal:#0f766e; --blue:#2563eb; --amber:#bd6b00; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .widget { width:min(980px,100%); margin:0 auto; padding:16px; }
+    .bar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+    h1 { margin:0; font-size:24px; letter-spacing:0; }
+    button { border:1px solid var(--rule); background:#fff; border-radius:6px; padding:7px 10px; cursor:pointer; }
+    button.active { border-color:var(--teal); background:#ecfdf5; color:#064e3b; }
+    .panel { border:1px solid var(--rule); border-radius:8px; background:var(--panel); padding:16px; }
+    .grid { display:grid; grid-template-columns:280px minmax(0,1fr); gap:14px; }
+    .controls { display:grid; gap:14px; align-content:start; }
+    label { display:grid; gap:6px; font-size:13px; font-weight:700; color:#383838; }
+    input[type=range] { width:100%; accent-color:var(--teal); }
+    .value { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; color:var(--muted); }
+    .annotation { margin-top:12px; color:var(--muted); line-height:1.55; min-height:48px; }
+    svg { display:block; width:100%; height:auto; }
+    @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body data-mode="analogy">
+  <main class="widget">
+    <div class="bar">
+      <h1>Starting vortex memory</h1>
+      <div><button data-set-mode="analogy" class="active">Analogy</button><button data-set-mode="maths">Maths</button></div>
+    </div>
+    <section class="panel grid">
+      <div class="controls">
+        <label>Convective time after start <span class="value" id="sValue"></span><input id="sSlider" type="range" min="0" max="28" step="0.1" value="6"></label>
+        <label>Step angle <span class="value" id="aValue"></span><input id="aSlider" type="range" min="1" max="9" step="0.5" value="5"></label>
+        <p class="annotation" id="annotation"></p>
+      </div>
+      <div id="plot"></div>
+    </section>
+  </main>
+  <script>
+    const DATA_URL = '../data/theodorsen_article_data.json';
+    const colors = { ink:'#171717', muted:'#5f6368', rule:'#e2e2dc', teal:'#0f766e', blue:'#2563eb', amber:'#bd6b00' };
+    let data;
+    const annotations = {
+      analogy: 'The first lift response is only half awake. A starting vortex is the bookkeeping entry that lets the wing and wake agree on circulation.',
+      maths: 'The curve uses the Wagner approximation phi(s)=1-0.165 exp(-0.0455s)-0.335 exp(-0.3s). Full circulatory lift is approached asymptotically.'
+    };
+    function mode() { return document.body.dataset.mode || 'analogy'; }
+    function setMode(next) { document.body.dataset.mode = next; document.querySelectorAll('[data-set-mode]').forEach(b => b.classList.toggle('active', b.dataset.setMode === next)); render(); }
+    function scale(v,a,b,c,d){ return c+(v-a)/(b-a)*(d-c); }
+    function path(rows, x, y, xd, yd, w, h, p){ return rows.map((r,i)=>`${i?'L':'M'}${scale(x(r),xd[0],xd[1],p,w-p).toFixed(1)} ${scale(y(r),yd[0],yd[1],h-p,p).toFixed(1)}`).join(' '); }
+    function render() {
+      if (!data) return;
+      const s = Number(document.getElementById('sSlider').value);
+      const alpha = Number(document.getElementById('aSlider').value);
+      const slope = data.quasiSteady.liftSlopePerRad;
+      const rows = data.liftHistory.stepResponse.map(r => ({...r, quasiCl:r.quasiCl * alpha / 5, memoryCl:r.memoryCl * alpha / 5}));
+      const current = rows.reduce((a,b)=>Math.abs(b.s-s)<Math.abs(a.s-s)?b:a);
+      document.getElementById('sValue').textContent = s.toFixed(1);
+      document.getElementById('aValue').textContent = alpha.toFixed(1) + ' deg';
+      document.getElementById('annotation').textContent = annotations[mode()] + ` Current memory lift is ${(100*current.memoryCl/current.quasiCl).toFixed(0)}% of quasi-steady.`;
+      const w=760,h=360,p=46, yd=[0, Math.max(...rows.map(r=>r.quasiCl))*1.08], xd=[0,28], x=scale(s,xd[0],xd[1],p,w-p);
+      document.getElementById('plot').innerHTML = `<svg viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="8" fill="#fbfbf8"/><line x1="${p}" x2="${w-p}" y1="${h-p}" y2="${h-p}" stroke="#aaa"/><line x1="${p}" x2="${p}" y1="${p}" y2="${h-p}" stroke="#aaa"/><path d="${path(rows,r=>r.s,r=>r.quasiCl,xd,yd,w,h,p)}" fill="none" stroke="${colors.amber}" stroke-width="2.5" stroke-dasharray="7 6"/><path d="${path(rows,r=>r.s,r=>r.memoryCl,xd,yd,w,h,p)}" fill="none" stroke="${colors.teal}" stroke-width="4"/><line x1="${x}" x2="${x}" y1="${p}" y2="${h-p}" stroke="${colors.ink}" stroke-dasharray="5 6"/><circle cx="${x}" cy="${scale(current.memoryCl,yd[0],yd[1],h-p,p)}" r="6" fill="${colors.teal}"/><text x="${p+8}" y="${p+20}" font-size="13" fill="${colors.amber}">quasi-steady target</text><text x="${p+8}" y="${p+42}" font-size="13" fill="${colors.teal}">wake-memory response</text><text x="${w/2}" y="${h-10}" text-anchor="middle" font-size="12" fill="${colors.muted}">convective time s = 2Ut/c</text><text x="16" y="${h/2}" text-anchor="middle" font-size="12" fill="${colors.muted}" transform="rotate(-90 16 ${h/2})">CL</text></svg>`;
+    }
+    window.addEventListener('message', e => { if (e.data && e.data.type === 'theodorsen-mode') setMode(e.data.mode === 'maths' ? 'maths' : 'analogy'); });
+    document.querySelectorAll('[data-set-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.setMode)));
+    fetch(DATA_URL).then(r => r.json()).then(json => { data = json; document.querySelectorAll('input').forEach(i => i.addEventListener('input', render)); render(); });
+  </script>
+</body>
+</html>

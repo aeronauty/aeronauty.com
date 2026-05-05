@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en" data-reading-mode="analogy">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Wing Remembers</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f5ef;
+      --ink: #1c1917;
+      --muted: #6f6860;
+      --rule: #ded7cc;
+      --panel: #ffffff;
+      --teal: #0f766e;
+      --amber: #c87916;
+      --blue: #2563eb;
+      --rose: #be185d;
+      --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: clip; }
+    .th-progress { position: fixed; inset: 0 auto auto 0; height: 3px; width: 100%; transform: scaleX(0); transform-origin: left; z-index: 40; background: linear-gradient(90deg,var(--teal),var(--blue),var(--rose)); }
+    .th-hero { min-height: 100svh; display: grid; grid-template-columns: minmax(0,1fr) minmax(340px,460px); gap: 36px; align-items: center; width: min(1280px, calc(100vw - 48px)); margin: 0 auto; padding: 72px 0; }
+    .th-eyebrow { margin: 0 0 16px; color: var(--teal); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .18em; }
+    h1 { margin: 0; font-family: var(--serif); font-size: clamp(54px, 9vw, 118px); line-height: .94; letter-spacing: 0; }
+    .th-kicker { max-width: 720px; margin: 26px 0 0; color: var(--muted); font-size: clamp(18px, 2vw, 23px); line-height: 1.55; }
+    .th-hero-card { border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); padding: 22px; box-shadow: 0 24px 70px rgba(28,25,23,.08); }
+    .th-hero-card p { margin: 10px 0 0; color: var(--muted); line-height: 1.6; }
+    .th-rail { position: fixed; left: max(18px, calc((100vw - 1180px)/2 - 82px)); top: 112px; bottom: 80px; width: 74px; z-index: 12; display: none; }
+    .th-rail svg { width: 100%; height: 100%; overflow: visible; }
+    .th-rail-label { position: absolute; left: 66px; top: 0; width: 170px; color: var(--muted); font-size: 12px; line-height: 1.3; transform: translateY(-50%); opacity: .9; }
+    @media (min-width: 1400px) { .th-rail { display: block; } }
+    .th-mode-switch { position: sticky; top: 12px; z-index: 30; width: min(680px, calc(100vw - 32px)); margin: -42px auto 56px; padding: 6px; border: 1px solid var(--rule); border-radius: 999px; background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(14px); box-shadow: 0 16px 48px rgba(28,25,23,.08); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .th-mode-switch button { border: 0; border-radius: 999px; padding: 12px 14px; background: transparent; color: var(--muted); font-weight: 800; cursor: pointer; }
+    html[data-reading-mode="analogy"] button[data-set-mode="analogy"],
+    html[data-reading-mode="maths"] button[data-set-mode="maths"] { background: var(--ink); color: white; }
+    .th-prose { width: min(760px, calc(100vw - 38px)); margin: 0 auto 96px; }
+    .th-prose p, .th-prose li { font-family: var(--serif); font-size: 21px; line-height: 1.72; }
+    .th-prose h1 { display: none; }
+    .th-section { margin: 92px 0 72px; scroll-margin-top: 90px; }
+    .th-section-num { display: block; margin-bottom: 10px; color: var(--teal); font-family: var(--mono); font-size: 13px; font-weight: 800; letter-spacing: .12em; }
+    .th-section-title { margin: 0 0 24px; font-family: var(--serif); font-size: clamp(36px, 4vw, 56px); line-height: 1.03; letter-spacing: 0; }
+    .th-mode-block { border-left: 3px solid var(--teal); margin: 28px 0; padding: 3px 0 3px 20px; }
+    .th-mode-block p { margin: 0; color: var(--muted); }
+    .th-mode-maths { border-color: var(--amber); }
+    html[data-reading-mode="analogy"] .th-mode-maths { display: none; }
+    html[data-reading-mode="maths"] .th-mode-analogy { display: none; }
+    .th-details { margin: 34px 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); padding: 0; overflow: hidden; }
+    .th-details summary { cursor: pointer; padding: 18px 20px; font-weight: 800; color: var(--ink); }
+    .th-details-body { padding: 0 20px 20px; }
+    .th-details-body p, .th-details-body li { font-size: 18px; }
+    .th-widget { position: relative; left: 50%; transform: translateX(-50%); width: min(1180px, calc(100vw - 44px)); margin: 62px 0; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: white; box-shadow: 0 24px 70px rgba(28,25,23,.08); }
+    .th-widget iframe { display: block; width: 100%; height: min(760px, 82svh); border: 0; }
+    .th-video { position: relative; left: 50%; transform: translateX(-50%); width: min(1080px, calc(100vw - 44px)); margin: 54px 0; }
+    .th-video video, .th-video iframe, .th-video-placeholder { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--rule); border-radius: 10px; background: #111827; color: white; display: grid; place-items: center; }
+    .th-video iframe { display: block; }
+    .th-video figcaption { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .th-references { margin-top: 100px; padding-top: 28px; border-top: 1px solid var(--rule); }
+    .th-references h2 { font-family: var(--serif); font-size: 38px; }
+    .th-references p, .th-references li { font-family: var(--sans); font-size: 15px; line-height: 1.6; }
+    .th-references a { overflow-wrap: anywhere; }
+    code { font-family: var(--mono); background: #eee8dd; padding: .12em .35em; border-radius: 4px; }
+    a { color: var(--teal); text-decoration-thickness: 1px; text-underline-offset: 3px; overflow-wrap: anywhere; }
+    @media (max-width: 720px) {
+      .th-hero { grid-template-columns: 1fr; width: calc(100vw - 32px); padding-top: 42px; }
+      .th-mode-switch { margin-top: -24px; }
+      .th-prose p, .th-prose li { font-size: 19px; }
+      .th-widget iframe { height: 720px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="th-progress" aria-hidden="true"></div>
+  <aside class="th-rail" aria-hidden="true">
+    <svg viewBox="0 0 74 720" preserveAspectRatio="none">
+      <path class="rail-wake" d="M37 18 C18 110 58 190 37 280 C16 370 58 470 37 702" fill="none" stroke="#cfc7ba" stroke-width="2" stroke-dasharray="4 8"/>
+      <path class="rail-wake-active" d="M37 18 C18 110 58 190 37 280 C16 370 58 470 37 702" fill="none" stroke="#0f766e" stroke-width="3" stroke-linecap="round"/>
+      <g class="rail-foil" transform="translate(37 18) rotate(0)">
+        <path d="M-28 0 C-15 -8 16 -8 31 0 C15 7 -14 7 -28 0Z" fill="#fff" stroke="#1c1917" stroke-width="2"/>
+        <circle cx="-6" cy="0" r="2.5" fill="#c87916"/>
+      </g>
+    </svg>
+    <span class="th-rail-label">The wing remembers.</span>
+  </aside>
+
+  <header class="th-hero">
+    <div>
+      <p class="th-eyebrow">Aeronauty Lab · unsteady aerodynamics</p>
+      <h1>The Wing Remembers</h1>
+      <p class="th-kicker">A scrollytelling explanation of Theodorsen, flutter, reduced frequency, and the first-order way a wing's wake remembers what the wing did a moment ago.</p>
+    </div>
+    <div class="th-hero-card">
+      <strong>For two kinds of reader.</strong>
+      <p>Start in Analogy Heavy if this is half-remembered classroom material. Switch to Maths Heavy when you want the derivation, notation, and frequency-domain machinery.</p>
+    </div>
+  </header>
+
+  <nav class="th-mode-switch" aria-label="Reading mode">
+    <button type="button" data-set-mode="analogy">Analogy Heavy</button>
+    <button type="button" data-set-mode="maths">Maths Heavy</button>
+  </nav>
+
+  <main class="th-prose">
+    <h1>The Wing Remembers</h1>
+<p>There is a particular class of aerodynamic result that looks like a small correction until you build something that moves.</p>
+<p>A wing at a steady angle of attack is already complicated enough. The pressure field has to arrange itself around the section, the trailing edge has to satisfy the Kutta condition, the wake has to take away the circulation it is owed, and everyone involved pretends that drawing a tidy streamline picture makes this emotionally manageable.</p>
+<p>Now make the wing oscillate.</p>
+<p>Not violently. Just pitch it a few degrees, or plunge it up and down, or let an elastic mode flex it at some frequency. The lift no longer follows the motion directly. It lags. Its amplitude changes. The wake you shed half a cycle ago is still out there, convecting downstream, still inducing velocity back on the airfoil. The wing is not responding only to where it is now. It is responding to where it has been.</p>
+<p>That is the core idea of this piece:</p>
+<p><strong>Unsteady lift is aerodynamic memory.</strong></p>
+<p>And Theodorsen's function, \(C(k)\), is one of the great early acts of compressing that memory into something engineers can actually use without giving up and becoming accountants.</p>
+<figure class="th-video" data-video="flutter">
+  <iframe title="Flutter footage" src="https://www.youtube.com/embed/TJNJfrkge9o" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+  <figcaption><strong>Flutter footage</strong> NASA/Boeing wind-tunnel testing of a long, narrow wing model for aeroelastic response and flutter suppression.</figcaption>
+</figure>
+<p>Flutter is the dramatic version, which is why it usually gets the thumbnail. A structure bends or twists, the aerodynamic load arrives with just the wrong phase, energy is fed into the motion rather than taken out, and the oscillation grows. It is not "the wind is strong" in any simple sense. It is a feedback problem. The airflow is doing work on the structure because the timing is wrong.</p>
+<p>Theodorsen matters because timing is the whole game.</p>
+
+<section class="th-section" id="the-steady-picture-is-too-forgiving" data-section-index="0">
+<span class="th-section-num">00</span>
+<h2 class="th-section-title">The Steady Picture Is Too Forgiving</h2>
+
+<p>Most aerodynamic teaching starts with the steady problem, and that is fair. If an airfoil sits at a fixed angle of attack in a steady flow, thin-airfoil theory gives the famous lift slope:</p>
+<div class="th-mode-block th-mode-maths" data-mode="maths">
+<p>For a thin symmetric airfoil in incompressible attached flow,</p>
+<p>\[
+C_L \approx 2\pi \alpha
+\]</p>
+<p>with \(\alpha\) in radians. More generally, a real section gets a measured or computed lift slope, a zero-lift offset, viscous corrections, and eventually a polite note from separation explaining that the linear model has had a lovely time but needs to go home.</p>
+</div>
+
+<p>That steady result is useful. It is also a trap.</p>
+<p>The trap is the word "the." The lift. The circulation. The wake. In the steady cartoon these are nouns, already arranged. In the unsteady problem they are verbs. The circulation is being built. The wake is being shed. The airfoil is moving while the flow is still adjusting to the last thing it did.</p>
+<figure class="th-video" data-video="circulation-starting-vortex">
+  <div class="th-video-placeholder"><span>Video source pending</span></div>
+  <figcaption><strong>Starting vortex and circulation</strong> Placeholder slot for Harry&#x27;s coffee-cup/spoon circulation clip. The references include NASA Glenn starting-vortex and circulation explainers.</figcaption>
+</figure>
+<p>The starting vortex is the cleanest way to see the crime scene. Start an airfoil impulsively and the bound circulation cannot simply appear on the airfoil by administrative decree. A vortex is shed into the wake so total circulation is conserved. The airfoil gets bound circulation; the wake gets the opposite bookkeeping entry. Aerodynamics, unlike project management, does not allow you to hide the accounting error in a spreadsheet.</p>
+<p>That shed vorticity does not disappear because the airfoil has moved on. It convects downstream and continues to induce velocity. Every new change in bound circulation leaves another trace in the wake. The present lift depends on the accumulated wake history.</p>
+<aside class="th-widget" data-widget="starting-vortex-memory">
+  <iframe title="Starting Vortex Memory" src="figures/starting-vortex-memory.html" loading="lazy"></iframe>
+</aside>
+<p>The widget should make the point visually: a sudden motion leaves a coherent wake structure behind it; later motion happens in the induced field of that earlier event. If the wing "remembers", this is the memory. Not mysticism. Vorticity.</p>
+
+</section>
+<section class="th-section" id="wagner-s-problem-the-step-response" data-section-index="1">
+<span class="th-section-num">01</span>
+<h2 class="th-section-title">Wagner's Problem: The Step Response</h2>
+
+<p>Before the harmonic version, there is the step version.</p>
+<p>Imagine an airfoil that is suddenly put at a small angle of attack. The quasi-steady answer would jump immediately to \(2\pi\alpha\). The real unsteady inviscid answer does not. It approaches the steady value gradually because the wake is being formed and carried away.</p>
+<p>This is Wagner's function: the indicial lift response to a step change in angle of attack. It says, roughly, "how much of the steady circulatory lift has arrived by this nondimensional time?"</p>
+<p>The point is not the exact curve yet. The point is that a simple step input has a history-dependent output.</p>
+<div class="th-mode-block th-mode-analogy" data-mode="analogy">
+<p>Think of turning a large ship, not because fluid mechanics needs a second fluid metaphor but because sometimes the obvious crime is the right one. You can move the rudder now, but the ship's response contains the inertia of what it was already doing. An airfoil's unsteady lift has a different mechanism, but the same warning label: a control input is not the same thing as an instantaneous state change.</p>
+</div>
+
+<p>For a general motion, the circulatory lift can be written as a history integral. Each past change in effective angle of attack contributes to the current lift, weighted by how old that change is.</p>
+<aside class="th-widget" data-widget="lift-history-integral">
+  <iframe title="Lift History Integral" src="figures/lift-history-integral.html" loading="lazy"></iframe>
+</aside>
+<p>This is an elegant statement and a miserable way to do repetitive engineering calculations by hand. If every sinusoidal motion requires dragging the entire past wake history around, the algebra becomes a shed full of rakes. Step on one and another one hits you.</p>
+<p>Theodorsen's move was to ask a different question:</p>
+<p>If the motion is harmonic, can the whole wake-memory operator collapse into a complex multiplier?</p>
+<p>The answer is yes. That answer is \(C(k)\).</p>
+
+</section>
+<section class="th-section" id="reduced-frequency-is-the-knob" data-section-index="2">
+<span class="th-section-num">02</span>
+<h2 class="th-section-title">Reduced Frequency Is The Knob</h2>
+
+<p>The unsteady problem needs a nondimensional frequency. The usual one is reduced frequency,</p>
+<div class="th-mode-block th-mode-maths" data-mode="maths">
+<p>\[
+k = \frac{\omega b}{U}
+\]</p>
+<p>where \(\omega\) is the angular frequency of the motion, \(b\) is the semichord, and \(U\) is the freestream speed.</p>
+</div>
+
+<p>Reduced frequency compares the time it takes the airfoil to move with the time it takes the flow to cross the airfoil. Low \(k\) means the flow sees the motion as slow. High \(k\) means the airfoil is changing appreciably before the wake from the previous change has gone very far.</p>
+<aside class="th-widget" data-widget="reduced-frequency">
+  <iframe title="Reduced Frequency" src="figures/reduced-frequency.html" loading="lazy"></iframe>
+</aside>
+<p>This is one of those parameters that is simple enough to define and subtle enough to spend a career misusing. It is not just "frequency". A large slow aircraft mode and a small fast section oscillation can land in similar places once scaled by chord and speed. The wake cares about that scaled timing, not the calendar frequency you happened to write in the test plan.</p>
+<p>At \(k \to 0\), Theodorsen's function tends toward 1: the circulatory lift is essentially quasi-steady. At higher \(k\), the magnitude drops and the phase becomes more negative: the lift is smaller than the quasi-steady prediction and arrives late.</p>
+<p>That sounds like a correction factor. It is not quite. It is a compressed memory model.</p>
+
+</section>
+<section class="th-section" id="harmonic-collapse" data-section-index="3">
+<span class="th-section-num">03</span>
+<h2 class="th-section-title">Harmonic Collapse</h2>
+
+<p>Here is the outrageously useful thing about sinusoids: linear systems treat them as eigenfunctions. Put in a sinusoid, get out a sinusoid at the same frequency, with changed amplitude and phase. The entire convolution with the wake can be represented by a complex gain.</p>
+<aside class="th-widget" data-widget="harmonic-collapse">
+  <iframe title="Harmonic Collapse" src="figures/harmonic-collapse.html" loading="lazy"></iframe>
+</aside>
+<p>This is the collapse:</p>
+<div class="th-mode-block th-mode-maths" data-mode="maths">
+<p>For harmonic motion, write the effective angle of attack as</p>
+<p>\[
+\alpha_\mathrm{eff}(t) = \Re\{\hat{\alpha} e^{i\omega t}\}.
+\]</p>
+<p>The circulatory lift contribution can be represented, schematically, as</p>
+<p>\[
+\hat{C}_{L,\mathrm{circ}} =
+2\pi C(k)\hat{\alpha}_\mathrm{eff}.
+\]</p>
+<p>Theodorsen's function is complex:</p>
+<p>\[
+C(k) = F(k) + iG(k).
+\]</p>
+<p>\(F(k)\) changes the in-phase component. \(G(k)\) changes the quadrature component. Together they encode amplitude reduction and phase lag.</p>
+</div>
+
+<p>In the classical thin-airfoil result, Theodorsen found</p>
+<div class="th-mode-block th-mode-maths" data-mode="maths">
+<p>\[
+C(k)=
+\frac{H_1^{(2)}(k)}
+{H_1^{(2)}(k) + iH_0^{(2)}(k)}
+\]</p>
+<p>where \(H_n^{(2)}\) are Hankel functions of the second kind.</p>
+</div>
+
+<p>This is a good place to say something unfashionable but important: this is not "a simple formula" in the sense that a hand calculator feels simple. It is a compact special-function representation of a wake boundary-value problem. The beauty is not that it is elementary. The beauty is that the unsteady wake has been reduced to a function of one nondimensional parameter.</p>
+<aside class="th-widget" data-widget="ck-response">
+  <iframe title="Ck Response" src="figures/ck-response.html" loading="lazy"></iframe>
+</aside>
+<p>The widget should show \(F(k)\), \(G(k)\), \(|C(k)|\), and phase. The important behaviour is qualitative:</p>
+<ul>
+<li>near zero reduced frequency, \(C(k)\) is close to 1;</li>
+<li>as \(k\) increases, the magnitude falls;</li>
+<li>the imaginary part creates phase lag;</li>
+<li>at very high \(k\), the circulatory contribution tends toward a limiting value rather than behaving like a steady airfoil with caffeine.</li>
+</ul>
+<p>The lift has not vanished. The circulatory part has changed. There are also non-circulatory or apparent-mass terms, which are not multiplied by \(C(k)\). That distinction matters, especially in pitch and plunge.</p>
+
+</section>
+<section class="th-section" id="pitch-plunge-and-the-slightly-annoying-location-of-things" data-section-index="4">
+<span class="th-section-num">04</span>
+<h2 class="th-section-title">Pitch, Plunge, And The Slightly Annoying Location Of Things</h2>
+
+<p>An oscillating airfoil has more than one way to move.</p>
+<p>It can plunge: move up and down without changing pitch angle. It can pitch: rotate about an axis. It can do both, which is what a bending-torsion wing section effectively does once you reduce it to a typical-section model.</p>
+<aside class="th-widget" data-widget="pitch-plunge">
+  <iframe title="Pitch Plunge" src="figures/pitch-plunge.html" loading="lazy"></iframe>
+</aside>
+<p>The effective angle of attack is not just the geometric pitch angle. It includes plunge velocity, pitch rate, and the location of the pitch axis relative to the mid-chord. This is where the expressions become less blog-friendly and more honest.</p>
+<div class="th-mode-block th-mode-maths" data-mode="maths">
+<p>For a typical airfoil section with plunge \(h(t)\), pitch \(\alpha(t)\), semichord \(b\), freestream \(U\), and pitch-axis location \(a b\) measured from the mid-chord, the effective circulatory input has the shape</p>
+<p>\[
+\alpha_\mathrm{eff}
+\sim
+\alpha + \frac{\dot{h}}{U}
+ b\left(\frac{1}{2}-a\right)\frac{\dot{\alpha}}{U}.
+\]</p>
+<p>Different sign conventions move minus signs around. Aerospace has survived worse, but only just.</p>
+</div>
+
+<p>That effective input gets multiplied by \(C(k)\) for the circulatory part. The apparent-mass part depends on accelerations and does not wait for the wake. In aeroelastic equations, both appear in the generalized aerodynamic forces.</p>
+<p>This is why Theodorsen remains useful long after you can run CFD. It gives you a clean way to separate:</p>
+<ul>
+<li>the part of the load that follows from accelerating fluid locally;</li>
+<li>the part of the load carried by circulation and wake memory;</li>
+<li>the way phase changes with reduced frequency.</li>
+</ul>
+<p>You can then ask whether a higher-fidelity model is changing the answer because of viscosity, separation, compressibility, thickness, three-dimensionality, turbulence modelling, or because you were previously using the wrong unsteady memory.</p>
+<p>That is a better question than "does CFD match theory?", which is often a fancy way of asking whether a racing bicycle matches a drawing of a wheel.</p>
+
+</section>
+<section class="th-section" id="why-this-matters-for-flutter" data-section-index="5">
+<span class="th-section-num">05</span>
+<h2 class="th-section-title">Why This Matters For Flutter</h2>
+
+<p>Flutter is a structural-aerodynamic energy exchange problem. If the aerodynamic force is in the right phase, it damps the motion. If it is in the wrong phase, it feeds the motion.</p>
+<p>The scary part is that "wrong phase" can be a modest-looking shift. A few degrees of aerodynamic lag in the right coordinate can move a mode from damped to unstable. The airplane does not care that the plot looked nearly the same in PowerPoint.</p>
+<p>Theodorsen's function enters classical flutter analysis because it gives the unsteady aerodynamic forces for harmonic motion. Combine those forces with a structural model and solve for the complex frequency where the system can sustain itself. The flutter boundary appears where damping crosses zero.</p>
+<div class="th-mode-block th-mode-analogy" data-mode="analogy">
+<p>Imagine pushing a child on a swing. Push at the bottom in the direction of motion and you add energy. Push with the wrong timing and you remove it, or mostly look foolish. Flutter is the aircraft version, except the person doing the pushing is the pressure field and the child is a wing whose certification paperwork would prefer not to become confetti.</p>
+</div>
+
+<p>Theodorsen did not make flutter easy. He made an essential part of the aerodynamic timing computable.</p>
+
+</section>
+<section class="th-section" id="the-short-derivation-with-the-usual-crimes-hidden-in-the-basement" data-section-index="6">
+<span class="th-section-num">06</span>
+<h2 class="th-section-title">The Short Derivation, With The Usual Crimes Hidden In The Basement</h2>
+
+<details class="th-details th-mode-maths" data-default-mode="maths">
+  <summary>derivation-short-form</summary>
+  <div class="th-details-body">
+<p>We can sketch the derivation without pretending that a few paragraphs replace the NACA report.</p>
+<p>Start with incompressible, inviscid, two-dimensional potential flow around a thin airfoil. The airfoil is allowed to execute small harmonic pitch and plunge motions. Because the problem is linearized, the velocity potential can be split into non-circulatory and circulatory parts.</p>
+<p>The non-circulatory part is local apparent mass. It comes from accelerating the fluid around the body and depends directly on accelerations. It does not require a shed wake to communicate the past.</p>
+<p>The circulatory part is constrained by the Kutta condition at the trailing edge and by the vorticity shed into the wake. A change in bound circulation must be accompanied by vorticity in the wake, convecting downstream with the freestream in the thin-airfoil approximation. For harmonic motion, the wake vorticity distribution also varies harmonically. That lets the integral influence of the wake be represented in the frequency domain.</p>
+<p>Solving the resulting integral equation gives a relationship between the bound circulation and the harmonic motion. The wake influence appears through Hankel functions. With the common reduced-frequency convention \(k=\omega b/U\), the circulatory correction becomes</p>
+<p>\[
+C(k)=
+\frac{H_1^{(2)}(k)}
+{H_1^{(2)}(k) + iH_0^{(2)}(k)}.
+\]</p>
+<p>The lift and moment expressions then combine apparent-mass terms with circulatory terms multiplied by \(C(k)\). The exact signs and coefficients depend on the pitch-axis convention and the coordinate direction for plunge, which is why every serious aeroelasticity text starts by defining those before doing anything interesting.</p>
+<p>The derivation is not a proof that real air behaves like thin inviscid potential flow. It is a proof that, under those assumptions, wake memory for harmonic motion has a precise frequency response.</p>
+  </div>
+</details>
+
+
+</section>
+<section class="th-section" id="the-model-ladder" data-section-index="7">
+<span class="th-section-num">07</span>
+<h2 class="th-section-title">The Model Ladder</h2>
+
+<p>Theodorsen is not the last word. It is the first honest word in a ladder.</p>
+<aside class="th-widget" data-widget="model-ladder">
+  <iframe title="Model Ladder" src="figures/model-ladder.html" loading="lazy"></iframe>
+</aside>
+<p>The ladder I want for this article has five rungs:</p>
+<ol>
+<li><strong>Quasi-steady section model.</strong> Use a steady lift slope or a FlexFoil/XFOIL-style polar and assume the lift follows motion instantly. Cheap, useful, wrong as soon as wake timing matters.</li>
+<li><strong>Theodorsen plus quasi-steady section data.</strong> Use a real or computed lift slope for the section, then apply Theodorsen's wake-memory response for harmonic attached-flow motion. Still idealized, but now the timing is in the room.</li>
+<li><strong>Flow360 RANS.</strong> Solve a steady viscous mean-flow problem. Useful for the baseline section aerodynamics, pressure recovery, and separated steady states. Not time-accurate wake memory.</li>
+<li><strong>Flow360 URANS.</strong> Solve a time-accurate mean-flow problem with modelled turbulence. This is the practical comparison for oscillating-airfoil loops when the motion is not too pathological.</li>
+<li><strong>Flow360 LES/DDES.</strong> Resolve more of the unsteady separated wake physics. Expensive, sensitive to mesh and timestep, and not a magic truth machine. But when separation, vortex shedding, or dynamic stall is the story, this is where the story has to go.</li>
+</ol>
+<p>The current private lab scaffold seeds the first two pieces: numerical Hankel-function values for \(C(k)\), and a FlexFoil quasi-steady NACA 0012 polar used as a low-order section reference. The Flow360 rows are deliberately a schema, not a claim. No Flow360 comparison should be implied until the cases exist.</p>
+<p>This matters because the ladder is not about declaring a winner. It is about asking what each model remembers.</p>
+<p>Quasi-steady remembers the current state and forgets the wake. Theodorsen remembers the inviscid attached wake, but forgets viscosity and separation. RANS remembers viscous mean-flow structure, but forgets resolved unsteady history. URANS remembers time-varying modelled flow. LES and DDES remember more of the wake, if the grid, timestep, and modelling choices deserve that verb.</p>
+<p>"What does this model remember?" is the question that prevents model hierarchy from becoming brand warfare.</p>
+
+</section>
+<section class="th-section" id="what-the-widgets-should-teach" data-section-index="8">
+<span class="th-section-num">08</span>
+<h2 class="th-section-title">What The Widgets Should Teach</h2>
+
+<p>The article should not use the interactive pieces as decoration. Each one has a job.</p>
+<p><strong>Starting vortex memory</strong> should make the wake visible as the storage medium. The reader should see that a change in circulation leaves something downstream.</p>
+<p><strong>Lift history integral</strong> should connect that visual wake to the convolution idea: current lift is an accumulated effect of past motion.</p>
+<p><strong>Harmonic collapse</strong> should show why harmonic motion is special: the ugly history integral becomes a complex gain.</p>
+<p><strong>Reduced frequency</strong> should give the reader a physical feel for \(k\), not merely the equation.</p>
+<p><strong>The \(C(k)\) response</strong> should make the frequency-response behaviour of \(C(k)\) unavoidable: amplitude and phase change together.</p>
+<p><strong>Pitch and plunge</strong> should show why a typical section has coupled motion inputs, and why pitch-axis location matters.</p>
+<p><strong>The model ladder</strong> should stop the article from becoming a museum piece. The point is not that Theodorsen replaces CFD. The point is that Theodorsen gives us a clean mental coordinate system for interrogating CFD.</p>
+
+</section>
+<section class="th-section" id="the-dry-moral" data-section-index="9">
+<span class="th-section-num">09</span>
+<h2 class="th-section-title">The Dry Moral</h2>
+
+<p>Theodorsen's function is sometimes taught like a historical curiosity: here is an old special function from an old report, please admire the notation and move on. That undersells it.</p>
+<p>The real achievement is architectural. Theodorsen took an unsteady wake-memory problem and turned it into a frequency response. Once you have that, you can talk about amplitude, phase, damping, flutter, and model comparison in a compact engineering language.</p>
+<p>That is still the right language, even when the next tool in the chain is a very expensive CFD run.</p>
+<p>The modern mistake is to treat high-fidelity simulation as a solvent that dissolves low-order thinking. It does not. It gives you more detailed answers. You still need to know what question you asked, what physics the model could remember, and which missing memory is likely to hurt you.</p>
+<p>The wing remembers. Theodorsen tells you how much of that memory survives into a harmonic lift response. CFD can tell you what happens when the tidy assumptions fall apart. The useful engineer keeps both thoughts in his head at once, which is inconvenient but cheaper than learning about phase lag from a flutter test.</p>
+<section class="th-references" id="references">
+
+</section>
+<section class="th-section" id="references" data-section-index="10">
+<span class="th-section-num">10</span>
+<h2 class="th-section-title">References</h2>
+
+<ul>
+<li>Theodore Theodorsen, <em>General Theory of Aerodynamic Instability and the Mechanism of Flutter</em>, NACA Report 496, 1935. NASA NTRS record: <a href="https://ntrs.nasa.gov/citations/19930090935">https://ntrs.nasa.gov/citations/19930090935</a>. Archival UNT copy: <a href="https://digital.library.unt.edu/ark:/67531/metadc53413/">https://digital.library.unt.edu/ark:/67531/metadc53413/</a>.</li>
+<li>NASA/Boeing flutter-related wing testing video, NASA Langley Transonic Dynamics Tunnel: <a href="https://www.nasa.gov/aeronautics/nasa-boeing-test-aircraft-wings/">https://www.nasa.gov/aeronautics/nasa-boeing-test-aircraft-wings/</a>.</li>
+<li>NASA DAST flutter failure still, public domain, DVIDS/NASA: <a href="https://www.dvidshub.net/image/699105/dast-flight-showing-diverging-wingtip-oscillations">https://www.dvidshub.net/image/699105/dast-flight-showing-diverging-wingtip-oscillations</a>.</li>
+<li>NASA Glenn Beginner's Guide, "Shed Vorticity": <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/shed-vorticity/">https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/shed-vorticity/</a>.</li>
+<li>NASA Glenn Beginner's Guide, conformal mapping, circulation, and Kutta condition: <a href="https://www.grc.nasa.gov/www/k-12/airplane/map.html">https://www.grc.nasa.gov/www/k-12/airplane/map.html</a>.</li>
+<li>NASA NTRS bibliographic record for Mehta and Lavan, "Starting vortex, separation bubbles and stall - A numerical study of laminar unsteady flow around an airfoil": <a href="https://ntrs.nasa.gov/citations/19750042140">https://ntrs.nasa.gov/citations/19750042140</a>.</li>
+<li>NASA images and media usage guidance: <a href="https://www.nasa.gov/nasa-brand-center/images-and-media/">https://www.nasa.gov/nasa-brand-center/images-and-media/</a>.</li>
+<li>Wagner, H. (1925). <em>Uber die Entstehung des dynamischen Auftriebes von Tragflugeln</em>. Zeitschrift fur Angewandte Mathematik und Mechanik.</li>
+<li>Garrick, I. E. (1936). <em>Propulsion of a Flapping and Oscillating Airfoil</em>. NACA Report 567.</li>
+<li>Bisplinghoff, R. L., Ashley, H., and Halfman, R. L. (1955). <em>Aeroelasticity</em>. Addison-Wesley.</li>
+<li>Fung, Y. C. (1955). <em>An Introduction to the Theory of Aeroelasticity</em>. Wiley.</li>
+<li>Katz, J., and Plotkin, A. (2001). <em>Low-Speed Aerodynamics</em>. Cambridge University Press.</li>
+</ul>
+</section>
+</section>
+  </main>
+
+  <script>
+    (function() {
+      const root = document.documentElement;
+      const saved = localStorage.getItem('theodorsen-reading-mode') || 'analogy';
+      function setMode(mode) {
+        root.dataset.readingMode = mode;
+        localStorage.setItem('theodorsen-reading-mode', mode);
+        document.querySelectorAll('.th-details[data-default-mode="maths"]').forEach(el => {
+          if (mode === 'maths') el.setAttribute('open', '');
+          else el.removeAttribute('open');
+        });
+        document.querySelectorAll('iframe').forEach(frame => {
+          try { frame.contentWindow && frame.contentWindow.postMessage({ type: 'theodorsen-mode', mode }, '*'); } catch (_) {}
+        });
+      }
+      document.querySelectorAll('[data-set-mode]').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.setMode)));
+      setMode(saved === 'maths' ? 'maths' : 'analogy');
+
+      const progress = document.querySelector('.th-progress');
+      const activeWake = document.querySelector('.rail-wake-active');
+      const foil = document.querySelector('.rail-foil');
+      const railPath = document.querySelector('.rail-wake');
+      const pathLen = railPath ? railPath.getTotalLength() : 0;
+      if (activeWake && pathLen) {
+        activeWake.style.strokeDasharray = pathLen;
+        activeWake.style.strokeDashoffset = pathLen;
+      }
+      function update() {
+        const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+        const t = Math.min(1, Math.max(0, scrollY / max));
+        if (progress) progress.style.transform = `scaleX(${t})`;
+        if (activeWake && pathLen) activeWake.style.strokeDashoffset = `${pathLen * (1 - t)}`;
+        if (foil && railPath && pathLen) {
+          const p = railPath.getPointAtLength(pathLen * t);
+          const wobble = Math.sin(t * Math.PI * 18) * 9;
+          foil.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${wobble})`);
+        }
+      }
+      addEventListener('scroll', update, { passive: true });
+      addEventListener('resize', update);
+      update();
+    })();
+  </script>
+</body>
+</html>
