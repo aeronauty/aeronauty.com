@@ -223,9 +223,12 @@ function geoLabel(event: ActivityEvent): string {
 }
 
 function mapPoint(lat: number, lon: number) {
+  const clampedLat = Math.max(-85.0511, Math.min(85.0511, lat));
+  const latRad = (clampedLat * Math.PI) / 180;
+  const mercatorY = 0.5 - Math.log(Math.tan(Math.PI / 4 + latRad / 2)) / (2 * Math.PI);
   return {
     x: ((lon + 180) / 360) * 720,
-    y: ((90 - lat) / 180) * 360,
+    y: mercatorY * 360,
   };
 }
 
@@ -435,38 +438,8 @@ export default function LabActivityPage() {
             <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)]">
               <div className="overflow-hidden rounded-md border border-stone-200 bg-[#f8fafc]">
                 <svg viewBox="0 0 720 360" role="img" aria-label="Approximate visitor source map" className="h-auto w-full">
-                  <defs>
-                    <linearGradient id="activity-ocean" x1="0" x2="1" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#f8fafc" />
-                      <stop offset="100%" stopColor="#eef7fb" />
-                    </linearGradient>
-                  </defs>
-                  <rect width="720" height="360" fill="url(#activity-ocean)" />
-                  {[60, 120, 180, 240, 300].map((y) => (
-                    <line key={`lat-${y}`} x1="0" x2="720" y1={y} y2={y} stroke="#e2e8f0" strokeWidth="1" />
-                  ))}
-                  {[120, 240, 360, 480, 600].map((x) => (
-                    <line key={`lon-${x}`} x1={x} x2={x} y1="0" y2="360" stroke="#e2e8f0" strokeWidth="1" />
-                  ))}
-                  <g fill="#dce7e5" stroke="#c8d8d8" strokeWidth="1.2">
-                    <path d="M114 52 L150 39 L202 41 L246 59 L266 91 L250 115 L218 121 L196 145 L160 143 L130 124 L96 119 L69 101 L54 76 L78 61 Z" />
-                    <path d="M35 80 L78 56 L103 63 L94 86 L62 101 L38 98 Z" />
-                    <path d="M250 30 L287 22 L318 34 L314 54 L282 64 L248 56 Z" />
-                    <path d="M207 140 L239 152 L253 183 L241 220 L256 254 L244 300 L224 321 L209 278 L188 244 L197 204 L183 178 Z" />
-                    <path d="M330 82 L370 67 L414 76 L408 104 L364 112 L335 104 Z" />
-                    <path d="M362 121 L408 116 L439 146 L430 203 L402 272 L365 279 L340 236 L346 181 Z" />
-                    <path d="M414 87 L478 64 L558 72 L638 106 L668 148 L632 178 L570 164 L514 179 L459 154 L410 129 Z" />
-                    <path d="M500 160 L540 176 L552 214 L527 226 L496 204 Z" />
-                    <path d="M568 236 L640 245 L675 284 L646 313 L590 306 L555 270 Z" />
-                    <path d="M648 218 L666 211 L681 220 L668 236 Z" />
-                  </g>
-                  <g fill="none" stroke="#d0dddd" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.9" opacity="0.8">
-                    <path d="M128 74 C161 62 203 65 239 86" />
-                    <path d="M360 97 C378 91 395 92 409 99" />
-                    <path d="M438 104 C490 85 569 91 631 127" />
-                    <path d="M374 144 C401 160 414 204 396 250" />
-                    <path d="M585 256 C614 253 644 265 660 291" />
-                  </g>
+                  <image href="/activity/osm-world-z0.png" x="0" y="0" width="720" height="360" preserveAspectRatio="none" />
+                  <rect width="720" height="360" fill="#f8fafc" opacity="0.18" />
                   {topLocations.map((location) => {
                     const point = mapPoint(location.lat, location.lon);
                     const radius = 5 + (location.views / maxLocationViews) * 13;
@@ -482,6 +455,9 @@ export default function LabActivityPage() {
                     );
                   })}
                 </svg>
+                <p className="px-3 py-2 text-[11px] leading-none text-stone-400">
+                  Map tiles © OpenStreetMap contributors.
+                </p>
               </div>
 
               <div className="divide-y divide-stone-200">
