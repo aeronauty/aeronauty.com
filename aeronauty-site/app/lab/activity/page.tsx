@@ -34,10 +34,48 @@ type SourceSummary = {
   lastSeen: string;
 };
 
+type GeoSummary = {
+  label: string;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  views: number;
+  visitors: number;
+  lastSeen: string;
+  lat: number;
+  lon: number;
+};
+
 type TrackerStatus = {
   recorded?: boolean;
   reason?: string;
 } | null;
+
+const COUNTRY_CENTRES: Record<string, { name: string; lat: number; lon: number }> = {
+  AU: { name: "Australia", lat: -25.3, lon: 133.8 },
+  BR: { name: "Brazil", lat: -14.2, lon: -51.9 },
+  CA: { name: "Canada", lat: 56.1, lon: -106.3 },
+  CH: { name: "Switzerland", lat: 46.8, lon: 8.2 },
+  CN: { name: "China", lat: 35.9, lon: 104.2 },
+  DE: { name: "Germany", lat: 51.2, lon: 10.5 },
+  ES: { name: "Spain", lat: 40.5, lon: -3.7 },
+  FR: { name: "France", lat: 46.2, lon: 2.2 },
+  GB: { name: "United Kingdom", lat: 55.4, lon: -3.4 },
+  IE: { name: "Ireland", lat: 53.4, lon: -8.2 },
+  IN: { name: "India", lat: 20.6, lon: 78.9 },
+  IT: { name: "Italy", lat: 41.9, lon: 12.6 },
+  JP: { name: "Japan", lat: 36.2, lon: 138.3 },
+  NL: { name: "Netherlands", lat: 52.1, lon: 5.3 },
+  NZ: { name: "New Zealand", lat: -40.9, lon: 174.9 },
+  SE: { name: "Sweden", lat: 60.1, lon: 18.6 },
+  SG: { name: "Singapore", lat: 1.4, lon: 103.8 },
+  US: { name: "United States", lat: 39.8, lon: -98.6 },
+  ZA: { name: "South Africa", lat: -30.6, lon: 22.9 },
+};
+
+const COUNTRY_ALIASES: Record<string, string> = {
+  UK: "GB",
+};
 
 function getVisitorKey(event: ActivityEvent): string {
   return event.email ?? event.clientIpHash ?? event.id;
@@ -161,6 +199,73 @@ function summarizeSources(events: ActivityEvent[]): SourceSummary[] {
     .sort((a, b) => b.views - a.views || a.source.localeCompare(b.source));
 }
 
+function normaliseCountry(country: string | null): string | null {
+  if (!country) return null;
+  const code = country.trim().toUpperCase();
+  return COUNTRY_ALIASES[code] ?? code;
+}
+
+function readableCountry(country: string | null): string {
+  const code = normaliseCountry(country);
+  if (!code) return "Unknown";
+  return COUNTRY_CENTRES[code]?.name ?? code;
+}
+
+function geoPoint(country: string | null): { lat: number; lon: number } {
+  const code = normaliseCountry(country);
+  return (code ? COUNTRY_CENTRES[code] : null) ?? { lat: 0, lon: 0 };
+}
+
+function geoLabel(event: ActivityEvent): string {
+  const country = readableCountry(event.country);
+  const place = [event.city, event.region].filter(Boolean).join(", ");
+  return place ? `${place}, ${country}` : country;
+}
+
+function mapPoint(lat: number, lon: number) {
+  return {
+    x: ((lon + 180) / 360) * 720,
+    y: ((90 - lat) / 180) * 360,
+  };
+}
+
+function summarizeGeo(events: ActivityEvent[]): GeoSummary[] {
+  const byLocation = new Map<string, { event: ActivityEvent; views: number; visitors: Set<string>; lastSeen: string }>();
+
+  for (const event of events) {
+    const key = [event.country ?? "unknown", event.region ?? "", event.city ?? ""].join("|");
+    const summary = byLocation.get(key) ?? {
+      event,
+      views: 0,
+      visitors: new Set<string>(),
+      lastSeen: event.createdAt,
+    };
+    summary.views += 1;
+    summary.visitors.add(getVisitorKey(event));
+    if (new Date(event.createdAt).getTime() > new Date(summary.lastSeen).getTime()) {
+      summary.lastSeen = event.createdAt;
+    }
+    byLocation.set(key, summary);
+  }
+
+  return Array.from(byLocation.values())
+    .map((summary) => {
+      const point = geoPoint(summary.event.country);
+      return {
+        label: geoLabel(summary.event),
+        country: normaliseCountry(summary.event.country),
+        region: summary.event.region,
+        city: summary.event.city,
+        views: summary.views,
+        visitors: summary.visitors.size,
+        lastSeen: summary.lastSeen,
+        lat: point.lat,
+        lon: point.lon,
+      };
+    })
+    .sort((a, b) => b.views - a.views || a.label.localeCompare(b.label));
+}
+
 function isDashboardSelfEvent(event: ActivityEvent): boolean {
   return event.path === "/lab/activity";
 }
@@ -178,6 +283,9 @@ export default function LabActivityPage() {
   const labEvents = visibleEvents.filter((event) => event.eventType === "lab_access" || event.eventType === "lab_login").length;
   const topPaths = summarizePaths(visibleEvents);
   const topSources = summarizeSources(visibleEvents);
+  const topLocations = summarizeGeo(visibleEvents);
+  const maxLocationViews = Math.max(1, ...topLocations.map((location) => location.views));
+  const countryCount = new Set(topLocations.map((location) => location.country ?? "unknown")).size;
   const externalSourceEvents = visibleEvents.filter((event) => {
     const source = getSource(event);
     return source !== "Direct / unknown" && source !== "Direct / internal" && source !== "Internal";
@@ -307,6 +415,72 @@ export default function LabActivityPage() {
               </div>
             </section>
           </div>
+        )}
+
+        {topLocations.length > 0 && (
+          <section className="mt-6 rounded-md border border-stone-200 bg-white p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Geography</h2>
+                <p className="mt-2 text-sm text-stone-500">
+                  Approximate locations from Vercel country/region/city headers.
+                </p>
+              </div>
+              <p className="text-sm text-stone-500">
+                {topLocations.length} location{topLocations.length === 1 ? "" : "s"} · {countryCount}{" "}
+                {countryCount === 1 ? "country" : "countries"}
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)]">
+              <div className="overflow-hidden rounded-md border border-stone-200 bg-[#f8fafc]">
+                <svg viewBox="0 0 720 360" role="img" aria-label="Approximate visitor source map" className="h-auto w-full">
+                  <rect width="720" height="360" fill="#f8fafc" />
+                  <path d="M68 94 C104 58 164 54 214 74 C250 88 267 120 238 150 C217 172 186 166 154 182 C118 200 88 186 70 154 C58 132 50 112 68 94Z" fill="#e7ecef" />
+                  <path d="M214 206 C248 194 284 212 294 248 C304 286 280 326 244 322 C214 318 198 288 204 254 C207 234 198 218 214 206Z" fill="#e7ecef" />
+                  <path d="M330 92 C384 58 462 72 498 112 C526 142 514 176 468 174 C426 172 400 148 360 158 C324 166 294 144 300 118 C303 106 314 98 330 92Z" fill="#e7ecef" />
+                  <path d="M364 182 C396 166 446 174 468 210 C488 242 474 300 438 316 C402 332 370 306 374 262 C376 232 338 202 364 182Z" fill="#e7ecef" />
+                  <path d="M516 154 C560 126 626 132 660 168 C684 194 668 222 622 218 C576 214 550 224 522 204 C502 190 492 172 516 154Z" fill="#e7ecef" />
+                  <path d="M574 252 C610 240 654 258 668 292 C680 322 644 336 602 328 C566 320 544 276 574 252Z" fill="#e7ecef" />
+                  {[60, 120, 180, 240, 300].map((y) => (
+                    <line key={`lat-${y}`} x1="0" x2="720" y1={y} y2={y} stroke="#e2e8f0" strokeWidth="1" />
+                  ))}
+                  {[120, 240, 360, 480, 600].map((x) => (
+                    <line key={`lon-${x}`} x1={x} x2={x} y1="0" y2="360" stroke="#e2e8f0" strokeWidth="1" />
+                  ))}
+                  {topLocations.map((location) => {
+                    const point = mapPoint(location.lat, location.lon);
+                    const radius = 5 + (location.views / maxLocationViews) * 13;
+                    return (
+                      <g key={`${location.label}-${location.lastSeen}`}>
+                        <circle cx={point.x} cy={point.y} r={radius + 5} fill="#0e7490" opacity="0.12" />
+                        <circle cx={point.x} cy={point.y} r={radius} fill="#0891b2" opacity="0.78" />
+                        <circle cx={point.x} cy={point.y} r="2.5" fill="#0f172a" opacity="0.65" />
+                        <title>
+                          {location.label}: {location.views} events, {location.visitors} visitors
+                        </title>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+
+              <div className="divide-y divide-stone-200">
+                {topLocations.slice(0, 8).map((location) => (
+                  <div key={`${location.label}-${location.lastSeen}`} className="grid grid-cols-[1fr_auto] gap-3 py-3 text-sm">
+                    <div>
+                      <p className="font-medium text-stone-800">{location.label}</p>
+                      <p className="mt-1 text-xs text-stone-400">Last seen {new Date(location.lastSeen).toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-stone-700">{location.views} events</p>
+                      <p className="mt-1 text-xs text-stone-400">{location.visitors} visitors</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
         )}
 
         {storeConfigured === false && (
