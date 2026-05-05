@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type ActivityEvent = {
   id: string;
@@ -50,6 +50,11 @@ type TrackerStatus = {
   recorded?: boolean;
   reason?: string;
 } | null;
+
+type PlotlyStatic = NonNullable<Window["Plotly"]>;
+
+const PLOTLY_SCRIPT_ID = "plotly-js-cdn";
+const PLOTLY_SRC = "https://cdn.plot.ly/plotly-2.32.0.min.js";
 
 const COUNTRY_CENTRES: Record<string, { name: string; lat: number; lon: number }> = {
   AU: { name: "Australia", lat: -25.3, lon: 133.8 },
@@ -222,16 +227,6 @@ function geoLabel(event: ActivityEvent): string {
   return place ? `${place}, ${country}` : country;
 }
 
-function mapPoint(lat: number, lon: number) {
-  const clampedLat = Math.max(-85.0511, Math.min(85.0511, lat));
-  const latRad = (clampedLat * Math.PI) / 180;
-  const mercatorY = 0.5 - Math.log(Math.tan(Math.PI / 4 + latRad / 2)) / (2 * Math.PI);
-  return {
-    x: ((lon + 180) / 360) * 720,
-    y: mercatorY * 360,
-  };
-}
-
 function summarizeGeo(events: ActivityEvent[]): GeoSummary[] {
   const byLocation = new Map<string, { event: ActivityEvent; views: number; visitors: Set<string>; lastSeen: string }>();
 
@@ -273,6 +268,108 @@ function isDashboardSelfEvent(event: ActivityEvent): boolean {
   return event.path === "/lab/activity";
 }
 
+function loadPlotly(): Promise<PlotlyStatic> {
+  if (window.Plotly) return Promise.resolve(window.Plotly);
+
+  return new Promise((resolve, reject) => {
+    const existing = document.getElementById(PLOTLY_SCRIPT_ID) as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => (window.Plotly ? resolve(window.Plotly) : reject(new Error("Plotly failed to load"))), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Plotly failed to load")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = PLOTLY_SCRIPT_ID;
+    script.src = PLOTLY_SRC;
+    script.async = true;
+    script.onload = () => (window.Plotly ? resolve(window.Plotly) : reject(new Error("Plotly failed to load")));
+    script.onerror = () => reject(new Error("Plotly failed to load"));
+    document.head.appendChild(script);
+  });
+}
+
+function LabActivityMap({ locations }: { locations: GeoSummary[] }) {
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
+
+  const mapLocations = useMemo(
+    () => locations.filter((location) => Number.isFinite(location.lat) && Number.isFinite(location.lon)),
+    [locations]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const element = mapRef.current;
+    if (!element || mapLocations.length === 0) return;
+
+    const maxViews = Math.max(1, ...mapLocations.map((location) => location.views));
+
+    loadPlotly()
+      .then((Plotly) => {
+        if (cancelled || !mapRef.current) return;
+        return Plotly.react(
+          mapRef.current,
+          [
+            {
+              type: "scattermapbox",
+              mode: "markers",
+              lat: mapLocations.map((location) => location.lat),
+              lon: mapLocations.map((location) => location.lon),
+              text: mapLocations.map((location) => location.label),
+              customdata: mapLocations.map((location) => [location.views, location.visitors, new Date(location.lastSeen).toLocaleString()]),
+              hovertemplate: "<b>%{text}</b><br>%{customdata[0]} events<br>%{customdata[1]} visitors<br>Last seen %{customdata[2]}<extra></extra>",
+              marker: {
+                size: mapLocations.map((location) => 9 + (location.views / maxViews) * 18),
+                color: "#0891b2",
+                opacity: 0.82,
+              },
+            },
+          ],
+          {
+            autosize: true,
+            height: 380,
+            margin: { l: 0, r: 0, t: 0, b: 0 },
+            paper_bgcolor: "#f8fafc",
+            plot_bgcolor: "#f8fafc",
+            showlegend: false,
+            mapbox: {
+              style: "open-street-map",
+              center: { lat: 24, lon: 0 },
+              zoom: 0.65,
+            },
+          },
+          {
+            responsive: true,
+            displayModeBar: false,
+          }
+        );
+      })
+      .then(() => {
+        if (!cancelled) setStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("failed");
+      });
+
+    return () => {
+      cancelled = true;
+      element.replaceChildren();
+    };
+  }, [mapLocations]);
+
+  return (
+    <div className="relative min-h-[380px] overflow-hidden rounded-md border border-stone-200 bg-[#f8fafc]">
+      <div ref={mapRef} className="h-[380px] w-full" />
+      {status !== "ready" && (
+        <div className="absolute inset-0 grid place-items-center bg-[#f8fafc] text-sm text-stone-500">
+          {status === "failed" ? "Map failed to load." : "Loading map..."}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LabActivityPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [storeConfigured, setStoreConfigured] = useState<boolean | null>(null);
@@ -287,7 +384,6 @@ export default function LabActivityPage() {
   const topPaths = summarizePaths(visibleEvents);
   const topSources = summarizeSources(visibleEvents);
   const topLocations = summarizeGeo(visibleEvents);
-  const maxLocationViews = Math.max(1, ...topLocations.map((location) => location.views));
   const countryCount = new Set(topLocations.map((location) => location.country ?? "unknown")).size;
   const externalSourceEvents = visibleEvents.filter((event) => {
     const source = getSource(event);
@@ -436,27 +532,10 @@ export default function LabActivityPage() {
             </div>
 
             <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)]">
-              <div className="overflow-hidden rounded-md border border-stone-200 bg-[#f8fafc]">
-                <svg viewBox="0 0 720 360" role="img" aria-label="Approximate visitor source map" className="h-auto w-full">
-                  <image href="/activity/osm-world-z0.png" x="0" y="0" width="720" height="360" preserveAspectRatio="none" />
-                  <rect width="720" height="360" fill="#f8fafc" opacity="0.18" />
-                  {topLocations.map((location) => {
-                    const point = mapPoint(location.lat, location.lon);
-                    const radius = 5 + (location.views / maxLocationViews) * 13;
-                    return (
-                      <g key={`${location.label}-${location.lastSeen}`}>
-                        <circle cx={point.x} cy={point.y} r={radius + 5} fill="#0e7490" opacity="0.12" />
-                        <circle cx={point.x} cy={point.y} r={radius} fill="#0891b2" opacity="0.78" />
-                        <circle cx={point.x} cy={point.y} r="2.5" fill="#0f172a" opacity="0.65" />
-                        <title>
-                          {location.label}: {location.views} events, {location.visitors} visitors
-                        </title>
-                      </g>
-                    );
-                  })}
-                </svg>
-                <p className="px-3 py-2 text-[11px] leading-none text-stone-400">
-                  Map tiles © OpenStreetMap contributors.
+              <div>
+                <LabActivityMap locations={topLocations} />
+                <p className="mt-2 text-[11px] leading-none text-stone-400">
+                  Plotly map using OpenStreetMap tiles. Map data © OpenStreetMap contributors.
                 </p>
               </div>
 
