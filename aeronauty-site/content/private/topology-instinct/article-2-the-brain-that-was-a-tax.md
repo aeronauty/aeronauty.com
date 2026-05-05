@@ -2,6 +2,12 @@
 
 In an earlier version of this essay, this was the point where the article quietly became a different article. The first one was about data entry — about systems losing the shape of the work and making people put it back by hand. It ended at a thing called Thread. [If you haven't read it](/writing/i-dont-like-data-entry), the short version is: I have spent twenty years noticing the same thing across very different jobs, mostly without realising it was the same thing.
 
+<aside class="ti-bridge-link">
+  <p class="ti-bridge-eyebrow">Reading note</p>
+  <p class="ti-bridge-copy">I do not really expect anyone to spend an hour reading either essay. But if you are going to give this one that time, it will behave better if you read the first one first: that one is about the work; this one is about the brain that kept being drawn to it.</p>
+  <p class="ti-bridge-action"><a href="/writing/i-dont-like-data-entry">Read the first essay</a></p>
+</aside>
+
 This one is about the person who kept noticing. About why he kept losing tools (in the garage, but also scripts I wrote), abandoning projects at 80%, and looking, on paper, scattered. And about what happened when prescribed ADHD medication and a swarm of cheap fast AI agents arrived more or less at the same time.
 
 The thesis, stated up front so I don't have to dance around it: **ADHD plus medication plus AI agents changed the economics of being a cross-domain generalist.** The same wiring that used to produce unfinished projects, dropped tools, and a CV that read as scattered can now be useful, *for now*, when paired with specialist agents that absorb the boring grind. I don't know how long the *for now* lasts. I'll get to that.
