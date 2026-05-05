@@ -5,13 +5,45 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 const CONSENT_KEY = "aeronauty-analytics-consent";
+const ATTRIBUTION_KEY = "aeronauty-public-attribution";
 
 type ConsentState = "unknown" | "accepted" | "declined";
+type Attribution = {
+  landingPath: string;
+  referrer: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  capturedAt: string;
+};
 
 function readConsent(): ConsentState {
   if (typeof window === "undefined") return "unknown";
   const value = window.localStorage.getItem(CONSENT_KEY);
   return value === "accepted" || value === "declined" ? value : "unknown";
+}
+
+function getUtm(searchParams: URLSearchParams) {
+  return {
+    utmSource: searchParams.get("utm_source"),
+    utmMedium: searchParams.get("utm_medium"),
+    utmCampaign: searchParams.get("utm_campaign"),
+  };
+}
+
+function readStoredAttribution(): Attribution | null {
+  try {
+    const raw = window.sessionStorage.getItem(ATTRIBUTION_KEY);
+    return raw ? (JSON.parse(raw) as Attribution) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredAttribution(attribution: Attribution) {
+  try {
+    window.sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(attribution));
+  } catch {}
 }
 
 export default function Analytics() {
@@ -31,6 +63,24 @@ export default function Analytics() {
   useEffect(() => {
     if (consent !== "accepted") return;
     if (pathname === "/lab/activity") return;
+    const currentSearchParams = new URLSearchParams(searchParams.toString());
+    const utm = getUtm(currentSearchParams);
+    const documentReferrer = document.referrer || null;
+    const existingAttribution = readStoredAttribution();
+    const hasNewAttribution = Boolean(utm.utmSource || documentReferrer);
+    const attribution =
+      hasNewAttribution || !existingAttribution
+        ? {
+            landingPath: path,
+            referrer: documentReferrer,
+            ...utm,
+            capturedAt: new Date().toISOString(),
+          }
+        : existingAttribution;
+
+    if (hasNewAttribution || !existingAttribution) {
+      writeStoredAttribution(attribution);
+    }
 
     fetch("/api/activity/page-view", {
       method: "POST",
@@ -42,10 +92,13 @@ export default function Analytics() {
         pageTitle: document.title,
         metadata: {
           viewport: `${window.innerWidth}x${window.innerHeight}`,
+          documentReferrer,
+          attribution,
+          ...utm,
         },
       }),
     }).catch(() => {});
-  }, [consent, path, pathname]);
+  }, [consent, path, pathname, searchParams]);
 
   function choose(next: Exclude<ConsentState, "unknown">) {
     window.localStorage.setItem(CONSENT_KEY, next);
