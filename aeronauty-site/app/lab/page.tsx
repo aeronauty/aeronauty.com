@@ -45,12 +45,12 @@ export default async function LabPage() {
               Early drafts, private notes, and behind-the-scenes technical posts.
             </p>
           </Link>
-          <div className="rounded-md border border-stone-200 bg-white p-5">
+          <Link href="/lab/theodorsen" className="rounded-md border border-stone-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-stone-400 hover:shadow-[0_18px_50px_rgba(28,25,23,0.08)]">
             <h2 className="font-semibold">Private demos</h2>
             <p className="mt-2 text-sm leading-6 text-stone-600">
-              Work-in-progress tools and demos can be added here as they become useful.
+              Theodorsen, unsteady lift, and the Flow360 model ladder.
             </p>
-          </div>
+          </Link>
           {isOwner && (
             <Link href="/lab/activity" className="rounded-md border border-stone-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-stone-400 hover:shadow-[0_18px_50px_rgba(28,25,23,0.08)]">
               <h2 className="font-semibold">Activity</h2>

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Theodorsen Lab</title>
+  <style>
+    :root {
+      --paper: #f7f5ef;
+      --ink: #1c1917;
+      --muted: #68625d;
+      --rule: #dfd8cd;
+      --panel: #ffffff;
+      --teal: #0f766e;
+      --blue: #2563eb;
+      --amber: #c87916;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { width: min(1220px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 46px; }
+    h1 { margin: 0; max-width: 860px; font-size: clamp(42px, 7vw, 82px); line-height: 1.02; font-weight: 720; letter-spacing: 0; }
+    h2 { margin: 4px 0 0; font-size: 22px; letter-spacing: 0; }
+    p { line-height: 1.65; }
+    .eyebrow { margin: 0 0 12px; color: var(--teal); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; align-items: end; }
+    .hero-copy { margin-top: 18px; max-width: 780px; color: var(--muted); font-size: 18px; }
+    .note, .panel { border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); box-shadow: 0 18px 60px rgba(28, 25, 23, .06); }
+    .note { padding: 18px; background: #fff7ed; border-color: #fed7aa; color: #78350f; font-size: 14px; }
+    .grid { display: grid; gap: 18px; margin-top: 18px; }
+    .two { grid-template-columns: 360px minmax(0, 1fr); }
+    .half { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .panel { padding: 20px; overflow: hidden; }
+    .controls { display: grid; gap: 22px; }
+    label { display: block; font-size: 14px; font-weight: 700; color: #3f3a35; }
+    .slider-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 8px; }
+    .value { border-radius: 5px; background: #f2efe8; padding: 6px 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; color: var(--ink); }
+    input[type="range"] { width: 100%; accent-color: var(--teal); }
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat { border-radius: 7px; background: #f8fafc; padding: 12px; }
+    .stat span { display: block; color: var(--muted); font-size: 12px; }
+    .stat strong { display: block; margin-top: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 18px; }
+    svg { display: block; width: 100%; height: 100%; }
+    .chart { height: 330px; }
+    .wake { height: 330px; }
+    .model-list { display: grid; gap: 10px; }
+    .model-button { width: 100%; border: 1px solid var(--rule); border-radius: 7px; background: #fff; padding: 14px; text-align: left; cursor: pointer; }
+    .model-button.active { border-color: var(--teal); background: #ecfdf5; }
+    .model-button strong { display: block; margin-bottom: 5px; }
+    .model-button span { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .model-detail { color: var(--muted); font-size: 14px; }
+    .pill { display: inline-block; margin: 0 6px 6px 0; border: 1px solid var(--rule); border-radius: 999px; padding: 5px 9px; font-size: 12px; font-weight: 700; color: #57534e; }
+    .todo { margin: 0; padding-left: 20px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    @media (max-width: 940px) {
+      main { width: min(100% - 22px, 720px); padding-top: 20px; }
+      .hero, .two, .half { grid-template-columns: 1fr; }
+      .chart, .wake { height: 290px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Private technical lab</p>
+        <h1>The wing remembers.</h1>
+        <p class="hero-copy">A first working scaffold for a more technical piece on Theodorsen, unsteady lift, and why compressing a wake into one frequency-response function was mathematically outrageous.</p>
+      </div>
+      <aside class="note">
+        <strong>Draft stance.</strong>
+        <p>Theodorsen's \(C(k)\) is not a tidy elementary analytic expression. In practice this page evaluates special functions numerically: exactly the sort of calculation Theodorsen had to make tractable without Python.</p>
+      </aside>
+    </section>
+
+    <section class="grid two">
+      <div class="panel">
+        <p class="eyebrow">Reduced frequency</p>
+        <h2>Controls</h2>
+        <div class="controls">
+          <label>
+            <div class="slider-row"><span>Reduced frequency k</span><span class="value" id="kValue"></span></div>
+            <input id="kSlider" type="range" min="0.01" max="1.4" step="0.01" value="0.18" />
+          </label>
+          <label>
+            <div class="slider-row"><span>Pitch amplitude</span><span class="value" id="ampValue"></span></div>
+            <input id="ampSlider" type="range" min="1" max="10" step="0.25" value="4" />
+          </label>
+          <div class="stats">
+            <div class="stat"><span>F(k)</span><strong id="fValue"></strong></div>
+            <div class="stat"><span>G(k)</span><strong id="gValue"></strong></div>
+            <div class="stat"><span>|C(k)|</span><strong id="magValue"></strong></div>
+            <div class="stat"><span>phase</span><strong id="phaseValue"></strong></div>
+          </div>
+          <p style="color:var(--muted);font-size:14px;">Low k is almost quasi-steady. Higher k means the wake attenuates and delays the circulatory lift.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">Widget 01</p>
+        <h2>Motion, wake, and lift lag</h2>
+        <div class="grid half" style="margin-top:14px;">
+          <div class="wake" id="wakePlot"></div>
+          <div class="chart" id="signalChart"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid half">
+      <div class="panel">
+        <p class="eyebrow">Widget 02</p>
+        <h2>C(k): special-function result, numerical object</h2>
+        <div class="chart" id="ckChart"></div>
+        <p style="color:var(--muted);font-size:14px;">The elegant move is not that \(C(k)\) is easy. It is that the entire shed-wake memory problem becomes something you can multiply by in the frequency domain.</p>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">Widget 03</p>
+        <h2>Lift loop: what quasi-steady misses</h2>
+        <div class="chart" id="loopChart"></div>
+        <p style="color:var(--muted);font-size:14px;">A quasi-steady model maps motion to lift directly. Theodorsen turns the line into a loop because the wake still remembers.</p>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <div class="panel">
+        <p class="eyebrow">Flow360 comparison plan</p>
+        <h2>Model ladder: what each method remembers</h2>
+        <div class="model-list" id="modelList"></div>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">Selected model</p>
+        <h2 id="modelTitle"></h2>
+        <div class="model-detail" id="modelDetail"></div>
+      </div>
+    </section>
+
+    <section class="grid half">
+      <div class="panel">
+        <p class="eyebrow" id="polarEyebrow"></p>
+        <h2>FlexFoil quasi-steady section polar</h2>
+        <div class="chart" id="polarChart"></div>
+        <p style="color:var(--muted);font-size:14px;" id="polarNote"></p>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">TODO for the piece</p>
+        <h2>Next data drops</h2>
+        <ol class="todo">
+          <li>Replace the seed NACA 0012 case with the actual airfoil/motion we want to explain.</li>
+          <li>Generate Flow360 RANS and URANS quasi-2D cases at matching reduced frequencies.</li>
+          <li>Add LES/DDES only once the mesh/time-step story is honest enough to teach from.</li>
+          <li>Turn the selected-model cards into real overlays: lift amplitude, phase, loop area, and wake pictures.</li>
+          <li>Write the historical section: Theodorsen did not make this easy; he made it computable.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const colors = { ink: '#1c1917', muted: '#68625d', rule: '#e7e5e4', teal: '#0f766e', blue: '#2563eb', amber: '#c87916' };
+    let dataset, activeModel;
+
+    function fmt(x, d = 3) { return Number(x).toFixed(d); }
+    function extent(values, pad = 0.08) {
+      const min = Math.min(...values), max = Math.max(...values), span = Math.max(1e-9, max - min);
+      return [min - span * pad, max + span * pad];
+    }
+    function scale(v, a, b, c, d) { return c + ((v - a) / Math.max(1e-9, b - a)) * (d - c); }
+    function interp(points, k) {
+      if (k <= points[0].k) return points[0];
+      if (k >= points[points.length - 1].k) return points[points.length - 1];
+      const hi = points.findIndex(p => p.k >= k), lo = points[hi - 1], up = points[hi], w = (k - lo.k) / (up.k - lo.k);
+      return { k, F: lo.F + (up.F - lo.F) * w, G: lo.G + (up.G - lo.G) * w, magnitude: lo.magnitude + (up.magnitude - lo.magnitude) * w, phaseDeg: lo.phaseDeg + (up.phaseDeg - lo.phaseDeg) * w };
+    }
+    function signals(k, c, ampDeg, slope) {
+      const amp = ampDeg * Math.PI / 180, phase = c.phaseDeg * Math.PI / 180;
+      return Array.from({ length: 145 }, (_, i) => {
+        const t = i / 144 * Math.PI * 2, motion = Math.sin(t);
+        return { t: t / (Math.PI * 2), motion, quasi: slope * amp * motion, theo: slope * amp * c.magnitude * Math.sin(t + phase) };
+      });
+    }
+    function linePath(data, xFn, yFn, xd, yd, w, h, p) {
+      return data.map((d, i) => {
+        const x = scale(xFn(d), xd[0], xd[1], p, w - p), y = scale(yFn(d), yd[0], yd[1], h - p, p);
+        return `${i ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`;
+      }).join(' ');
+    }
+    function chart(el, data, series, xFn, opts = {}) {
+      const w = 720, h = 320, p = 42;
+      const xd = opts.xDomain || extent(data.map(xFn), .02);
+      const yd = opts.yDomain || extent(series.flatMap(s => data.map(s.y)), .1);
+      const grid = [0, .25, .5, .75, 1].map(t => {
+        const x = p + (w - 2*p) * t, y = p + (h - 2*p) * t;
+        return `<line x1="${x}" x2="${x}" y1="${p}" y2="${h-p}" stroke="${colors.rule}"/><line x1="${p}" x2="${w-p}" y1="${y}" y2="${y}" stroke="${colors.rule}"/>`;
+      }).join('');
+      const ref = opts.referenceX == null ? '' : `<line x1="${scale(opts.referenceX, xd[0], xd[1], p, w-p)}" x2="${scale(opts.referenceX, xd[0], xd[1], p, w-p)}" y1="${p}" y2="${h-p}" stroke="${colors.ink}" stroke-dasharray="5 6"/>`;
+      const paths = series.map(s => `<path d="${linePath(data, xFn, s.y, xd, yd, w, h, p)}" fill="none" stroke="${s.color}" stroke-width="${s.width || 2.5}" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+      const legend = series.map((s, i) => `<g transform="translate(${p+8} ${p+10+i*20})"><line x1="0" x2="22" stroke="${s.color}" stroke-width="${s.width || 2.5}"/><text x="30" y="4" font-size="12" fill="${colors.ink}">${s.label}</text></g>`).join('');
+      el.innerHTML = `<svg viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="14" fill="#fafaf9"/>${grid}${ref}<line x1="${p}" x2="${w-p}" y1="${h-p}" y2="${h-p}" stroke="#a8a29e"/><line x1="${p}" x2="${p}" y1="${p}" y2="${h-p}" stroke="#a8a29e"/>${paths}<text x="${w/2}" y="${h-8}" text-anchor="middle" font-size="12" fill="${colors.muted}">${opts.xLabel || ''}</text><text x="13" y="${h/2}" text-anchor="middle" font-size="12" fill="${colors.muted}" transform="rotate(-90 13 ${h/2})">${opts.yLabel || ''}</text>${legend}</svg>`;
+    }
+    function wake(el, k, ampDeg, c) {
+      const wakeLength = 70 + k * 70, lag = Math.abs(c.phaseDeg), foilAngle = ampDeg * .65;
+      const pts = Array.from({ length: 12 }, (_, i) => `${220 + i * (wakeLength / 10)},${125 + Math.sin(i * .8 + k * 2.5) * (10 + lag * .2)}`);
+      const circles = pts.map((pair, i) => { const [x, y] = pair.split(','); return `<circle cx="${x}" cy="${y}" r="${Math.max(2, 7 - i*.35)}"/>`; }).join('');
+      el.innerHTML = `<svg viewBox="0 0 520 250"><defs><linearGradient id="wakeG" x1="0%" x2="100%"><stop offset="0%" stop-color="${colors.teal}" stop-opacity=".8"/><stop offset="100%" stop-color="${colors.blue}" stop-opacity=".08"/></linearGradient></defs><rect width="520" height="250" rx="18" fill="#f8fafc"/><path d="M30 125 C115 70 315 70 490 125" fill="none" stroke="#d6d3d1"/><path d="M30 125 C115 180 315 180 490 125" fill="none" stroke="#d6d3d1"/><g transform="translate(168 124) rotate(${foilAngle})"><path d="M-115 0 C-72 -23 66 -20 120 0 C62 15 -72 20 -115 0Z" fill="#fff" stroke="${colors.ink}" stroke-width="3"/><circle cx="-25" r="4" fill="${colors.amber}"/></g><polyline points="${pts.join(' ')}" fill="none" stroke="url(#wakeG)" stroke-width="5" stroke-linecap="round"/><g fill="${colors.teal}" opacity=".78">${circles}</g><text x="24" y="32" fill="${colors.muted}" font-size="13">motion now</text><text x="346" y="214" fill="${colors.muted}" font-size="13">wake memory carried downstream</text></svg>`;
+    }
+    function renderModels() {
+      const list = document.getElementById('modelList');
+      list.innerHTML = dataset.flow360Ladder.map(row => `<button class="model-button ${row.model === activeModel ? 'active' : ''}" data-model="${row.model}"><strong>${row.model}</strong><span>${row.flowMemory}</span></button>`).join('');
+      list.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { activeModel = btn.dataset.model; renderModels(); }));
+      const row = dataset.flow360Ladder.find(r => r.model === activeModel);
+      document.getElementById('modelTitle').textContent = row.model;
+      document.getElementById('modelDetail').innerHTML = `<p>${row.flowMemory}</p><p><span class="pill">Separated flow: ${row.separatedFlow}</span><span class="pill">Resolved unsteadiness: ${row.resolvedUnsteadiness ? 'yes' : 'no'}</span><span class="pill">Relative cost: ${row.relativeCost}x</span></p><p>${row.note}</p>`;
+    }
+    function render() {
+      const k = Number(document.getElementById('kSlider').value);
+      const amp = Number(document.getElementById('ampSlider').value);
+      const c = interp(dataset.theodorsen, k);
+      const sig = signals(k, c, amp, dataset.quasiSteady.liftSlopePerRad);
+      document.getElementById('kValue').textContent = fmt(k, 2);
+      document.getElementById('ampValue').textContent = `${fmt(amp, 2)} deg`;
+      document.getElementById('fValue').textContent = fmt(c.F);
+      document.getElementById('gValue').textContent = fmt(c.G);
+      document.getElementById('magValue').textContent = fmt(c.magnitude);
+      document.getElementById('phaseValue').textContent = `${fmt(c.phaseDeg, 1)} deg`;
+      wake(document.getElementById('wakePlot'), k, amp, c);
+      chart(document.getElementById('signalChart'), sig, [
+        { label: 'airfoil motion', color: colors.ink, y: d => d.motion },
+        { label: 'quasi-steady CL', color: colors.amber, y: d => d.quasi },
+        { label: 'Theodorsen CL', color: colors.teal, width: 3, y: d => d.theo }
+      ], d => d.t, { xLabel: 'cycle', yLabel: 'motion / CL' });
+      chart(document.getElementById('ckChart'), dataset.theodorsen, [
+        { label: 'real F(k)', color: colors.blue, y: d => d.F },
+        { label: 'imag G(k)', color: colors.amber, y: d => d.G },
+        { label: 'magnitude', color: colors.teal, width: 3, y: d => d.magnitude }
+      ], d => d.k, { xLabel: 'reduced frequency k', yLabel: 'C(k)', yDomain: [-.25, 1.05], referenceX: k });
+      chart(document.getElementById('loopChart'), sig.map(d => ({ x: d.motion, quasi: d.quasi, theo: d.theo })), [
+        { label: 'quasi-steady', color: colors.amber, y: d => d.quasi },
+        { label: 'with wake memory', color: colors.teal, width: 3, y: d => d.theo }
+      ], d => d.x, { xLabel: 'motion coordinate', yLabel: 'CL', xDomain: [-1.05, 1.05] });
+      chart(document.getElementById('polarChart'), dataset.quasiSteady.rows, [
+        { label: 'CL', color: colors.teal, width: 3, y: d => d.cl },
+        { label: 'CM', color: colors.blue, y: d => d.cm }
+      ], d => d.alphaDeg, { xLabel: 'alpha, deg', yLabel: 'coefficient' });
+      document.getElementById('polarEyebrow').textContent = dataset.quasiSteady.airfoil;
+      document.getElementById('polarNote').textContent = `Generated with FlexFoil at Re ${Number(dataset.quasiSteady.reynolds).toExponential(1)}, Mach ${dataset.quasiSteady.mach}. Fitted lift slope: ${fmt(dataset.quasiSteady.liftSlopePerRad)} per rad.`;
+    }
+    fetch('../data/theodorsen_quasi2d.json').then(r => r.json()).then(data => {
+      dataset = data;
+      activeModel = dataset.flow360Ladder[0].model;
+      document.getElementById('kSlider').addEventListener('input', render);
+      document.getElementById('ampSlider').addEventListener('input', render);
+      render();
+      renderModels();
+    });
+  </script>
+</body>
+</html>
