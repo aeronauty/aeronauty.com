@@ -4,11 +4,23 @@ import { auth } from "@/lib/auth";
 import { getRedisClient, hasRedisConfig } from "@/lib/redis-config";
 
 const ACTIVITY_KEY = "aeronauty:activity:v1";
+const ENGAGEMENT_KEY = "aeronauty:engagement:v1";
 const MAX_ACTIVITY_EVENTS = 5000;
+const MAX_ENGAGEMENT_EVENTS = 5000;
+
+export type ActivityEventType =
+  | "page_view"
+  | "lab_login"
+  | "lab_access"
+  | "session_start"
+  | "page_engagement"
+  | "section_engagement"
+  | "article_progress"
+  | "session_end";
 
 export type ActivityEvent = {
   id: string;
-  eventType: "page_view" | "lab_login" | "lab_access";
+  eventType: ActivityEventType;
   path: string | null;
   pageTitle: string | null;
   email: string | null;
@@ -22,6 +34,25 @@ export type ActivityEvent = {
   vercelRegion: string | null;
   metadata: Record<string, unknown>;
   createdAt: string;
+};
+
+export type EngagementEvent = ActivityEvent & {
+  eventType:
+    | "session_start"
+    | "page_engagement"
+    | "section_engagement"
+    | "article_progress"
+    | "session_end";
+  sessionId: string | null;
+  articleSlug: string | null;
+  sectionId: string | null;
+  sectionTitle: string | null;
+  sectionType: string | null;
+  activeMs: number;
+  visibleMs: number;
+  maxVisibilityRatio: number;
+  maxScrollDepth: number;
+  isFinal: boolean;
 };
 
 export function hasActivityStore(): boolean {
@@ -111,10 +142,91 @@ export async function recordActivityEvent(
   await redis.ltrim(ACTIVITY_KEY, 0, MAX_ACTIVITY_EVENTS - 1);
 }
 
+function clampNumber(value: unknown, min: number, max: number): number {
+  const numeric = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  return Math.max(min, Math.min(max, numeric));
+}
+
+function metadataObject(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
+
+export async function recordEngagementEvents(
+  req: Request,
+  input: {
+    path?: string | null;
+    pageTitle?: string | null;
+    events: Array<{
+      eventType: EngagementEvent["eventType"];
+      sessionId?: string | null;
+      articleSlug?: string | null;
+      sectionId?: string | null;
+      sectionTitle?: string | null;
+      sectionType?: string | null;
+      activeMs?: number;
+      visibleMs?: number;
+      maxVisibilityRatio?: number;
+      maxScrollDepth?: number;
+      isFinal?: boolean;
+      metadata?: Record<string, unknown>;
+    }>;
+  }
+): Promise<number> {
+  const redis = getRedisClient();
+  if (!redis || input.events.length === 0) return 0;
+
+  const user = await getKnownUser(req);
+  const base = {
+    path: truncate(input.path ?? null, 2048),
+    pageTitle: truncate(input.pageTitle ?? null, 512),
+    email: user.email,
+    authMethod: user.authMethod,
+    referrer: getHeader(req, "referer"),
+    userAgent: getHeader(req, "user-agent"),
+    clientIpHash: hashClientIp(req),
+    country: getHeader(req, "x-vercel-ip-country", 32),
+    region: getHeader(req, "x-vercel-ip-country-region", 128),
+    city: getHeader(req, "x-vercel-ip-city", 256),
+    vercelRegion: getHeader(req, "x-vercel-id", 256),
+  };
+
+  const now = new Date().toISOString();
+  const events: EngagementEvent[] = input.events.slice(0, 60).map((item) => ({
+    id: crypto.randomUUID(),
+    eventType: item.eventType,
+    ...base,
+    sessionId: truncate(item.sessionId ?? null, 96),
+    articleSlug: truncate(item.articleSlug ?? null, 160),
+    sectionId: truncate(item.sectionId ?? null, 220),
+    sectionTitle: truncate(item.sectionTitle ?? null, 512),
+    sectionType: truncate(item.sectionType ?? null, 80),
+    activeMs: Math.round(clampNumber(item.activeMs, 0, 15 * 60 * 1000)),
+    visibleMs: Math.round(clampNumber(item.visibleMs, 0, 15 * 60 * 1000)),
+    maxVisibilityRatio: clampNumber(item.maxVisibilityRatio, 0, 1),
+    maxScrollDepth: clampNumber(item.maxScrollDepth, 0, 1),
+    isFinal: Boolean(item.isFinal),
+    metadata: metadataObject(item.metadata),
+    createdAt: now,
+  }));
+
+  await redis.lpush(ENGAGEMENT_KEY, ...events);
+  await redis.ltrim(ENGAGEMENT_KEY, 0, MAX_ENGAGEMENT_EVENTS - 1);
+  return events.length;
+}
+
 export async function getRecentActivity(limit = 100): Promise<ActivityEvent[]> {
   const redis = getRedisClient();
   if (!redis) return [];
 
   const safeLimit = Math.max(1, Math.min(limit, 500));
   return redis.lrange<ActivityEvent>(ACTIVITY_KEY, 0, safeLimit - 1);
+}
+
+export async function getRecentEngagement(limit = 500): Promise<EngagementEvent[]> {
+  const redis = getRedisClient();
+  if (!redis) return [];
+
+  const safeLimit = Math.max(1, Math.min(limit, 1000));
+  return redis.lrange<EngagementEvent>(ENGAGEMENT_KEY, 0, safeLimit - 1);
 }

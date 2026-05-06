@@ -19,10 +19,61 @@ type ActivityEvent = {
   createdAt: string;
 };
 
+type EngagementEvent = ActivityEvent & {
+  sessionId: string | null;
+  articleSlug: string | null;
+  sectionId: string | null;
+  sectionTitle: string | null;
+  sectionType: string | null;
+  activeMs: number;
+  visibleMs: number;
+  maxVisibilityRatio: number;
+  maxScrollDepth: number;
+  isFinal: boolean;
+};
+
 type PathSummary = {
   path: string;
   views: number;
   visitors: number;
+};
+
+type EngagementPathSummary = {
+  path: string;
+  visitors: number;
+  activeMs: number;
+  averageActiveMs: number;
+  exits: number;
+  maxScrollDepth: number;
+};
+
+type BlogSectionSummary = {
+  key: string;
+  articleSlug: string;
+  sectionId: string;
+  sectionTitle: string;
+  sectionType: string;
+  visitors: number;
+  activeMs: number;
+  averageActiveMs: number;
+  medianActiveMs: number;
+  skimRate: number;
+  exitRate: number;
+  maxScrollDepth: number;
+  lastSeen: string;
+};
+
+type SessionSummary = {
+  sessionId: string;
+  visitor: string;
+  source: string;
+  location: string;
+  entryPath: string;
+  exitPath: string;
+  activeMs: number;
+  deepestSection: string;
+  maxScrollDepth: number;
+  lastSeen: string;
 };
 
 type SourceSummary = {
@@ -105,6 +156,175 @@ function summarizePaths(events: ActivityEvent[]): PathSummary[] {
     }))
     .sort((a, b) => b.views - a.views || a.path.localeCompare(b.path))
     .slice(0, 8);
+}
+
+function formatDuration(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return "0s";
+  const totalSeconds = Math.round(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+}
+
+function formatPercent(value: number): string {
+  if (!Number.isFinite(value)) return "0%";
+  return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
+}
+
+function engagementVisitorKey(event: EngagementEvent): string {
+  return event.sessionId ?? event.email ?? event.clientIpHash ?? event.id;
+}
+
+function summarizeEngagementPaths(events: EngagementEvent[]): EngagementPathSummary[] {
+  const byPath = new Map<string, { visitors: Set<string>; activeMs: number; exits: number; maxScrollDepth: number }>();
+
+  for (const event of events) {
+    if (event.eventType !== "page_engagement" && event.eventType !== "session_end") continue;
+    const path = event.path ?? "(unknown)";
+    const summary = byPath.get(path) ?? { visitors: new Set<string>(), activeMs: 0, exits: 0, maxScrollDepth: 0 };
+    summary.visitors.add(engagementVisitorKey(event));
+    summary.activeMs += event.activeMs;
+    summary.maxScrollDepth = Math.max(summary.maxScrollDepth, event.maxScrollDepth);
+    if (event.eventType === "session_end") summary.exits += 1;
+    byPath.set(path, summary);
+  }
+
+  return Array.from(byPath.entries())
+    .map(([path, summary]) => ({
+      path,
+      visitors: summary.visitors.size,
+      activeMs: summary.activeMs,
+      averageActiveMs: summary.visitors.size ? summary.activeMs / summary.visitors.size : 0,
+      exits: summary.exits,
+      maxScrollDepth: summary.maxScrollDepth,
+    }))
+    .sort((a, b) => b.activeMs - a.activeMs || a.path.localeCompare(b.path))
+    .slice(0, 8);
+}
+
+function estimatedWords(event: EngagementEvent): number {
+  const value = event.metadata?.estimatedWords;
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function summarizeBlogSections(events: EngagementEvent[]): BlogSectionSummary[] {
+  const exitsBySection = new Map<string, Set<string>>();
+  for (const event of events) {
+    if (event.eventType !== "session_end" || !event.articleSlug || !event.sectionId) continue;
+    const key = `${event.articleSlug}::${event.sectionId}`;
+    const visitors = exitsBySection.get(key) ?? new Set<string>();
+    visitors.add(engagementVisitorKey(event));
+    exitsBySection.set(key, visitors);
+  }
+
+  const bySection = new Map<
+    string,
+    {
+      articleSlug: string;
+      sectionId: string;
+      sectionTitle: string;
+      sectionType: string;
+      visitors: Set<string>;
+      activeByVisitor: Map<string, number>;
+      skimVisitors: Set<string>;
+      activeMs: number;
+      maxScrollDepth: number;
+      lastSeen: string;
+    }
+  >();
+
+  for (const event of events) {
+    if (event.eventType !== "section_engagement" || !event.articleSlug || !event.sectionId) continue;
+    const key = `${event.articleSlug}::${event.sectionId}`;
+    const visitor = engagementVisitorKey(event);
+    const summary =
+      bySection.get(key) ??
+      {
+        articleSlug: event.articleSlug,
+        sectionId: event.sectionId,
+        sectionTitle: event.sectionTitle ?? event.sectionId,
+        sectionType: event.sectionType ?? "section",
+        visitors: new Set<string>(),
+        activeByVisitor: new Map<string, number>(),
+        skimVisitors: new Set<string>(),
+        activeMs: 0,
+        maxScrollDepth: 0,
+        lastSeen: event.createdAt,
+      };
+    summary.visitors.add(visitor);
+    summary.activeMs += event.activeMs;
+    summary.activeByVisitor.set(visitor, (summary.activeByVisitor.get(visitor) ?? 0) + event.activeMs);
+    summary.maxScrollDepth = Math.max(summary.maxScrollDepth, event.maxScrollDepth);
+    if (new Date(event.createdAt).getTime() > new Date(summary.lastSeen).getTime()) summary.lastSeen = event.createdAt;
+
+    const expectedReadMs = Math.max(3000, Math.min(20000, estimatedWords(event) * 180));
+    if (event.visibleMs > 0 && event.activeMs < Math.min(5000, expectedReadMs * 0.35)) {
+      summary.skimVisitors.add(visitor);
+    }
+    bySection.set(key, summary);
+  }
+
+  return Array.from(bySection.entries())
+    .map(([key, summary]) => {
+      const activeValues = Array.from(summary.activeByVisitor.values());
+      const exits = exitsBySection.get(key)?.size ?? 0;
+      return {
+        key,
+        articleSlug: summary.articleSlug,
+        sectionId: summary.sectionId,
+        sectionTitle: summary.sectionTitle,
+        sectionType: summary.sectionType,
+        visitors: summary.visitors.size,
+        activeMs: summary.activeMs,
+        averageActiveMs: summary.visitors.size ? summary.activeMs / summary.visitors.size : 0,
+        medianActiveMs: median(activeValues),
+        skimRate: summary.visitors.size ? summary.skimVisitors.size / summary.visitors.size : 0,
+        exitRate: summary.visitors.size ? exits / summary.visitors.size : 0,
+        maxScrollDepth: summary.maxScrollDepth,
+        lastSeen: summary.lastSeen,
+      };
+    })
+    .sort((a, b) => b.averageActiveMs - a.averageActiveMs || b.visitors - a.visitors)
+    .slice(0, 16);
+}
+
+function summarizeSessions(events: EngagementEvent[]): SessionSummary[] {
+  const bySession = new Map<string, SessionSummary>();
+
+  for (const event of [...events].reverse()) {
+    const sessionId = engagementVisitorKey(event);
+    const existing =
+      bySession.get(sessionId) ??
+      {
+        sessionId,
+        visitor: event.email ?? "anonymous",
+        source: getSource(event as ActivityEvent),
+        location: [event.city, event.region, event.country].filter(Boolean).join(", ") || "unknown",
+        entryPath: event.path ?? "(unknown)",
+        exitPath: event.path ?? "(unknown)",
+        activeMs: 0,
+        deepestSection: event.sectionTitle ?? event.sectionId ?? "none",
+        maxScrollDepth: 0,
+        lastSeen: event.createdAt,
+      };
+    existing.exitPath = event.path ?? existing.exitPath;
+    existing.activeMs += event.eventType === "page_engagement" || event.eventType === "session_end" ? event.activeMs : 0;
+    existing.maxScrollDepth = Math.max(existing.maxScrollDepth, event.maxScrollDepth);
+    if (event.sectionTitle || event.sectionId) existing.deepestSection = event.sectionTitle ?? event.sectionId ?? existing.deepestSection;
+    if (new Date(event.createdAt).getTime() > new Date(existing.lastSeen).getTime()) existing.lastSeen = event.createdAt;
+    bySession.set(sessionId, existing);
+  }
+
+  return Array.from(bySession.values())
+    .sort((a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime())
+    .slice(0, 12);
 }
 
 function metadataString(event: ActivityEvent, key: string): string | null {
@@ -372,6 +592,7 @@ function LabActivityMap({ locations }: { locations: GeoSummary[] }) {
 
 export default function LabActivityPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
+  const [engagementEvents, setEngagementEvents] = useState<EngagementEvent[]>([]);
   const [storeConfigured, setStoreConfigured] = useState<boolean | null>(null);
   const [ownerActivityFiltered, setOwnerActivityFiltered] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -382,6 +603,15 @@ export default function LabActivityPage() {
   const publicPageViews = visibleEvents.filter((event) => event.eventType === "page_view").length;
   const labEvents = visibleEvents.filter((event) => event.eventType === "lab_access" || event.eventType === "lab_login").length;
   const topPaths = summarizePaths(visibleEvents);
+  const visibleEngagementEvents = engagementEvents.filter((event) => event.path !== "/lab/activity");
+  const engagementPaths = summarizeEngagementPaths(visibleEngagementEvents);
+  const blogSections = summarizeBlogSections(visibleEngagementEvents);
+  const sessions = summarizeSessions(visibleEngagementEvents);
+  const totalActiveMs = visibleEngagementEvents
+    .filter((event) => event.eventType === "page_engagement" || event.eventType === "session_end")
+    .reduce((sum, event) => sum + event.activeMs, 0);
+  const averageActiveMs = sessions.length ? totalActiveMs / sessions.length : 0;
+  const bounceLikeExits = sessions.filter((session) => session.maxScrollDepth < 0.18 && session.activeMs < 10000).length;
   const topSources = summarizeSources(visibleEvents);
   const topLocations = summarizeGeo(visibleEvents);
   const countryCount = new Set(topLocations.map((location) => location.country ?? "unknown")).size;
@@ -393,15 +623,17 @@ export default function LabActivityPage() {
 
   const loadRecentActivity = useCallback(() => {
     setLoading(true);
-    fetch("/api/activity/recent?limit=200", { cache: "no-store" })
+    fetch("/api/activity/recent?limit=300&engagementLimit=1000", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : { events: [] }))
       .then((body) => {
         setEvents(body.events ?? []);
+        setEngagementEvents(body.engagementEvents ?? []);
         setStoreConfigured(body.activityStoreConfigured ?? null);
         setOwnerActivityFiltered(Boolean(body.ownerActivityFiltered));
       })
       .catch(() => {
         setEvents([]);
+        setEngagementEvents([]);
         setStoreConfigured(null);
         setOwnerActivityFiltered(false);
       })
@@ -482,6 +714,115 @@ export default function LabActivityPage() {
             <p className="mt-2 text-sm text-stone-500">Includes app referrer stripping and login redirects.</p>
           </div>
         </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-md border border-stone-200 bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Active time</p>
+            <p className="mt-3 text-4xl font-semibold">{loading ? "..." : formatDuration(totalActiveMs)}</p>
+            <p className="mt-2 text-sm text-stone-500">Visible, non-idle time from consented sessions.</p>
+          </div>
+          <div className="rounded-md border border-stone-200 bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Avg session</p>
+            <p className="mt-3 text-4xl font-semibold">{loading ? "..." : formatDuration(averageActiveMs)}</p>
+            <p className="mt-2 text-sm text-stone-500">{sessions.length} recent engagement sessions.</p>
+          </div>
+          <div className="rounded-md border border-stone-200 bg-white p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Quick exits</p>
+            <p className="mt-3 text-4xl font-semibold">{loading ? "..." : bounceLikeExits}</p>
+            <p className="mt-2 text-sm text-stone-500">Under 10s active time and under 18% scroll depth.</p>
+          </div>
+        </div>
+
+        {engagementPaths.length > 0 && (
+          <section className="mt-6 rounded-md border border-stone-200 bg-white p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Engaged paths</h2>
+                <p className="mt-2 text-sm text-stone-500">Ranked by active dwell time, not page views.</p>
+              </div>
+              <p className="text-sm text-stone-500">{visibleEngagementEvents.length} recent engagement records</p>
+            </div>
+            <div className="mt-4 divide-y divide-stone-200">
+              {engagementPaths.map((item) => (
+                <div key={item.path} className="grid gap-3 py-3 text-sm sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
+                  <span className="break-all font-medium text-stone-800">{item.path}</span>
+                  <span className="text-stone-500">{formatDuration(item.activeMs)} active</span>
+                  <span className="text-stone-500">{formatDuration(item.averageActiveMs)} avg</span>
+                  <span className="text-stone-500">{formatPercent(item.maxScrollDepth)} depth</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {blogSections.length > 0 && (
+          <section className="mt-6 rounded-md border border-stone-200 bg-white p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Blog attention and drop-off</h2>
+                <p className="mt-2 text-sm text-stone-500">Sections and scrolly beats with the strongest linger, skim, and exit signals.</p>
+              </div>
+              <p className="text-sm text-stone-500">Median and average active dwell by section.</p>
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[980px] text-left text-sm">
+                <thead className="border-b border-stone-200 text-stone-500">
+                  <tr>
+                    <th className="py-3 pr-4">Article</th>
+                    <th className="py-3 pr-4">Section</th>
+                    <th className="py-3 pr-4">Type</th>
+                    <th className="py-3 pr-4">Visitors</th>
+                    <th className="py-3 pr-4">Avg</th>
+                    <th className="py-3 pr-4">Median</th>
+                    <th className="py-3 pr-4">Skim</th>
+                    <th className="py-3 pr-4">Exit</th>
+                    <th className="py-3">Depth</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-200">
+                  {blogSections.map((section) => (
+                    <tr key={section.key}>
+                      <td className="py-3 pr-4 text-stone-500">{section.articleSlug}</td>
+                      <td className="py-3 pr-4">
+                        <div className="font-medium text-stone-800">{section.sectionTitle}</div>
+                        <div className="text-xs text-stone-400">{section.sectionId}</div>
+                      </td>
+                      <td className="py-3 pr-4 text-stone-500">{section.sectionType}</td>
+                      <td className="py-3 pr-4 text-stone-500">{section.visitors}</td>
+                      <td className="py-3 pr-4 text-stone-500">{formatDuration(section.averageActiveMs)}</td>
+                      <td className="py-3 pr-4 text-stone-500">{formatDuration(section.medianActiveMs)}</td>
+                      <td className="py-3 pr-4 text-stone-500">{formatPercent(section.skimRate)}</td>
+                      <td className="py-3 pr-4 text-stone-500">{formatPercent(section.exitRate)}</td>
+                      <td className="py-3 text-stone-500">{formatPercent(section.maxScrollDepth)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {sessions.length > 0 && (
+          <section className="mt-6 rounded-md border border-stone-200 bg-white p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Recent sessions</h2>
+            <div className="mt-4 divide-y divide-stone-200">
+              {sessions.map((session) => (
+                <div key={session.sessionId} className="grid gap-3 py-3 text-sm lg:grid-cols-[1fr_1fr_auto_auto] lg:items-center">
+                  <div>
+                    <p className="font-medium text-stone-800">{session.source}</p>
+                    <p className="mt-1 text-xs text-stone-400">{session.location} · {session.visitor}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-stone-600">{session.entryPath}</p>
+                    <p className="mt-1 truncate text-xs text-stone-400">Deepest: {session.deepestSection}</p>
+                  </div>
+                  <span className="text-stone-500">{formatDuration(session.activeMs)}</span>
+                  <span className="text-stone-500">{formatPercent(session.maxScrollDepth)} depth</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {topPaths.length > 0 && (
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
