@@ -9,6 +9,8 @@ const EVENT_TYPES = new Set<EngagementEvent["eventType"]>([
   "session_end",
 ]);
 
+type EngagementInputEvent = Parameters<typeof recordEngagementEvents>[1]["events"][number];
+
 function stringValue(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -42,14 +44,14 @@ export async function POST(req: NextRequest) {
   }
 
   const rawEvents = Array.isArray(body.events) ? body.events : [];
-  const events = rawEvents
+  const events: EngagementInputEvent[] = rawEvents
     .slice(0, 60)
-    .map((item: unknown) => {
-      if (!item || typeof item !== "object") return null;
+    .flatMap((item: unknown): EngagementInputEvent[] => {
+      if (!item || typeof item !== "object") return [];
       const record = item as Record<string, unknown>;
       const eventType = stringValue(record.eventType, 80) as EngagementEvent["eventType"] | null;
-      if (!eventType || !EVENT_TYPES.has(eventType)) return null;
-      return {
+      if (!eventType || !EVENT_TYPES.has(eventType)) return [];
+      return [{
         eventType,
         sessionId: stringValue(record.sessionId, 96),
         articleSlug: stringValue(record.articleSlug, 160),
@@ -62,9 +64,8 @@ export async function POST(req: NextRequest) {
         maxScrollDepth: numberValue(record.maxScrollDepth, 1),
         isFinal: Boolean(record.isFinal),
         metadata: metadataValue(record.metadata),
-      };
-    })
-    .filter((event): event is NonNullable<typeof event> => Boolean(event));
+      }];
+    });
 
   if (events.length === 0) {
     return NextResponse.json({ ok: true, recorded: false, reason: "no-valid-events" });
