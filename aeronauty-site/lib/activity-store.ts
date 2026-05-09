@@ -384,8 +384,8 @@ export async function getEngagementAggregates(): Promise<{
   await updateEngagementAggregates(recentEvents);
 
   const [pathKeys, sectionKeys] = await Promise.all([
-    redis.smembers<string>(ENGAGEMENT_PATH_INDEX_KEY),
-    redis.smembers<string>(ENGAGEMENT_SECTION_INDEX_KEY),
+    redis.smembers<string[]>(ENGAGEMENT_PATH_INDEX_KEY),
+    redis.smembers<string[]>(ENGAGEMENT_SECTION_INDEX_KEY),
   ]);
 
   const paths = await Promise.all(
