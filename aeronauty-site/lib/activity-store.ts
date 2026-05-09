@@ -380,9 +380,6 @@ export async function getEngagementAggregates(): Promise<{
   const redis = getRedisClient();
   if (!redis) return { paths: [], sections: [] };
 
-  const recentEvents = await getRecentEngagement(MAX_ENGAGEMENT_EVENTS);
-  await updateEngagementAggregates(recentEvents);
-
   const [pathKeys, sectionKeys] = await Promise.all([
     redis.smembers<string[]>(ENGAGEMENT_PATH_INDEX_KEY),
     redis.smembers<string[]>(ENGAGEMENT_SECTION_INDEX_KEY),
