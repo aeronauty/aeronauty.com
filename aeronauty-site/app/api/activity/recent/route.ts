@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ActivityEvent,
   EngagementEvent,
+  getEngagementAggregates,
   getKnownUser,
   getRecentActivity,
   getRecentEngagement,
@@ -36,11 +37,13 @@ export async function GET(req: NextRequest) {
   const engagementEvents = (await getRecentEngagement(5000))
     .filter((event) => !isOwnerEngagement(event))
     .slice(0, safeEngagementLimit);
+  const engagementAggregates = await getEngagementAggregates();
 
   return NextResponse.json({
     activityStoreConfigured: hasActivityStore(),
     ownerActivityFiltered: true,
     events,
     engagementEvents,
+    engagementAggregates,
   });
 }

@@ -63,6 +63,37 @@ type BlogSectionSummary = {
   lastSeen: string;
 };
 
+type EngagementAggregates = {
+  paths: Array<{
+    key: string;
+    path: string;
+    pageTitle: string | null;
+    sessions: number;
+    activeMs: number;
+    events: number;
+    exits: number;
+    maxScrollDepth: number;
+    firstSeen: string | null;
+    lastSeen: string | null;
+  }>;
+  sections: Array<{
+    key: string;
+    articleSlug: string;
+    sectionId: string;
+    sectionTitle: string;
+    sectionType: string;
+    sessions: number;
+    activeMs: number;
+    visibleMs: number;
+    events: number;
+    skims: number;
+    exits: number;
+    maxScrollDepth: number;
+    firstSeen: string | null;
+    lastSeen: string | null;
+  }>;
+};
+
 type SessionSummary = {
   sessionId: string;
   visitor: string;
@@ -209,6 +240,20 @@ function summarizeEngagementPaths(events: EngagementEvent[]): EngagementPathSumm
     .slice(0, 8);
 }
 
+function summarizeAggregatePaths(aggregates: EngagementAggregates["paths"]): EngagementPathSummary[] {
+  return aggregates
+    .map((item) => ({
+      path: item.path,
+      visitors: item.sessions,
+      activeMs: item.activeMs,
+      averageActiveMs: item.sessions ? item.activeMs / item.sessions : 0,
+      exits: item.exits,
+      maxScrollDepth: item.maxScrollDepth,
+    }))
+    .sort((a, b) => b.activeMs - a.activeMs || a.path.localeCompare(b.path))
+    .slice(0, 8);
+}
+
 function estimatedWords(event: EngagementEvent): number {
   const value = event.metadata?.estimatedWords;
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -291,6 +336,27 @@ function summarizeBlogSections(events: EngagementEvent[]): BlogSectionSummary[] 
         lastSeen: summary.lastSeen,
       };
     })
+    .sort((a, b) => b.averageActiveMs - a.averageActiveMs || b.visitors - a.visitors)
+    .slice(0, 16);
+}
+
+function summarizeAggregateBlogSections(aggregates: EngagementAggregates["sections"]): BlogSectionSummary[] {
+  return aggregates
+    .map((section) => ({
+      key: section.key,
+      articleSlug: section.articleSlug,
+      sectionId: section.sectionId,
+      sectionTitle: section.sectionTitle,
+      sectionType: section.sectionType,
+      visitors: section.sessions,
+      activeMs: section.activeMs,
+      averageActiveMs: section.sessions ? section.activeMs / section.sessions : 0,
+      medianActiveMs: 0,
+      skimRate: section.sessions ? section.skims / section.sessions : 0,
+      exitRate: section.sessions ? section.exits / section.sessions : 0,
+      maxScrollDepth: section.maxScrollDepth,
+      lastSeen: section.lastSeen ?? section.firstSeen ?? "",
+    }))
     .sort((a, b) => b.averageActiveMs - a.averageActiveMs || b.visitors - a.visitors)
     .slice(0, 16);
 }
@@ -593,6 +659,7 @@ function LabActivityMap({ locations }: { locations: GeoSummary[] }) {
 export default function LabActivityPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [engagementEvents, setEngagementEvents] = useState<EngagementEvent[]>([]);
+  const [engagementAggregates, setEngagementAggregates] = useState<EngagementAggregates>({ paths: [], sections: [] });
   const [storeConfigured, setStoreConfigured] = useState<boolean | null>(null);
   const [ownerActivityFiltered, setOwnerActivityFiltered] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -604,13 +671,22 @@ export default function LabActivityPage() {
   const labEvents = visibleEvents.filter((event) => event.eventType === "lab_access" || event.eventType === "lab_login").length;
   const topPaths = summarizePaths(visibleEvents);
   const visibleEngagementEvents = engagementEvents.filter((event) => event.path !== "/lab/activity");
-  const engagementPaths = summarizeEngagementPaths(visibleEngagementEvents);
-  const blogSections = summarizeBlogSections(visibleEngagementEvents);
+  const hasAggregateEngagement = engagementAggregates.paths.length > 0 || engagementAggregates.sections.length > 0;
+  const engagementPaths = engagementAggregates.paths.length > 0
+    ? summarizeAggregatePaths(engagementAggregates.paths)
+    : summarizeEngagementPaths(visibleEngagementEvents);
+  const blogSections = engagementAggregates.sections.length > 0
+    ? summarizeAggregateBlogSections(engagementAggregates.sections)
+    : summarizeBlogSections(visibleEngagementEvents);
   const sessions = summarizeSessions(visibleEngagementEvents);
-  const totalActiveMs = visibleEngagementEvents
-    .filter((event) => event.eventType === "page_engagement" || event.eventType === "session_end")
-    .reduce((sum, event) => sum + event.activeMs, 0);
-  const averageActiveMs = sessions.length ? totalActiveMs / sessions.length : 0;
+  const totalActiveMs = hasAggregateEngagement
+    ? engagementAggregates.paths.reduce((sum, path) => sum + path.activeMs, 0)
+    : visibleEngagementEvents
+        .filter((event) => event.eventType === "page_engagement" || event.eventType === "session_end")
+        .reduce((sum, event) => sum + event.activeMs, 0);
+  const averageActiveMs = hasAggregateEngagement
+    ? totalActiveMs / Math.max(1, engagementAggregates.paths.reduce((sum, path) => sum + path.sessions, 0))
+    : sessions.length ? totalActiveMs / sessions.length : 0;
   const bounceLikeExits = sessions.filter((session) => session.maxScrollDepth < 0.18 && session.activeMs < 10000).length;
   const topSources = summarizeSources(visibleEvents);
   const topLocations = summarizeGeo(visibleEvents);
@@ -628,12 +704,14 @@ export default function LabActivityPage() {
       .then((body) => {
         setEvents(body.events ?? []);
         setEngagementEvents(body.engagementEvents ?? []);
+        setEngagementAggregates(body.engagementAggregates ?? { paths: [], sections: [] });
         setStoreConfigured(body.activityStoreConfigured ?? null);
         setOwnerActivityFiltered(Boolean(body.ownerActivityFiltered));
       })
       .catch(() => {
         setEvents([]);
         setEngagementEvents([]);
+        setEngagementAggregates({ paths: [], sections: [] });
         setStoreConfigured(null);
         setOwnerActivityFiltered(false);
       })
@@ -740,7 +818,9 @@ export default function LabActivityPage() {
                 <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Engaged paths</h2>
                 <p className="mt-2 text-sm text-stone-500">Ranked by active dwell time, not page views.</p>
               </div>
-              <p className="text-sm text-stone-500">{visibleEngagementEvents.length} recent engagement records</p>
+              <p className="text-sm text-stone-500">
+                {hasAggregateEngagement ? "Durable aggregate totals" : `${visibleEngagementEvents.length} recent engagement records`}
+              </p>
             </div>
             <div className="mt-4 divide-y divide-stone-200">
               {engagementPaths.map((item) => (
@@ -762,7 +842,9 @@ export default function LabActivityPage() {
                 <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">Blog attention and drop-off</h2>
                 <p className="mt-2 text-sm text-stone-500">Sections and scrolly beats with the strongest linger, skim, and exit signals.</p>
               </div>
-              <p className="text-sm text-stone-500">Median and average active dwell by section.</p>
+              <p className="text-sm text-stone-500">
+                {hasAggregateEngagement ? "Aggregate active dwell, skim, and exit totals by section." : "Median and average active dwell by section."}
+              </p>
             </div>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[980px] text-left text-sm">
@@ -790,7 +872,9 @@ export default function LabActivityPage() {
                       <td className="py-3 pr-4 text-stone-500">{section.sectionType}</td>
                       <td className="py-3 pr-4 text-stone-500">{section.visitors}</td>
                       <td className="py-3 pr-4 text-stone-500">{formatDuration(section.averageActiveMs)}</td>
-                      <td className="py-3 pr-4 text-stone-500">{formatDuration(section.medianActiveMs)}</td>
+                      <td className="py-3 pr-4 text-stone-500">
+                        {hasAggregateEngagement ? "n/a" : formatDuration(section.medianActiveMs)}
+                      </td>
                       <td className="py-3 pr-4 text-stone-500">{formatPercent(section.skimRate)}</td>
                       <td className="py-3 pr-4 text-stone-500">{formatPercent(section.exitRate)}</td>
                       <td className="py-3 text-stone-500">{formatPercent(section.maxScrollDepth)}</td>

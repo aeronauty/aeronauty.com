@@ -5,6 +5,9 @@ import { getRedisClient, hasRedisConfig } from "@/lib/redis-config";
 
 const ACTIVITY_KEY = "aeronauty:activity:v1";
 const ENGAGEMENT_KEY = "aeronauty:engagement:v1";
+const ENGAGEMENT_PATH_INDEX_KEY = "aeronauty:engagement:agg:path:index:v1";
+const ENGAGEMENT_SECTION_INDEX_KEY = "aeronauty:engagement:agg:section:index:v1";
+const ENGAGEMENT_PROCESSED_EVENTS_KEY = "aeronauty:engagement:agg:processed-events:v1";
 const MAX_ACTIVITY_EVENTS = 5000;
 const MAX_ENGAGEMENT_EVENTS = 5000;
 
@@ -53,6 +56,36 @@ export type EngagementEvent = ActivityEvent & {
   maxVisibilityRatio: number;
   maxScrollDepth: number;
   isFinal: boolean;
+};
+
+export type EngagementPathAggregate = {
+  key: string;
+  path: string;
+  pageTitle: string | null;
+  sessions: number;
+  activeMs: number;
+  events: number;
+  exits: number;
+  maxScrollDepth: number;
+  firstSeen: string | null;
+  lastSeen: string | null;
+};
+
+export type EngagementSectionAggregate = {
+  key: string;
+  articleSlug: string;
+  sectionId: string;
+  sectionTitle: string;
+  sectionType: string;
+  sessions: number;
+  activeMs: number;
+  visibleMs: number;
+  events: number;
+  skims: number;
+  exits: number;
+  maxScrollDepth: number;
+  firstSeen: string | null;
+  lastSeen: string | null;
 };
 
 export function hasActivityStore(): boolean {
@@ -152,6 +185,114 @@ function metadataObject(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function aggregateKey(value: string): string {
+  return crypto.createHash("sha256").update(value).digest("hex").slice(0, 24);
+}
+
+function aggregateNumber(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : 0;
+  }
+  return 0;
+}
+
+function aggregateString(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+
+function estimatedWordsFromMetadata(metadata: Record<string, unknown>): number {
+  const value = metadata.estimatedWords;
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function isSkim(event: EngagementEvent): boolean {
+  const expectedReadMs = Math.max(3000, Math.min(20000, estimatedWordsFromMetadata(event.metadata) * 180));
+  return event.visibleMs > 0 && event.activeMs < Math.min(5000, expectedReadMs * 0.35);
+}
+
+async function updateAggregateMax(hashKey: string, field: string, value: number): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+  const current = aggregateNumber(await redis.hget(hashKey, field));
+  if (value > current) {
+    await redis.hset(hashKey, { [field]: value });
+  }
+}
+
+async function updateEngagementAggregates(events: EngagementEvent[]): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis || events.length === 0) return;
+
+  const firstSeenWrites = new Map<string, string>();
+
+  for (const event of events) {
+    const newlyProcessed = await redis.sadd(ENGAGEMENT_PROCESSED_EVENTS_KEY, event.id);
+    if (newlyProcessed === 0) continue;
+
+    const sessionId = event.sessionId ?? event.email ?? event.clientIpHash ?? event.id;
+    const timestamp = event.createdAt;
+
+    if ((event.eventType === "page_engagement" || event.eventType === "session_end") && event.path) {
+      const key = aggregateKey(event.path);
+      const hashKey = `aeronauty:engagement:agg:path:${key}:v1`;
+      const sessionKey = `aeronauty:engagement:agg:path:${key}:sessions:v1`;
+      const exitKey = `aeronauty:engagement:agg:path:${key}:exits:v1`;
+
+      await redis.sadd(ENGAGEMENT_PATH_INDEX_KEY, key);
+      await redis.hset(hashKey, {
+        path: event.path,
+        pageTitle: event.pageTitle ?? "",
+        lastSeen: timestamp,
+      });
+      if (!firstSeenWrites.has(hashKey)) firstSeenWrites.set(hashKey, timestamp);
+      await redis.sadd(sessionKey, sessionId);
+      await redis.hincrby(hashKey, "activeMs", event.activeMs);
+      await redis.hincrby(hashKey, "events", 1);
+      await updateAggregateMax(hashKey, "maxScrollDepth", Math.max(0, event.maxScrollDepth));
+      if (event.eventType === "session_end") {
+        await redis.sadd(exitKey, sessionId);
+      }
+    }
+
+    if (event.eventType === "section_engagement" && event.articleSlug && event.sectionId) {
+      const sectionIdentity = `${event.articleSlug}::${event.sectionId}`;
+      const key = aggregateKey(sectionIdentity);
+      const hashKey = `aeronauty:engagement:agg:section:${key}:v1`;
+      const sessionKey = `aeronauty:engagement:agg:section:${key}:sessions:v1`;
+      const skimKey = `aeronauty:engagement:agg:section:${key}:skims:v1`;
+
+      await redis.sadd(ENGAGEMENT_SECTION_INDEX_KEY, key);
+      await redis.hset(hashKey, {
+        articleSlug: event.articleSlug,
+        sectionId: event.sectionId,
+        sectionTitle: event.sectionTitle ?? event.sectionId,
+        sectionType: event.sectionType ?? "section",
+        lastSeen: timestamp,
+      });
+      if (!firstSeenWrites.has(hashKey)) firstSeenWrites.set(hashKey, timestamp);
+      await redis.sadd(sessionKey, sessionId);
+      await redis.hincrby(hashKey, "activeMs", event.activeMs);
+      await redis.hincrby(hashKey, "visibleMs", event.visibleMs);
+      await redis.hincrby(hashKey, "events", 1);
+      await updateAggregateMax(hashKey, "maxScrollDepth", Math.max(0, event.maxScrollDepth));
+      if (isSkim(event)) {
+        await redis.sadd(skimKey, sessionId);
+      }
+    }
+
+    if (event.eventType === "session_end" && event.articleSlug && event.sectionId) {
+      const key = aggregateKey(`${event.articleSlug}::${event.sectionId}`);
+      await redis.sadd(`aeronauty:engagement:agg:section:${key}:exits:v1`, sessionId);
+    }
+  }
+
+  await Promise.all(
+    Array.from(firstSeenWrites.entries()).map(([hashKey, timestamp]) => redis.hsetnx(hashKey, "firstSeen", timestamp))
+  );
+}
+
 export async function recordEngagementEvents(
   req: Request,
   input: {
@@ -212,6 +353,7 @@ export async function recordEngagementEvents(
 
   await redis.lpush(ENGAGEMENT_KEY, ...events);
   await redis.ltrim(ENGAGEMENT_KEY, 0, MAX_ENGAGEMENT_EVENTS - 1);
+  await updateEngagementAggregates(events);
   return events.length;
 }
 
@@ -229,4 +371,73 @@ export async function getRecentEngagement(limit = 500): Promise<EngagementEvent[
 
   const safeLimit = Math.max(1, Math.min(limit, MAX_ENGAGEMENT_EVENTS));
   return redis.lrange<EngagementEvent>(ENGAGEMENT_KEY, 0, safeLimit - 1);
+}
+
+export async function getEngagementAggregates(): Promise<{
+  paths: EngagementPathAggregate[];
+  sections: EngagementSectionAggregate[];
+}> {
+  const redis = getRedisClient();
+  if (!redis) return { paths: [], sections: [] };
+
+  const recentEvents = await getRecentEngagement(MAX_ENGAGEMENT_EVENTS);
+  await updateEngagementAggregates(recentEvents);
+
+  const [pathKeys, sectionKeys] = await Promise.all([
+    redis.smembers<string>(ENGAGEMENT_PATH_INDEX_KEY),
+    redis.smembers<string>(ENGAGEMENT_SECTION_INDEX_KEY),
+  ]);
+
+  const paths = await Promise.all(
+    (pathKeys ?? []).map(async (key) => {
+      const hashKey = `aeronauty:engagement:agg:path:${key}:v1`;
+      const [data, sessions, exits] = await Promise.all([
+        redis.hgetall<Record<string, unknown>>(hashKey),
+        redis.scard(`aeronauty:engagement:agg:path:${key}:sessions:v1`),
+        redis.scard(`aeronauty:engagement:agg:path:${key}:exits:v1`),
+      ]);
+      return {
+        key,
+        path: aggregateString(data?.path) ?? "(unknown)",
+        pageTitle: aggregateString(data?.pageTitle),
+        sessions,
+        activeMs: aggregateNumber(data?.activeMs),
+        events: aggregateNumber(data?.events),
+        exits,
+        maxScrollDepth: aggregateNumber(data?.maxScrollDepth),
+        firstSeen: aggregateString(data?.firstSeen),
+        lastSeen: aggregateString(data?.lastSeen),
+      };
+    })
+  );
+
+  const sections = await Promise.all(
+    (sectionKeys ?? []).map(async (key) => {
+      const hashKey = `aeronauty:engagement:agg:section:${key}:v1`;
+      const [data, sessions, skims, exits] = await Promise.all([
+        redis.hgetall<Record<string, unknown>>(hashKey),
+        redis.scard(`aeronauty:engagement:agg:section:${key}:sessions:v1`),
+        redis.scard(`aeronauty:engagement:agg:section:${key}:skims:v1`),
+        redis.scard(`aeronauty:engagement:agg:section:${key}:exits:v1`),
+      ]);
+      return {
+        key,
+        articleSlug: aggregateString(data?.articleSlug) ?? "(unknown)",
+        sectionId: aggregateString(data?.sectionId) ?? key,
+        sectionTitle: aggregateString(data?.sectionTitle) ?? aggregateString(data?.sectionId) ?? key,
+        sectionType: aggregateString(data?.sectionType) ?? "section",
+        sessions,
+        activeMs: aggregateNumber(data?.activeMs),
+        visibleMs: aggregateNumber(data?.visibleMs),
+        events: aggregateNumber(data?.events),
+        skims,
+        exits,
+        maxScrollDepth: aggregateNumber(data?.maxScrollDepth),
+        firstSeen: aggregateString(data?.firstSeen),
+        lastSeen: aggregateString(data?.lastSeen),
+      };
+    })
+  );
+
+  return { paths, sections };
 }
