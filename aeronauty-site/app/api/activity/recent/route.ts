@@ -28,12 +28,12 @@ export async function GET(req: NextRequest) {
 
   const requestedLimit = Number(req.nextUrl.searchParams.get("limit") ?? 100);
   const safeLimit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(requestedLimit, 500)) : 100;
-  const requestedEngagementLimit = Number(req.nextUrl.searchParams.get("engagementLimit") ?? 750);
+  const requestedEngagementLimit = Number(req.nextUrl.searchParams.get("engagementLimit") ?? 5000);
   const safeEngagementLimit = Number.isFinite(requestedEngagementLimit)
-    ? Math.max(1, Math.min(requestedEngagementLimit, 1000))
-    : 750;
+    ? Math.max(1, Math.min(requestedEngagementLimit, 5000))
+    : 5000;
   const events = (await getRecentActivity(500)).filter((event) => !isOwnerActivity(event)).slice(0, safeLimit);
-  const engagementEvents = (await getRecentEngagement(1000))
+  const engagementEvents = (await getRecentEngagement(5000))
     .filter((event) => !isOwnerEngagement(event))
     .slice(0, safeEngagementLimit);
 

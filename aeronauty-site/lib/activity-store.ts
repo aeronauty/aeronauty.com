@@ -227,6 +227,6 @@ export async function getRecentEngagement(limit = 500): Promise<EngagementEvent[
   const redis = getRedisClient();
   if (!redis) return [];
 
-  const safeLimit = Math.max(1, Math.min(limit, 1000));
+  const safeLimit = Math.max(1, Math.min(limit, MAX_ENGAGEMENT_EVENTS));
   return redis.lrange<EngagementEvent>(ENGAGEMENT_KEY, 0, safeLimit - 1);
 }

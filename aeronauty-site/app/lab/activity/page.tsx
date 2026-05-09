@@ -623,7 +623,7 @@ export default function LabActivityPage() {
 
   const loadRecentActivity = useCallback(() => {
     setLoading(true);
-    fetch("/api/activity/recent?limit=300&engagementLimit=1000", { cache: "no-store" })
+    fetch("/api/activity/recent?limit=300&engagementLimit=5000", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : { events: [] }))
       .then((body) => {
         setEvents(body.events ?? []);
@@ -771,7 +771,7 @@ export default function LabActivityPage() {
                     <th className="py-3 pr-4">Article</th>
                     <th className="py-3 pr-4">Section</th>
                     <th className="py-3 pr-4">Type</th>
-                    <th className="py-3 pr-4">Visitors</th>
+                    <th className="py-3 pr-4">Sessions</th>
                     <th className="py-3 pr-4">Avg</th>
                     <th className="py-3 pr-4">Median</th>
                     <th className="py-3 pr-4">Skim</th>
