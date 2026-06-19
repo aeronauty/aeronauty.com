@@ -88,10 +88,11 @@ export async function getScreenshotUrls(paths: (string | null)[]): Promise<(stri
   return paths.map((path) => (path ? urlByPath.get(path) ?? null : null));
 }
 
-export async function deleteScreenshot(path: string | null): Promise<void> {
-  if (!path) return;
+export async function deleteScreenshots(paths: string[]): Promise<void> {
+  const present = paths.filter((path): path is string => Boolean(path));
+  if (present.length === 0) return;
   const client = getAdminClient();
   if (!client) return;
-  const { error } = await client.storage.from(SCREENSHOT_BUCKET).remove([path]);
+  const { error } = await client.storage.from(SCREENSHOT_BUCKET).remove(present);
   if (error) console.error("Screenshot delete failed:", error.message);
 }

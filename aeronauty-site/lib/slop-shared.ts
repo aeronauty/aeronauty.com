@@ -21,15 +21,15 @@ export type SlopSubmission = {
   weekKey: string | null;
   createdAt: string;
   approvedAt: string | null;
-  /** Storage path of the uploaded screenshot in the private bucket, if any. */
-  imagePath: string | null;
+  /** Storage paths of uploaded screenshots/attachments in the private bucket. */
+  imagePaths: string[];
   /** Best-effort link unfurl captured at submit time. */
   previewImageUrl: string | null;
   previewTitle: string | null;
   previewDescription: string | null;
 };
 
-/** A submission with its screenshot resolved to a short-lived signed URL for display. */
-export type SlopSubmissionView = SlopSubmission & { screenshotUrl: string | null };
+/** A submission with its screenshots resolved to short-lived signed URLs for display. */
+export type SlopSubmissionView = SlopSubmission & { screenshotUrls: string[] };
 
 export type SlopNominee = SlopSubmissionView & { votes: number };

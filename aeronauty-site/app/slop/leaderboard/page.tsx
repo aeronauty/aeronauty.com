@@ -78,14 +78,33 @@ export default async function SlopLeaderboardPage() {
                     </span>
                   </div>
                   <p className="mt-2 leading-7 text-stone-800">{nominee.reason}</p>
-                  {(nominee.screenshotUrl || nominee.previewImageUrl) && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={nominee.screenshotUrl ?? nominee.previewImageUrl ?? ""}
-                      alt=""
-                      loading="lazy"
-                      className="mt-3 max-h-80 w-full rounded-md border border-stone-200 object-contain"
-                    />
+                  {nominee.screenshotUrls.length > 0 ? (
+                    <div
+                      className={`mt-3 grid gap-2 ${
+                        nominee.screenshotUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                      }`}
+                    >
+                      {nominee.screenshotUrls.map((src) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={src}
+                          src={src}
+                          alt=""
+                          loading="lazy"
+                          className="max-h-80 w-full rounded-md border border-stone-200 object-contain"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    nominee.previewImageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={nominee.previewImageUrl}
+                        alt=""
+                        loading="lazy"
+                        className="mt-3 max-h-80 w-full rounded-md border border-stone-200 object-contain"
+                      />
+                    )
                   )}
                   {nominee.previewTitle && (
                     <p className="mt-2 text-sm font-medium text-stone-500">{nominee.previewTitle}</p>
