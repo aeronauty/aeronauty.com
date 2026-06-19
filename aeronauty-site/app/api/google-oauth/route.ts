@@ -17,7 +17,7 @@ function getBaseUrl(req: NextRequest): string {
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.labAllowed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const baseUrl = getBaseUrl(req);
   const oauth2 = new google.auth.OAuth2(

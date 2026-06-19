@@ -5,25 +5,30 @@ import { LAB_SESSION_COOKIE, isLabOwnerEmail, verifyLabSessionToken } from "@/li
 export default async function middleware(req: NextRequest) {
   const authSession = await auth();
 
+  // A NextAuth session is now obtainable by ANY Google account (for public
+  // commenting), so private areas must gate on the allowlist flags — never on
+  // "is logged in" alone.
+  const labAllowedViaGoogle = Boolean(authSession?.user?.labAllowed);
+  const isOwnerViaGoogle = Boolean(authSession?.user?.isOwner);
+
   if (req.nextUrl.pathname.startsWith("/lab")) {
     const isLoginPage = req.nextUrl.pathname === "/lab/login";
     const token = req.cookies.get(LAB_SESSION_COOKIE)?.value;
     const email = token ? await verifyLabSessionToken(token) : null;
-    const googleEmail = authSession?.user?.email?.toLowerCase() ?? null;
-    const isGoogleLoggedIn = Boolean(googleEmail);
-    const viewerEmail = email ?? googleEmail;
+    const labAllowed = Boolean(email) || labAllowedViaGoogle;
 
-    if ((email || isGoogleLoggedIn) && isLoginPage) {
+    if (labAllowed && isLoginPage) {
       return NextResponse.redirect(new URL("/lab", req.url));
     }
 
-    if (!email && !isGoogleLoggedIn && !isLoginPage) {
+    if (!labAllowed && !isLoginPage) {
       const loginUrl = new URL("/lab/login", req.url);
       loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    if (req.nextUrl.pathname.startsWith("/lab/activity") && (!viewerEmail || !isLabOwnerEmail(viewerEmail))) {
+    const isOwner = Boolean(email && isLabOwnerEmail(email)) || isOwnerViaGoogle;
+    if (req.nextUrl.pathname.startsWith("/lab/activity") && !isOwner) {
       return NextResponse.redirect(new URL("/lab", req.url));
     }
 
@@ -33,7 +38,7 @@ export default async function middleware(req: NextRequest) {
   const isDashboardLogin = req.nextUrl.pathname === "/dashboard/login";
   if (isDashboardLogin) return NextResponse.next();
 
-  if (!authSession?.user) {
+  if (!labAllowedViaGoogle) {
     const loginUrl = new URL("/dashboard/login", req.url);
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);

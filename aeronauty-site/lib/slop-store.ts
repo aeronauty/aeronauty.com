@@ -3,16 +3,21 @@ import { z } from "zod";
 import { getRedisClient, hasRedisConfig } from "@/lib/redis-config";
 import { deleteScreenshots, getScreenshotUrls } from "@/lib/supabase-storage";
 import {
-  SLOP_CATEGORIES,
+  MAX_CUSTOM_TAGS,
+  MAX_CUSTOM_TAG_LEN,
+  MAX_COMMENT_LEN,
+  isSlopTag,
+  type SlopTag,
   type SlopSubmission,
   type SlopSubmissionView,
   type SlopNominee,
+  type SlopComment,
 } from "@/lib/slop-shared";
 
 export {
-  SLOP_CATEGORIES,
-  SLOP_CATEGORY_LABELS,
-  type SlopCategory,
+  SLOP_TAGS,
+  SLOP_TAG_LABELS,
+  type SlopTag,
   type SlopStatus,
   type SlopSubmission,
   type SlopSubmissionView,
@@ -57,6 +62,17 @@ function isValidHttpUrl(value: string): boolean {
   }
 }
 
+/** Strips angle brackets + control chars and caps length for a free-text "Other" tag. */
+export function sanitizeCustomTag(raw: string): string {
+  const visible = Array.from(raw.replace(/[<>]/g, ""))
+    .filter((ch) => {
+      const code = ch.charCodeAt(0);
+      return code >= 32 && code !== 127; // drop control chars
+    })
+    .join("");
+  return visible.trim().slice(0, MAX_CUSTOM_TAG_LEN);
+}
+
 export const submissionInputSchema = z.object({
   url: z
     .string()
@@ -65,9 +81,22 @@ export const submissionInputSchema = z.object({
     .max(2000)
     .transform(normalizeSubmissionUrl)
     .refine(isValidHttpUrl, "Must be a valid web link"),
-  category: z.enum(SLOP_CATEGORIES),
+  tags: z
+    .array(z.string())
+    .default([])
+    .transform((arr) => Array.from(new Set(arr.filter(isSlopTag))) as SlopTag[]),
+  customTags: z
+    .array(z.string())
+    .default([])
+    .transform((arr) => {
+      const cleaned = arr.map(sanitizeCustomTag).filter((t) => t.length > 0);
+      return Array.from(new Set(cleaned)).slice(0, MAX_CUSTOM_TAGS);
+    }),
   reason: z.string().trim().min(3).max(600),
   credit: z.string().trim().max(80).optional(),
+}).refine((data) => data.tags.length + data.customTags.length >= 1, {
+  message: "Pick at least one tag",
+  path: ["tags"],
 });
 
 export type SubmissionInput = z.infer<typeof submissionInputSchema>;
@@ -100,7 +129,15 @@ export function currentWeekKey(date = new Date()): string {
 
 function getClientIp(req: Request): string | null {
   const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || null;
+  if (forwarded) {
+    // The platform proxy (Vercel) appends the real client IP LAST. The left-most
+    // entries are attacker-controllable, so trust the right-most hop, not the first.
+    const parts = forwarded
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (parts.length) return parts[parts.length - 1];
+  }
   return req.headers.get("x-real-ip");
 }
 
@@ -134,7 +171,8 @@ export async function rateLimitSubmit(req: Request): Promise<boolean> {
 export async function getSubmission(id: string): Promise<SlopSubmission | null> {
   const redis = getRedisClient();
   if (!redis) return null;
-  return (await redis.get<SlopSubmission>(`${SUBMISSION_PREFIX}${id}`)) ?? null;
+  const row = await redis.get<SlopSubmission>(`${SUBMISSION_PREFIX}${id}`);
+  return row ? normalizeSubmission(row) : null;
 }
 
 export async function createSubmission(input: CreateSubmissionInput): Promise<SlopSubmission> {
@@ -144,7 +182,8 @@ export async function createSubmission(input: CreateSubmissionInput): Promise<Sl
   const submission: SlopSubmission = {
     id: crypto.randomUUID(),
     url: input.url,
-    category: input.category,
+    tags: input.tags,
+    customTags: input.customTags,
     reason: input.reason,
     credit: input.credit?.trim() ? input.credit.trim() : null,
     status: "pending",
@@ -162,11 +201,19 @@ export async function createSubmission(input: CreateSubmissionInput): Promise<Sl
   return submission;
 }
 
-/** Backfills imagePaths[] for any record stored under the old single-path shape. */
+/** Backfills newer fields for records stored under older shapes (single imagePath, single category). */
 function normalizeSubmission(row: SlopSubmission): SlopSubmission {
-  if (Array.isArray(row.imagePaths)) return row;
-  const legacy = (row as { imagePath?: string | null }).imagePath ?? null;
-  return { ...row, imagePaths: legacy ? [legacy] : [] };
+  const next = { ...row };
+  if (!Array.isArray(next.imagePaths)) {
+    const legacy = (next as { imagePath?: string | null }).imagePath ?? null;
+    next.imagePaths = legacy ? [legacy] : [];
+  }
+  if (!Array.isArray(next.tags)) {
+    const legacyCategory = (next as { category?: string }).category;
+    next.tags = legacyCategory && isSlopTag(legacyCategory) ? [legacyCategory] : [];
+  }
+  if (!Array.isArray(next.customTags)) next.customTags = [];
+  return next;
 }
 
 async function loadSubmissions(ids: string[]): Promise<SlopSubmission[]> {
@@ -231,6 +278,7 @@ export async function rejectSubmission(id: string): Promise<void> {
   await redis.del(`${SUBMISSION_PREFIX}${id}`);
   await redis.srem(PENDING_INDEX_KEY, id);
   await deleteScreenshots(submission ? normalizeSubmission(submission).imagePaths : []);
+  await clearComments(id);
 }
 
 export async function listNominees(weekKey = currentWeekKey()): Promise<SlopNominee[]> {
@@ -280,4 +328,114 @@ export async function castVote(
 
   const votes = await redis.incr(votesKey);
   return { ok: true, votes: Number(votes), alreadyVoted: false };
+}
+
+// ---- Comments -------------------------------------------------------------
+
+const COMMENTS_HASH_PREFIX = "aeronauty:slop:comments:v1:"; // <subId> -> hash(commentId -> json)
+const COMMENTS_INDEX_PREFIX = "aeronauty:slop:comments:idx:v1:"; // <subId> -> zset(commentId by ts)
+const COMMENT_RATE_PREFIX = "aeronauty:slop:crate:v1:";
+const COMMENT_RATE_WINDOW_SECONDS = 60 * 60;
+const COMMENT_MAX_PER_WINDOW = 12;
+const MAX_COMMENTS_PER_SUBMISSION = 500;
+const COMMENTS_DISPLAY_LIMIT = 200;
+
+export type NewCommentInput = {
+  submissionId: string;
+  body: string;
+  authorName: string | null;
+  verified: boolean;
+  isOwner: boolean;
+};
+
+/** True when the client is under the per-window comment limit. */
+export async function rateLimitComment(req: Request): Promise<boolean> {
+  const redis = getRedisClient();
+  if (!redis) return true;
+  const key = clientKey(req);
+  if (!key) return true;
+  const rateKey = `${COMMENT_RATE_PREFIX}${key}`;
+  const count = await redis.incr(rateKey);
+  if (count === 1) await redis.expire(rateKey, COMMENT_RATE_WINDOW_SECONDS);
+  return count <= COMMENT_MAX_PER_WINDOW;
+}
+
+/** Adds a comment to an approved nominee. Returns the stored comment, or null if not allowed. */
+export async function addComment(input: NewCommentInput): Promise<SlopComment | null> {
+  const redis = getRedisClient();
+  if (!redis) return null;
+
+  const submission = await getSubmission(input.submissionId);
+  if (!submission || submission.status !== "approved") return null;
+
+  const body = input.body.trim().slice(0, MAX_COMMENT_LEN);
+  if (!body) return null;
+
+  const comment: SlopComment = {
+    id: crypto.randomUUID(),
+    body,
+    authorName: input.authorName?.trim() ? input.authorName.trim().slice(0, 80) : null,
+    verified: input.verified,
+    isOwner: input.isOwner,
+    createdAt: new Date().toISOString(),
+  };
+
+  const hashKey = `${COMMENTS_HASH_PREFIX}${input.submissionId}`;
+  const indexKey = `${COMMENTS_INDEX_PREFIX}${input.submissionId}`;
+  const score = Date.parse(comment.createdAt);
+
+  await redis.hset(hashKey, { [comment.id]: comment });
+  await redis.zadd(indexKey, { score, member: comment.id });
+
+  // Trim oldest beyond the cap.
+  const total = await redis.zcard(indexKey);
+  if (total > MAX_COMMENTS_PER_SUBMISSION) {
+    const excess = total - MAX_COMMENTS_PER_SUBMISSION;
+    const oldest = await redis.zrange<string[]>(indexKey, 0, excess - 1);
+    if (oldest.length) {
+      await redis.zrem(indexKey, ...oldest);
+      await redis.hdel(hashKey, ...oldest);
+    }
+  }
+
+  return comment;
+}
+
+/** Lists a nominee's comments, newest first. */
+export async function listComments(submissionId: string): Promise<SlopComment[]> {
+  const redis = getRedisClient();
+  if (!redis) return [];
+
+  const indexKey = `${COMMENTS_INDEX_PREFIX}${submissionId}`;
+  const ids = await redis.zrange<string[]>(indexKey, 0, COMMENTS_DISPLAY_LIMIT - 1, { rev: true });
+  if (!ids.length) return [];
+
+  const hashKey = `${COMMENTS_HASH_PREFIX}${submissionId}`;
+  const rows = await redis.hmget<Record<string, SlopComment>>(hashKey, ...ids);
+  if (!rows) return [];
+
+  return ids
+    .map((id) => rows[id])
+    .filter((row): row is SlopComment => Boolean(row));
+}
+
+export async function countComments(submissionId: string): Promise<number> {
+  const redis = getRedisClient();
+  if (!redis) return 0;
+  return redis.zcard(`${COMMENTS_INDEX_PREFIX}${submissionId}`);
+}
+
+export async function deleteComment(submissionId: string, commentId: string): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+  await redis.hdel(`${COMMENTS_HASH_PREFIX}${submissionId}`, commentId);
+  await redis.zrem(`${COMMENTS_INDEX_PREFIX}${submissionId}`, commentId);
+}
+
+/** Removes a submission's entire comment thread (used when a submission is rejected/removed). */
+export async function clearComments(submissionId: string): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+  await redis.del(`${COMMENTS_HASH_PREFIX}${submissionId}`);
+  await redis.del(`${COMMENTS_INDEX_PREFIX}${submissionId}`);
 }

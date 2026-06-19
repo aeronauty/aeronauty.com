@@ -4,7 +4,7 @@ import { getStoredAccounts, removeAccount } from "@/lib/token-store";
 
 export async function GET() {
   const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.labAllowed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const accounts = await getStoredAccounts();
   // Strip tokens from response
@@ -15,7 +15,7 @@ export async function GET() {
 
 export async function DELETE(req: NextRequest) {
   const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.labAllowed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { email } = await req.json();
   await removeAccount(email);

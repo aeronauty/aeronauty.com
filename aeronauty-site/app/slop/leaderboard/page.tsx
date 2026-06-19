@@ -2,12 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ExternalLink } from "lucide-react";
 import SlopVoteButton from "@/components/SlopVoteButton";
-import {
-  SLOP_CATEGORY_LABELS,
-  currentWeekKey,
-  hasSlopStore,
-  listNominees,
-} from "@/lib/slop-store";
+import { SlopTagChips } from "@/components/SlopTagChips";
+import SlopComments from "@/components/SlopComments";
+import { currentWeekKey, hasSlopStore, listNominees } from "@/lib/slop-store";
 
 export const dynamic = "force-dynamic";
 
@@ -73,9 +70,7 @@ export default async function SlopLeaderboardPage() {
                     <span className="text-lg" aria-hidden>
                       {RANK_BADGES[index] ?? `#${index + 1}`}
                     </span>
-                    <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-stone-600">
-                      {SLOP_CATEGORY_LABELS[nominee.category]}
-                    </span>
+                    <SlopTagChips tags={nominee.tags} customTags={nominee.customTags} />
                   </div>
                   <p className="mt-2 leading-7 text-stone-800">{nominee.reason}</p>
                   {nominee.screenshotUrls.length > 0 ? (
@@ -123,6 +118,7 @@ export default async function SlopLeaderboardPage() {
                       <span className="text-stone-400">spotted by {nominee.credit}</span>
                     )}
                   </div>
+                  <SlopComments submissionId={nominee.id} />
                 </div>
               </li>
             ))}
