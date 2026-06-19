@@ -36,13 +36,14 @@ export async function POST(req: NextRequest) {
 
   const parsed = submissionInputSchema.safeParse({
     url: form.get("url"),
-    category: form.get("category"),
+    tags: form.getAll("tags"),
+    customTags: form.getAll("customTags"),
     reason: form.get("reason"),
     credit: form.get("credit") ?? undefined,
   });
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Check the link, category, and comment, then try again." },
+      { error: "Check the link, pick at least one tag, and add a comment, then try again." },
       { status: 400 }
     );
   }

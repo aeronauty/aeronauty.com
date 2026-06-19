@@ -18,7 +18,7 @@ function getBaseUrl(req: NextRequest): string {
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session) return NextResponse.redirect(new URL("/dashboard/login", req.url));
+  if (!session?.user?.labAllowed) return NextResponse.redirect(new URL("/dashboard/login", req.url));
 
   const code = req.nextUrl.searchParams.get("code");
   const error = req.nextUrl.searchParams.get("error");

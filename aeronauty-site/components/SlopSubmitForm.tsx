@@ -2,7 +2,13 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { X, Plus } from "lucide-react";
-import { SLOP_CATEGORIES, SLOP_CATEGORY_LABELS, type SlopCategory } from "@/lib/slop-shared";
+import {
+  SLOP_TAGS,
+  SLOP_TAG_LABELS,
+  MAX_CUSTOM_TAGS,
+  MAX_CUSTOM_TAG_LEN,
+  type SlopTag,
+} from "@/lib/slop-shared";
 
 type Status = "idle" | "sending" | "sent" | "error";
 type Attachment = { file: File; previewUrl: string };
@@ -13,13 +19,34 @@ const MAX_ATTACHMENTS = 4;
 
 export default function SlopSubmitForm() {
   const [url, setUrl] = useState("");
-  const [category, setCategory] = useState<SlopCategory>("ai-slop");
+  const [tags, setTags] = useState<SlopTag[]>(["ai-slop"]);
+  const [customTags, setCustomTags] = useState<string[]>([]);
+  const [customInput, setCustomInput] = useState("");
   const [reason, setReason] = useState("");
   const [credit, setCredit] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function toggleTag(tag: SlopTag) {
+    setTags((current) =>
+      current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag]
+    );
+  }
+
+  function addCustomTag() {
+    const value = customInput.replace(/[<>]/g, "").trim().slice(0, MAX_CUSTOM_TAG_LEN);
+    if (!value) return;
+    setCustomTags((current) =>
+      current.length >= MAX_CUSTOM_TAGS || current.includes(value) ? current : [...current, value]
+    );
+    setCustomInput("");
+  }
+
+  function removeCustomTag(value: string) {
+    setCustomTags((current) => current.filter((t) => t !== value));
+  }
 
   function addFiles(selected: FileList | null) {
     if (!selected || selected.length === 0) return;
@@ -67,13 +94,21 @@ export default function SlopSubmitForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (tags.length + customTags.length === 0) {
+      setErrorMessage("Pick at least one tag.");
+      setStatus("error");
+      return;
+    }
+
     setStatus("sending");
     setErrorMessage("");
 
     try {
       const body = new FormData();
       body.set("url", url);
-      body.set("category", category);
+      tags.forEach((t) => body.append("tags", t));
+      customTags.forEach((t) => body.append("customTags", t));
       body.set("reason", reason);
       body.set("credit", credit);
       attachments.forEach((a) => body.append("screenshots", a.file));
@@ -89,6 +124,9 @@ export default function SlopSubmitForm() {
 
       setStatus("sent");
       setUrl("");
+      setTags([]);
+      setCustomTags([]);
+      setCustomInput("");
       setReason("");
       setCredit("");
       clearAttachments();
@@ -139,27 +177,70 @@ export default function SlopSubmitForm() {
       </label>
 
       <fieldset>
-        <span className="text-sm font-medium text-stone-700">Category</span>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          {SLOP_CATEGORIES.map((value) => {
-            const selected = category === value;
+        <span className="text-sm font-medium text-stone-700">
+          Tags <span className="font-normal text-stone-400">(pick any that fit)</span>
+        </span>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {SLOP_TAGS.map((value) => {
+            const selected = tags.includes(value);
             return (
               <button
                 key={value}
                 type="button"
-                onClick={() => setCategory(value)}
+                onClick={() => toggleTag(value)}
                 aria-pressed={selected}
-                className={`rounded-md border px-4 py-3 text-sm font-semibold transition ${
+                className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
                   selected
                     ? "border-[var(--accent)] bg-teal-700/10 text-teal-900"
                     : "border-stone-300 bg-white text-stone-700 hover:border-stone-400"
                 }`}
               >
-                {SLOP_CATEGORY_LABELS[value]}
+                {SLOP_TAG_LABELS[value]}
               </button>
             );
           })}
+          {customTags.map((value) => (
+            <span
+              key={value}
+              className="inline-flex items-center gap-1 rounded-full border border-[var(--accent)] bg-teal-700/10 px-3 py-1.5 text-sm font-semibold text-teal-900"
+            >
+              {value}
+              <button
+                type="button"
+                onClick={() => removeCustomTag(value)}
+                aria-label={`Remove tag ${value}`}
+                className="rounded-full text-teal-900/70 hover:text-red-700"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          ))}
         </div>
+        {customTags.length < MAX_CUSTOM_TAGS && (
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              value={customInput}
+              onChange={(event) => setCustomInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addCustomTag();
+                }
+              }}
+              maxLength={MAX_CUSTOM_TAG_LEN}
+              placeholder="Other… (add your own)"
+              className="flex-1 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-950 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-teal-700/15"
+            />
+            <button
+              type="button"
+              onClick={addCustomTag}
+              className="rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-500"
+            >
+              Add
+            </button>
+          </div>
+        )}
       </fieldset>
 
       <div className="block">

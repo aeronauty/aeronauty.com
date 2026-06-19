@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ExternalLink } from "lucide-react";
-import { SLOP_CATEGORY_LABELS, type SlopSubmissionView } from "@/lib/slop-shared";
+import { type SlopSubmissionView } from "@/lib/slop-shared";
+import { SlopTagChips } from "@/components/SlopTagChips";
 
 function hostnameOf(url: string): string {
   try {
@@ -49,9 +50,7 @@ export default function SlopModerationList({
       {items.map((item) => (
         <li key={item.id} className="rounded-md border border-stone-200 bg-white p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-stone-600">
-              {SLOP_CATEGORY_LABELS[item.category]}
-            </span>
+            <SlopTagChips tags={item.tags} customTags={item.customTags} />
             <span className="text-xs text-stone-400">
               {new Date(item.createdAt).toLocaleString()}
             </span>

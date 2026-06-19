@@ -1,20 +1,42 @@
 // Client-safe types and constants for the slop feature. No server/Redis imports
 // here so this can be pulled into browser bundles without dragging in the store.
 
-export const SLOP_CATEGORIES = ["shit-physics", "ai-slop"] as const;
-export type SlopCategory = (typeof SLOP_CATEGORIES)[number];
+export const SLOP_TAGS = [
+  "shit-physics",
+  "ai-slop",
+  "barely-veiled-bigotry",
+  "sir-this-is-a-wendys",
+] as const;
+export type SlopTag = (typeof SLOP_TAGS)[number];
 
-export const SLOP_CATEGORY_LABELS: Record<SlopCategory, string> = {
+export const SLOP_TAG_LABELS: Record<SlopTag, string> = {
   "shit-physics": "Shit physics",
   "ai-slop": "AI slop",
+  "barely-veiled-bigotry": "Barely-veiled bigotry",
+  "sir-this-is-a-wendys": "Sir, this is a Wendy's",
 };
+
+export const MAX_CUSTOM_TAGS = 3;
+export const MAX_CUSTOM_TAG_LEN = 40;
+
+export function isSlopTag(value: string): value is SlopTag {
+  return (SLOP_TAGS as readonly string[]).includes(value);
+}
+
+/** Human label for a stored tag slug; predefined → label, otherwise the raw custom value. */
+export function tagLabel(tag: string): string {
+  return isSlopTag(tag) ? SLOP_TAG_LABELS[tag] : tag;
+}
 
 export type SlopStatus = "pending" | "approved";
 
 export type SlopSubmission = {
   id: string;
   url: string;
-  category: SlopCategory;
+  /** Predefined tag slugs. */
+  tags: SlopTag[];
+  /** Free-text "Other" tags (already sanitized at submit time). */
+  customTags: string[];
   reason: string;
   credit: string | null;
   status: SlopStatus;
@@ -33,3 +55,23 @@ export type SlopSubmission = {
 export type SlopSubmissionView = SlopSubmission & { screenshotUrls: string[] };
 
 export type SlopNominee = SlopSubmissionView & { votes: number };
+
+export type SlopComment = {
+  id: string;
+  body: string;
+  /** Display name (typed, or from a Google profile), or null for anonymous. */
+  authorName: string | null;
+  /** True when posted by a signed-in (Google) account. */
+  verified: boolean;
+  /** True when posted by the site owner. */
+  isOwner: boolean;
+  createdAt: string;
+};
+
+export type CommentViewer = {
+  signedIn: boolean;
+  name: string | null;
+  isOwner: boolean;
+};
+
+export const MAX_COMMENT_LEN = 1000;

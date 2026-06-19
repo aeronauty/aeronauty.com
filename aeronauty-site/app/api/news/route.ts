@@ -76,7 +76,7 @@ async function fetchAllFeeds(): Promise<NewsItem[]> {
 
 export async function GET() {
   const session = await auth();
-  if (!session) {
+  if (!session?.user?.labAllowed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

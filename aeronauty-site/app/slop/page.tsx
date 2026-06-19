@@ -27,8 +27,8 @@ export default function SlopSubmitPage() {
         </h1>
         <p className="mt-6 text-lg leading-8 text-stone-600">
           Shit physics, confidently-wrong engineering, AI-generated drivel dressed up as insight —
-          drop the link below. Each week the worst of it goes on a leaderboard, you vote for the
-          champion, and the winner earns its own short.
+          drop the link below. Each week (or whenever I get round to it) the worst of it goes on a
+          leaderboard, you vote for the champion, and the winner earns its own short.
         </p>
         <p className="mt-4 text-sm leading-6 text-stone-500">
           Everything is reviewed before it goes public. I go after the claim, not the person — keep

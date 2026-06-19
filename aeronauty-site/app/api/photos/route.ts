@@ -127,7 +127,7 @@ async function fetchPhotoUrls(token: string): Promise<PhotoEntry[]> {
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.labAllowed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const albumUrl = req.nextUrl.searchParams.get("url");
   if (!albumUrl) return NextResponse.json({ error: "Missing url param" }, { status: 400 });

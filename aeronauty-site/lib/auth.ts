@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { isAllowedLabEmail } from "@/lib/lab-auth";
+import { isAllowedLabEmail, isLabOwnerEmail } from "@/lib/lab-auth";
 
 // Simple in-memory brute-force protection.
 // Locks out an IP for 15 minutes after 10 failed attempts.
@@ -65,15 +65,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
+    // Any Google account may sign in — but a session alone grants nothing.
+    // Access to private areas is gated separately on the labAllowed / isOwner
+    // flags below (see middleware.ts), so public commenters can authenticate
+    // without reaching the dashboard or lab.
     async signIn({ user, account }) {
       if (account?.provider !== "google") return true;
-      return Boolean(user.email && isAllowedLabEmail(user.email));
+      return Boolean(user.email);
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        const email = (user.email ?? "").toLowerCase();
+        const credentialsOwner = (user as { id?: string }).id === "owner";
+        token.labAllowed = credentialsOwner || isAllowedLabEmail(email);
+        token.isOwner = credentialsOwner || isLabOwnerEmail(email);
+      } else if (token.labAllowed === undefined) {
+        // Upgrade tokens issued before these flags existed, so an already-signed-in
+        // owner isn't locked out and has to re-authenticate.
+        const email = (token.email ?? "").toLowerCase();
+        const credentialsOwner = token.sub === "owner";
+        token.labAllowed = credentialsOwner || isAllowedLabEmail(email);
+        token.isOwner = credentialsOwner || isLabOwnerEmail(email);
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.labAllowed = Boolean(token.labAllowed);
+        session.user.isOwner = Boolean(token.isOwner);
+      }
+      return session;
     },
     authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname === "/dashboard/login";
       if (isLoginPage) return true; // Always allow the login page
-      return isLoggedIn; // Redirect everything else if not logged in
+      return Boolean(auth?.user?.labAllowed); // private areas require an allowlisted account
     },
   },
 });
