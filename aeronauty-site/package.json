@@ -11,6 +11,7 @@
     "sync-wind-turbine": "mkdir -p public/wind-turbine && cp submodules/WindTurbineExplainer/turbine_3d_interactive.html public/wind-turbine/ && cp submodules/WindTurbineExplainer/blade_harmonics.html public/wind-turbine/ && cp -r submodules/WindTurbineExplainer/blade-harmonics-app/whythreeblades public/wind-turbine/blade-harmonics"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
     "@upstash/redis": "^1.37.0",
     "csv-parse": "^6.1.0",
     "framer-motion": "^11.3.24",
@@ -25,6 +26,7 @@
     "react-syntax-highlighter": "^15.5.0",
     "recharts": "^3.3.0",
     "rss-parser": "^3.13.0",
+    "server-only": "^0.0.1",
     "tsdav": "^2.1.8",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
