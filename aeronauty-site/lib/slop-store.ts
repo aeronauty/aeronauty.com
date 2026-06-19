@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { z } from "zod";
 import { getRedisClient, hasRedisConfig } from "@/lib/redis-config";
-import { deleteScreenshot, getScreenshotUrls } from "@/lib/supabase-storage";
+import { deleteScreenshots, getScreenshotUrls } from "@/lib/supabase-storage";
 import {
   SLOP_CATEGORIES,
   type SlopSubmission,
@@ -30,20 +30,41 @@ const RATE_PREFIX = "aeronauty:slop:rate:v1:";
 const SUBMIT_WINDOW_SECONDS = 60 * 60;
 const SUBMIT_MAX_PER_WINDOW = 8;
 
+/**
+ * Forgiving link normalization: trims, strips stray leading junk, and prepends
+ * https:// when the scheme is missing — so "linkedin.com/...", "www.x.com/...",
+ * and "//example.com" all become valid URLs. Does not force www (that breaks
+ * apex-only hosts).
+ */
+export function normalizeSubmissionUrl(raw: string): string {
+  let value = raw.trim().replace(/^[@<]+/, "").replace(/[>]+$/, "").trim();
+  if (!value) return value;
+  if (!/^https?:\/\//i.test(value)) {
+    value = `https://${value.replace(/^\/+/, "")}`;
+  }
+  return value;
+}
+
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      parsed.hostname.includes(".")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const submissionInputSchema = z.object({
   url: z
     .string()
     .trim()
     .min(1)
     .max(2000)
-    .refine((value) => {
-      try {
-        const parsed = new URL(value);
-        return parsed.protocol === "http:" || parsed.protocol === "https:";
-      } catch {
-        return false;
-      }
-    }, "Must be a valid http(s) link"),
+    .transform(normalizeSubmissionUrl)
+    .refine(isValidHttpUrl, "Must be a valid web link"),
   category: z.enum(SLOP_CATEGORIES),
   reason: z.string().trim().min(3).max(600),
   credit: z.string().trim().max(80).optional(),
@@ -52,7 +73,7 @@ export const submissionInputSchema = z.object({
 export type SubmissionInput = z.infer<typeof submissionInputSchema>;
 
 export type CreateSubmissionInput = SubmissionInput & {
-  imagePath?: string | null;
+  imagePaths?: string[];
   previewImageUrl?: string | null;
   previewTitle?: string | null;
   previewDescription?: string | null;
@@ -130,7 +151,7 @@ export async function createSubmission(input: CreateSubmissionInput): Promise<Sl
     weekKey: null,
     createdAt: new Date().toISOString(),
     approvedAt: null,
-    imagePath: input.imagePath ?? null,
+    imagePaths: input.imagePaths ?? [],
     previewImageUrl: input.previewImageUrl ?? null,
     previewTitle: input.previewTitle ?? null,
     previewDescription: input.previewDescription ?? null,
@@ -141,21 +162,35 @@ export async function createSubmission(input: CreateSubmissionInput): Promise<Sl
   return submission;
 }
 
+/** Backfills imagePaths[] for any record stored under the old single-path shape. */
+function normalizeSubmission(row: SlopSubmission): SlopSubmission {
+  if (Array.isArray(row.imagePaths)) return row;
+  const legacy = (row as { imagePath?: string | null }).imagePath ?? null;
+  return { ...row, imagePaths: legacy ? [legacy] : [] };
+}
+
 async function loadSubmissions(ids: string[]): Promise<SlopSubmission[]> {
   const redis = getRedisClient();
   if (!redis || ids.length === 0) return [];
   const keys = ids.map((id) => `${SUBMISSION_PREFIX}${id}`);
   const rows = await redis.mget<(SlopSubmission | null)[]>(...keys);
-  return rows.filter((row): row is SlopSubmission => Boolean(row));
+  return rows
+    .filter((row): row is SlopSubmission => Boolean(row))
+    .map(normalizeSubmission);
 }
 
-/** Resolves each submission's stored screenshot path into a signed display URL. */
+/** Resolves each submission's stored screenshot paths into signed display URLs. */
 async function attachScreenshots(submissions: SlopSubmission[]): Promise<SlopSubmissionView[]> {
-  const urls = await getScreenshotUrls(submissions.map((submission) => submission.imagePath));
-  return submissions.map((submission, index) => ({
-    ...submission,
-    screenshotUrl: urls[index] ?? null,
-  }));
+  const allPaths = submissions.flatMap((submission) => submission.imagePaths);
+  const signed = await getScreenshotUrls(allPaths);
+
+  let cursor = 0;
+  return submissions.map((submission) => {
+    const urls = submission.imagePaths
+      .map(() => signed[cursor++])
+      .filter((url): url is string => Boolean(url));
+    return { ...submission, screenshotUrls: urls };
+  });
 }
 
 export async function listPending(): Promise<SlopSubmissionView[]> {
@@ -195,7 +230,7 @@ export async function rejectSubmission(id: string): Promise<void> {
   const submission = await getSubmission(id);
   await redis.del(`${SUBMISSION_PREFIX}${id}`);
   await redis.srem(PENDING_INDEX_KEY, id);
-  await deleteScreenshot(submission?.imagePath ?? null);
+  await deleteScreenshots(submission ? normalizeSubmission(submission).imagePaths : []);
 }
 
 export async function listNominees(weekKey = currentWeekKey()): Promise<SlopNominee[]> {

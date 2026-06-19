@@ -8,9 +8,12 @@ import {
 import { hasImageStore, uploadScreenshot } from "@/lib/supabase-storage";
 import { fetchLinkPreview } from "@/lib/slop-unfurl";
 
-// Kept under Vercel's ~4.5 MB serverless request-body limit; the file streams
-// through this function. For larger uploads, switch to a signed direct-to-storage URL.
+// The whole multipart body streams through this function, so the total is kept
+// under Vercel's ~4.5 MB serverless request-body limit. For more/larger files,
+// switch to signed direct-to-storage uploads.
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
+const MAX_ATTACHMENTS = 4;
 const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
 export async function POST(req: NextRequest) {
@@ -44,24 +47,44 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Optional screenshot upload.
-  let imagePath: string | null = null;
-  const screenshot = form.get("screenshot");
-  if (screenshot instanceof File && screenshot.size > 0) {
-    if (!ALLOWED_IMAGE_TYPES.has(screenshot.type)) {
+  // Optional screenshot/attachment uploads (multiple allowed).
+  const files = form
+    .getAll("screenshots")
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+  if (files.length > MAX_ATTACHMENTS) {
+    return NextResponse.json(
+      { error: `Up to ${MAX_ATTACHMENTS} attachments, please.` },
+      { status: 400 }
+    );
+  }
+
+  let total = 0;
+  for (const file of files) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: "Screenshot must be a PNG, JPEG, WebP, or GIF." },
+        { error: "Attachments must be PNG, JPEG, WebP, or GIF." },
         { status: 400 }
       );
     }
-    if (screenshot.size > MAX_IMAGE_BYTES) {
-      return NextResponse.json({ error: "Screenshot must be under 4 MB." }, { status: 400 });
+    if (file.size > MAX_IMAGE_BYTES) {
+      return NextResponse.json({ error: "Each attachment must be under 4 MB." }, { status: 400 });
     }
-    if (hasImageStore()) {
-      imagePath = await uploadScreenshot(screenshot);
-      if (!imagePath) {
-        return NextResponse.json({ error: "Could not save that screenshot." }, { status: 502 });
-      }
+    total += file.size;
+  }
+  if (total > MAX_TOTAL_BYTES) {
+    return NextResponse.json(
+      { error: "Attachments are too large together — keep the total under 4 MB." },
+      { status: 400 }
+    );
+  }
+
+  let imagePaths: string[] = [];
+  if (files.length > 0 && hasImageStore()) {
+    const uploaded = await Promise.all(files.map((file) => uploadScreenshot(file)));
+    imagePaths = uploaded.filter((path): path is string => Boolean(path));
+    if (imagePaths.length !== files.length) {
+      return NextResponse.json({ error: "Could not save those attachments." }, { status: 502 });
     }
   }
 
@@ -71,7 +94,7 @@ export async function POST(req: NextRequest) {
   try {
     await createSubmission({
       ...parsed.data,
-      imagePath,
+      imagePaths,
       previewImageUrl: preview?.imageUrl ?? null,
       previewTitle: preview?.title ?? null,
       previewDescription: preview?.description ?? null,

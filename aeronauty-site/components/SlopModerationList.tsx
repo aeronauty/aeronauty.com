@@ -57,14 +57,33 @@ export default function SlopModerationList({
             </span>
           </div>
           <p className="mt-2 leading-7 text-stone-800">{item.reason}</p>
-          {(item.screenshotUrl || item.previewImageUrl) && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.screenshotUrl ?? item.previewImageUrl ?? ""}
-              alt=""
-              loading="lazy"
-              className="mt-3 max-h-80 w-full rounded-md border border-stone-200 object-contain"
-            />
+          {item.screenshotUrls.length > 0 ? (
+            <div
+              className={`mt-3 grid gap-2 ${
+                item.screenshotUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"
+              }`}
+            >
+              {item.screenshotUrls.map((src) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  className="max-h-80 w-full rounded-md border border-stone-200 object-contain"
+                />
+              ))}
+            </div>
+          ) : (
+            item.previewImageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.previewImageUrl}
+                alt=""
+                loading="lazy"
+                className="mt-3 max-h-80 w-full rounded-md border border-stone-200 object-contain"
+              />
+            )
           )}
           {(item.previewTitle || item.previewDescription) && (
             <div className="mt-2 rounded-md bg-stone-50 px-3 py-2 text-sm text-stone-500">
