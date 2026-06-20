@@ -2,9 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { deletePost, hasPostsStore, savePost } from "@/lib/posts-store";
 import { isOwnerRequest } from "@/lib/owner";
 
+/** Programmatic publishing path: a bearer token (POSTS_API_KEY) acts as owner-equivalent. */
+function hasValidApiKey(req: NextRequest): boolean {
+  const key = process.env.POSTS_API_KEY;
+  if (!key) return false;
+  return req.headers.get("authorization") === `Bearer ${key}`;
+}
+
+async function authorized(req: NextRequest): Promise<boolean> {
+  return hasValidApiKey(req) || (await isOwnerRequest());
+}
+
 export async function POST(req: NextRequest) {
-  // /api/* isn't covered by middleware, so authorize at the resource.
-  if (!(await isOwnerRequest())) {
+  // /api/* isn't covered by middleware, so authorize at the resource —
+  // an owner session (UI) or the POSTS_API_KEY bearer token (automation).
+  if (!(await authorized(req))) {
     return NextResponse.json({ error: "Not authorized." }, { status: 401 });
   }
   if (!hasPostsStore()) {
