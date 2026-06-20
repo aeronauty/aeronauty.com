@@ -64,7 +64,7 @@ export default async function SlopLeaderboardPage() {
                 key={nominee.id}
                 className="flex gap-4 rounded-md border border-stone-200 bg-white p-5"
               >
-                <SlopVoteButton id={nominee.id} initialVotes={nominee.votes} />
+                <SlopVoteButton id={nominee.id} initialScore={nominee.score} />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-lg" aria-hidden>

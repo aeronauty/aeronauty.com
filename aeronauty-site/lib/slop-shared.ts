@@ -54,7 +54,33 @@ export type SlopSubmission = {
 /** A submission with its screenshots resolved to short-lived signed URLs for display. */
 export type SlopSubmissionView = SlopSubmission & { screenshotUrls: string[] };
 
-export type SlopNominee = SlopSubmissionView & { votes: number };
+export type SlopNominee = SlopSubmissionView & {
+  upvotes: number;
+  downvotes: number;
+  /** Net score (upvotes − downvotes); the board ranks by this. */
+  score: number;
+};
+
+export type VoteDirection = "up" | "down";
+
+/** Rotating microcopy for the up/down buttons — keeps the board playful. Edit freely. */
+export const VOTE_LABELS: { up: string; down: string }[] = [
+  { up: "More of this", down: "Actually… it's fine" },
+  { up: "Crown it 👑", down: "Spare us" },
+  { up: "Peak slop", down: "Leave it alone" },
+  { up: "Send it ⬆️", down: "Nah" },
+  { up: "Gloriously wrong", down: "It's… okay" },
+  { up: "Museum-grade", down: "Move along" },
+  { up: "Chef's kiss of nonsense", down: "Not it" },
+  { up: "Frame it", down: "Pardon it" },
+];
+
+/** Deterministic label pick per entry, so the copy is stable for a given nominee. */
+export function voteLabelFor(id: string): { up: string; down: string } {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return VOTE_LABELS[hash % VOTE_LABELS.length];
+}
 
 export type SlopComment = {
   id: string;

@@ -64,25 +64,36 @@ async function sendEmail(subject: string, html: string, text: string): Promise<b
 const WRAP = (inner: string) =>
   `<div style="font-family:ui-sans-serif,system-ui,sans-serif;color:#1c1917;max-width:560px">${inner}</div>`;
 
-/** Instant email when a single submission lands in the queue. */
-export async function notifyNewSubmission(sub: SlopSubmission, baseUrl: string): Promise<boolean> {
+/** Instant email when a single submission lands. `held` = caught by the filter, awaiting review. */
+export async function notifyNewSubmission(
+  sub: SlopSubmission,
+  baseUrl: string,
+  opts: { held?: boolean } = {}
+): Promise<boolean> {
+  const held = Boolean(opts.held);
   const adminUrl = `${baseUrl}/slop/admin`;
+  const boardUrl = `${baseUrl}/slop/leaderboard`;
   const reason = sub.reason.length > 240 ? `${sub.reason.slice(0, 240)}…` : sub.reason;
   const shots = sub.imagePaths?.length
     ? `${sub.imagePaths.length} screenshot${sub.imagePaths.length === 1 ? "" : "s"}`
     : "no screenshots";
   const credit = sub.credit ? `Spotted by ${escapeHtml(sub.credit)}` : "Anonymous";
 
-  const subject = `🗑️ New slop: ${tagsLine(sub)}`;
+  const heading = held ? "🚩 Held for review" : "🗑️ Now live on the board";
+  const cta = held
+    ? `<a href="${adminUrl}" style="display:inline-block;background:#1c1917;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:600">Review it →</a>`
+    : `<a href="${boardUrl}" style="display:inline-block;background:#1c1917;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:600">See the board →</a> &nbsp; <a href="${adminUrl}" style="color:#78716c">manage</a>`;
+
+  const subject = held ? `🚩 Slop held for review: ${tagsLine(sub)}` : `🗑️ New slop live: ${tagsLine(sub)}`;
   const html = WRAP(`
-    <h2 style="margin:0 0 8px">New slop submitted</h2>
+    <h2 style="margin:0 0 8px">${heading}</h2>
     <p style="margin:0 0 4px;color:#0f766e;font-weight:600">${escapeHtml(tagsLine(sub))}</p>
     <p style="margin:0 0 12px;line-height:1.5">${escapeHtml(reason)}</p>
     <p style="margin:0 0 4px"><a href="${escapeHtml(sub.url)}" style="color:#0f766e">${escapeHtml(sub.url)}</a></p>
     <p style="margin:0 0 16px;color:#78716c;font-size:13px">${shots} · ${credit}</p>
-    <a href="${adminUrl}" style="display:inline-block;background:#1c1917;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:600">Review the queue →</a>
+    ${cta}
   `);
-  const text = `New slop submitted\n${tagsLine(sub)}\n\n${reason}\n${sub.url}\n${shots} · ${credit}\n\nReview: ${adminUrl}`;
+  const text = `${heading}\n${tagsLine(sub)}\n\n${reason}\n${sub.url}\n${shots} · ${credit}\n\n${held ? `Review: ${adminUrl}` : `Board: ${boardUrl}`}`;
   return sendEmail(subject, html, text);
 }
 

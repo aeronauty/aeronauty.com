@@ -12,6 +12,7 @@ import {
   type SlopSubmissionView,
   type SlopNominee,
   type SlopComment,
+  type VoteDirection,
 } from "@/lib/slop-shared";
 
 export {
@@ -28,8 +29,7 @@ const SUBMISSION_PREFIX = "aeronauty:slop:sub:v1:";
 const PENDING_INDEX_KEY = "aeronauty:slop:index:pending:v1";
 const WEEK_INDEX_PREFIX = "aeronauty:slop:index:week:v1:";
 const WEEKS_KEY = "aeronauty:slop:index:weeks:v1";
-const VOTES_PREFIX = "aeronauty:slop:votes:v1:";
-const VOTERS_PREFIX = "aeronauty:slop:voters:v1:";
+const VOTE_HASH_PREFIX = "aeronauty:slop:vote:v2:"; // <id> -> hash(voterKey -> "up" | "down")
 const RATE_PREFIX = "aeronauty:slop:rate:v1:";
 
 const SUBMIT_WINDOW_SECONDS = 60 * 60;
@@ -271,12 +271,16 @@ export async function approveSubmission(id: string): Promise<SlopSubmission | nu
   return updated;
 }
 
+/** Removes a submission whether it is held (pending) or live (approved). */
 export async function rejectSubmission(id: string): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
   const submission = await getSubmission(id);
   await redis.del(`${SUBMISSION_PREFIX}${id}`);
   await redis.srem(PENDING_INDEX_KEY, id);
+  if (submission?.weekKey) {
+    await redis.srem(`${WEEK_INDEX_PREFIX}${submission.weekKey}`, id);
+  }
   await deleteScreenshots(submission ? normalizeSubmission(submission).imagePaths : []);
   await clearComments(id);
 }
@@ -289,45 +293,60 @@ export async function listNominees(weekKey = currentWeekKey()): Promise<SlopNomi
   const submissions = await loadSubmissions(ids);
   if (submissions.length === 0) return [];
 
-  const voteKeys = submissions.map((submission) => `${VOTES_PREFIX}${submission.id}`);
-  const voteValues = await redis.mget<(number | null)[]>(...voteKeys);
-  const views = await attachScreenshots(submissions);
+  const [views, tallies] = await Promise.all([
+    attachScreenshots(submissions),
+    Promise.all(submissions.map((submission) => tallyVotes(submission.id))),
+  ]);
 
-  const nominees: SlopNominee[] = views.map((view, index) => ({
-    ...view,
-    votes: Number(voteValues[index] ?? 0),
-  }));
+  const nominees: SlopNominee[] = views.map((view, index) => {
+    const { up, down } = tallies[index];
+    return { ...view, upvotes: up, downvotes: down, score: up - down };
+  });
 
-  return nominees.sort((a, b) => b.votes - a.votes || (a.createdAt < b.createdAt ? 1 : -1));
+  return nominees.sort((a, b) => b.score - a.score || (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+async function tallyVotes(id: string): Promise<{ up: number; down: number }> {
+  const redis = getRedisClient();
+  if (!redis) return { up: 0, down: 0 };
+  const votes = (await redis.hgetall<Record<string, VoteDirection>>(`${VOTE_HASH_PREFIX}${id}`)) ?? {};
+  let up = 0;
+  let down = 0;
+  for (const direction of Object.values(votes)) {
+    if (direction === "up") up += 1;
+    else if (direction === "down") down += 1;
+  }
+  return { up, down };
 }
 
 export async function castVote(
   req: Request,
-  id: string
-): Promise<{ ok: boolean; votes: number; alreadyVoted: boolean }> {
+  id: string,
+  direction: VoteDirection
+): Promise<{ ok: boolean; upvotes: number; downvotes: number; score: number; yourVote: VoteDirection | null }> {
   const redis = getRedisClient();
-  if (!redis) return { ok: false, votes: 0, alreadyVoted: false };
+  const fail = { ok: false, upvotes: 0, downvotes: 0, score: 0, yourVote: null };
+  if (!redis) return fail;
 
   const submission = await getSubmission(id);
-  if (!submission || submission.status !== "approved") {
-    return { ok: false, votes: 0, alreadyVoted: false };
-  }
+  if (!submission || submission.status !== "approved") return fail;
 
   const voter = clientKey(req);
-  const votersKey = `${VOTERS_PREFIX}${id}`;
-  const votesKey = `${VOTES_PREFIX}${id}`;
+  const hashKey = `${VOTE_HASH_PREFIX}${id}`;
+  let yourVote: VoteDirection | null = direction;
 
   if (voter) {
-    const alreadyVoted = await redis.sismember(votersKey, voter);
-    if (alreadyVoted) {
-      const votes = (await redis.get<number>(votesKey)) ?? 0;
-      return { ok: true, votes: Number(votes), alreadyVoted: true };
+    const previous = await redis.hget<VoteDirection>(hashKey, voter);
+    if (previous === direction) {
+      await redis.hdel(hashKey, voter); // clicking the same arrow again clears the vote
+      yourVote = null;
+    } else {
+      await redis.hset(hashKey, { [voter]: direction });
     }
-    await redis.sadd(votersKey, voter);
   }
 
-  const votes = await redis.incr(votesKey);
-  return { ok: true, votes: Number(votes), alreadyVoted: false };
+  const { up, down } = await tallyVotes(id);
+  return { ok: true, upvotes: up, downvotes: down, score: up - down, yourVote };
 }
 
 // ---- Comments -------------------------------------------------------------
