@@ -15,8 +15,12 @@ function hostnameOf(url: string): string {
 
 export default function SlopModerationList({
   initialItems,
+  mode = "held",
+  emptyText = "Nothing here.",
 }: {
   initialItems: SlopSubmissionView[];
+  mode?: "held" | "live";
+  emptyText?: string;
 }) {
   const [items, setItems] = useState(initialItems);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export default function SlopModerationList({
   if (items.length === 0) {
     return (
       <div className="rounded-md border border-stone-200 bg-white p-8 text-center text-stone-600">
-        Queue is empty. Nothing waiting for review.
+        {emptyText}
       </div>
     );
   }
@@ -104,21 +108,23 @@ export default function SlopModerationList({
           </div>
 
           <div className="mt-4 flex gap-3">
-            <button
-              type="button"
-              disabled={busyId === item.id}
-              onClick={() => moderate(item.id, "approve")}
-              className="rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Approve → leaderboard
-            </button>
+            {mode === "held" && (
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() => moderate(item.id, "approve")}
+                className="rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Approve → leaderboard
+              </button>
+            )}
             <button
               type="button"
               disabled={busyId === item.id}
               onClick={() => moderate(item.id, "reject")}
               className="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-red-400 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Reject
+              {mode === "held" ? "Reject" : "Remove from board"}
             </button>
           </div>
         </li>

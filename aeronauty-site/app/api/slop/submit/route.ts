@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  approveSubmission,
   createSubmission,
   hasSlopStore,
   rateLimitSubmit,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/slop-store";
 import { hasImageStore, uploadScreenshot } from "@/lib/supabase-storage";
 import { fetchLinkPreview } from "@/lib/slop-unfurl";
+import { isFlagged } from "@/lib/slop-wordfilter";
 import { notifyNewSubmission } from "@/lib/slop-notify";
 import { getRequestBaseUrl } from "@/lib/lab-auth";
 
@@ -102,9 +104,17 @@ export async function POST(req: NextRequest) {
       previewTitle: preview?.title ?? null,
       previewDescription: preview?.description ?? null,
     });
+
+    // Auto-publish unless the content trips the moderation blocklist, in which
+    // case it stays held in the queue for manual review.
+    const held = isFlagged([created.reason, ...created.customTags, created.url, created.credit]);
+    if (!held) {
+      await approveSubmission(created.id);
+    }
+
     // Instant owner notification — never fails or noticeably delays the submit.
-    await notifyNewSubmission(created, getRequestBaseUrl(req)).catch(() => {});
-    return NextResponse.json({ ok: true });
+    await notifyNewSubmission(created, getRequestBaseUrl(req), { held }).catch(() => {});
+    return NextResponse.json({ ok: true, held });
   } catch (error) {
     console.error("Slop submission error:", error);
     return NextResponse.json({ error: "Could not save that submission." }, { status: 500 });

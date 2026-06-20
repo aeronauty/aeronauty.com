@@ -8,14 +8,20 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const id = typeof body?.id === "string" ? body.id : "";
-  if (!id) {
-    return NextResponse.json({ error: "Missing entry id." }, { status: 400 });
+  const direction = body?.direction === "up" || body?.direction === "down" ? body.direction : null;
+  if (!id || !direction) {
+    return NextResponse.json({ error: "Missing entry id or direction." }, { status: 400 });
   }
 
-  const result = await castVote(req, id);
+  const result = await castVote(req, id, direction);
   if (!result.ok) {
     return NextResponse.json({ error: "That entry isn't open for voting." }, { status: 400 });
   }
 
-  return NextResponse.json({ votes: result.votes, alreadyVoted: result.alreadyVoted });
+  return NextResponse.json({
+    upvotes: result.upvotes,
+    downvotes: result.downvotes,
+    score: result.score,
+    yourVote: result.yourVote,
+  });
 }
