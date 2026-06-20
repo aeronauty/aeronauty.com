@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deletePost, hasPostsStore, savePost } from "@/lib/posts-store";
+import { deletePost, getPostById, hasPostsStore, savePost } from "@/lib/posts-store";
 import { isOwnerRequest } from "@/lib/owner";
+import { sendOwnerEmail } from "@/lib/email";
+import { getRequestBaseUrl } from "@/lib/lab-auth";
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 /** Programmatic publishing path: a bearer token (POSTS_API_KEY) acts as owner-equivalent. */
 function hasValidApiKey(req: NextRequest): boolean {
@@ -40,6 +46,7 @@ export async function POST(req: NextRequest) {
     if (!title || !content.trim()) {
       return NextResponse.json({ error: "Title and body are required." }, { status: 400 });
     }
+    const existing = typeof body?.id === "string" ? await getPostById(body.id) : null;
     const post = await savePost({
       id: typeof body?.id === "string" ? body.id : null,
       title,
@@ -50,7 +57,19 @@ export async function POST(req: NextRequest) {
       status,
     });
     if (!post) return NextResponse.json({ error: "Could not save." }, { status: 500 });
-    return NextResponse.json({ ok: true, post });
+
+    // Notify the owner when a post goes live (newly published, or explicitly forced).
+    let emailed = false;
+    const newlyPublished = post.status === "published" && existing?.status !== "published";
+    if (post.status === "published" && (newlyPublished || body?.notify === true)) {
+      const url = `${getRequestBaseUrl(req)}/posts/${post.slug}`;
+      emailed = await sendOwnerEmail(
+        `✅ Posted: ${post.title}`,
+        `<div style="font-family:ui-sans-serif,system-ui,sans-serif;color:#1c1917;max-width:560px"><h2 style="margin:0 0 8px">✅ Your post is live</h2><p style="margin:0 0 12px;line-height:1.5"><strong>${escapeHtml(post.title)}</strong></p><a href="${url}" style="display:inline-block;background:#1c1917;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:600">View the post →</a><p style="margin:16px 0 0;color:#78716c;font-size:13px">${url}</p></div>`,
+        `Your post is live: ${url}`
+      );
+    }
+    return NextResponse.json({ ok: true, post, emailed });
   }
 
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });
