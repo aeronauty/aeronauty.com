@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       title,
       summary: typeof body?.summary === "string" ? body.summary : "",
       body: content,
+      format: body?.format === "html" ? "html" : "markdown",
       tags: Array.isArray(body?.tags) ? body.tags.filter((t: unknown) => typeof t === "string") : [],
       status,
     });

@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import { getRedisClient, hasRedisConfig } from "@/lib/redis-config";
-import { slugify, type Post, type PostStatus } from "@/lib/posts-shared";
+import { slugify, type Post, type PostStatus, type PostFormat } from "@/lib/posts-shared";
 
-export { slugify, type Post, type PostStatus } from "@/lib/posts-shared";
+export { slugify, type Post, type PostStatus, type PostFormat } from "@/lib/posts-shared";
 
 const POST_PREFIX = "aeronauty:post:v1:";
 const SLUG_PREFIX = "aeronauty:postslug:v1:";
@@ -45,6 +45,7 @@ export type SavePostInput = {
   title: string;
   summary?: string;
   body: string;
+  format?: PostFormat;
   tags?: string[];
   status: PostStatus;
 };
@@ -65,6 +66,7 @@ export async function savePost(input: SavePostInput): Promise<Post | null> {
     title: input.title.trim().slice(0, 200),
     summary: (input.summary ?? "").trim().slice(0, 400),
     body: input.body,
+    format: input.format === "html" ? "html" : "markdown",
     tags: (input.tags ?? []).map((t) => t.trim()).filter(Boolean).slice(0, 8),
     status: input.status,
     createdAt: existing?.createdAt ?? now,

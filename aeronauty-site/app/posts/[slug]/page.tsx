@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { Markdown } from "@/components/Markdown";
+import HtmlEmbed from "@/components/HtmlEmbed";
 import { getPostBySlug, hasPostsStore } from "@/lib/posts-store";
 import { isOwnerRequest } from "@/lib/owner";
 
@@ -67,7 +68,11 @@ export default async function PostPage({ params }: { params: { slug: string } })
         </header>
 
         <article className="mt-8">
-          <Markdown>{post.body}</Markdown>
+          {post.format === "html" ? (
+            <HtmlEmbed html={post.body} title={post.title} />
+          ) : (
+            <Markdown>{post.body}</Markdown>
+          )}
         </article>
       </main>
       <SiteFooter />

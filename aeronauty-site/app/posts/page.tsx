@@ -45,7 +45,14 @@ export default async function PostsPage() {
                 className="block rounded-md border border-stone-200 bg-white p-6 transition hover:border-stone-400 hover:shadow-[0_18px_50px_rgba(28,25,23,0.08)]"
               >
                 <div className="flex items-baseline justify-between gap-4">
-                  <h2 className="text-2xl font-semibold tracking-tight">{post.title}</h2>
+                  <h2 className="text-2xl font-semibold tracking-tight">
+                    {post.title}
+                    {post.format === "html" && (
+                      <span className="ml-2 align-middle rounded-full bg-teal-700/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-teal-800">
+                        Interactive
+                      </span>
+                    )}
+                  </h2>
                   <span className="shrink-0 text-sm text-stone-400">{formatDate(post.publishedAt)}</span>
                 </div>
                 {post.summary && <p className="mt-3 leading-7 text-stone-600">{post.summary}</p>}

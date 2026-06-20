@@ -1,13 +1,16 @@
 // Client-safe types + helpers for posts (no Redis imports).
 
 export type PostStatus = "draft" | "published";
+export type PostFormat = "markdown" | "html";
 
 export type Post = {
   id: string;
   slug: string;
   title: string;
   summary: string;
-  body: string; // markdown
+  /** Markdown, or a self-contained HTML fragment/document when format === "html". */
+  body: string;
+  format: PostFormat;
   tags: string[];
   status: PostStatus;
   createdAt: string;
