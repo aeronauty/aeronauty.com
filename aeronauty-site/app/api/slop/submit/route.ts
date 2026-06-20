@@ -7,6 +7,8 @@ import {
 } from "@/lib/slop-store";
 import { hasImageStore, uploadScreenshot } from "@/lib/supabase-storage";
 import { fetchLinkPreview } from "@/lib/slop-unfurl";
+import { notifyNewSubmission } from "@/lib/slop-notify";
+import { getRequestBaseUrl } from "@/lib/lab-auth";
 
 // The whole multipart body streams through this function, so the total is kept
 // under Vercel's ~4.5 MB serverless request-body limit. For more/larger files,
@@ -93,13 +95,15 @@ export async function POST(req: NextRequest) {
   const preview = await fetchLinkPreview(parsed.data.url).catch(() => null);
 
   try {
-    await createSubmission({
+    const created = await createSubmission({
       ...parsed.data,
       imagePaths,
       previewImageUrl: preview?.imageUrl ?? null,
       previewTitle: preview?.title ?? null,
       previewDescription: preview?.description ?? null,
     });
+    // Instant owner notification — never fails or noticeably delays the submit.
+    await notifyNewSubmission(created, getRequestBaseUrl(req)).catch(() => {});
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Slop submission error:", error);
