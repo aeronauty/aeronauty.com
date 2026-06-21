@@ -3,6 +3,9 @@
 export type PostStatus = "draft" | "published";
 export type PostFormat = "markdown" | "html";
 
+/** Posts tagged with this show up in the "Slop Forensics" archive on /slop. */
+export const SLOP_SERIES_TAG = "Slop Forensics";
+
 export type Post = {
   id: string;
   slug: string;
