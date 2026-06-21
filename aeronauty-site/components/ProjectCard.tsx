@@ -10,19 +10,22 @@ interface ProjectCardProps {
 
 export function ProjectCard({ title, description, link, kicker, tags }: ProjectCardProps) {
   return (
-    <Link href={link} className="group block h-full rounded-md border border-stone-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-stone-400 hover:shadow-[0_18px_50px_rgba(28,25,23,0.08)]">
+    <Link href={link} className="card group block h-full p-6">
       {kicker && <p className="eyebrow text-[0.65rem]">{kicker}</p>}
-      <h3 className="mt-4 text-2xl font-semibold tracking-tight text-stone-950">{title}</h3>
-      <p className="mt-3 leading-7 text-stone-600">{description}</p>
-      <div className="mt-6 flex flex-wrap gap-2">
+      <h3 className="mt-4 font-display text-2xl font-semibold tracking-tight text-[var(--ink)]">{title}</h3>
+      <p className="mt-3 leading-7 text-[var(--muted)]">{description}</p>
+      <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2">
         {tags.map((tag) => (
-          <span key={tag} className="rounded-full border border-stone-200 px-3 py-1 text-xs font-medium text-stone-600">
+          <span
+            key={tag}
+            className="border-b border-[var(--rule)] pb-0.5 font-mono text-[0.7rem] uppercase tracking-[0.06em] text-[var(--muted)]"
+          >
             {tag}
           </span>
         ))}
       </div>
-      <span className="mt-7 inline-flex text-sm font-semibold text-[var(--ink)] underline decoration-stone-300 underline-offset-4 group-hover:decoration-[var(--accent)]">
-        Open
+      <span className="an-link mt-7 inline-flex font-mono text-xs uppercase tracking-[0.08em] text-[var(--ink)]">
+        Open →
       </span>
     </Link>
   );

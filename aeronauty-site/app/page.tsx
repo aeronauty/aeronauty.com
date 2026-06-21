@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Hero } from "@/components/Hero";
 import { ProjectCard } from "@/components/ProjectCard";
+import { Reveal } from "@/components/Reveal";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 
@@ -57,13 +58,9 @@ export default function Home() {
               ["Writing", "Technical notes, postmortems, and longer explanations.", "/writing"],
               ["Lab", "Private drafts and behind-the-scenes prototypes.", "/lab"],
             ].map(([title, body, href]) => (
-              <Link
-                key={title}
-                href={href}
-                className="rounded-md border border-stone-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-stone-400 hover:shadow-[0_18px_50px_rgba(28,25,23,0.08)]"
-              >
-                <h3 className="text-lg font-semibold text-stone-950">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-stone-600">{body}</p>
+              <Link key={title} href={href} className="card p-5">
+                <h3 className="font-display text-lg font-semibold text-[var(--ink)]">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{body}</p>
               </Link>
             ))}
           </div>
@@ -83,8 +80,10 @@ export default function Home() {
               </Link>
             </div>
             <div className="mt-10 grid gap-5 md:grid-cols-3">
-              {featured.map((item) => (
-                <ProjectCard key={item.title} {...item} />
+              {featured.map((item, i) => (
+                <Reveal key={item.title} delay={i * 0.08} className="h-full">
+                  <ProjectCard {...item} />
+                </Reveal>
               ))}
             </div>
           </div>

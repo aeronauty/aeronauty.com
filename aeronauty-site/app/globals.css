@@ -3,72 +3,162 @@
 @tailwind utilities;
 
 :root {
-  --background: #f7f4ee;
-  --foreground: #1c1917;
-  --paper: #f7f4ee;
-  --ink: #1c1917;
-  --muted: #68615a;
-  --accent: #0f766e;
+  /* "The Standard Model" — warm newsprint + editor's-correction red */
+  --background: #f4efe4;
+  --foreground: #2c2622;
+  --paper: #f4efe4;
+  --paper-raised: #fbf8f1;
+  --ink: #1a1714;
+  --muted: #6b635a;
+  --rule: #d8d0c2;
+  --accent: #d7263d;
+  --accent-deep: #a81c2e;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Helvetica Neue',
+  font-family: var(--font-sans), ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display), Georgia, serif;
+  color: var(--ink);
+  letter-spacing: -0.02em;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  .font-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
 }
 
+/* Mono kicker with a trailing hairline — replaces the old eyebrow label. */
 .eyebrow {
+  align-items: center;
   color: var(--accent);
+  display: inline-flex;
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.72rem;
   font-weight: 700;
+  gap: 0.6rem;
   letter-spacing: 0.18em;
   line-height: 1;
   text-transform: uppercase;
+}
+.eyebrow::after {
+  background: var(--rule);
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 1.5rem;
+}
+
+/* Mono metadata readout for content objects (dates, tags, status). */
+.data-strip {
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.data-strip .flag {
+  color: var(--accent);
+}
+
+/* Correction-stroke link underline (wipes in on hover). */
+.an-link {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 2px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-size 160ms ease-out, color 160ms ease-out;
+}
+.an-link:hover {
+  background-size: 100% 2px;
+  color: var(--ink);
+}
+
+/* Blinking terminal cursor (hero / wordmark accent). */
+.cursor::after {
+  animation: blink 1s step-end infinite;
+  color: var(--accent);
+  content: "▌";
+  margin-left: 0.06em;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor::after {
+    animation: none;
+  }
 }
 
 .button-primary,
 .button-secondary {
   align-items: center;
-  border-radius: 999px;
+  border-radius: 2px;
   display: inline-flex;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 600;
   justify-content: center;
   min-height: 2.75rem;
-  padding: 0 1.1rem;
-  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  padding: 0 1.2rem;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+    transform 160ms ease;
 }
 
 .button-primary {
   background: var(--ink);
-  color: white;
+  color: var(--paper-raised);
 }
 
 .button-primary:hover {
-  background: #0f0f0f;
+  background: #2c2622;
 }
 
 .button-secondary {
   background: transparent;
-  border: 1px solid #d6d0c7;
+  border: 1px solid var(--ink);
   color: var(--ink);
 }
 
 .button-secondary:hover {
-  border-color: #a8a29e;
-  background: white;
+  background: var(--paper-raised);
 }
 
-/* No animations — keep things light for low-power devices */
+.button-primary:active,
+.button-secondary:active {
+  transform: translateY(1px);
+}
+
+/* Editorial card: hairline border, no float shadow; a red top-rule snaps in on hover. */
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  position: relative;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.card:hover {
+  border-color: var(--ink);
+  box-shadow: inset 0 2px 0 0 var(--accent);
+}
 
 /* react-grid-layout dark theme overrides */
 .dashboard-grid .react-grid-placeholder {
