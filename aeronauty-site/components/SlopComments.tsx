@@ -24,7 +24,6 @@ export default function SlopComments({ submissionId }: { submissionId: string })
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [body, setBody] = useState("");
-  const [name, setName] = useState("");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,7 +55,7 @@ export default function SlopComments({ submissionId }: { submissionId: string })
       const res = await fetch("/api/slop/comment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId, body, name: viewer.signedIn ? undefined : name }),
+        body: JSON.stringify({ submissionId, body }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -133,51 +132,44 @@ export default function SlopComments({ submissionId }: { submissionId: string })
             </ul>
           )}
 
-          <form onSubmit={handlePost} className="space-y-2">
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              maxLength={MAX_COMMENT_LEN}
-              rows={2}
-              required
-              placeholder="Add a comment…"
-              className="w-full resize-none rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-950 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-teal-700/15"
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              {viewer.signedIn ? (
+          {viewer.signedIn ? (
+            <form onSubmit={handlePost} className="space-y-2">
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                maxLength={MAX_COMMENT_LEN}
+                rows={2}
+                required
+                placeholder="Add a comment…"
+                className="w-full resize-none rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-950 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-teal-700/15"
+              />
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-stone-500">
                   Commenting as <span className="font-semibold">{viewer.name || "you"}</span>
                   {viewer.isOwner && " (owner)"}
                 </span>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    maxLength={80}
-                    placeholder="Name (optional)"
-                    className="w-40 rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-950 outline-none transition focus:border-[var(--accent)]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => signIn("google", { callbackUrl: window.location.href })}
-                    className="text-xs text-stone-500 underline-offset-2 hover:text-stone-900 hover:underline"
-                  >
-                    or sign in with Google
-                  </button>
-                </>
-              )}
+                <button
+                  type="submit"
+                  disabled={posting || !body.trim()}
+                  className="ml-auto rounded-full bg-stone-950 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {posting ? "Posting…" : "Post"}
+                </button>
+              </div>
+              {error && <p className="text-xs text-red-700">{error}</p>}
+            </form>
+          ) : (
+            <div className="flex items-center gap-3 rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-600">
+              <span>Sign in to comment.</span>
               <button
-                type="submit"
-                disabled={posting || !body.trim()}
-                className="ml-auto rounded-full bg-stone-950 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => signIn("google", { callbackUrl: window.location.href })}
+                className="ml-auto rounded-full bg-stone-950 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-stone-800"
               >
-                {posting ? "Posting…" : "Post"}
+                Sign in with Google
               </button>
             </div>
-            {error && <p className="text-xs text-red-700">{error}</p>}
-          </form>
+          )}
         </div>
       )}
     </div>
