@@ -157,6 +157,28 @@ export async function listIntake(status = "new"): Promise<SlopIntakeItem[]> {
   }));
 }
 
+export type IntakeRow = {
+  post_url: string;
+  tags: string[] | null;
+  custom_tags: string[] | null;
+  image_path: string | null;
+  why_slop: string | null;
+  claim_summary: string | null;
+  draft_headline: string | null;
+};
+
+/** Raw fields needed to promote an intake item into a slop submission. */
+export async function getIntakeRow(id: string): Promise<IntakeRow | null> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return null;
+  const { data } = await sb
+    .from(TABLE)
+    .select("post_url,tags,custom_tags,image_path,why_slop,claim_summary,draft_headline")
+    .eq("id", id)
+    .maybeSingle();
+  return (data as IntakeRow) ?? null;
+}
+
 export async function updateIntakeStatus(id: string, status: string): Promise<void> {
   const sb = getSupabaseAdmin();
   if (!sb) return;

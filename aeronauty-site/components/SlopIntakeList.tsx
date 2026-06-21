@@ -23,6 +23,20 @@ export default function SlopIntakeList({ initialItems }: { initialItems: SlopInt
     }
   }
 
+  async function promote(id: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch("/api/slop/intake/promote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) setItems((current) => current.filter((i) => i.id !== id));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   if (items.length === 0) {
     return (
       <div className="rounded-md border border-stone-200 bg-white p-8 text-center text-stone-600">
@@ -99,7 +113,15 @@ export default function SlopIntakeList({ initialItems }: { initialItems: SlopInt
             </a>
           </div>
 
-          <div className="mt-4 flex gap-3">
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              disabled={busyId === item.id}
+              onClick={() => promote(item.id)}
+              className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+            >
+              Promote to board →
+            </button>
             <button
               type="button"
               disabled={busyId === item.id}

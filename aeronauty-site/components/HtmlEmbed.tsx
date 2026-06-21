@@ -1,84 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Maximize2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-/** Wraps an HTML fragment/document into a minimal page so it renders cleanly in an iframe. */
+/**
+ * Wraps an HTML fragment/document into a minimal page and injects a height
+ * reporter, so the parent can size the iframe to its content — the page then
+ * scrolls as one (scrollytelling), with no nested scrollbar.
+ */
 function wrapDoc(html: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base target="_blank"><style>html,body{margin:0;padding:0;background:#f7f4ee}</style></head><body>${html}</body></html>`;
+  const reporter =
+    "(function(){function r(){try{var b=document.body,d=document.documentElement;" +
+    "var h=Math.max(b.scrollHeight,b.offsetHeight,d.scrollHeight,d.offsetHeight);" +
+    "parent.postMessage({__aeroEmbed:true,height:h},'*');}catch(e){}}" +
+    "window.addEventListener('load',r);window.addEventListener('resize',r);" +
+    "if(window.ResizeObserver){try{new ResizeObserver(r).observe(document.body);}catch(e){}}" +
+    "setInterval(r,1000);r();})();";
+  return (
+    `<!doctype html><html><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1">` +
+    `<base target="_blank"><style>html,body{margin:0;padding:0;background:#f4efe4}</style></head>` +
+    `<body>${html}<script>${reporter}</script></body></html>`
+  );
 }
 
-// Sandboxed: scripts run, but the frame gets an opaque origin (no access to the
-// parent page, cookies, or storage). allow-popups lets in-content links open.
+// Sandboxed: scripts run, but the frame has an opaque origin (no access to the
+// parent page, cookies, or storage). It can still postMessage its height up.
 const SANDBOX = "allow-scripts allow-popups";
 
 export default function HtmlEmbed({ html, title }: { html: string; title: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const doc = wrapDoc(html);
+  const ref = useRef<HTMLIFrameElement>(null);
+  const [height, setHeight] = useState(700);
 
   useEffect(() => {
-    if (!expanded) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setExpanded(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [expanded]);
+    function onMessage(event: MessageEvent) {
+      if (
+        ref.current &&
+        event.source === ref.current.contentWindow &&
+        event.data &&
+        (event.data as { __aeroEmbed?: boolean }).__aeroEmbed
+      ) {
+        const h = Number((event.data as { height?: number }).height);
+        if (h > 0 && h < 40000) setHeight(Math.ceil(h));
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   return (
-    <>
-      <div className="relative overflow-hidden rounded-md border border-stone-200 bg-[var(--paper)]">
-        <iframe
-          title={title}
-          srcDoc={doc}
-          sandbox={SANDBOX}
-          loading="lazy"
-          className="block h-[460px] w-full border-0"
-        />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--paper)] to-transparent" />
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-stone-800"
-        >
-          <Maximize2 className="h-4 w-4" /> Expand
-        </button>
-      </div>
-
-      {expanded && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col bg-stone-900/80 p-2 backdrop-blur-sm sm:p-4"
-          onClick={() => setExpanded(false)}
-        >
-          <div
-            className="mx-auto flex w-full max-w-6xl flex-1 flex-col overflow-hidden rounded-lg bg-[var(--paper)] shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-stone-200 px-4 py-2">
-              <span className="truncate text-sm font-semibold text-stone-700">{title}</span>
-              <button
-                type="button"
-                onClick={() => setExpanded(false)}
-                aria-label="Close"
-                className="rounded-full p-1.5 text-stone-500 transition hover:bg-stone-200 hover:text-stone-900"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <iframe
-              title={`${title} — expanded`}
-              srcDoc={doc}
-              sandbox={SANDBOX}
-              className="block w-full flex-1 border-0"
-            />
-          </div>
-        </div>
-      )}
-    </>
+    // Full-bleed on desktop (breaks out of the prose column to fill the viewport
+    // width); contained on mobile. Height auto-fits content for scrollytelling.
+    <div className="relative w-full overflow-hidden rounded-md border border-stone-200 lg:left-1/2 lg:w-screen lg:-translate-x-1/2 lg:rounded-none lg:border-x-0">
+      <iframe
+        ref={ref}
+        title={title}
+        srcDoc={wrapDoc(html)}
+        sandbox={SANDBOX}
+        scrolling="no"
+        style={{ height }}
+        className="block w-full border-0"
+      />
+    </div>
   );
 }
