@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { Markdown } from "@/components/Markdown";
 import HtmlEmbed from "@/components/HtmlEmbed";
+import PostComments from "@/components/PostComments";
 import { getPostBySlug, hasPostsStore } from "@/lib/posts-store";
 import { SLOP_SERIES_TAG } from "@/lib/posts-shared";
 import { isOwnerRequest } from "@/lib/owner";
@@ -93,6 +94,8 @@ export default async function PostPage({ params }: { params: { slug: string } })
             </div>
           </aside>
         )}
+
+        {post.status === "published" && <PostComments postId={post.id} />}
       </main>
       <SiteFooter />
     </div>

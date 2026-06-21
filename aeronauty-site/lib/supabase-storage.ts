@@ -17,12 +17,22 @@ export function hasImageStore(): boolean {
   return getConfig() !== null;
 }
 
+/** True when Supabase (url + secret key) is configured — for storage or DB use. */
+export function hasSupabase(): boolean {
+  return getConfig() !== null;
+}
+
 function getAdminClient(): SupabaseClient | null {
   const config = getConfig();
   if (!config) return null;
   return createClient(config.url, config.secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+/** Server-only Supabase client (secret key, bypasses RLS) — for DB tables too, not just storage. */
+export function getSupabaseAdmin(): SupabaseClient | null {
+  return getAdminClient();
 }
 
 /**

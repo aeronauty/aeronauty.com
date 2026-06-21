@@ -21,6 +21,15 @@ export type Post = {
   publishedAt: string | null;
 };
 
+export type PostComment = {
+  id: string;
+  body: string;
+  authorName: string | null;
+  verified: boolean;
+  isOwner: boolean;
+  createdAt: string;
+};
+
 export function slugify(input: string): string {
   const slug = input
     .toLowerCase()
