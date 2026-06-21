@@ -59,6 +59,26 @@ export async function uploadScreenshot(file: File): Promise<string | null> {
   return path;
 }
 
+/** Uploads a raw image buffer (e.g. a decoded base64 screenshot from the sweep). */
+export async function uploadScreenshotBuffer(
+  buffer: Buffer,
+  contentType: string
+): Promise<string | null> {
+  const client = getAdminClient();
+  if (!client) return null;
+  const extension = (contentType.split("/")[1] ?? "png").replace(/[^a-z0-9]/gi, "") || "png";
+  const path = `${new Date().getUTCFullYear()}/${crypto.randomUUID()}.${extension}`;
+  const { error } = await client.storage.from(SCREENSHOT_BUCKET).upload(path, buffer, {
+    contentType,
+    upsert: false,
+  });
+  if (error) {
+    console.error("Screenshot buffer upload failed:", error.message);
+    return null;
+  }
+  return path;
+}
+
 /** Generates a short-lived signed URL for a stored screenshot path. */
 export async function getScreenshotUrl(path: string | null): Promise<string | null> {
   if (!path) return null;
