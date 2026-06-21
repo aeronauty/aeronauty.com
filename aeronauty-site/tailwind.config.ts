@@ -8,24 +8,35 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["var(--font-display)", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        // "The Standard Model" — the accent is editor's-correction red. Used via
+        // `var(--accent)` / the `accent-*` utilities below. NOTE: `teal` is left
+        // as Tailwind's default (green) on purpose — downstream features use
+        // teal-* as their success/positive color, so it must NOT be hijacked.
+        accent: {
+          DEFAULT: "#D7263D",
+          deep: "#A81C2E",
+        },
       },
-      animation: {
-        'float': 'float 3s ease-in-out infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
+      borderRadius: {
+        DEFAULT: "2px",
+      },
+      maxWidth: {
+        container: "78rem",
       },
       keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        glow: {
-          'from': { textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00ff88, 0 0 40px #00ff88' },
-          'to': { textShadow: '0 0 20px #fff, 0 0 30px #00ff88, 0 0 40px #00ff88, 0 0 50px #00ff88' },
-        }
-      }
+        blink: { "50%": { opacity: "0" } },
+      },
+      animation: {
+        blink: "blink 1s step-end infinite",
+      },
     },
   },
   plugins: [],
