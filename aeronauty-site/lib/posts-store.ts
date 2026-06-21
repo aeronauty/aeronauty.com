@@ -90,6 +90,13 @@ export async function listPosts(opts: { publishedOnly?: boolean } = {}): Promise
   return opts.publishedOnly ? posts.filter((p) => p.status === "published") : posts;
 }
 
+/** Published posts carrying a given tag (case-insensitive), newest first. */
+export async function listPostsByTag(tag: string): Promise<Post[]> {
+  const needle = tag.toLowerCase();
+  const posts = await listPosts({ publishedOnly: true });
+  return posts.filter((post) => post.tags.some((t) => t.toLowerCase() === needle));
+}
+
 export async function deletePost(id: string): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
