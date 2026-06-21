@@ -1,17 +1,6 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
-
-// Re-mounts on every navigation, so this animates page-to-page transitions.
+// Re-mounts on every navigation, so the CSS `.page-enter` animation (globals.css)
+// re-plays for a page-to-page transition. Pure CSS, so the content is visible
+// even without JS and honors prefers-reduced-motion — no SSR opacity:0 blackout.
 export default function Template({ children }: { children: React.ReactNode }) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      initial={reduce ? false : { opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className="page-enter">{children}</div>;
 }

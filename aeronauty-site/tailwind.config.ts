@@ -16,21 +16,10 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        // "The Standard Model" — the accent is editor's-correction red.
-        // The old code used `teal-*` utilities for the accent, so teal is
-        // remapped to the red ramp: every existing teal-* utility now reads red.
-        teal: {
-          50: "#FCEBEB",
-          100: "#F7C1C1",
-          200: "#F09595",
-          300: "#EC6E6E",
-          400: "#E24B4A",
-          500: "#D7263D",
-          600: "#D7263D",
-          700: "#C01F33",
-          800: "#A81C2E",
-          900: "#791F1F",
-        },
+        // "The Standard Model" — the accent is editor's-correction red. Used via
+        // `var(--accent)` / the `accent-*` utilities below. NOTE: `teal` is left
+        // as Tailwind's default (green) on purpose — downstream features use
+        // teal-* as their success/positive color, so it must NOT be hijacked.
         accent: {
           DEFAULT: "#D7263D",
           deep: "#A81C2E",

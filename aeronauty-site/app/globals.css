@@ -44,7 +44,7 @@ h4 {
 /* Mono kicker with a trailing hairline — replaces the old eyebrow label. */
 .eyebrow {
   align-items: center;
-  color: var(--accent);
+  color: var(--accent-deep);
   display: inline-flex;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.72rem;
@@ -71,7 +71,7 @@ h4 {
   text-transform: uppercase;
 }
 .data-strip .flag {
-  color: var(--accent);
+  color: var(--accent-deep);
 }
 
 /* Correction-stroke link underline (wipes in on hover). */
@@ -103,8 +103,27 @@ h4 {
   }
 }
 
+/* Page-to-page transition. Pure CSS so it runs without JS (content always ends
+   visible) and re-plays each navigation via template.tsx's remount. */
+.page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cursor::after {
+    animation: none;
+  }
+  .page-enter {
     animation: none;
   }
 }
@@ -201,7 +220,7 @@ h4 {
 .post-body h4 {
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #1c1917;
+  color: var(--ink);
   line-height: 1.25;
 }
 .post-body h1 {
@@ -225,7 +244,7 @@ h4 {
   margin: 1rem 0;
 }
 .post-body a {
-  color: var(--accent);
+  color: var(--accent-deep);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
