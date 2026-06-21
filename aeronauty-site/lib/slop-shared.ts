@@ -101,3 +101,25 @@ export type CommentViewer = {
 };
 
 export const MAX_COMMENT_LEN = 1000;
+
+/** A candidate captured by the daily LinkedIn sweep, awaiting owner review. */
+export type SlopIntakeItem = {
+  id: string;
+  postUrl: string;
+  authorName: string | null;
+  authorHeadline: string | null;
+  postedAt: string | null;
+  excerpt: string;
+  claimSummary: string | null;
+  whySlop: string | null;
+  tags: string[];
+  customTags: string[];
+  severity: number | null;
+  priorityAuthor: boolean;
+  confidence: number | null;
+  draftHeadline: string | null;
+  draftBody: string | null;
+  screenshotUrl: string | null;
+  status: string;
+  createdAt: string;
+};

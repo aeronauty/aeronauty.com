@@ -3,7 +3,9 @@ import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { LAB_SESSION_COOKIE, isLabOwnerEmail, verifyLabSessionToken } from "@/lib/lab-auth";
 import { hasSlopStore, listNominees, listPending } from "@/lib/slop-store";
+import { hasIntakeStore, listIntake } from "@/lib/slop-intake-store";
 import SlopModerationList from "@/components/SlopModerationList";
+import SlopIntakeList from "@/components/SlopIntakeList";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,7 @@ export default async function SlopAdminPage() {
   const [held, live] = hasSlopStore()
     ? await Promise.all([listPending(), listNominees()])
     : [[], []];
+  const intake = hasIntakeStore() ? await listIntake("new") : [];
 
   return (
     <main className="min-h-screen bg-[var(--paper)] text-stone-950">
@@ -70,6 +73,14 @@ export default async function SlopAdminPage() {
         ) : (
           <>
             <section className="mt-10">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                📥 From the daily sweep
+                <span className="text-sm font-normal text-stone-400">{intake.length}</span>
+              </h2>
+              <SlopIntakeList initialItems={intake} />
+            </section>
+
+            <section className="mt-12">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
                 🚩 Held for review
                 <span className="text-sm font-normal text-stone-400">{held.length}</span>
