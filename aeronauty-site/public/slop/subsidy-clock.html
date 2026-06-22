@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Subsidy Clock: a small annual number wearing a big cumulative coat - Aeronauty / Slop</title>
+<meta name="description" content="The Subsidy Clock totals UK renewable subsidies as a scary cumulative number with the denominator removed. Point the same ticking counter at fuel-duty freezes, Brexit, PFI, water dividends and the Truss mini-budget, and ask what each one actually bought.">
+<link rel="canonical" href="https://www.aeronauty.com/slop/subsidy-clock">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Aeronauty / Slop">
+<meta property="og:title" content="The Subsidy Clock: a small annual number wearing a big cumulative coat">
+<meta property="og:description" content="One number with the denominator deliberately removed. The same ticking-counter format, pointed at the things nobody builds a clock for - fuel duty, Brexit, PFI, water, Truss. Live and sourced.">
+<meta property="og:url" content="https://www.aeronauty.com/slop/subsidy-clock">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="The Subsidy Clock: a small annual number wearing a big cumulative coat">
+<meta name="twitter:description" content="One number with the denominator removed. Point the same counter at fuel duty, Brexit, PFI, water and Truss, and ask what each one bought. Live and sourced.">
+<style>
+  :root{
+    --ink:#15181c; --muted:#5b6470; --line:#e4e7eb; --bg:#fbfcfd; --card:#ffffff;
+    --accent:#0b7a3b; --accentbg:#eaf6ef; --warn:#b23b2e;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+
+  /* ---- article ---- */
+  .post{padding:14px 0 6px}
+  .kicker-top{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.07em;margin:28px 0 6px}
+  .post h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(28px,5.2vw,42px);line-height:1.12;letter-spacing:-.01em;margin:.1em 0 .35em}
+  .post h2{font-family:Georgia,serif;font-size:24px;margin:34px 0 10px}
+  .post .meta{color:var(--muted);font-size:14px;margin-bottom:22px}
+  .post p, .post li{font-family:Georgia,"Times New Roman",serif;font-size:18px;line-height:1.62;color:#23272d}
+  .post p{margin:0 0 18px}
+  .post .lead{font-size:20px}
+  .post b, .post strong{font-weight:700}
+  .post .flawhead{font-weight:700}
+  .post hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+  .post .srcblock{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;color:var(--muted);line-height:1.5}
+  .post .srcblock a{color:var(--muted)}
+  .post .srcblock li{font-family:inherit;font-size:14px;margin-bottom:8px}
+  .note-it{font-style:italic;color:var(--muted)}
+
+  /* ---- counter widget ---- */
+  .counter{margin:30px 0;padding:22px 0 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--accent);
+    background:var(--accentbg);padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+  .live .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px}
+  .tab{border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:13.5px;font-weight:600;
+    padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .tab:hover{color:var(--ink);border-color:#cfd5dc}
+  .tab[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .hero{text-align:center;padding:24px 0 8px}
+  .eyebrow{color:var(--muted);font-size:13px;margin-bottom:6px}
+  .hero h3.title{font-size:clamp(22px,4vw,32px);line-height:1.1;margin:.1em 0 .3em;letter-spacing:-.02em}
+  .sub{color:var(--muted);max-width:600px;margin:0 auto 22px;font-size:15.5px}
+  .bignum{font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-.03em;
+    font-size:clamp(38px,10vw,78px);line-height:1;color:var(--ink)}
+  .bigcap{color:var(--muted);font-size:12px;margin-top:10px;text-transform:uppercase;letter-spacing:.06em}
+  .stopped .bignum{color:var(--warn)}
+  .compare{display:inline-block;margin:18px auto 0;background:var(--accentbg);border:1px solid var(--line);
+    border-radius:999px;padding:9px 18px;font-size:15px;color:var(--ink);max-width:560px}
+  .compare b{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px}
+  .compare .sub2{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  .opened{margin:20px auto 0;max-width:420px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:14px 18px;box-shadow:var(--shadow)}
+  .opened .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .opened .val{font-variant-numeric:tabular-nums;font-weight:700;font-size:24px}
+
+  .chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:26px 0}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .chip .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .chip .v{font-variant-numeric:tabular-nums;font-weight:700;font-size:19px;margin-top:3px}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:10px 0 18px;box-shadow:var(--shadow)}
+  .panel h4.ph{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .panel .bought{color:var(--ink);font-weight:600;margin:8px 0 14px;font-size:15.5px}
+  .panel .flaw{color:var(--ink);margin:0;font-size:15.5px}
+  .panel .flaw b{color:var(--warn)}
+  .srcs{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .srcs a{color:var(--muted)}
+  .phead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .sharebtn{border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:13px;font-weight:600;
+    padding:7px 13px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .sharebtn:hover{border-color:#cfd5dc}
+  .verdict{margin:16px 0 0;padding:13px 16px;background:var(--accentbg);border-radius:12px;font-weight:600;font-size:15px}
+  .verdict:before{content:"Net verdict - ";color:var(--muted);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.06em}
+
+  .ledger{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  .ledger .col{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg)}
+  .ledger h5{margin:0 0 5px;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .ledger .got h5{color:var(--accent)} .ledger .cost h5{color:var(--warn)}
+  .ledger p{margin:0;font-size:14px;font-family:inherit;color:var(--ink)}
+  @media(max-width:560px){.ledger{grid-template-columns:1fr}}
+
+  .board{margin:6px 0 18px}
+  .board .lead2{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .brow{padding:14px 0;border-bottom:1px solid var(--line)}
+  .brow .metar{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .brow .name{font-weight:700}
+  .brow .name .rk{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:8px}
+  .brow .pct{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px}
+  .brow .amt{color:var(--muted);font-size:12.5px;font-weight:600}
+  .barwrap{position:relative;background:var(--line);border-radius:7px;height:14px;margin:8px 0 8px;overflow:hidden}
+  .bar{height:100%;border-radius:7px;transition:width .3s}
+  .basemark{position:absolute;top:-3px;bottom:-3px;left:50%;width:2px;background:#9aa3ad}
+  .brow .vnote{font-size:12.5px;color:var(--muted)}
+  .brow .vnote b{color:var(--ink);font-weight:600}
+  .brow .verdictline{font-size:13px;font-weight:600;margin-top:6px}
+  .brow.base{background:#f2f7f3;border-radius:10px;padding:14px 12px;margin:0 -12px;border-bottom:none}
+
+  .note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+  .disc{background:#fff8ed;border:1px solid #f1dcae;color:#7a5a17;border-radius:12px;padding:12px 16px;font-size:13px;margin:14px 0 4px}
+  .disc b{color:#5e4512}
+  footer.site{padding:26px 0 50px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <article class="post">
+    <div class="kicker-top">Aeronauty / Slop</div>
+    <h1>The Subsidy Clock: a small annual number wearing a big cumulative coat</h1>
+    <div class="meta">Filed 22 June 2026</div>
+
+    <p class="lead"><b>The specimen.</b> A "Subsidy Clock" (subsidyclock.co.uk, launched via <i>The Daily Sceptic</i>) that totals UK renewable and low-carbon electricity support since 2002 and shows it as a counter ticking upward in real time. The figure quoted on its behalf: £131.8bn in direct subsidies, £227.6bn including indirect, "about £15M per day, or £627k per hour," "paid by every UK energy consumer."</p>
+
+    <p>The number is real. The rhetoric around it is the slop.</p>
+
+    <h2>The flaw, in three parts</h2>
+
+    <p><span class="flawhead">1. It never divides.</span> The whole effect depends on letting a quantity run for twenty-four years and then refusing to put a denominator under it. £131.8bn over 24 years is about <b>£5.5bn a year</b>. That is the number the clock will not show you, because £5.5bn is a policy line item and £131.8bn is a headline. "£15M a day" and "£627k an hour" are not new facts, they are the same £5.5bn re-sliced into units small enough to sound frightening. A counter that increments per second dresses a backward-looking accounting total up as live, ongoing spend. It is a calculator with a drum roll.</p>
+
+    <p><span class="flawhead">2. It stuffs the "indirect" total with things that aren't subsidies.</span> The jump from ~£131.8bn to £227.6bn is made by folding in the Capacity Market, <b>carbon pricing</b> (the Climate Change Levy, Carbon Price Support and ETS auction revenue), and transmission and balancing charges. This is not an inference; it is exactly what the site's own methodology page lists under "the indirect bill." Carbon pricing is revenue <i>to</i> the Treasury and a charge on emissions, not a payment <i>to</i> a generator. Transmission and balancing charges are the cost of running any grid, with any mix, including an all-gas one. The site marks every one of these components <b>estimated</b> and concedes the share blamed on renewables is "a stated judgement." Relabelling a tax and general system costs as "renewables subsidy", even a carefully hedged one, is doing the work the direct figure couldn't.</p>
+
+    <p><span class="flawhead">3. The padding is "estimated," by the site's own admission.</span> Here is the honest place to give the clock credit: its <i>direct</i> figure already <b>nets</b> CfD paybacks, so when wholesale runs above the strike price and generators pay money back, the methodology says it counts that. The direct number is not where the inflation lives. The inflation lives in the leap to £227.6bn, which is the "indirect bill", and the site itself marks every component of it estimated, with the attribution a stated judgement rather than a measurement. A number whose own footnotes call it a judgement should not be quoted on LinkedIn as a hard "£227.6Bn."</p>
+
+    <p>And the thing the £131.8bn actually bought, guaranteed offtake that drove offshore-wind strike prices down by roughly 70% between 2015 and 2019, is the reason recent CfD auctions clear <i>below</i> wholesale. The subsidy purchased a learning curve. The clock invoices you for the tuition and hides the graduate.</p>
+
+    <h2>Now point the same clock at anything</h2>
+
+    <p>The Subsidy Clock's only real argument is "look how big the cumulative number is." Fine. Below is the same machine, pointed at things that don't get a ticking counter built for them. Switch the subject, watch it tick, and read the two lines underneath each one: what it actually bought, and what it cost beyond money. That second layer is the denominator the clock leaves out, applied to everyone evenly.</p>
+  </article>
+
+  <!-- ================= INTERACTIVE COUNTER ================= -->
+  <section class="counter" id="counter">
+    <span class="live"><span class="dot"></span>Live demonstration</span>
+
+    <div class="tabs" id="tabs" role="tablist"></div>
+
+    <div class="hero" id="hero">
+      <div class="eyebrow" id="eyebrow"></div>
+      <h3 class="title" id="title"></h3>
+      <div class="sub" id="subtitle"></div>
+      <div class="bignum" id="bignum">£0</div>
+      <div class="bigcap" id="bigcap"></div>
+      <div class="compare" id="compare" style="display:none"></div>
+
+      <div class="opened" id="openedBox">
+        <div class="lbl" id="openedLbl">Since you opened this page</div>
+        <div class="val" id="opened">£0.00</div>
+      </div>
+    </div>
+
+    <div class="chips" id="chips"></div>
+
+    <section class="board" id="board" style="display:none"></section>
+
+    <section class="panel" id="panel">
+      <div class="phead">
+        <h4 class="ph">What the clock won't tell you</h4>
+        <button class="sharebtn" id="shareBtn" type="button">Copy share text</button>
+      </div>
+      <p class="bought" id="bought"></p>
+      <p class="flaw" id="flaw"></p>
+      <div class="ledger" id="ledger"></div>
+      <p class="verdict" id="verdict"></p>
+      <div class="srcs" id="srcs"></div>
+    </section>
+
+    <p class="note" id="how">Timeframe figures are run-rate estimates, exactly as the original Subsidy Clock states: "Every hour" projects the current rate over one hour; "Today" and "This year" apply it to time elapsed since midnight and 1 January. The all-time chip shows the direct figure, then the total with estimated indirect costs in brackets where one exists.</p>
+
+    <div class="disc">A demonstration, not a hoax. Every headline figure here is real and sourced. The point is that the live-ticking-counter format can be pointed at <b>any</b> large cumulative number, and the ones nobody builds a clock for tend to be the bigger ones. The format is a parody of <b>The Subsidy Clock</b> by Richard Lyon.</div>
+  </section>
+  <!-- =============== /INTERACTIVE COUNTER ================= -->
+
+  <article class="post">
+    <h2>The correct framing</h2>
+    <p>Subsidy figures mean nothing as a lump. They mean something <b>per unit of energy and net of value delivered</b>: cost per MWh, against the capacity and generation it financed and the gas imports it displaced, with CfD counted as the two-way contract it is, and with fossil-fuel support, fuel duty freezes and North Sea reliefs, on the <i>same</i> ledger. Do that and the renewables line stops being a scandal and starts being one of the better-value things on the page. Green levies are a small and shrinking slice of a bill that was driven up by gas prices, not by the clock.</p>
+
+    <p><b>Kicker.</b> Any number is a scandal if you let it run for twenty-four years and forbid yourself from dividing. The tell isn't the figure on the Subsidy Clock, it's that nobody ever builds one of these for the bills they'd rather you didn't add up.</p>
+
+    <hr>
+
+    <div class="srcblock">
+      <p style="font-weight:700;color:var(--ink);margin-bottom:10px;font-family:inherit">Sources and figures</p>
+      <ul>
+        <li><b>Subsidy Clock, composition of the "indirect bill"</b> (Capacity Market, Climate Change Levy + Carbon Price Support, ETS auction revenue, TNUoS transmission and BSUoS balancing charges; each marked "estimated," attribution "a stated judgement"; CfD paybacks netted in the direct layer): <a href="https://subsidyclock.co.uk/methodology#indirect">subsidyclock.co.uk/methodology#indirect</a>. Launch: <i>The Daily Sceptic</i>, "Introducing the UK Subsidy Clock," 21 June 2026. Quoted post: Tim Watkins, LinkedIn, 22 June 2026.</li>
+        <li><b>Fuel duty freeze, ~£120bn 2011 to Oct 2024</b> (relative to RPI uprating): <a href="https://obr.uk/forecasts-in-depth/tax-by-tax-spend-by-spend/fuel-duties/">OBR fuel duties</a>; <a href="https://commonslibrary.parliament.uk/research-briefings/cbp-10340/">Commons Library</a>. Emissions effect: <a href="https://www.carbonbrief.org/analysis-fuel-duty-freezes-have-increased-uk-co2-emissions-by-up-to-7/">Carbon Brief</a>.</li>
+        <li><b>Brexit, 4% long-run GDP / ~£40bn public finances</b>: <a href="https://obr.uk/forecasts-in-depth/the-economy-forecast/brexit-analysis/">OBR Brexit analysis</a>. Newer studies put the per-capita hit nearer 6-8%.</li>
+        <li><b>PFI, ~£306bn for ~£60bn of assets</b>: <a href="https://www.pinsentmasons.com/out-law/news/cost-of-pfi-repayments-to-taxpayer-will-ultimately-top-300bn">Treasury figures / Guardian</a>; <a href="https://publications.parliament.uk/pa/cm201719/cmselect/cmpubacc/894/89406.htm">Public Accounts Committee</a>.</li>
+        <li><b>Water dividends, £78bn since 1991</b> (FT research, nominal): <a href="https://www.waternewseurope.com/privatised-water-companies-awash-with-debt-in-england-and-wales-as-dividends-flow-to-shareholders/">via Water News Europe</a>; Ofwat statutory ~£52.7bn: <a href="https://shepwayvox.org/2026/01/26/ofwat-data-41-4-trillion-litres-lost-to-leaks-since-privatisation-in-england-wales-52-7bn-paid-in-dividends/">Ofwat data</a>; ~£61.8bn (2021 prices): <a href="https://gala.gre.ac.uk/id/eprint/34274/14/34274%20HALL_Water_and_Sewerage_Company_Finances_(Rev.2)_2021.pdf">Univ. of Greenwich</a>.</li>
+        <li><b>NHS Test &amp; Trace, £37bn / £8.7bn unspent</b>: <a href="https://committees.parliament.uk/committee/127/public-accounts-committee/news/158262/muddled-overstated-eyewateringly-expensive-pac-damning-on-test-trace-that-has-failed-on-main-objectives/">Public Accounts Committee</a>.</li>
+        <li><b>PPE, 75% of £12bn lost, £4bn to be burned, £1.4bn destroyed</b>: <a href="https://committees.parliament.uk/committee/127/public-accounts-committee/news/171306/4-billion-of-unusable-ppe-bought-in-first-year-of-pandemic-will-be-burnt-to-generate-power/">Public Accounts Committee</a>; <a href="https://cleanroomtechnology.com/government-writes-off-1-4bn-of-ppe-from-covid">£1.4bn destroyed</a>.</li>
+        <li><b>Royal Mail, £3.30 float to £4.50 close, ~£750m</b>: <a href="https://www.nao.org.uk/reports/privatisation-of-royal-mail-plc/">NAO</a>; <a href="https://commonslibrary.parliament.uk/research-briefings/sn06668/">Commons Library</a>.</li>
+        <li><b>Truss mini-budget, ~£30bn fiscal hole, £19.3bn BoE gilt purchases</b>: <a href="https://en.wikipedia.org/wiki/September_2022_United_Kingdom_mini-budget">overview / Resolution Foundation / Bank of England</a>.</li>
+      </ul>
+      <p class="note-it" style="font-family:inherit">Run-rates are estimates and labelled as such throughout. Figures are stated loosely in 2024 prices where noted.</p>
+    </div>
+  </article>
+
+  <footer class="site"><b>Aeronauty / Slop.</b> Forensic takedowns of bad data and AI slop. <a href="/slop" style="color:var(--muted)">More exhibits →</a></footer>
+</div>
+
+<script>
+const YEAR_MS = 365.25*24*3600*1000;
+const SEC_PER_YEAR = 365.25*24*3600;
+const gbp0 = new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0});
+const gbp2 = new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',minimumFractionDigits:2,maximumFractionDigits:2});
+
+const METERS = [
+  {
+    id:'renewables', tab:'Renewables subsidies',
+    eyebrow:'Total paid since 2002 · 2024 prices',
+    title:'The Subsidy Clock',
+    subtitle:'UK renewable & low-carbon electricity support, the original. A live tally of CfD, Renewables Obligation, Feed-in Tariff and constraint payments.',
+    baseDate:'2026-06-22', baseTotal:131.8e9, ratePerYear:5.49e9, indirectTotal:227.6e9,
+    accent:'#0b7a3b',
+    bought:'Guaranteed offtake that drove offshore-wind strike prices down ~70% between 2015 and 2019, which is why recent CfD auctions clear below wholesale. To its credit, the clock already nets the days when generators pay money back, so the direct figure isn’t the inflation point.',
+    flaw:'The headline sums <b>nominal pounds over 24 years</b> (~£5.5bn/yr) with no per-MWh figure on the front page. The real stretch is the jump to £227.6bn: that "indirect bill" is network and balancing charges, the capacity levy and <b>carbon pricing</b>, which the site itself marks estimated, with the share attributed to renewables "a stated judgement," not a measurement. Carbon pricing is Treasury revenue and a charge on emissions, not a payment to wind farms.',
+    srcs:[['Subsidy Clock methodology (indirect bill)','https://subsidyclock.co.uk/methodology#indirect'],['subsidyclock.co.uk','https://subsidyclock.co.uk/'],['The Daily Sceptic launch','https://dailysceptic.org/2026/06/21/introducing-the-uk-subsidy-clock/']]
+  },
+  {
+    id:'fuelduty', tab:'Fuel-duty freeze',
+    eyebrow:'Revenue foregone since 2011 · OBR',
+    title:'The Fuel-Duty Clock',
+    subtitle:'The tax cut that never ends. Fuel duty has been frozen or cut every year since 2011, a fossil-fuel subsidy nobody built a counter for.',
+    baseDate:'2024-10-01', baseTotal:120e9, ratePerYear:5e9,
+    accent:'#b23b2e',
+    bought:'Cheaper motoring for 14 years, with the largest gains going to higher-mileage, higher-income drivers.',
+    flaw:'A genuine fossil-fuel subsidy of <b>~£120bn between 2011 and Oct 2024</b> (OBR, relative to RPI uprating), nearly the entire 24-year renewables figure, racked up in barely half the time. The continuing-freeze cost runs ~£4-5bn a year.',
+    note:'£120bn is the OBR’s cumulative cost vs uprating with inflation; run-rate here is the estimated continuing cost, not the full annual duty gap.',
+    srcs:[['OBR fuel duties','https://obr.uk/forecasts-in-depth/tax-by-tax-spend-by-spend/fuel-duties/'],['Commons Library, fuel duty','https://commonslibrary.parliament.uk/research-briefings/cbp-10340/'],['Carbon Brief: freezes raised CO2 up to 7%','https://www.carbonbrief.org/analysis-fuel-duty-freezes-have-increased-uk-co2-emissions-by-up-to-7/']]
+  },
+  {
+    id:'brexit', tab:'Brexit',
+    eyebrow:'Lost output since 2020 · OBR 4% of GDP',
+    title:'The Brexit Clock',
+    subtitle:'The cumulative hit from a 4%-of-GDP productivity loss. There is no real Brexit Clock. This is what one would look like.',
+    baseDate:'2026-01-01', baseTotal:240e9, ratePerYear:40e9,
+    accent:'#5b3fb0',
+    bought:'Lost output. The OBR’s long-run 4%-of-GDP productivity hit knocks roughly £40bn a year off the public finances; newer studies put the per-person damage nearer 6-8%. No wind farms at the end of it.',
+    flaw:'On these figures Brexit clears the Subsidy Clock’s entire 24-year total roughly <b>every three to four years</b>, and leaves nothing physical behind. Nobody is spinning up a browser-tab counter for it.',
+    note:'Run-rate is the OBR’s public-finances proxy for a 4% productivity loss; lost-output estimates run higher.',
+    srcs:[['OBR Brexit analysis','https://obr.uk/forecasts-in-depth/the-economy-forecast/brexit-analysis/'],['Economic effects of Brexit','https://en.wikipedia.org/wiki/Economic_effects_of_Brexit']]
+  },
+  {
+    id:'pfi', tab:'PFI',
+    eyebrow:'Repayments for ~£60bn of assets · cumulative',
+    title:'The PFI Clock',
+    subtitle:'Private Finance Initiative, roughly £60bn of schools and hospitals, bought on the national credit card for a final bill north of £300bn.',
+    baseDate:'2025-01-01', baseTotal:200e9, ratePerYear:9e9,
+    accent:'#7a5c1e',
+    bought:'About £60bn of hospitals, schools and roads, for which the public will ultimately pay roughly £306bn over 25-30 year contracts, often getting the assets back needing repair.',
+    flaw:'The state is on track to pay <b>~£306bn for ~£60bn of assets</b> (Treasury figures), a five-fold markup, at around £10bn a year. Keeping it off the books was the entire point.',
+    note:'Run-rate is about £9-10bn/yr of PFI repayments; the baseline is an estimate of cumulative payments to date.',
+    srcs:[['Treasury figures / Guardian','https://www.pinsentmasons.com/out-law/news/cost-of-pfi-repayments-to-taxpayer-will-ultimately-top-300bn'],['Public Accounts Committee','https://publications.parliament.uk/pa/cm201719/cmselect/cmpubacc/894/89406.htm']]
+  },
+  {
+    id:'water', tab:'Water privatisation',
+    eyebrow:'Shareholder dividends since 1991 · 2023 prices',
+    title:'The Water Dividend Clock',
+    subtitle:'What England & Wales water monopolies have paid shareholders since privatisation in 1991, while the pipes leaked and the rivers filled with sewage.',
+    baseDate:'2023-03-31', baseTotal:78e9, ratePerYear:1.6e9,
+    accent:'#1f6f8b',
+    bought:'A set of regional monopolies carrying £60bn+ of debt, record sewage discharges and 41 trillion litres lost to leaks, with dividends often funded by borrowing, not investment.',
+    flaw:'<b>£78bn</b> paid to shareholders over 32 years (FT, nominal) by companies that loaded up on debt to do it. Privatisation promised private investment; a lot of the cash flowed the other way.',
+    note:'£78bn is FT research (16 companies, 1991-March 2023, nominal); Ofwat’s statutory series is lower (~£52.7bn), and University of Greenwich puts it at ~£61.8bn in 2021 prices.',
+    srcs:[['FT research (via Water News Europe)','https://www.waternewseurope.com/privatised-water-companies-awash-with-debt-in-england-and-wales-as-dividends-flow-to-shareholders/'],['Ofwat data: £52.7bn / 41.4tn litres','https://shepwayvox.org/2026/01/26/ofwat-data-41-4-trillion-litres-lost-to-leaks-since-privatisation-in-england-wales-52-7bn-paid-in-dividends/'],['Univ. of Greenwich (Hall)','https://gala.gre.ac.uk/id/eprint/34274/14/34274%20HALL_Water_and_Sewerage_Company_Finances_(Rev.2)_2021.pdf']]
+  },
+  {
+    id:'testtrace', tab:'Test & Trace',
+    eyebrow:'May 2020 to 2022 · the "unimaginable" budget',
+    title:'The Test & Trace Clock',
+    subtitle:'£37bn over two years for a system the Public Accounts Committee said failed its central objective.',
+    baseDate:'2020-05-01', baseTotal:37e9, cap:37e9, ratePerYear:18.5e9, stopped:true, stoppedNote:'Wound down, 2022',
+    accent:'#b23b2e',
+    bought:'A contact-tracing operation the PAC found showed no clear evidence of cutting transmission, followed by two more national lockdowns, with much of the capacity it paid for left unused.',
+    flaw:'An <b>"eye-watering" £37bn</b> over two years, and it couldn’t even spend £8.7bn of the first year’s allocation. More consultants in April 2021 than in December 2020.',
+    factChips:[['Budget','£37bn'],['Unspent, year 1','£8.7bn'],['Lockdowns averted','0 (two followed)'],['Consultants','rising, not falling']],
+    srcs:[['Public Accounts Committee','https://committees.parliament.uk/committee/127/public-accounts-committee/news/158262/muddled-overstated-eyewateringly-expensive-pac-damning-on-test-trace-that-has-failed-on-main-objectives/']]
+  },
+  {
+    id:'ppe', tab:'PPE waste',
+    eyebrow:'Pandemic procurement · written down',
+    title:'The PPE Clock',
+    subtitle:'£12bn spent on PPE in year one of the pandemic, three-quarters of it lost to inflated prices or kit that didn’t meet requirements.',
+    baseDate:'2021-03-31', baseTotal:9e9, cap:9e9, ratePerYear:9e9, stopped:true, stoppedNote:'Booked as loss, 2021-22',
+    accent:'#b23b2e',
+    bought:'Mountains of unusable masks and aprons, £4bn of it to be burned "to generate power", plus £100m+ just to store and incinerate the surplus.',
+    flaw:'DHSC <b>lost about 75% of £12bn</b> to overpricing and unfit kit; £1.4bn already destroyed; a quarter of contracts in dispute. The VIP lane did the rest.',
+    factChips:[['Spent, year 1','£12bn'],['Lost (overpricing/unfit)','~£9bn (75%)'],['To be binned','£4bn'],['Already destroyed','£1.4bn']],
+    srcs:[['Public Accounts Committee','https://committees.parliament.uk/committee/127/public-accounts-committee/news/171306/4-billion-of-unusable-ppe-bought-in-first-year-of-pandemic-will-be-burnt-to-generate-power/'],['£1.4bn destroyed','https://cleanroomtechnology.com/government-writes-off-1-4bn-of-ppe-from-covid']]
+  },
+  {
+    id:'royalmail', tab:'Royal Mail sell-off',
+    eyebrow:'October 2013 · first-day mispricing',
+    title:'The Royal Mail Clock',
+    subtitle:'Floated at £3.30, opened at £4.50. The value the Treasury left on the table in a single morning.',
+    baseDate:'2013-10-11', baseTotal:0.75e9, cap:0.75e9, ratePerYear:0.75e9, stopped:true, stoppedNote:'Sold, October 2013',
+    accent:'#7a5c1e',
+    bought:'A 500-year-old public asset sold cheap to institutions, 60% of it in the first tranche. The NAO said the Department "could have achieved better value for the taxpayer."',
+    flaw:'Shares jumped <b>£3.30 to £4.50</b> on day one. The NAO and MPs found the taxpayer "missed out on significant value," on the order of several hundred million pounds, by lunchtime.',
+    factChips:[['Float price','£3.30'],['Day-one close','£4.50'],['Left on the table','~£750m'],['NAO verdict','"better value" possible']],
+    srcs:[['NAO report','https://www.nao.org.uk/reports/privatisation-of-royal-mail-plc/'],['Commons Library','https://commonslibrary.parliament.uk/research-briefings/sn06668/']]
+  },
+  {
+    id:'truss', tab:'Truss mini-budget',
+    eyebrow:'23-26 September 2022 · then it stopped',
+    title:'The Mini-Budget Clock',
+    subtitle:'The counter that ran for 96 hours. £45bn of unfunded tax cuts, a gilt crisis, and an emergency Bank of England backstop.',
+    baseDate:'2022-09-23', baseTotal:30e9, cap:30e9, ratePerYear:2.74e12, stopped:true, stoppedNote:'Stopped, 26 September 2022',
+    accent:'#b23b2e',
+    bought:'A gilt-market crisis and a Bank of England intervention "on whatever scale necessary", £19.3bn of gilts bought in 13 days. A ~£30bn fiscal hole. Forty-nine days of government.',
+    flaw:'It did in <b>96 hours</b> what the Subsidy Clock needs a quarter of a century of theatrics to gesture at. Then it stopped, because someone turned it off. The renewables money is still generating electricity; this is a scar on the yield curve.',
+    factChips:[['Headline','£45bn unfunded'],['Fiscal hole','~£30bn'],['Time to detonate','96 hours'],['BoE backstop','£19.3bn gilts'],['Government lasted','49 days']],
+    srcs:[['Resolution Foundation / overview','https://en.wikipedia.org/wiki/September_2022_United_Kingdom_mini-budget'],['Bank of England response','https://en.wikipedia.org/wiki/September_2022_United_Kingdom_mini-budget#Bank_of_England_response']]
+  }
+];
+
+const LEDGER = {
+  renewables:{got:'About 50 GW of low-carbon capacity and the fastest grid decarbonisation in the G7; recent strike prices now undercut gas.',
+    cost:'Intermittency and grid-balancing costs, onshore-wind and pylon siting fights, and early contracts that locked in high prices before the cost curve fell.'},
+  fuelduty:{got:'Cheaper motoring for 14 years, weighted heavily towards higher-mileage, higher-income drivers.',
+    cost:'Higher transport emissions and roadside air pollution, entrenched car dependency, and a widening hole in the tax base.'},
+  brexit:{got:'Regulatory and trade-policy autonomy and an end to EU budget contributions, the sovereignty its supporters value above GDP.',
+    cost:'Persistent trade friction, weaker business investment, labour shortages in care and farming, and lower goods exports.'},
+  pfi:{got:'Hospitals and schools built years earlier than Treasury capital budgets would have allowed.',
+    cost:'Rigid 25-30 year contracts, soaring maintenance charges, assets handed back degraded, and a liability kept off the books by design.'},
+  water:{got:'Some treatment and metering investment, with the capital kept off the government balance sheet.',
+    cost:'Record sewage spills, 41 trillion litres lost to leaks, £60bn+ of company debt, and dividends often funded by borrowing.'},
+  testtrace:{got:'A standing mass-testing capability and lab network, stood up at speed.',
+    cost:'No measurable effect on transmission, two further lockdowns, and lasting damage to trust in emergency spending.'},
+  ppe:{got:'Some genuinely usable protective kit during a real global scramble.',
+    cost:'£4bn destined for the incinerator, the "VIP lane" cronyism, and a quarter of contracts in dispute.'},
+  royalmail:{got:'A completed sale within the Parliament, and, briefly, free shares for employees.',
+    cost:'A public asset sold below market, weaker leverage over the universal service obligation, eroding into today’s delivery crisis.'},
+  truss:{got:'Nothing that outlasted the week.',
+    cost:'A mortgage-rate spike for millions, a pension-fund LDI near-collapse needing a Bank rescue, and a lasting premium on UK borrowing.'}
+};
+
+const VERDICTS = {
+  renewables:'Real cost, real assets, close to the cheapest new power Britain can build. The scandal is the framing, not the spending.',
+  fuelduty:'A fossil subsidy nearly the size of the entire renewables programme, bought in half the time, and it pushed emissions up.',
+  brexit:'The biggest number on the board, and the only one with no asset at the end of it.',
+  pfi:'Five pounds owed for every pound of building. The textbook case of a number that means nothing without its denominator.',
+  water:'Tens of billions out to shareholders, much of it borrowed, while the asset rotted. Privatisation running in reverse.',
+  testtrace:'A quarter of the renewables figure in two years, for no measurable effect on transmission.',
+  ppe:'Tiny as a share, but most of it was literally set on fire. Waste, not investment.',
+  royalmail:'A rounding error in cash; a permanent loss in public assets.',
+  truss:'A quarter of 24 years of subsidies, detonated in 96 hours, leaving only higher mortgages behind.'
+};
+
+let current = METERS[0];
+let board = false;
+let openedAt = Date.now();
+
+function liveValue(m, now){
+  const elapsedYrs = (now - new Date(m.baseDate).getTime())/YEAR_MS;
+  let v = m.baseTotal + m.ratePerYear*elapsedYrs;
+  if(m.cap!=null) v = Math.min(v, m.cap);
+  return v;
+}
+const RENEW = METERS.find(m=>m.id==='renewables');
+function pctFmt(x){ return x>=1000 ? Math.round(x).toLocaleString('en-GB') : x>=100 ? x.toFixed(0) : x.toFixed(1); }
+
+function buildTabs(){
+  const t=document.getElementById('tabs'); t.innerHTML='';
+  const lb=document.createElement('button');
+  lb.className='tab'; lb.textContent='★ Leaderboard'; lb.setAttribute('role','tab');
+  lb.setAttribute('aria-selected', board);
+  lb.onclick=()=>{ board=true; render(); };
+  t.appendChild(lb);
+  METERS.forEach(m=>{
+    const b=document.createElement('button');
+    b.className='tab'; b.textContent=m.tab; b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', !board && m.id===current.id);
+    b.onclick=()=>{ board=false; current=m; openedAt=Date.now(); render(); };
+    t.appendChild(b);
+  });
+}
+
+function render(){
+  buildTabs();
+  const single=['hero','chips','panel','how'];
+  if(board){
+    single.forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById('board').style.display='block';
+    renderBoard(); return;
+  }
+  document.getElementById('board').style.display='none';
+  ['hero','chips','panel','how'].forEach(id=>document.getElementById(id).style.display='');
+
+  document.documentElement.style.setProperty('--accent', current.accent);
+  document.getElementById('hero').classList.toggle('stopped', !!current.stopped);
+  document.getElementById('eyebrow').textContent = current.eyebrow;
+  document.getElementById('title').textContent = current.title;
+  document.getElementById('subtitle').innerHTML = current.subtitle;
+  document.getElementById('bought').innerHTML = current.bought;
+  document.getElementById('flaw').innerHTML = current.flaw;
+
+  const led=LEDGER[current.id]||{got:'',cost:''};
+  document.getElementById('ledger').innerHTML =
+    '<div class="col got"><h5>What it bought, beyond money</h5><p>'+led.got+'</p></div>'+
+    '<div class="col cost"><h5>What it cost, beyond money</h5><p>'+led.cost+'</p></div>';
+  document.getElementById('verdict').innerHTML = VERDICTS[current.id]||'';
+
+  const s=document.getElementById('srcs');
+  s.innerHTML = 'Sources: ' + current.srcs.map(x=>'<a href="'+x[1]+'" target="_blank" rel="noopener">'+x[0]+'</a>').join(' &middot; ')
+    + (current.note? '<div style="margin-top:8px">'+current.note+'</div>':'');
+
+  if(current.stopped){
+    document.getElementById('openedLbl').textContent='Status';
+    document.getElementById('opened').textContent = current.stoppedNote || 'Completed';
+  }else{
+    document.getElementById('openedLbl').textContent='Since you opened this page';
+  }
+  tick();
+}
+
+function buildChips(now){
+  const c=document.getElementById('chips'); c.innerHTML='';
+  let chips;
+  if(current.stopped && current.factChips){
+    chips = current.factChips.map(([k,v])=>({k,v}));
+  } else {
+    const rps=current.ratePerYear/SEC_PER_YEAR;
+    const d=new Date();
+    const midnight=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+    const jan1=new Date(d.getFullYear(),0,1).getTime();
+    const live=liveValue(current, now);
+    const all=current.indirectTotal
+      ? gbp0.format(live)+'  ('+gbp0.format(live*(current.indirectTotal/current.baseTotal))+')'
+      : gbp0.format(live);
+    chips=[
+      {k:'Every hour, at this rate', v:gbp0.format(current.ratePerYear/8766)},
+      {k:'Today so far', v:gbp0.format(rps*((now-midnight)/1000))},
+      {k:'This year', v:gbp0.format(rps*((now-jan1)/1000))},
+      {k: current.indirectTotal?'All-time (with indirect)':'All-time', v:all}
+    ];
+  }
+  if(current.id!=='renewables'){
+    const renew=liveValue(RENEW, now);
+    chips.push({k:'vs the Subsidy Clock', v:pctFmt(liveValue(current,now)/renew*100)+'%'});
+  }
+  chips.forEach(o=>{
+    const el=document.createElement('div'); el.className='chip';
+    el.innerHTML='<div class="k">'+o.k+'</div><div class="v">'+o.v+'</div>';
+    c.appendChild(el);
+  });
+}
+
+function renderBoard(){
+  const now=Date.now();
+  const renew=liveValue(RENEW, now);
+  const rows=METERS.map(m=>{const v=liveValue(m,now);return {m,v,pct:v/renew*100};}).sort((a,b)=>b.pct-a.pct);
+  const SCALE=200;
+  let html='<p class="lead2">All nine, ranked by cumulative £ as a share of the renewables Subsidy Clock, which is exactly the <b>wrong</b> way to rank them. The dashed line is the renewables total (100%). Read the value notes underneath to see why the ranking is close to meaningless.</p>';
+  rows.forEach((r,i)=>{
+    const led=LEDGER[r.m.id]||{got:'',cost:''};
+    const w=Math.min(r.pct,SCALE)/SCALE*100;
+    const isBase=r.m.id==='renewables';
+    html+='<div class="brow '+(isBase?'base':'')+'">'
+      +'<div class="metar"><span class="name"><span class="rk">'+(i+1)+'</span>'+r.m.tab+'</span>'
+      +'<span class="pct">'+pctFmt(r.pct)+'%<span class="amt">  '+gbp0.format(r.v)+'</span></span></div>'
+      +'<div class="barwrap"><div class="bar" style="width:'+w+'%;background:'+r.m.accent+'"></div><div class="basemark"></div></div>'
+      +'<div class="vnote"><b>Bought:</b> '+led.got+' &nbsp; <b>Cost:</b> '+led.cost+'</div>'
+      +'<div class="verdictline" style="color:'+r.m.accent+'">'+(VERDICTS[r.m.id]||'')+'</div>'
+      +'</div>';
+  });
+  document.getElementById('board').innerHTML=html;
+}
+
+function tick(){
+  if(board){ renderBoard(); return; }
+  const now=Date.now();
+  document.getElementById('bignum').textContent = gbp0.format(liveValue(current, now));
+  document.getElementById('bigcap').textContent = current.eyebrow;
+  if(!current.stopped){
+    const rps=current.ratePerYear/SEC_PER_YEAR;
+    document.getElementById('opened').textContent = gbp2.format(rps*((now-openedAt)/1000));
+  }
+  const cmp=document.getElementById('compare');
+  if(current.id==='renewables'){
+    cmp.style.display='inline-block';
+    cmp.innerHTML='The baseline, <b>100%</b>. Every other meter is measured against this number.';
+  }else{
+    const renewDirect=liveValue(RENEW, now);
+    const pctDirect=liveValue(current,now)/renewDirect*100;
+    const pctAll=liveValue(current,now)/RENEW.indirectTotal*100;
+    cmp.style.display='inline-block';
+    cmp.innerHTML='= <b>'+pctFmt(pctDirect)+'%</b> of the renewables Subsidy Clock'
+      +'<span class="sub2">'+pctFmt(pctAll)+'% of the £227.6bn all-in figure &middot; renewables baseline ticking at '+gbp0.format(renewDirect)+'</span>';
+  }
+  buildChips(now);
+}
+
+function plain(s){const d=document.createElement('div');d.innerHTML=s;return (d.textContent||'').replace(/\s+/g,' ').trim();}
+function shareText(){
+  const now=Date.now();
+  const led=LEDGER[current.id]||{got:'',cost:''};
+  const pct=pctFmt(liveValue(current,now)/liveValue(RENEW,now)*100);
+  const src=current.srcs&&current.srcs[0]?current.srcs[0][1]:'';
+  return [
+    plain(current.title)+': '+gbp0.format(liveValue(current,now)),
+    current.id==='renewables' ? 'The UK renewables "Subsidy Clock", the baseline.' : '= '+pct+'% of the UK renewables "Subsidy Clock".',
+    '',
+    'Bought: '+plain(led.got),
+    'Cost: '+plain(led.cost),
+    'Verdict: '+plain(VERDICTS[current.id]||''),
+    '',
+    'A cumulative £ figure tells you almost nothing without these two lines. Source: '+src
+  ].join('\n');
+}
+document.getElementById('shareBtn').addEventListener('click', async (e)=>{
+  const btn=e.currentTarget;
+  try{ await navigator.clipboard.writeText(shareText()); btn.textContent='Copied'; }
+  catch(_){ const ta=document.createElement('textarea'); ta.value=shareText(); document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');btn.textContent='Copied';}catch(__){btn.textContent='Copy failed';} ta.remove(); }
+  setTimeout(()=>btn.textContent='Copy share text', 1800);
+});
+
+render();
+setInterval(tick, 250);
+</script>
+</body>
+</html>

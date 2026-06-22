@@ -68,6 +68,22 @@ export default async function SlopSubmitPage() {
               The full breakdowns — slop, taken apart piece by piece.
             </p>
             <div className="mt-8 space-y-3">
+              <a
+                href="/slop/subsidy-clock"
+                className="block rounded-md border border-stone-200 bg-white p-5 transition hover:border-stone-400 hover:shadow-[0_18px_50px_rgba(28,25,23,0.08)]"
+              >
+                <div className="flex items-baseline justify-between gap-4">
+                  <h3 className="font-semibold tracking-tight">
+                    The Subsidy Clock: a small annual number wearing a big cumulative coat
+                  </h3>
+                  <span className="shrink-0 text-xs font-medium text-[var(--accent)]">Interactive</span>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-stone-600">
+                  A live counter tots up UK renewable subsidies to make you gasp. Point the same
+                  ticking format at fuel duty, Brexit, PFI, water and the Truss budget — and ask what
+                  each one actually bought.
+                </p>
+              </a>
               {exhibits.map((post) => (
                 <Link
                   key={post.id}
