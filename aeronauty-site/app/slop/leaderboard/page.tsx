@@ -5,6 +5,7 @@ import SlopVoteButton from "@/components/SlopVoteButton";
 import { SlopTagChips } from "@/components/SlopTagChips";
 import SlopComments from "@/components/SlopComments";
 import { hasSlopStore, listNominees } from "@/lib/slop-store";
+import type { SlopNominee } from "@/lib/slop-shared";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,69 @@ function hostnameOf(url: string): string {
   } catch {
     return "link";
   }
+}
+
+/**
+ * Preview media for a nominee, in priority: real screenshot(s) › live LinkedIn
+ * embed › generated exhibit card (.svg) › unfurl image. The card and real
+ * screenshots both live in screenshotUrls, distinguished by the .svg extension.
+ */
+function NomineeMedia({ nominee }: { nominee: SlopNominee }) {
+  const realShots = nominee.screenshotUrls.filter((u) => !/\.svg(\?|$)/i.test(u));
+  const cardShots = nominee.screenshotUrls.filter((u) => /\.svg(\?|$)/i.test(u));
+
+  if (realShots.length > 0) {
+    return (
+      <div className={`mt-3 grid gap-2 ${realShots.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+        {realShots.map((src) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={src}
+            src={src}
+            alt=""
+            loading="lazy"
+            className="max-h-80 w-full rounded-md border border-stone-200 object-contain"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (nominee.embedActivityId) {
+    return (
+      <iframe
+        title="LinkedIn post"
+        src={`https://www.linkedin.com/embed/feed/update/urn:li:activity:${nominee.embedActivityId}`}
+        loading="lazy"
+        className="mt-3 h-[560px] w-full rounded-md border border-stone-200 bg-white"
+      />
+    );
+  }
+
+  if (cardShots.length > 0) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={cardShots[0]}
+        alt=""
+        loading="lazy"
+        className="mt-3 w-full rounded-md border border-stone-200 object-contain"
+      />
+    );
+  }
+
+  if (nominee.previewImageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={nominee.previewImageUrl}
+        alt=""
+        loading="lazy"
+        className="mt-3 max-h-80 w-full rounded-md border border-stone-200 object-contain"
+      />
+    );
+  }
+  return null;
 }
 
 export default async function SlopLeaderboardPage() {
@@ -72,34 +136,7 @@ export default async function SlopLeaderboardPage() {
                     <SlopTagChips tags={nominee.tags} customTags={nominee.customTags} />
                   </div>
                   <p className="mt-2 leading-7 text-stone-800">{nominee.reason}</p>
-                  {nominee.screenshotUrls.length > 0 ? (
-                    <div
-                      className={`mt-3 grid gap-2 ${
-                        nominee.screenshotUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"
-                      }`}
-                    >
-                      {nominee.screenshotUrls.map((src) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          key={src}
-                          src={src}
-                          alt=""
-                          loading="lazy"
-                          className="max-h-80 w-full rounded-md border border-stone-200 object-contain"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    nominee.previewImageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={nominee.previewImageUrl}
-                        alt=""
-                        loading="lazy"
-                        className="mt-3 max-h-80 w-full rounded-md border border-stone-200 object-contain"
-                      />
-                    )
-                  )}
+                  <NomineeMedia nominee={nominee} />
                   {nominee.previewTitle && (
                     <p className="mt-2 text-sm font-medium text-stone-500">{nominee.previewTitle}</p>
                   )}
