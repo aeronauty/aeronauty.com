@@ -56,7 +56,8 @@ function NomineeMedia({ nominee }: { nominee: SlopNominee }) {
         title="LinkedIn post"
         src={`https://www.linkedin.com/embed/feed/update/urn:li:activity:${nominee.embedActivityId}`}
         loading="lazy"
-        className="mt-3 h-[560px] w-full rounded-md border border-stone-200 bg-white"
+        style={{ height: "clamp(420px, 72vh, 760px)" }}
+        className="mt-3 w-full rounded-md border border-stone-200 bg-white"
       />
     );
   }
