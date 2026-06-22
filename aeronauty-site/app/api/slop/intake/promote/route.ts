@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIntakeRow, updateIntakeStatus } from "@/lib/slop-intake-store";
 import { approveSubmission, createSubmission } from "@/lib/slop-store";
+import { uploadScreenshotBuffer } from "@/lib/supabase-storage";
+import { buildExhibitCardSvg } from "@/lib/slop-exhibit-card";
 import { isOwnerRequest } from "@/lib/owner";
 import { isSlopTag, type SlopTag } from "@/lib/slop-shared";
 
@@ -19,12 +21,27 @@ export async function POST(req: NextRequest) {
   const tags = (row.tags ?? []).filter(isSlopTag) as SlopTag[];
   const reason = (row.why_slop || row.claim_summary || "Flagged from the daily sweep").slice(0, 600);
 
+  // Sweep items are text-only (LinkedIn can't be unfurled), so when there's no
+  // screenshot, generate an on-brand "exhibit card" from the quote as the preview.
+  let imagePaths = row.image_path ? [row.image_path] : [];
+  if (imagePaths.length === 0 && row.excerpt) {
+    const svg = buildExhibitCardSvg({
+      headline: row.draft_headline,
+      excerpt: row.excerpt,
+      author: row.author_name,
+      authorHeadline: row.author_headline,
+      severity: row.severity,
+    });
+    const path = await uploadScreenshotBuffer(Buffer.from(svg, "utf8"), "image/svg+xml");
+    if (path) imagePaths = [path];
+  }
+
   const created = await createSubmission({
     url: row.post_url,
     tags,
     customTags: row.custom_tags ?? [],
     reason,
-    imagePaths: row.image_path ? [row.image_path] : [],
+    imagePaths,
     previewTitle: row.draft_headline,
     previewDescription: row.claim_summary,
   });

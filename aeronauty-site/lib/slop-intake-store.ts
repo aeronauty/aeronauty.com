@@ -165,6 +165,10 @@ export type IntakeRow = {
   why_slop: string | null;
   claim_summary: string | null;
   draft_headline: string | null;
+  excerpt: string | null;
+  author_name: string | null;
+  author_headline: string | null;
+  severity: number | null;
 };
 
 /** Raw fields needed to promote an intake item into a slop submission. */
@@ -173,7 +177,9 @@ export async function getIntakeRow(id: string): Promise<IntakeRow | null> {
   if (!sb) return null;
   const { data } = await sb
     .from(TABLE)
-    .select("post_url,tags,custom_tags,image_path,why_slop,claim_summary,draft_headline")
+    .select(
+      "post_url,tags,custom_tags,image_path,why_slop,claim_summary,draft_headline,excerpt,author_name,author_headline,severity"
+    )
     .eq("id", id)
     .maybeSingle();
   return (data as IntakeRow) ?? null;
