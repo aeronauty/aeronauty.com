@@ -29,6 +29,9 @@ const SUBMISSION_PREFIX = "aeronauty:slop:sub:v1:";
 const PENDING_INDEX_KEY = "aeronauty:slop:index:pending:v1";
 const WEEK_INDEX_PREFIX = "aeronauty:slop:index:week:v1:";
 const WEEKS_KEY = "aeronauty:slop:index:weeks:v1";
+// The active round/board. Sticky: changes ONLY when the owner starts a new
+// round, never automatically on a calendar boundary.
+const ACTIVE_ROUND_KEY = "aeronauty:slop:active-round:v1";
 const VOTE_HASH_PREFIX = "aeronauty:slop:vote:v2:"; // <id> -> hash(voterKey -> "up" | "down")
 const RATE_PREFIX = "aeronauty:slop:rate:v1:";
 
@@ -125,6 +128,37 @@ export function currentWeekKey(date = new Date()): string {
       ((d.getTime() - firstThursday.getTime()) / 86_400_000 - 3 + firstThursdayDayNum) / 7
     );
   return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+/**
+ * The id of the active leaderboard round. This is deliberately STICKY — it
+ * changes only when the owner calls startNewRound(), never on a week boundary —
+ * so the board never resets itself on the calendar. Lazily seeded to the current
+ * ISO week the first time it is read.
+ */
+export async function getActiveRound(): Promise<string> {
+  const redis = getRedisClient();
+  if (!redis) return currentWeekKey();
+  const current = await redis.get<string>(ACTIVE_ROUND_KEY);
+  if (typeof current === "string" && current.length > 0) return current;
+  const init = currentWeekKey();
+  await redis.set(ACTIVE_ROUND_KEY, init);
+  await redis.sadd(WEEKS_KEY, init);
+  return init;
+}
+
+/**
+ * Starts a fresh, empty round and makes it active. The previous round's
+ * nominees stay in Redis (archived under their round id) — nothing is deleted,
+ * they just stop showing on the board. Returns the new round id. Owner-only.
+ */
+export async function startNewRound(): Promise<string | null> {
+  const redis = getRedisClient();
+  if (!redis) return null;
+  const id = `round-${Date.now().toString(36)}`;
+  await redis.set(ACTIVE_ROUND_KEY, id);
+  await redis.sadd(WEEKS_KEY, id);
+  return id;
 }
 
 function getClientIp(req: Request): string | null {
@@ -256,7 +290,7 @@ export async function approveSubmission(id: string): Promise<SlopSubmission | nu
   const submission = await getSubmission(id);
   if (!submission || submission.status === "approved") return submission;
 
-  const weekKey = currentWeekKey();
+  const weekKey = await getActiveRound();
   const updated: SlopSubmission = {
     ...submission,
     status: "approved",
@@ -285,11 +319,12 @@ export async function rejectSubmission(id: string): Promise<void> {
   await clearComments(id);
 }
 
-export async function listNominees(weekKey = currentWeekKey()): Promise<SlopNominee[]> {
+export async function listNominees(roundId?: string): Promise<SlopNominee[]> {
   const redis = getRedisClient();
   if (!redis) return [];
 
-  const ids = await redis.smembers(`${WEEK_INDEX_PREFIX}${weekKey}`);
+  const round = roundId ?? (await getActiveRound());
+  const ids = await redis.smembers(`${WEEK_INDEX_PREFIX}${round}`);
   const submissions = await loadSubmissions(ids);
   if (submissions.length === 0) return [];
 
