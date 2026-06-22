@@ -3,8 +3,9 @@ import { getIntakeRow, updateIntakeStatus } from "@/lib/slop-intake-store";
 import { approveSubmission, createSubmission } from "@/lib/slop-store";
 import { uploadScreenshotBuffer } from "@/lib/supabase-storage";
 import { buildExhibitCardSvg } from "@/lib/slop-exhibit-card";
+import { isLinkedinEmbeddable } from "@/lib/linkedin-embed";
 import { isOwnerRequest } from "@/lib/owner";
-import { isSlopTag, type SlopTag } from "@/lib/slop-shared";
+import { isSlopTag, linkedinActivityId, type SlopTag } from "@/lib/slop-shared";
 
 // Owner promotes a swept candidate straight onto the leaderboard (live + votable).
 export async function POST(req: NextRequest) {
@@ -36,6 +37,10 @@ export async function POST(req: NextRequest) {
     if (path) imagePaths = [path];
   }
 
+  // If the LinkedIn post embeds cleanly, render the live post on the board.
+  const activityId = linkedinActivityId(row.post_url);
+  const embedActivityId = activityId && (await isLinkedinEmbeddable(activityId)) ? activityId : null;
+
   const created = await createSubmission({
     url: row.post_url,
     tags,
@@ -44,6 +49,7 @@ export async function POST(req: NextRequest) {
     imagePaths,
     previewTitle: row.draft_headline,
     previewDescription: row.claim_summary,
+    embedActivityId,
   });
 
   await approveSubmission(created.id); // straight to the live board

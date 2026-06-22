@@ -49,7 +49,15 @@ export type SlopSubmission = {
   previewImageUrl: string | null;
   previewTitle: string | null;
   previewDescription: string | null;
+  /** LinkedIn activity id when the post embeds cleanly — renders the live post. */
+  embedActivityId?: string | null;
 };
+
+/** Extracts a LinkedIn activity id from a post URL (feed/update urn or /posts/ slug). */
+export function linkedinActivityId(url: string | null | undefined): string | null {
+  const match = /activity[:-](\d{6,})/.exec(url ?? "");
+  return match ? match[1] : null;
+}
 
 /** A submission with its screenshots resolved to short-lived signed URLs for display. */
 export type SlopSubmissionView = SlopSubmission & { screenshotUrls: string[] };

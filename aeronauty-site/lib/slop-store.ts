@@ -109,6 +109,7 @@ export type CreateSubmissionInput = SubmissionInput & {
   previewImageUrl?: string | null;
   previewTitle?: string | null;
   previewDescription?: string | null;
+  embedActivityId?: string | null;
 };
 
 export function hasSlopStore(): boolean {
@@ -228,6 +229,7 @@ export async function createSubmission(input: CreateSubmissionInput): Promise<Sl
     previewImageUrl: input.previewImageUrl ?? null,
     previewTitle: input.previewTitle ?? null,
     previewDescription: input.previewDescription ?? null,
+    embedActivityId: input.embedActivityId ?? null,
   };
 
   await redis.set(`${SUBMISSION_PREFIX}${submission.id}`, submission);
@@ -247,6 +249,7 @@ function normalizeSubmission(row: SlopSubmission): SlopSubmission {
     next.tags = legacyCategory && isSlopTag(legacyCategory) ? [legacyCategory] : [];
   }
   if (!Array.isArray(next.customTags)) next.customTags = [];
+  if (next.embedActivityId === undefined) next.embedActivityId = null;
   return next;
 }
 
