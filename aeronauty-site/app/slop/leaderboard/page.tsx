@@ -4,7 +4,7 @@ import { ExternalLink } from "lucide-react";
 import SlopVoteButton from "@/components/SlopVoteButton";
 import { SlopTagChips } from "@/components/SlopTagChips";
 import SlopComments from "@/components/SlopComments";
-import { currentWeekKey, hasSlopStore, listNominees } from "@/lib/slop-store";
+import { hasSlopStore, listNominees } from "@/lib/slop-store";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +24,7 @@ function hostnameOf(url: string): string {
 }
 
 export default async function SlopLeaderboardPage() {
-  const weekKey = currentWeekKey();
-  const nominees = hasSlopStore() ? await listNominees(weekKey) : [];
+  const nominees = hasSlopStore() ? await listNominees() : [];
 
   return (
     <main className="min-h-screen bg-[var(--paper)] text-stone-950">
@@ -39,9 +38,9 @@ export default async function SlopLeaderboardPage() {
           </Link>
         </div>
 
-        <p className="eyebrow">{weekKey} · Slop leaderboard</p>
+        <p className="eyebrow">Slop leaderboard</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-          This week&apos;s worst offenders
+          The current worst offenders
         </h1>
         <p className="mt-6 text-lg leading-8 text-stone-600">
           Reviewed picks from the pile. Upvote the most egregious — the champion gets its own short.
@@ -49,7 +48,7 @@ export default async function SlopLeaderboardPage() {
 
         {nominees.length === 0 ? (
           <div className="mt-10 rounded-md border border-stone-200 bg-white p-8 text-center text-stone-600">
-            <p className="font-semibold text-stone-800">Nothing on the board yet this week.</p>
+            <p className="font-semibold text-stone-800">Nothing on the board yet.</p>
             <p className="mt-2 text-sm leading-6">
               The queue is being reviewed.{" "}
               <Link href="/slop" className="font-semibold text-[var(--accent)] hover:underline">

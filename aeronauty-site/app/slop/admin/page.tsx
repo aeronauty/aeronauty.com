@@ -6,6 +6,7 @@ import { hasSlopStore, listNominees, listPending } from "@/lib/slop-store";
 import { hasIntakeStore, listIntake } from "@/lib/slop-intake-store";
 import SlopModerationList from "@/components/SlopModerationList";
 import SlopIntakeList from "@/components/SlopIntakeList";
+import SlopRoundReset from "@/components/SlopRoundReset";
 
 export const dynamic = "force-dynamic";
 
@@ -97,10 +98,13 @@ export default async function SlopAdminPage() {
                 🟢 Live on the board
                 <span className="text-sm font-normal text-stone-400">{live.length}</span>
               </h2>
+              <div className="mb-4">
+                <SlopRoundReset liveCount={live.length} />
+              </div>
               <SlopModerationList
                 initialItems={live}
                 mode="live"
-                emptyText="Nothing on the board yet this week."
+                emptyText="Nothing on the board yet."
               />
             </section>
           </>
