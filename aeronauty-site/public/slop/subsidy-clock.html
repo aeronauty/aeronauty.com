@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Subsidy Clock: a small annual number wearing a big cumulative coat - Aeronauty / Slop</title>
-<meta name="description" content="The Subsidy Clock totals UK renewable subsidies as a scary cumulative number with the denominator removed. Point the same ticking counter at fuel-duty freezes, Brexit, PFI, water dividends and the Truss mini-budget, and ask what each one actually bought.">
+<meta name="description" content="The Subsidy Clock is a real, careful site — but the scary cumulative number that gets shared from it drops the per-household context. Point the same ticking counter at fuel duty, Brexit, PFI, water and the Truss mini-budget, and ask what each one actually bought.">
 <link rel="canonical" href="https://www.aeronauty.com/slop/subsidy-clock">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Aeronauty / Slop">
 <meta property="og:title" content="The Subsidy Clock: a small annual number wearing a big cumulative coat">
-<meta property="og:description" content="One number with the denominator deliberately removed. The same ticking-counter format, pointed at the things nobody builds a clock for - fuel duty, Brexit, PFI, water, Truss. Live and sourced.">
+<meta property="og:description" content="A real, careful site — and the scary version of its number that gets shared, stripped of context. The same ticking-counter format, pointed at fuel duty, Brexit, PFI, water and Truss. Live and sourced.">
 <meta property="og:url" content="https://www.aeronauty.com/slop/subsidy-clock">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="The Subsidy Clock: a small annual number wearing a big cumulative coat">
-<meta name="twitter:description" content="One number with the denominator removed. Point the same counter at fuel duty, Brexit, PFI, water and Truss, and ask what each one bought. Live and sourced.">
+<meta name="twitter:description" content="The number's real; the version that gets shared drops the context. Point the same counter at fuel duty, Brexit, PFI, water and Truss, and ask what each one bought.">
 <style>
   :root{
     --ink:#15181c; --muted:#5b6470; --line:#e4e7eb; --bg:#fbfcfd; --card:#ffffff;
@@ -42,6 +42,25 @@
   .post .srcblock a{color:var(--muted)}
   .post .srcblock li{font-family:inherit;font-size:14px;margin-bottom:8px}
   .note-it{font-style:italic;color:var(--muted)}
+
+  /* live-site embed */
+  .embed{margin:30px 0}
+  .embed .frame{border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);background:#fff}
+  .embed iframe{width:100%;height:620px;border:0;display:block}
+  .embed figcaption{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5}
+  /* contrast callout */
+  .bignote{border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);padding:6px 20px 16px;margin:26px 0}
+  .bn-row{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .bn-row:last-of-type{border-bottom:none}
+  .bn-lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+  .bn-num{font-variant-numeric:tabular-nums;font-weight:800;font-size:clamp(21px,5.2vw,33px);letter-spacing:-.02em;color:var(--warn);line-height:1}
+  .bn-num.small{color:var(--accent)}
+  .bn-unit{font-size:13.5px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .bn-cap{margin:12px 0 0;font-size:14px;color:var(--muted)}
+  /* scrollytelling reveal */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1 !important;transform:none !important;transition:none}}
 
   /* ---- counter widget ---- */
   .counter{margin:30px 0;padding:22px 0 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -130,23 +149,38 @@
     <h1>The Subsidy Clock: a small annual number wearing a big cumulative coat</h1>
     <div class="meta">Filed 22 June 2026</div>
 
-    <p class="lead"><b>The specimen.</b> A "Subsidy Clock" (subsidyclock.co.uk, launched via <i>The Daily Sceptic</i>) that totals UK renewable and low-carbon electricity support since 2002 and shows it as a counter ticking upward in real time. The figure quoted on its behalf: £131.8bn in direct subsidies, £227.6bn including indirect, "about £15M per day, or £627k per hour," "paid by every UK energy consumer."</p>
+    <p class="lead"><b>The specimen.</b> "The Subsidy Clock" (subsidyclock.co.uk, launched via <i>The Daily Sceptic</i>): a live counter that totals UK renewable and low-carbon electricity support since 2002 and ticks it upward in real time. As I write, the direct figure reads about <b>£131.8 billion</b> — and £220bn-plus once it adds its estimated "indirect" costs.</p>
 
-    <p>The number is real. The rhetoric around it is the slop.</p>
+    <p>Now the part nobody expects me to say: <b>the site itself is careful.</b> Every figure is sourced. It <i>nets</i> the money generators pay back when the wholesale price beats their strike price. It marks the indirect total "estimated" and calls the share it pins on renewables "a stated judgement." And — this is the bit that matters — it <i>divides</i>. Right there on the homepage it tells you the cost works out at <b>£424.92 per household per year</b>, or <b>19% of your bill</b>.</p>
 
-    <h2>The flaw, in three parts</h2>
+    <p>So this isn't a hoax, and I won't pretend it is. The slop isn't the website. The slop is what's left when this gets <i>shared</i> — and the reason it works on all of us.</p>
 
-    <p><span class="flawhead">1. It never divides.</span> The whole effect depends on letting a quantity run for twenty-four years and then refusing to put a denominator under it. £131.8bn over 24 years is about <b>£5.5bn a year</b>. That is the number the clock will not show you, because £5.5bn is a policy line item and £131.8bn is a headline. "£15M a day" and "£627k an hour" are not new facts, they are the same £5.5bn re-sliced into units small enough to sound frightening. A counter that increments per second dresses a backward-looking accounting total up as live, ongoing spend. It is a calculator with a drum roll.</p>
+    <figure class="embed">
+      <div class="frame">
+        <iframe src="https://subsidyclock.co.uk/" title="The live Subsidy Clock at subsidyclock.co.uk" loading="lazy" referrerpolicy="no-referrer"></iframe>
+      </div>
+      <figcaption>The real thing, live. Scroll it: alongside the twelve-digit number it shows you <b>£424.92 a household</b> and <b>19% of your bill</b>. Almost nobody who shares this quotes those.</figcaption>
+    </figure>
 
-    <p><span class="flawhead">2. It stuffs the "indirect" total with things that aren't subsidies.</span> The jump from ~£131.8bn to £227.6bn is made by folding in the Capacity Market, <b>carbon pricing</b> (the Climate Change Levy, Carbon Price Support and ETS auction revenue), and transmission and balancing charges. This is not an inference; it is exactly what the site's own methodology page lists under "the indirect bill." Carbon pricing is revenue <i>to</i> the Treasury and a charge on emissions, not a payment <i>to</i> a generator. Transmission and balancing charges are the cost of running any grid, with any mix, including an all-gas one. The site marks every one of these components <b>estimated</b> and concedes the share blamed on renewables is "a stated judgement." Relabelling a tax and general system costs as "renewables subsidy", even a carefully hedged one, is doing the work the direct figure couldn't.</p>
+    <h2>The number that travels</h2>
 
-    <p><span class="flawhead">3. The padding is "estimated," by the site's own admission.</span> Here is the honest place to give the clock credit: its <i>direct</i> figure already <b>nets</b> CfD paybacks, so when wholesale runs above the strike price and generators pay money back, the methodology says it counts that. The direct number is not where the inflation lives. The inflation lives in the leap to £227.6bn, which is the "indirect bill", and the site itself marks every component of it estimated, with the attribution a stated judgement rather than a measurement. A number whose own footnotes call it a judgement should not be quoted on LinkedIn as a hard "£227.6Bn."</p>
+    <p>Watch what happens between that careful site and your feed. The post that landed on mine kept the twelve-digit number and the "£15M a day, £627k an hour, paid by every UK energy consumer" — and quietly dropped the £424.92, the 19%, the netting, the "estimated," the word "judgement." Every piece of context the site itself provides, sanded off. What's left is a number built to do exactly one job: make you gasp.</p>
 
-    <p>And the thing the £131.8bn actually bought, guaranteed offtake that drove offshore-wind strike prices down by roughly 70% between 2015 and 2019, is the reason recent CfD auctions clear <i>below</i> wholesale. The subsidy purchased a learning curve. The clock invoices you for the tuition and hides the graduate.</p>
+    <div class="bignote">
+      <div class="bn-row"><span class="bn-lbl">What gets shared</span><span class="bn-num">£131,835,301,722</span></div>
+      <div class="bn-row"><span class="bn-lbl">What the site says you actually pay</span><span class="bn-num small">£424.92<span class="bn-unit"> / year &middot; 19% of your bill</span></span></div>
+      <p class="bn-cap">Same data, same website. One of these gets shared. The other doesn't. That's the whole trick.</p>
+    </div>
 
-    <h2>Now point the same clock at anything</h2>
+    <p>And it works because of one fact about every single one of us: <b>nobody can actually feel the difference between a million, a billion and a trillion.</b> They land in the same spot in your head — "big, and aimed at me." A twelve-digit number on a ticking clock isn't information, it's a feeling. £424.92 a year is a figure you could argue about over a pint. £131,835,301,722 is a figure you can only be frightened by. That isn't a side effect of the design. It <i>is</i> the design — and it's aimed squarely at the people who can't picture the gap between those numbers, which is to say everyone.</p>
 
-    <p>The Subsidy Clock's only real argument is "look how big the cumulative number is." Fine. Below is the same machine, pointed at things that don't get a ticking counter built for them. Switch the subject, watch it tick, and read the two lines underneath each one: what it actually bought, and what it cost beyond money. That second layer is the denominator the clock leaves out, applied to everyone evenly.</p>
+    <p>Is the "indirect" framing even fair? That's a real argument — carbon pricing is a tax, revenue <i>to</i> the Treasury, and grid and balancing charges exist for any energy mix, an all-gas one included, so filing them under "renewables subsidy" is a stretch. But the site flags all of it as an estimate and a judgement, and shows its working. You can disagree with a judgement that's shown its working. You can't disagree with a twelve-digit number that's had its working deleted, because there's nothing left to check.</p>
+
+    <p>And the thing the £131.8bn actually bought — guaranteed offtake that drove offshore-wind strike prices down roughly 70% between 2015 and 2019 — is why recent auctions clear <i>below</i> wholesale. The subsidy bought a learning curve. The shared version invoices you for the tuition and hides the graduate.</p>
+
+    <h2>So I pointed the same clock at everything else</h2>
+
+    <p>The cumulative-counter format has exactly one move: "look how big the number is." Fine. Here's the same machine, pointed at things nobody builds a ticking clock for. Switch the subject, watch it tick, and read the two lines underneath each one — what it actually bought, and what it cost beyond money. Those are the lines the shared version always leaves out.</p>
   </article>
 
   <!-- ================= INTERACTIVE COUNTER ================= -->
@@ -187,7 +221,7 @@
 
     <p class="note" id="how">Timeframe figures are run-rate estimates, exactly as the original Subsidy Clock states: "Every hour" projects the current rate over one hour; "Today" and "This year" apply it to time elapsed since midnight and 1 January. The all-time chip shows the direct figure, then the total with estimated indirect costs in brackets where one exists.</p>
 
-    <div class="disc">A demonstration, not a hoax. Every headline figure here is real and sourced. The point is that the live-ticking-counter format can be pointed at <b>any</b> large cumulative number, and the ones nobody builds a clock for tend to be the bigger ones. The format is a parody of <b>The Subsidy Clock</b> by Richard Lyon.</div>
+    <div class="disc">A demonstration, not a hoax. Every headline figure here is real and sourced. The point is that the live-ticking-counter format can be pointed at <b>any</b> large cumulative number, and the ones nobody builds a clock for tend to be the bigger ones. The format is a parody of <b>The Subsidy Clock</b> (subsidyclock.co.uk).</div>
   </section>
   <!-- =============== /INTERACTIVE COUNTER ================= -->
 
@@ -231,10 +265,10 @@ const METERS = [
     eyebrow:'Total paid since 2002 · 2024 prices',
     title:'The Subsidy Clock',
     subtitle:'UK renewable & low-carbon electricity support, the original. A live tally of CfD, Renewables Obligation, Feed-in Tariff and constraint payments.',
-    baseDate:'2026-06-22', baseTotal:131.8e9, ratePerYear:5.49e9, indirectTotal:227.6e9,
+    baseDate:'2026-06-22', baseTotal:131.8e9, ratePerYear:5.49e9, indirectTotal:220e9,
     accent:'#0b7a3b',
     bought:'Guaranteed offtake that drove offshore-wind strike prices down ~70% between 2015 and 2019, which is why recent CfD auctions clear below wholesale. To its credit, the clock already nets the days when generators pay money back, so the direct figure isn’t the inflation point.',
-    flaw:'The headline sums <b>nominal pounds over 24 years</b> (~£5.5bn/yr) with no per-MWh figure on the front page. The real stretch is the jump to £227.6bn: that "indirect bill" is network and balancing charges, the capacity levy and <b>carbon pricing</b>, which the site itself marks estimated, with the share attributed to renewables "a stated judgement," not a measurement. Carbon pricing is Treasury revenue and a charge on emissions, not a payment to wind farms.',
+    flaw:'To its credit the site shows the denominator the shared version drops — <b>£424.92 a household, 19% of your bill</b>, right on the homepage. The stretch is the leap to the ~£220bn "indirect" total: network and balancing charges, the capacity levy and <b>carbon pricing</b>, which the site marks estimated and calls "a stated judgement." Carbon pricing is Treasury revenue, not a payment to wind farms — fair to dispute, but it shows its working. The slop is the twelve-digit number that travels with all of that deleted.',
     srcs:[['Subsidy Clock methodology (indirect bill)','https://subsidyclock.co.uk/methodology#indirect'],['subsidyclock.co.uk','https://subsidyclock.co.uk/'],['The Daily Sceptic launch','https://dailysceptic.org/2026/06/21/introducing-the-uk-subsidy-clock/']]
   },
   {
@@ -507,7 +541,7 @@ function tick(){
     const pctAll=liveValue(current,now)/RENEW.indirectTotal*100;
     cmp.style.display='inline-block';
     cmp.innerHTML='= <b>'+pctFmt(pctDirect)+'%</b> of the renewables Subsidy Clock'
-      +'<span class="sub2">'+pctFmt(pctAll)+'% of the £227.6bn all-in figure &middot; renewables baseline ticking at '+gbp0.format(renewDirect)+'</span>';
+      +'<span class="sub2">'+pctFmt(pctAll)+'% of the £220bn all-in figure &middot; renewables baseline ticking at '+gbp0.format(renewDirect)+'</span>';
   }
   buildChips(now);
 }
@@ -539,6 +573,24 @@ document.getElementById('shareBtn').addEventListener('click', async (e)=>{
 
 render();
 setInterval(tick, 250);
+</script>
+
+<script>
+/* Scrollytelling: reveal article blocks as they scroll into view. Pure progressive
+   enhancement — if JS or IntersectionObserver is missing, everything stays visible. */
+(function(){
+  if(!('IntersectionObserver' in window)) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var sel = '.post > p, .post > h2, .post > .lead, .embed, .bignote, .counter, .disc, .srcblock';
+  var els = Array.prototype.slice.call(document.querySelectorAll(sel));
+  els.forEach(function(el){ el.classList.add('reveal'); });
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+  els.forEach(function(el){ io.observe(el); });
+})();
 </script>
 </body>
 </html>
