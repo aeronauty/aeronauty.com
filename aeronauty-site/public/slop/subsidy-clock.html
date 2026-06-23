@@ -272,6 +272,18 @@ const METERS = [
     srcs:[['Subsidy Clock methodology (indirect bill)','https://subsidyclock.co.uk/methodology#indirect'],['subsidyclock.co.uk','https://subsidyclock.co.uk/'],['The Daily Sceptic launch','https://dailysceptic.org/2026/06/21/introducing-the-uk-subsidy-clock/']]
   },
   {
+    id:'avduty', tab:'Jet-fuel tax break', annual:true,
+    eyebrow:'Fuel duty waived on UK jet fuel · per year · 2023',
+    title:'The Jet-Fuel Exemption Clock',
+    subtitle:'Drivers, hauliers, farmers and the railways all pay fuel duty. Airlines pay none on the kerosene they burn. This is the tax the Treasury chooses not to raise — ticking from the start of this year.',
+    baseDate:'2026-01-01', baseTotal:0, ratePerYear:5.9e9, cap:5.9e9,
+    accent:'#1f6f8b',
+    bought:'A flight network kept artificially cheap against rail, and a politically untouchable aviation sector. The exemption is a relic of the 1944 Chicago Convention era and has never been seriously levied.',
+    flaw:'Charging jet fuel the road rate (~53p/litre) would have raised <b>~£5.9bn in 2023</b> (Transport &amp; Environment); the UK raises roughly £4bn from Air Passenger Duty instead. As a recurring <b>£5.9bn a year</b>, this one tax break beats the renewables Subsidy Clock’s entire <b>£5.5bn-a-year average</b> — the subsidy everyone’s panicking about. Nobody builds it a ticking clock.',
+    note:'£5.9bn is T&E’s estimate of fuel-duty revenue foregone on jet fuel in 2023. Shown here as foregone <i>so far this year</i> at that rate; it recurs annually. APD (~£4bn) is a separate passenger tax, not a fuel duty.',
+    srcs:[['Transport & Environment: jet-fuel duty revenue, 2023','https://www.transportenvironment.org/te-united-kingdom/articles/jet-fuel-duty-how-much-revenue-could-have-been-raised-if-fuel-duty-was-applied-in-2023']]
+  },
+  {
     id:'fuelduty', tab:'Fuel-duty freeze',
     eyebrow:'Revenue foregone since 2011 · OBR',
     title:'The Fuel-Duty Clock',
@@ -372,6 +384,8 @@ const METERS = [
 const LEDGER = {
   renewables:{got:'About 50 GW of low-carbon capacity and the fastest grid decarbonisation in the G7; recent strike prices now undercut gas.',
     cost:'Intermittency and grid-balancing costs, onshore-wind and pylon siting fights, and early contracts that locked in high prices before the cost curve fell.'},
+  avduty:{got:'Cheap flights, a large aviation and tourism sector, and fares that undercut the train on plenty of routes.',
+    cost:'Aviation fuel effectively untaxed at the pump, a playing field tilted against rail, and a recurring multi-billion gap in the tax base.'},
   fuelduty:{got:'Cheaper motoring for 14 years, weighted heavily towards higher-mileage, higher-income drivers.',
     cost:'Higher transport emissions and roadside air pollution, entrenched car dependency, and a widening hole in the tax base.'},
   brexit:{got:'Regulatory and trade-policy autonomy and an end to EU budget contributions, the sovereignty its supporters value above GDP.',
@@ -392,6 +406,7 @@ const LEDGER = {
 
 const VERDICTS = {
   renewables:'Real cost, real assets, close to the cheapest new power Britain can build. The scandal is the framing, not the spending.',
+  avduty:'A real fossil-fuel tax break worth ~£5.9bn a year — bigger, year for year, than the renewables subsidy it gets dwarfed by in the headlines. Nobody builds it a clock.',
   fuelduty:'A fossil subsidy nearly the size of the entire renewables programme, bought in half the time, and it pushed emissions up.',
   brexit:'The biggest number on the board, and the only one with no asset at the end of it.',
   pfi:'Five pounds owed for every pound of building. The textbook case of a number that means nothing without its denominator.',
@@ -472,7 +487,18 @@ function render(){
 function buildChips(now){
   const c=document.getElementById('chips'); c.innerHTML='';
   let chips;
-  if(current.stopped && current.factChips){
+  if(current.annual){
+    const rps=current.ratePerYear/SEC_PER_YEAR;
+    const d=new Date();
+    const midnight=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+    chips=[
+      {k:'Every hour', v:gbp0.format(current.ratePerYear/8766)},
+      {k:'Today so far', v:gbp0.format(rps*((now-midnight)/1000))},
+      {k:'This year so far', v:gbp0.format(liveValue(current,now))},
+      {k:'A full year', v:'£5.9bn'},
+      {k:'vs the clock, per year', v:Math.round(current.ratePerYear/RENEW.ratePerYear*100)+'%'}
+    ];
+  } else if(current.stopped && current.factChips){
     chips = current.factChips.map(([k,v])=>({k,v}));
   } else {
     const rps=current.ratePerYear/SEC_PER_YEAR;
@@ -490,7 +516,7 @@ function buildChips(now){
       {k: current.indirectTotal?'All-time (with indirect)':'All-time', v:all}
     ];
   }
-  if(current.id!=='renewables'){
+  if(current.id!=='renewables' && !current.annual){
     const renew=liveValue(RENEW, now);
     chips.push({k:'vs the Subsidy Clock', v:pctFmt(liveValue(current,now)/renew*100)+'%'});
   }
@@ -504,9 +530,9 @@ function buildChips(now){
 function renderBoard(){
   const now=Date.now();
   const renew=liveValue(RENEW, now);
-  const rows=METERS.map(m=>{const v=liveValue(m,now);return {m,v,pct:v/renew*100};}).sort((a,b)=>b.pct-a.pct);
+  const rows=METERS.filter(m=>!m.annual).map(m=>{const v=liveValue(m,now);return {m,v,pct:v/renew*100};}).sort((a,b)=>b.pct-a.pct);
   const SCALE=200;
-  let html='<p class="lead2">All nine, ranked by cumulative £ as a share of the renewables Subsidy Clock, which is exactly the <b>wrong</b> way to rank them. The dashed line is the renewables total (100%). Read the value notes underneath to see why the ranking is close to meaningless.</p>';
+  let html='<p class="lead2">Ranked by cumulative £ as a share of the renewables Subsidy Clock — which is exactly the <b>wrong</b> way to rank them; the dashed line is the renewables total (100%). (The jet-fuel tax break is a <i>per-year</i> figure, not a cumulative one, so it isn’t ranked here — putting it in a cumulative table would be the very mistake this page is about. See its tab.)</p>';
   rows.forEach((r,i)=>{
     const led=LEDGER[r.m.id]||{got:'',cost:''};
     const w=Math.min(r.pct,SCALE)/SCALE*100;
@@ -532,7 +558,11 @@ function tick(){
     document.getElementById('opened').textContent = gbp2.format(rps*((now-openedAt)/1000));
   }
   const cmp=document.getElementById('compare');
-  if(current.id==='renewables'){
+  if(current.annual){
+    cmp.style.display='inline-block';
+    cmp.innerHTML='= <b>'+Math.round(current.ratePerYear/RENEW.ratePerYear*100)+'%</b> of the renewables Subsidy Clock — <i>per year</i>'
+      +'<span class="sub2">£5.9bn a year foregone vs the clock’s £5.5bn-a-year average. Same money, never given a counter.</span>';
+  }else if(current.id==='renewables'){
     cmp.style.display='inline-block';
     cmp.innerHTML='The baseline, <b>100%</b>. Every other meter is measured against this number.';
   }else{
