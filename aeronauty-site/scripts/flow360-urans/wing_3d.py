@@ -53,7 +53,9 @@ def write_csm(case_id: str, span: float) -> Path:
     return csm
 
 
-def build_params(fl, geometry, case_id: str, semispan: float, quasi2d: bool):
+def build_params(fl, geometry, case_id: str, semispan: float, quasi2d: bool,
+                 alpha_deg: float = ALPHA_DEG, unsteady: str | None = None):
+    """unsteady: None (steady), "urans" (time-accurate SA), "ddes" (SA-DDES)."""
     from flow360 import u  # unit system
 
     te_wake_x = [1.1, 1.5, 2.0, 3.0, 6.0]  # crossflow planes, x/c from LE
@@ -81,16 +83,30 @@ def build_params(fl, geometry, case_id: str, semispan: float, quasi2d: bool):
                 area=semispan * 1.0, moment_length=1.0, moment_center=(0.25, 0, 0)
             ),
             operating_condition=fl.AerospaceCondition.from_mach_reynolds(
-                mach=MACH, reynolds_mesh_unit=REYNOLDS, alpha=ALPHA_DEG * u.deg,
+                mach=MACH, reynolds_mesh_unit=REYNOLDS, alpha=alpha_deg * u.deg,
                 project_length_unit=1 * u.m,
             ),
             models=[
-                fl.Fluid(turbulence_model_solver=fl.SpalartAllmaras()),
+                fl.Fluid(
+                    turbulence_model_solver=fl.SpalartAllmaras(
+                        hybrid_model=fl.DetachedEddySimulation() if unsteady == "ddes" else None
+                    )
+                ),
                 fl.Wall(surfaces=[geometry["*"]]),
                 fl.Freestream(surfaces=[farfield.farfield]),
                 fl.SlipWall(surfaces=[farfield.symmetry_planes]),
             ],
-            time_stepping=fl.Steady(max_steps=6000),
+            # convective time c/U ~ 0.0294 s at M 0.1; URANS resolves it in
+            # ~50 steps, DDES in ~120, both run tens of convective times
+            time_stepping=(
+                fl.Steady(max_steps=6000)
+                if unsteady is None
+                else fl.Unsteady(
+                    steps=1500 if unsteady == "urans" else 4800,
+                    step_size=(5.9e-4 if unsteady == "urans" else 2.45e-4) * u.s,
+                    max_pseudo_steps=30,
+                )
+            ),
             outputs=[
                 fl.VolumeOutput(
                     output_format="paraview",
@@ -106,7 +122,25 @@ def build_params(fl, geometry, case_id: str, semispan: float, quasi2d: bool):
                 ),
                 # spanwise loading -> Gamma(y) vs the VLM
                 fl.ForceDistributionOutput(name="spanwise_loading", distribution_direction=(0, 1, 0)),
-            ],
+            ]
+            + (
+                [
+                    # time-averaged fields (start averaging after the transient)
+                    fl.TimeAverageVolumeOutput(
+                        output_format="paraview",
+                        output_fields=["primitiveVars", "vorticity", "qcriterion"],
+                        frequency_offset=500 if unsteady == "urans" else 1600,
+                    ),
+                    fl.TimeAverageSliceOutput(
+                        entities=slices,
+                        output_format="paraview",
+                        output_fields=["primitiveVars", "vorticity", "velocity", "Cp"],
+                        frequency_offset=500 if unsteady == "urans" else 1600,
+                    ),
+                ]
+                if unsteady
+                else []
+            ),
         )
     return params
 
@@ -115,8 +149,11 @@ def main() -> int:
     which = sys.argv[1] if len(sys.argv) > 1 else "quasi2d"
     submit = "--submit" in sys.argv
     quasi2d = which == "quasi2d"
+    unsteady = {"tip-urans": "urans", "tip-ddes": "ddes"}.get(which)
+    # unsteady cases run deep into separation so there is something to see
+    alpha_deg = 14.0 if unsteady else ALPHA_DEG
     semispan = SPAN_QUASI2D if quasi2d else SEMISPAN_TIP
-    case_id = f"wing3d-{which}-a{int(ALPHA_DEG)}"
+    case_id = f"wing3d-{which}-a{int(alpha_deg)}"
 
     csm = write_csm(case_id, semispan)
     print(f"[{case_id}] geometry: {csm}")
@@ -130,7 +167,7 @@ def main() -> int:
     project = fl.Project.from_geometry(str(csm), name=f"circulation-machine {case_id}")
     geometry = project.geometry
     geometry.group_faces_by_tag("faceId")
-    params = build_params(fl, geometry, case_id, semispan, quasi2d)
+    params = build_params(fl, geometry, case_id, semispan, quasi2d, alpha_deg, unsteady)
     case = project.run_case(params, name=case_id, draft_only=False)
     print(f"submitted: {case.id if hasattr(case, 'id') else case}")
     print("when finished: download volume/slice/surface outputs into "
