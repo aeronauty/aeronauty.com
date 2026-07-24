@@ -27,10 +27,13 @@ export function DesignerCanvas({
   sol,
   gridState,
   stale,
+  transition,
 }: {
   sol: FoilSolution
   gridState: GridState | null
   stale: boolean
+  /** boundary-layer transition stations (x/c) from the viscous overlay */
+  transition?: { xtrU: number; xtrL: number } | null
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [resizeTick, setResizeTick] = useState(0)
@@ -110,6 +113,31 @@ export function DesignerCanvas({
     ctx.fillStyle = INK
     ctx.fill()
 
+    // boundary-layer transition markers from the viscous overlay: the panels
+    // carry their pre-rotation chordwise station, so find the crossing on
+    // each surface (lower = first half TE->LE, upper = second half LE->TE)
+    if (transition) {
+      const panels = sol.geo.panels
+      const half = panels.length / 2
+      const mark = (station: number, from: number, to: number, color: string) => {
+        if (station >= 0.999) return // no transition before the TE
+        for (let i = from; i < to - 1; i++) {
+          const a = panels[i].xc
+          const b = panels[i + 1].xc
+          if ((a - station) * (b - station) <= 0) {
+            const p = panels[i]
+            ctx.beginPath()
+            ctx.arc(sx(p.mx + p.nx * 0.012), sy(p.my + p.ny * 0.012), 3, 0, 2 * Math.PI)
+            ctx.fillStyle = color
+            ctx.fill()
+            return
+          }
+        }
+      }
+      mark(transition.xtrU, half, panels.length, '#a81c2e')
+      mark(transition.xtrL, 0, half, '#1f5f8b')
+    }
+
     // stagnation points
     for (const s of stagnationPoints(sol)) {
       ctx.beginPath()
@@ -140,7 +168,7 @@ export function DesignerCanvas({
     const mono = getComputedStyle(canvas).getPropertyValue('--font-mono').trim()
     ctx.font = `11px ${mono || 'ui-monospace'}, monospace`
     ctx.fillText('U∞', sx(X0 + 0.05), ay - 7)
-  }, [sol, streamlines, stale, resizeTick])
+  }, [sol, streamlines, stale, resizeTick, transition])
 
   return (
     <div className="relative">

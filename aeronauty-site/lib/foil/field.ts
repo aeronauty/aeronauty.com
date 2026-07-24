@@ -117,8 +117,9 @@ export interface VelocityGrid {
   dipole: Vec2
 }
 
-const OUTER_SPEC = { x0: -1.6, y0: -1.4, nx: 211, ny: 141, h: 0.02 }
-const INNER_SPEC = { x0: -0.18, y0: -0.3, nx: 281, ny: 121, h: 0.005 }
+// Mirrored by OUTER/INNER in wasm/foil-core/src/lib.rs — keep in sync.
+export const OUTER_SPEC = { x0: -1.6, y0: -1.4, nx: 211, ny: 141, h: 0.02 }
+export const INNER_SPEC = { x0: -0.18, y0: -0.3, nx: 281, ny: 121, h: 0.005 }
 
 interface GridSpec {
   x0: number
@@ -143,7 +144,8 @@ function fillRow(sol: FoilSolution, spec: GridSpec, u: Float32Array, v: Float32A
   }
 }
 
-function assembleGrid(
+/** Assemble a VelocityGrid from filled arrays (used by both the JS fill and the WASM fill). */
+export function gridFromArrays(
   sol: FoilSolution,
   outer: { u: Float32Array; v: Float32Array },
   inner: { u: Float32Array; v: Float32Array },
@@ -185,7 +187,7 @@ export function buildVelocityGrid(sol: FoilSolution): VelocityGrid {
   const inner = { u: new Float32Array(INNER_SPEC.nx * INNER_SPEC.ny), v: new Float32Array(INNER_SPEC.nx * INNER_SPEC.ny) }
   for (let iy = 0; iy < OUTER_SPEC.ny; iy++) fillRow(sol, OUTER_SPEC, outer.u, outer.v, iy)
   for (let iy = 0; iy < INNER_SPEC.ny; iy++) fillRow(sol, INNER_SPEC, inner.u, inner.v, iy)
-  return assembleGrid(sol, outer, inner)
+  return gridFromArrays(sol, outer, inner)
 }
 
 /**
@@ -213,7 +215,7 @@ export async function buildVelocityGridAsync(
       sliceStart = performance.now()
     }
   }
-  return assembleGrid(sol, outer, inner)
+  return gridFromArrays(sol, outer, inner)
 }
 
 /**

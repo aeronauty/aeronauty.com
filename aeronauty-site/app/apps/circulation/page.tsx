@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteNav } from '@/components/SiteNav'
 import CirculationLab from './CirculationLab'
+import { UransSection } from './UransSection'
 
 export const metadata: Metadata = {
   title: 'The Circulation Machine — Aeronauty',
@@ -21,15 +22,19 @@ export default function CirculationPage() {
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-stone-600">
             A 2D panel code written from scratch for this page — no XFOIL, no ports, no borrowed
-            solver. It is validated against exact conformal-map solutions instead (Kármán–Trefftz
+            solver — validated against exact conformal-map solutions instead (Kármán–Trefftz
             sections, where the answer is known in closed form). Then it does the thing panel codes
-            never get asked to do: sit still with the air and watch the foil fly past.
+            never get asked to do: sit still with the air and watch the foil fly past. Where a
+            borrowed solver does appear for comparison — flexfoil for viscosity, Flow360 for URANS
+            — it says so on the tin.
           </p>
         </header>
 
         <div className="mt-12">
           <CirculationLab />
         </div>
+
+        <UransSection />
 
         <section className="card mt-10 p-6 sm:p-8">
           <p className="eyebrow">03 · Notes for the sceptical</p>
@@ -54,6 +59,18 @@ export default function CirculationPage() {
               the jump is precisely Γ. Everything the air permanently remembers about the passage
               is the circulation — which is why the measured drag asymmetry between the two probes
               converges on −Γ as the foil departs.
+            </p>
+            <p>
+              Where did the downwash go? Locally it is real: air near the section is deflected
+              downward as it passes, and the horizontal material lines bulge to show it. But for a
+              steadily translating 2D section the time-integrated vertical velocity at any fixed
+              station is exactly zero — the circulatory field&apos;s v is odd in x along the flight
+              direction and the thickness field&apos;s v integrates away too, so the bulge always
+              closes. &ldquo;The wing throws air down and that is the lift&rdquo; is a statement
+              about a control volume, not about what the air keeps: momentum flux through any plane
+              is balanced by the pressure field on that plane&apos;s boundary, and in unbounded 2D
+              the books close with nothing accumulating anywhere. What the air keeps is the
+              horizontal drift asymmetry — the circulation.
             </p>
             <p>
               Lift per unit span is ρU∞ times the circulation — with the counterclockwise-positive

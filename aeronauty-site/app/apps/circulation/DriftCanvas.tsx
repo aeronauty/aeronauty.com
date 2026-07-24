@@ -33,14 +33,20 @@ const RULE = '#d8d0c2'
 const RED_DOT = 'rgba(215, 38, 61, 0.78)'
 const BLUE_DOT = 'rgba(31, 95, 139, 0.78)'
 
-// Eulerian probes for the live circulation measurement: fixed lab points
-// whose time-integrated horizontal air velocity is the theorem's quantity
+// Eulerian probes for the live measurements: fixed lab points whose
+// time-integrated air velocity gives the circulation (horizontal component)
+// and the net downwash (vertical component — which converges to zero)
 const PROBE_X = 3.3
 const PROBE_Y = 0.3
 const LINE_XS = [1.1, 2.2, 3.3, 4.4, 5.5]
-const LINE_N = 101 // points per material line
+const LINE_N = 101 // points per vertical material line
 const LINE_Y0 = -1.5
 const LINE_DY = 0.03
+// horizontal material lines: these bulge as the foil passes and then snap
+// back flat — the visible refutation of "the wing leaves net downwash behind"
+const HLINE_YS = [-1.0, -0.6, -0.25, 0.25, 0.6, 1.0]
+const HLINE_N = 129
+const HLINE_DX = (X1 - X0) / (HLINE_N - 1)
 
 interface GridState {
   grid: VelocityGrid
@@ -54,12 +60,16 @@ interface ParticleSystem {
   ox: Float64Array // seed positions
   oy: Float64Array
   lines: { lx: Float64Array; ly: Float64Array; x0: number }[]
+  hlines: { lx: Float64Array; ly: Float64Array; y0: number }[]
   t: number
   phase: 'running' | 'hold'
   holdLeft: number
   /** time-integrated horizontal air velocity at the two fixed probes */
   probeAbove: number
   probeBelow: number
+  /** time-integrated vertical air velocity at the two fixed probes */
+  probeVAbove: number
+  probeVBelow: number
 }
 
 function seed(): ParticleSystem {
@@ -80,17 +90,29 @@ function seed(): ParticleSystem {
     }
     return { lx, ly, x0 }
   })
+  const hlines = HLINE_YS.map((y0) => {
+    const lx = new Float64Array(HLINE_N)
+    const ly = new Float64Array(HLINE_N)
+    for (let i = 0; i < HLINE_N; i++) {
+      lx[i] = X0 + i * HLINE_DX
+      ly[i] = y0
+    }
+    return { lx, ly, y0 }
+  })
   return {
     px: Float64Array.from(xs),
     py: Float64Array.from(ys),
     ox: Float64Array.from(xs),
     oy: Float64Array.from(ys),
     lines,
+    hlines,
     t: 0,
     phase: 'running',
     holdLeft: 0,
     probeAbove: 0,
     probeBelow: 0,
+    probeVAbove: 0,
+    probeVBelow: 0,
   }
 }
 
@@ -99,22 +121,26 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const measuredRef = useRef<HTMLSpanElement>(null)
   const predictedRef = useRef<HTMLSpanElement>(null)
+  const downwashRef = useRef<HTMLSpanElement>(null)
 
   const [playing, setPlaying] = useState(true)
   const [slowmo, setSlowmo] = useState(0.2)
   const [trails, setTrails] = useState(true)
   const [showLines, setShowLines] = useState(true)
+  const [showHLines, setShowHLines] = useState(true)
   const [resetTick, setResetTick] = useState(0)
 
   const playingRef = useRef(playing)
   const slowmoRef = useRef(slowmo)
   const trailsRef = useRef(trails)
   const linesRef = useRef(showLines)
+  const hlinesRef = useRef(showHLines)
   const visibleRef = useRef(true)
   playingRef.current = playing
   slowmoRef.current = slowmo
   trailsRef.current = trails
   linesRef.current = showLines
+  hlinesRef.current = showHLines
 
   useEffect(() => {
     // start paused for users who asked for reduced motion
@@ -154,24 +180,29 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
     // The animated flight only spans qc in [QC_END, QC_START], which captures
     // ~96% of the impulse integral at the probes. Pre-integrate the two tails
     // (foil far right before the pass, far left after it) from the same far
-    // field, so the displayed measurement genuinely converges to -Gamma.
-    const probeTail = (py: number): number => {
+    // field, so the displayed measurements genuinely converge.
+    const probeTail = (py: number): { u: number; v: number } => {
       const dt = 0.05
-      let acc = 0
+      let accU = 0
+      let accV = 0
       for (let qc = QC_START + 0.5 * dt; qc < 80; qc += dt) {
         airVelocity(PROBE_X, py, qc, v)
-        acc += v.x * dt
+        accU += v.x * dt
+        accV += v.y * dt
       }
       for (let qc = QC_END - 0.5 * dt; qc > -80; qc -= dt) {
         airVelocity(PROBE_X, py, qc, v)
-        acc += v.x * dt
+        accU += v.x * dt
+        accV += v.y * dt
       }
-      return acc
+      return { u: accU, v: accV }
     }
     const tailAbove = probeTail(PROBE_Y)
     const tailBelow = probeTail(-PROBE_Y)
-    sys.probeAbove = tailAbove
-    sys.probeBelow = tailBelow
+    sys.probeAbove = tailAbove.u
+    sys.probeBelow = tailBelow.u
+    sys.probeVAbove = tailAbove.v
+    sys.probeVBelow = tailBelow.v
 
     const eject = (i: number, arrX: Float64Array, arrY: Float64Array, qc: number) => {
       const rx = arrX[i] - (qc - 0.25)
@@ -213,12 +244,15 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       for (let s = 0; s < sub; s++) {
         advect(sys.px, sys.py, sys.px.length, sys.t, h)
         for (const line of sys.lines) advect(line.lx, line.ly, LINE_N, sys.t, h)
-        // accumulate the impulse integral at the two fixed probes (midpoint rule)
+        for (const hline of sys.hlines) advect(hline.lx, hline.ly, HLINE_N, sys.t, h)
+        // accumulate the impulse integrals at the two fixed probes (midpoint rule)
         const qcMid = QC_START - (sys.t + 0.5 * h)
         airVelocity(PROBE_X, PROBE_Y, qcMid, v)
         sys.probeAbove += v.x * h
+        sys.probeVAbove += v.y * h
         airVelocity(PROBE_X, -PROBE_Y, qcMid, v)
         sys.probeBelow += v.x * h
+        sys.probeVBelow += v.y * h
         sys.t += h
       }
     }
@@ -298,6 +332,36 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         }
       }
 
+      // horizontal material lines: they bulge while the foil passes and end
+      // flat again — no net downwash survives the passage
+      if (hlinesRef.current) {
+        for (const hline of sys.hlines) {
+          ctx.strokeStyle = RULE
+          ctx.setLineDash([3, 5])
+          ctx.beginPath()
+          ctx.moveTo(sx(X0), sy(hline.y0))
+          ctx.lineTo(sx(X1), sy(hline.y0))
+          ctx.stroke()
+          ctx.setLineDash([])
+
+          ctx.beginPath()
+          ctx.moveTo(sx(hline.lx[0]), sy(hline.ly[0]))
+          for (let i = 1; i < HLINE_N; i++) ctx.lineTo(sx(hline.lx[i]), sy(hline.ly[i]))
+          ctx.lineTo(sx(hline.lx[HLINE_N - 1]), sy(hline.y0))
+          ctx.lineTo(sx(hline.lx[0]), sy(hline.y0))
+          ctx.closePath()
+          ctx.fillStyle = 'rgba(26, 23, 20, 0.05)'
+          ctx.fill()
+
+          ctx.strokeStyle = 'rgba(26, 23, 20, 0.55)'
+          ctx.lineWidth = 1.2
+          ctx.beginPath()
+          ctx.moveTo(sx(hline.lx[0]), sy(hline.ly[0]))
+          for (let i = 1; i < HLINE_N; i++) ctx.lineTo(sx(hline.lx[i]), sy(hline.ly[i]))
+          ctx.stroke()
+        }
+      }
+
       // particles
       const n = sys.px.length
       for (let i = 0; i < n; i++) {
@@ -339,6 +403,10 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       const jump = -(sys.probeBelow - sys.probeAbove)
       if (measuredRef.current) measuredRef.current.textContent = jump.toFixed(3)
       if (predictedRef.current) predictedRef.current.textContent = (-sol.circulation).toFixed(3)
+      if (downwashRef.current) {
+        const net = 0.5 * (sys.probeVAbove + sys.probeVBelow)
+        downwashRef.current.textContent = net.toFixed(3)
+      }
     }
 
     const frame = (ms: number) => {
@@ -383,9 +451,12 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
             sys.ox = fresh.ox
             sys.oy = fresh.oy
             sys.lines = fresh.lines
+            sys.hlines = fresh.hlines
             sys.t = 0
-            sys.probeAbove = tailAbove
-            sys.probeBelow = tailBelow
+            sys.probeAbove = tailAbove.u
+            sys.probeBelow = tailBelow.u
+            sys.probeVAbove = tailAbove.v
+            sys.probeVBelow = tailBelow.v
             sys.phase = 'running'
             needsClear = true
           }
@@ -457,7 +528,11 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         </label>
         <label className="flex cursor-pointer items-center gap-2">
           <input type="checkbox" checked={showLines} onChange={(e) => setShowLines(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
-          <span className="data-strip">material lines</span>
+          <span className="data-strip">vertical lines</span>
+        </label>
+        <label className="flex cursor-pointer items-center gap-2">
+          <input type="checkbox" checked={showHLines} onChange={(e) => setShowHLines(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
+          <span className="data-strip">horizontal lines</span>
         </label>
 
         <div className="ml-auto flex items-baseline gap-5 border-l border-[var(--rule)] pl-6">
@@ -473,12 +548,18 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
               —
             </span>
           </div>
+          <div>
+            <span className="data-strip">net ∫v&thinsp;dt&nbsp;</span>
+            <span ref={downwashRef} className="font-mono text-lg font-bold tabular-nums text-[var(--ink)]">
+              —
+            </span>
+          </div>
         </div>
       </div>
       <p className="data-strip mt-2">
-        measured at two probes fixed in the room (+) at y = ±0.3c, integrating air velocity as the
-        foil passes (tails beyond the visible window pre-integrated from the same field) · positive
-        = below-path air dragged with the foil
+        probes fixed in the room (+) at y = ±0.3c integrate air velocity as the foil passes (tails
+        beyond the window pre-integrated) · U·ΔΔx positive = below-path air dragged with the foil ·
+        net ∫v&thinsp;dt is the accumulated downwash — watch it return to zero
       </p>
     </div>
   )

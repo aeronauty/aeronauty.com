@@ -12,9 +12,14 @@ const W = 420
 const H = 300
 const PAD = { l: 40, r: 12, t: 14, b: 26 }
 
+export interface CpOverlay {
+  x: number[]
+  cp: number[]
+}
+
 /** Surface Cp vs chordwise station, negative up, split into the two surfaces. */
-export function CpPlot({ sol }: { sol: FoilSolution }) {
-  const { upperPath, lowerPath, ticks, cpMin } = useMemo(() => {
+export function CpPlot({ sol, overlay }: { sol: FoilSolution; overlay?: CpOverlay | null }) {
+  const { upperPath, lowerPath, overlayPath, ticks, cpMin } = useMemo(() => {
     const n = sol.geo.panels.length
     const half = n / 2
     // fixed, slightly generous scale so the plot doesn't jump while dragging
@@ -48,8 +53,19 @@ export function CpPlot({ sol }: { sol: FoilSolution }) {
     for (let cp = -tickStep; cp >= min; cp -= tickStep) {
       tickVals.push({ cp, y: py(cp) })
     }
-    return { upperPath: path(upperIdx), lowerPath: path(lowerIdx), ticks: tickVals, cpMin: min, px, py }
-  }, [sol])
+
+    // viscous overlay: one dashed polyline in surface order (the short TE
+    // closure segment is invisible at plot scale)
+    let ovl = ''
+    if (overlay) {
+      const npts = Math.min(overlay.x.length, overlay.cp.length)
+      for (let k = 0; k < npts; k++) {
+        const cp = Math.max(Math.min(overlay.cp[k], max), min)
+        ovl += `${k === 0 ? 'M' : 'L'}${px(overlay.x[k]).toFixed(1)},${py(cp).toFixed(1)}`
+      }
+    }
+    return { upperPath: path(upperIdx), lowerPath: path(lowerIdx), overlayPath: ovl, ticks: tickVals, cpMin: min, px, py }
+  }, [sol, overlay])
 
   return (
     <svg
@@ -82,6 +98,7 @@ export function CpPlot({ sol }: { sol: FoilSolution }) {
       </text>
       <path d={lowerPath} fill="none" stroke={BLUE} strokeWidth="1.8" />
       <path d={upperPath} fill="none" stroke={RED} strokeWidth="1.8" />
+      {overlayPath && <path d={overlayPath} fill="none" stroke="var(--ink)" strokeWidth="1.3" strokeDasharray="4 3" opacity="0.75" />}
       {cpMin <= -12 && (
         <text x={W - PAD.r - 4} y={PAD.t + 10} textAnchor="end" fontSize="9" fill={MUTED} fontFamily="var(--font-mono), monospace">
           clipped at −12

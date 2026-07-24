@@ -55,7 +55,9 @@ export function panelInfluence(p: FoilPanel, px: number, py: number): PanelInflu
   }
 
   const logTerm = Math.log(r1sq / r2sq) / FOUR_PI
-  const dTheta = Math.atan2(Y, dx2) - Math.atan2(Y, X)
+  // th2 - th1 in one atan2: tan(th2 - th1) = Y L / (X(X-L) + Y^2), with the
+  // quadrant carried by the signs of the two arguments (exact identity)
+  const dTheta = Math.atan2(Y * L, X * dx2 + Y * Y)
   const angTerm = dTheta / TWO_PI
 
   // local components

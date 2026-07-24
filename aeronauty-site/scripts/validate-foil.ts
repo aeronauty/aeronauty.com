@@ -308,5 +308,89 @@ console.log('\n== Sampling grid vs direct summation ==')
   )
 }
 
-console.log(failures === 0 ? '\nAll checks passed.' : `\n${failures} CHECK(S) FAILED.`)
-process.exit(failures === 0 ? 0 : 1)
+async function wasmParity(): Promise<void> {
+  console.log('\n== WASM core parity (Rust foil-core vs TypeScript) ==')
+  const { readFileSync } = await import('node:fs')
+  const { pathToFileURL } = await import('node:url')
+  const path = await import('node:path')
+  const { solveSectionWasm, buildVelocityGridWasm } = await import('../lib/foil/wasm')
+  type FoilCore = import('../lib/foil/wasm').FoilCore
+
+  const pkg = path.resolve('public/foil-core')
+  let core: FoilCore
+  try {
+    const glue = await import(pathToFileURL(path.join(pkg, 'foil_core.js')).href)
+    await glue.default({ module_or_path: readFileSync(path.join(pkg, 'foil_core_bg.wasm')) })
+    core = glue as unknown as FoilCore
+  } catch (err) {
+    check('wasm module loads', false, `run \`npm run build:wasm\` first — ${err}`)
+    return
+  }
+  check('wasm module loads', true, 'public/foil-core')
+
+  const geo = makeSection({ camber: 0.04, camberPos: 0.4, thickness: 0.12, alpha: (6 * Math.PI) / 180, nPanels: 140 })
+
+  for (const [label, opts] of [
+    ['kutta on', {}],
+    ['kutta off, G=-0.4', { kutta: false, circulation: -0.4 }],
+  ] as const) {
+    const js = solveFoil(geo, opts)
+    const ws = solveSectionWasm(core, geo, opts)
+    let maxCp = 0
+    let maxSigma = 0
+    for (let i = 0; i < js.cp.length; i++) {
+      maxCp = Math.max(maxCp, Math.abs(js.cp[i] - ws.cp[i]))
+      maxSigma = Math.max(maxSigma, Math.abs(js.sigma[i] - ws.sigma[i]))
+    }
+    const scalars = Math.max(
+      Math.abs(js.clGamma - ws.clGamma),
+      Math.abs(js.clCp - ws.clCp),
+      Math.abs(js.cmQuarter - ws.cmQuarter),
+      Math.abs(js.circulation - ws.circulation),
+    )
+    check(
+      `solve parity (${label})`,
+      maxCp < 1e-10 && maxSigma < 1e-10 && scalars < 1e-10,
+      `max dCp ${maxCp.toExponential(1)}, dSigma ${maxSigma.toExponential(1)}, dScalars ${scalars.toExponential(1)}`,
+    )
+  }
+
+  const js = solveFoil(geo)
+  const ws = solveSectionWasm(core, geo)
+  const gridJs = buildVelocityGrid(js)
+  const gridWs = buildVelocityGridWasm(core, ws)
+  let maxGrid = 0
+  for (const part of ['outer', 'inner'] as const) {
+    for (let k = 0; k < gridJs[part].u.length; k++) {
+      maxGrid = Math.max(
+        maxGrid,
+        Math.abs(gridJs[part].u[k] - gridWs[part].u[k]),
+        Math.abs(gridJs[part].v[k] - gridWs[part].v[k]),
+      )
+    }
+  }
+  // the WASM grid fill uses fast polynomial transcendentals (~1e-7 rad), so
+  // parity with the f64 libm JS fill is loose-tolerance, not bit-exact
+  check('grid parity', maxGrid < 1e-4, `max diff ${maxGrid.toExponential(1)} (fast-math f32)`)
+
+  // benchmark: where the interactivity comes from
+  const time = (n: number, f: () => void): number => {
+    f() // warm
+    const t0 = performance.now()
+    for (let i = 0; i < n; i++) f()
+    return (performance.now() - t0) / n
+  }
+  const tSolveJs = time(5, () => solveFoil(geo))
+  const tSolveWs = time(20, () => solveSectionWasm(core, geo))
+  const tGridJs = time(2, () => buildVelocityGrid(js))
+  const tGridWs = time(10, () => buildVelocityGridWasm(core, ws))
+  console.log(
+    `  [INFO] solve: JS ${tSolveJs.toFixed(1)}ms -> WASM ${tSolveWs.toFixed(1)}ms (${(tSolveJs / tSolveWs).toFixed(1)}x); ` +
+      `grid: JS ${tGridJs.toFixed(0)}ms -> WASM ${tGridWs.toFixed(0)}ms (${(tGridJs / tGridWs).toFixed(1)}x)`,
+  )
+}
+
+wasmParity().then(() => {
+  console.log(failures === 0 ? '\nAll checks passed.' : `\n${failures} CHECK(S) FAILED.`)
+  process.exit(failures === 0 ? 0 : 1)
+})
