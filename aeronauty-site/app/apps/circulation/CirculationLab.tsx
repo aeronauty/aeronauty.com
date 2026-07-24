@@ -17,6 +17,7 @@ import { DesignerCanvas } from './DesignerCanvas'
 import { CpPlot } from './CpPlot'
 import { DriftCanvas } from './DriftCanvas'
 import { PolarChart } from './PolarChart'
+import { WingSection } from './WingSection'
 
 const N_PANELS = 140
 export const BLUE = '#1f5f8b'
@@ -491,6 +492,8 @@ export default function CirculationLab() {
           opposite signs. The lasting signature is horizontal, and it is exactly Γ/U.
         </p>
       </section>
+
+      <WingSection core={core} />
     </div>
   )
 }

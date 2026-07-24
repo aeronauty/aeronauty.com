@@ -31,6 +31,8 @@ export interface FoilCore {
     free(): void
   }
   fill_grids(nodes: Float64Array, alpha: number, sigma: Float64Array, gamma: number): Float32Array
+  /** Weissinger-L VLM for a rectangular wing: returns [y_centres..., gammas...] */
+  vlm_rectangular(span: number, alpha: number, n: number): Float64Array
 }
 
 let corePromise: Promise<FoilCore | null> | null = null

@@ -477,6 +477,75 @@ fn panel_influence_fast(p: &Panel, px: f64, py: f64) -> (f64, f64, f64, f64) {
     )
 }
 
+// ---------------------------------------------------------------------------
+// 3D: Weissinger-L vortex lattice for a rectangular flat wing. One chordwise
+// row of horseshoe vortices (bound leg at c/4, trailers to +infinity, control
+// points at 3c/4), cosine spanwise spacing over the FULL span, small-angle
+// flat-plate boundary condition. Feeds the Trefftz-plane exhibit: the trailed
+// vorticity is the spanwise derivative of the returned circulation.
+// ---------------------------------------------------------------------------
+
+/// Biot-Savart velocity (z-component only needed on the planar wing) of a
+/// finite vortex segment a->b with unit circulation, evaluated at p.
+#[inline]
+fn segment_wz(ax: f64, ay: f64, bx: f64, by: f64, px: f64, py: f64) -> f64 {
+    // all points in z = 0: velocity is purely z; use the standard formula
+    // V = G/4pi (r1 x r2)(|r1|+|r2|) / (|r1||r2|(|r1||r2| + r1.r2))
+    let r1x = px - ax;
+    let r1y = py - ay;
+    let r2x = px - bx;
+    let r2y = py - by;
+    let cross = r1x * r2y - r1y * r2x; // z-component of r1 x r2
+    let m1 = r1x.hypot(r1y);
+    let m2 = r2x.hypot(r2y);
+    let denom = m1 * m2 * (m1 * m2 + r1x * r2x + r1y * r2y);
+    if denom.abs() < 1e-14 {
+        return 0.0;
+    }
+    cross * (m1 + m2) / (4.0 * std::f64::consts::PI * denom)
+}
+
+/// Circulation distribution of a rectangular wing, span b (chord 1), at
+/// incidence alpha (radians), n horseshoe panels across the full span.
+/// Returns [y_centre_0..n-1, gamma_0..n-1].
+#[wasm_bindgen]
+pub fn vlm_rectangular(span: f64, alpha: f64, n: usize) -> Vec<f64> {
+    let half = span / 2.0;
+    // cosine-spaced station edges over the full span
+    let mut edges = Vec::with_capacity(n + 1);
+    for k in 0..=n {
+        let th = std::f64::consts::PI * k as f64 / n as f64;
+        edges.push(-half * th.cos());
+    }
+    let centres: Vec<f64> = (0..n).map(|i| 0.5 * (edges[i] + edges[i + 1])).collect();
+
+    const X_BOUND: f64 = 0.25;
+    const X_CTRL: f64 = 0.75;
+    const X_FAR: f64 = 1.0e7;
+
+    // AIC: downwash at control point i per unit circulation of horseshoe j
+    let mut a = vec![0.0f64; n * n];
+    let mut rhs = vec![-alpha; n];
+    for i in 0..n {
+        let (px, py) = (X_CTRL, centres[i]);
+        for j in 0..n {
+            let (y1, y2) = (edges[j], edges[j + 1]);
+            // trailer in from far downstream to bound-leg start, bound leg,
+            // trailer out to far downstream (circulation sense consistent)
+            let w = segment_wz(X_FAR, y1, X_BOUND, y1, px, py)
+                + segment_wz(X_BOUND, y1, X_BOUND, y2, px, py)
+                + segment_wz(X_BOUND, y2, X_FAR, y2, px, py);
+            a[i * n + j] = w;
+        }
+    }
+    solve_dense(&mut a, &mut rhs, n);
+
+    let mut out = Vec::with_capacity(2 * n);
+    out.extend_from_slice(&centres);
+    out.extend_from_slice(&rhs);
+    out
+}
+
 fn inside_foil(geo: &Geometry, x: f64, y: f64) -> bool {
     let (x_min, x_max, y_min, y_max) = geo.bbox;
     if x < x_min || x > x_max || y < y_min || y > y_max {

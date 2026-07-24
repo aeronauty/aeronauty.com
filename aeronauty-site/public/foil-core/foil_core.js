@@ -138,6 +138,22 @@ export function solve_section(nodes_flat, alpha, kutta, imposed_circulation, piv
     const ret = wasm.solve_section(ptr0, len0, alpha, kutta, imposed_circulation, pivot_x, pivot_y);
     return SolveOut.__wrap(ret);
 }
+
+/**
+ * Circulation distribution of a rectangular wing, span b (chord 1), at
+ * incidence alpha (radians), n horseshoe panels across the full span.
+ * Returns [y_centre_0..n-1, gamma_0..n-1].
+ * @param {number} span
+ * @param {number} alpha
+ * @param {number} n
+ * @returns {Float64Array}
+ */
+export function vlm_rectangular(span, alpha, n) {
+    const ret = wasm.vlm_rectangular(span, alpha, n);
+    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+    return v1;
+}
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,

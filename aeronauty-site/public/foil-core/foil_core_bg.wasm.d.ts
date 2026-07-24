@@ -13,6 +13,7 @@ export const solveout_cm_quarter: (a: number) => number;
 export const solveout_perimeter: (a: number) => number;
 export const solveout_chord: (a: number) => number;
 export const solve_section: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
+export const vlm_rectangular: (a: number, b: number, c: number) => [number, number];
 export const fill_grids: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
 export const __wbindgen_externrefs: WebAssembly.Table;
 export const __wbindgen_malloc: (a: number, b: number) => number;

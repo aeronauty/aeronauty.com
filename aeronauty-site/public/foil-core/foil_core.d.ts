@@ -34,6 +34,13 @@ export function fill_grids(nodes_flat: Float64Array, alpha: number, sigma: Float
  */
 export function solve_section(nodes_flat: Float64Array, alpha: number, kutta: boolean, imposed_circulation: number, pivot_x: number, pivot_y: number): SolveOut;
 
+/**
+ * Circulation distribution of a rectangular wing, span b (chord 1), at
+ * incidence alpha (radians), n horseshoe panels across the full span.
+ * Returns [y_centre_0..n-1, gamma_0..n-1].
+ */
+export function vlm_rectangular(span: number, alpha: number, n: number): Float64Array;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
@@ -50,6 +57,7 @@ export interface InitOutput {
     readonly solveout_perimeter: (a: number) => number;
     readonly solveout_chord: (a: number) => number;
     readonly solve_section: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
+    readonly vlm_rectangular: (a: number, b: number, c: number) => [number, number];
     readonly fill_grids: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
