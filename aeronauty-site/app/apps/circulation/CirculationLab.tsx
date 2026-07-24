@@ -485,8 +485,10 @@ export default function CirculationLab() {
           lines: the <em>vertical</em> ones keep their shear forever, while the <em>horizontal</em>{' '}
           ones bulge as the foil passes and snap back flat — the air is deflected down locally, but
           integrated over the whole passage the downwash at any fixed station is exactly zero. The
-          net ∫v&thinsp;dt readout tracks it live. The lasting signature is horizontal, and it is
-          exactly Γ/U.
+          net ∫v&thinsp;dt readout tracks it live. Then zoom out to fifty chords, turn on the
+          displacement vectors, and crank the gain: every particle moved, and what the whole field
+          kept is horizontal shear — the ⟨Δy⟩ readout sits at zero while ⟨Δx⟩ above and below hold
+          opposite signs. The lasting signature is horizontal, and it is exactly Γ/U.
         </p>
       </section>
     </div>

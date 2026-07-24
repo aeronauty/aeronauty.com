@@ -12,20 +12,20 @@ import { noWheel } from './CirculationLab'
  * the panel solution evaluated at the foil-relative position — the freestream
  * subtracts out exactly (Galilean transform), so what the particles do IS the
  * disturbance the foil leaves behind.
+ *
+ * Zoom scales the world window (up to ~50 chords wide) with proportionally
+ * more tracked particles; the displacement-vector overlay and the field
+ * statistics exist to answer one question honestly: after the foil has gone,
+ * what did the air KEEP — and the vertical answer is zero.
  */
 
-// lab window, in chords
-const X0 = 0
-const X1 = 6.4
-const Y0 = -1.5
-const Y1 = 1.5
-const ASPECT = (X1 - X0) / (Y1 - Y0)
-
-// foil quarter-chord path: y = 0, from START toward END at U = 1
-const QC_START = 7.4
+// world window at zoom 1, in chords; both dimensions scale with zoom
+const BASE_W = 6.4
+const BASE_HALF_H = 1.5
+const ASPECT = BASE_W / (2 * BASE_HALF_H)
+const BASE_SPEED = 1.6 // on-screen chords/s at slow-mo 1, zoom 1 (scaled by zoom)
 const QC_END = -1.4
-const BASE_SPEED = 1.6 // on-screen chords per second at slow-mo 1
-const HOLD_SECONDS = 3 // pause on the aftermath before looping
+const HOLD_SECONDS = 3
 
 const INK = '#1a1714'
 const PAPER = '#f4efe4'
@@ -33,20 +33,19 @@ const RULE = '#d8d0c2'
 const RED_DOT = 'rgba(215, 38, 61, 0.78)'
 const BLUE_DOT = 'rgba(31, 95, 139, 0.78)'
 
-// Eulerian probes for the live measurements: fixed lab points whose
-// time-integrated air velocity gives the circulation (horizontal component)
-// and the net downwash (vertical component — which converges to zero)
+// Eulerian probes: fixed lab points near the path whose time-integrated air
+// velocity gives the circulation (u) and the net downwash -> 0 (v)
 const PROBE_X = 3.3
 const PROBE_Y = 0.3
-const LINE_XS = [1.1, 2.2, 3.3, 4.4, 5.5]
-const LINE_N = 101 // points per vertical material line
-const LINE_Y0 = -1.5
-const LINE_DY = 0.03
-// horizontal material lines: these bulge as the foil passes and then snap
-// back flat — the visible refutation of "the wing leaves net downwash behind"
-const HLINE_YS = [-1.0, -0.6, -0.25, 0.25, 0.6, 1.0]
-const HLINE_N = 129
-const HLINE_DX = (X1 - X0) / (HLINE_N - 1)
+
+// material-line stations as fractions of the window
+const LINE_FRACS = [0.17, 0.34, 0.52, 0.69, 0.86]
+const HLINE_FRACS = [-2 / 3, -0.4, -1 / 6, 1 / 6, 0.4, 2 / 3]
+
+const MAX_PARTICLES = 12000
+
+type Density = 'sparse' | 'normal' | 'dense'
+const DENSITY_FACTOR: Record<Density, number> = { sparse: 1.5, normal: 1, dense: 0.72 }
 
 interface GridState {
   grid: VelocityGrid
@@ -54,52 +53,81 @@ interface GridState {
   version: number
 }
 
+interface MatLine {
+  lx: Float64Array
+  ly: Float64Array
+  /** seed station: x for vertical lines, y for horizontal ones */
+  s0: number
+  n: number
+}
+
 interface ParticleSystem {
+  zoom: number
+  x1: number
+  yHalf: number
+  qcStart: number
   px: Float64Array
   py: Float64Array
-  ox: Float64Array // seed positions
+  ox: Float64Array
   oy: Float64Array
-  lines: { lx: Float64Array; ly: Float64Array; x0: number }[]
-  hlines: { lx: Float64Array; ly: Float64Array; y0: number }[]
+  lines: MatLine[]
+  hlines: MatLine[]
   t: number
   phase: 'running' | 'hold'
   holdLeft: number
-  /** time-integrated horizontal air velocity at the two fixed probes */
+  /** time-integrated air velocity at the two fixed probes */
   probeAbove: number
   probeBelow: number
-  /** time-integrated vertical air velocity at the two fixed probes */
   probeVAbove: number
   probeVBelow: number
 }
 
-function seed(): ParticleSystem {
+function seed(zoom: number, density: Density): ParticleSystem {
+  const x1 = BASE_W * zoom
+  const yHalf = BASE_HALF_H * zoom
+  // world spacing grows like sqrt(zoom): the on-screen field gets denser as
+  // you zoom out, while the total count grows ~linearly with zoom
+  let spacing = 0.16 * Math.sqrt(zoom) * DENSITY_FACTOR[density]
+  const count = (x1 / spacing) * ((2 * yHalf) / (spacing * 0.725))
+  if (count > MAX_PARTICLES) spacing *= Math.sqrt(count / MAX_PARTICLES)
+  const dy = spacing * 0.725
+
   const xs: number[] = []
   const ys: number[] = []
-  for (let x = 0.08; x <= X1; x += 0.16) {
-    for (let y = -1.45; y <= 1.451; y += 0.116) {
+  for (let x = spacing / 2; x <= x1; x += spacing) {
+    // stagger rows so no particle sits exactly on the flight path
+    for (let y = -yHalf + dy / 2; y <= yHalf; y += dy) {
       xs.push(x)
       ys.push(y)
     }
   }
-  const lines = LINE_XS.map((x0) => {
-    const lx = new Float64Array(LINE_N)
-    const ly = new Float64Array(LINE_N)
-    for (let i = 0; i < LINE_N; i++) {
-      lx[i] = x0
-      ly[i] = LINE_Y0 + i * LINE_DY
+
+  const lineN = Math.min(261, Math.round(101 * Math.sqrt(zoom)))
+  const lines: MatLine[] = LINE_FRACS.map((f) => {
+    const lx = new Float64Array(lineN)
+    const ly = new Float64Array(lineN)
+    for (let i = 0; i < lineN; i++) {
+      lx[i] = f * x1
+      ly[i] = -yHalf + (i * 2 * yHalf) / (lineN - 1)
     }
-    return { lx, ly, x0 }
+    return { lx, ly, s0: f * x1, n: lineN }
   })
-  const hlines = HLINE_YS.map((y0) => {
-    const lx = new Float64Array(HLINE_N)
-    const ly = new Float64Array(HLINE_N)
-    for (let i = 0; i < HLINE_N; i++) {
-      lx[i] = X0 + i * HLINE_DX
-      ly[i] = y0
+  const hlineN = Math.min(289, Math.round(129 * Math.sqrt(zoom)))
+  const hlines: MatLine[] = HLINE_FRACS.map((f) => {
+    const lx = new Float64Array(hlineN)
+    const ly = new Float64Array(hlineN)
+    for (let i = 0; i < hlineN; i++) {
+      lx[i] = (i * x1) / (hlineN - 1)
+      ly[i] = f * yHalf
     }
-    return { lx, ly, y0 }
+    return { lx, ly, s0: f * yHalf, n: hlineN }
   })
+
   return {
+    zoom,
+    x1,
+    yHalf,
+    qcStart: x1 + 1,
     px: Float64Array.from(xs),
     py: Float64Array.from(ys),
     ox: Float64Array.from(xs),
@@ -122,12 +150,17 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
   const measuredRef = useRef<HTMLSpanElement>(null)
   const predictedRef = useRef<HTMLSpanElement>(null)
   const downwashRef = useRef<HTMLSpanElement>(null)
+  const statsRef = useRef<HTMLSpanElement>(null)
 
   const [playing, setPlaying] = useState(true)
   const [slowmo, setSlowmo] = useState(0.2)
+  const [zoom, setZoom] = useState(1)
+  const [density, setDensity] = useState<Density>('normal')
   const [trails, setTrails] = useState(true)
   const [showLines, setShowLines] = useState(true)
   const [showHLines, setShowHLines] = useState(true)
+  const [showVectors, setShowVectors] = useState(false)
+  const [vecGain, setVecGain] = useState(30)
   const [resetTick, setResetTick] = useState(0)
 
   const playingRef = useRef(playing)
@@ -135,12 +168,16 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
   const trailsRef = useRef(trails)
   const linesRef = useRef(showLines)
   const hlinesRef = useRef(showHLines)
+  const vectorsRef = useRef(showVectors)
+  const vecGainRef = useRef(vecGain)
   const visibleRef = useRef(true)
   playingRef.current = playing
   slowmoRef.current = slowmo
   trailsRef.current = trails
   linesRef.current = showLines
   hlinesRef.current = showHLines
+  vectorsRef.current = showVectors
+  vecGainRef.current = vecGain
 
   useEffect(() => {
     // start paused for users who asked for reduced motion
@@ -164,7 +201,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
     const { grid, sol } = gridState
     const geo = sol.geo
 
-    const sys = seed()
+    const sys = seed(zoom, density)
     let raf = 0
     let lastMs = 0
     let lastReadout = 0
@@ -177,20 +214,20 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       samplePerturbation(grid, x - (qc - 0.25), y, out)
     }
 
-    // The animated flight only spans qc in [QC_END, QC_START], which captures
-    // ~96% of the impulse integral at the probes. Pre-integrate the two tails
-    // (foil far right before the pass, far left after it) from the same far
-    // field, so the displayed measurements genuinely converge.
+    // The animated flight only spans qc in [QC_END, qcStart]. Pre-integrate
+    // the two tails (foil far right before the pass, far left after it) from
+    // the same far field, so the displayed measurements genuinely converge.
     const probeTail = (py: number): { u: number; v: number } => {
       const dt = 0.05
       let accU = 0
       let accV = 0
-      for (let qc = QC_START + 0.5 * dt; qc < 80; qc += dt) {
+      const far = sys.qcStart + 90
+      for (let qc = sys.qcStart + 0.5 * dt; qc < far; qc += dt) {
         airVelocity(PROBE_X, py, qc, v)
         accU += v.x * dt
         accV += v.y * dt
       }
-      for (let qc = QC_END - 0.5 * dt; qc > -80; qc -= dt) {
+      for (let qc = QC_END - 0.5 * dt; qc > -90; qc -= dt) {
         airVelocity(PROBE_X, py, qc, v)
         accU += v.x * dt
         accV += v.y * dt
@@ -199,10 +236,13 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
     }
     const tailAbove = probeTail(PROBE_Y)
     const tailBelow = probeTail(-PROBE_Y)
-    sys.probeAbove = tailAbove.u
-    sys.probeBelow = tailBelow.u
-    sys.probeVAbove = tailAbove.v
-    sys.probeVBelow = tailBelow.v
+    const applyTails = () => {
+      sys.probeAbove = tailAbove.u
+      sys.probeBelow = tailBelow.u
+      sys.probeVAbove = tailAbove.v
+      sys.probeVBelow = tailBelow.v
+    }
+    applyTails()
 
     const eject = (i: number, arrX: Float64Array, arrY: Float64Array, qc: number) => {
       const rx = arrX[i] - (qc - 0.25)
@@ -224,11 +264,11 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
     }
 
     const advect = (arrX: Float64Array, arrY: Float64Array, n: number, t0: number, dt: number) => {
-      const qcMid = QC_START - (t0 + 0.5 * dt)
-      const qcEnd = QC_START - (t0 + dt)
+      const qcMid = sys.qcStart - (t0 + 0.5 * dt)
+      const qcEnd = sys.qcStart - (t0 + dt)
       for (let i = 0; i < n; i++) {
         // midpoint rule: sample, take half step, resample at midpoint time
-        airVelocity(arrX[i], arrY[i], QC_START - t0, v)
+        airVelocity(arrX[i], arrY[i], sys.qcStart - t0, v)
         const mx = arrX[i] + 0.5 * dt * v.x
         const my = arrY[i] + 0.5 * dt * v.y
         airVelocity(mx, my, qcMid, v)
@@ -243,10 +283,10 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       const h = dtSim / sub
       for (let s = 0; s < sub; s++) {
         advect(sys.px, sys.py, sys.px.length, sys.t, h)
-        for (const line of sys.lines) advect(line.lx, line.ly, LINE_N, sys.t, h)
-        for (const hline of sys.hlines) advect(hline.lx, hline.ly, HLINE_N, sys.t, h)
+        for (const line of sys.lines) advect(line.lx, line.ly, line.n, sys.t, h)
+        for (const hline of sys.hlines) advect(hline.lx, hline.ly, hline.n, sys.t, h)
         // accumulate the impulse integrals at the two fixed probes (midpoint rule)
-        const qcMid = QC_START - (sys.t + 0.5 * h)
+        const qcMid = sys.qcStart - (sys.t + 0.5 * h)
         airVelocity(PROBE_X, PROBE_Y, qcMid, v)
         sys.probeAbove += v.x * h
         sys.probeVAbove += v.y * h
@@ -269,8 +309,8 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
     }
 
     const draw = (cssW: number, cssH: number, ctx: CanvasRenderingContext2D) => {
-      const sx = (x: number) => ((x - X0) / (X1 - X0)) * cssW
-      const sy = (y: number) => ((Y1 - y) / (Y1 - Y0)) * cssH
+      const sx = (x: number) => (x / sys.x1) * cssW
+      const sy = (y: number) => ((sys.yHalf - y) / (2 * sys.yHalf)) * cssH
 
       if (needsClear || !trailsRef.current) {
         ctx.fillStyle = PAPER
@@ -303,22 +343,22 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       ctx.stroke()
       ctx.setLineDash([])
 
-      // material lines: original (dashed) + deformed, with the swept lobe filled
+      // vertical material lines: original (dashed) + deformed, lobe filled
       if (linesRef.current) {
         for (const line of sys.lines) {
           ctx.strokeStyle = RULE
           ctx.setLineDash([3, 5])
           ctx.beginPath()
-          ctx.moveTo(sx(line.x0), sy(LINE_Y0))
-          ctx.lineTo(sx(line.x0), sy(-LINE_Y0))
+          ctx.moveTo(sx(line.s0), sy(-sys.yHalf))
+          ctx.lineTo(sx(line.s0), sy(sys.yHalf))
           ctx.stroke()
           ctx.setLineDash([])
 
           ctx.beginPath()
           ctx.moveTo(sx(line.lx[0]), sy(line.ly[0]))
-          for (let i = 1; i < LINE_N; i++) ctx.lineTo(sx(line.lx[i]), sy(line.ly[i]))
-          ctx.lineTo(sx(line.x0), sy(line.ly[LINE_N - 1]))
-          ctx.lineTo(sx(line.x0), sy(line.ly[0]))
+          for (let i = 1; i < line.n; i++) ctx.lineTo(sx(line.lx[i]), sy(line.ly[i]))
+          ctx.lineTo(sx(line.s0), sy(line.ly[line.n - 1]))
+          ctx.lineTo(sx(line.s0), sy(line.ly[0]))
           ctx.closePath()
           ctx.fillStyle = 'rgba(26, 23, 20, 0.05)'
           ctx.fill()
@@ -327,7 +367,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
           ctx.lineWidth = 1.4
           ctx.beginPath()
           ctx.moveTo(sx(line.lx[0]), sy(line.ly[0]))
-          for (let i = 1; i < LINE_N; i++) ctx.lineTo(sx(line.lx[i]), sy(line.ly[i]))
+          for (let i = 1; i < line.n; i++) ctx.lineTo(sx(line.lx[i]), sy(line.ly[i]))
           ctx.stroke()
         }
       }
@@ -339,16 +379,16 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
           ctx.strokeStyle = RULE
           ctx.setLineDash([3, 5])
           ctx.beginPath()
-          ctx.moveTo(sx(X0), sy(hline.y0))
-          ctx.lineTo(sx(X1), sy(hline.y0))
+          ctx.moveTo(sx(0), sy(hline.s0))
+          ctx.lineTo(sx(sys.x1), sy(hline.s0))
           ctx.stroke()
           ctx.setLineDash([])
 
           ctx.beginPath()
           ctx.moveTo(sx(hline.lx[0]), sy(hline.ly[0]))
-          for (let i = 1; i < HLINE_N; i++) ctx.lineTo(sx(hline.lx[i]), sy(hline.ly[i]))
-          ctx.lineTo(sx(hline.lx[HLINE_N - 1]), sy(hline.y0))
-          ctx.lineTo(sx(hline.lx[0]), sy(hline.y0))
+          for (let i = 1; i < hline.n; i++) ctx.lineTo(sx(hline.lx[i]), sy(hline.ly[i]))
+          ctx.lineTo(sx(hline.lx[hline.n - 1]), sy(hline.s0))
+          ctx.lineTo(sx(hline.lx[0]), sy(hline.s0))
           ctx.closePath()
           ctx.fillStyle = 'rgba(26, 23, 20, 0.05)'
           ctx.fill()
@@ -357,7 +397,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
           ctx.lineWidth = 1.2
           ctx.beginPath()
           ctx.moveTo(sx(hline.lx[0]), sy(hline.ly[0]))
-          for (let i = 1; i < HLINE_N; i++) ctx.lineTo(sx(hline.lx[i]), sy(hline.ly[i]))
+          for (let i = 1; i < hline.n; i++) ctx.lineTo(sx(hline.lx[i]), sy(hline.ly[i]))
           ctx.stroke()
         }
       }
@@ -370,6 +410,27 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         if (x < -4 || x > cssW + 4) continue
         ctx.fillStyle = sys.oy[i] > 0 ? RED_DOT : BLUE_DOT
         ctx.fillRect(x - 1.1, y - 1.1, 2.2, 2.2)
+      }
+
+      // displacement vectors: seed -> now, amplified. The instrument for
+      // "what did the air keep": horizontal shear survives, vertical nets out.
+      if (vectorsRef.current) {
+        const gain = vecGainRef.current
+        ctx.strokeStyle = 'rgba(26, 23, 20, 0.5)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        for (let i = 0; i < n; i++) {
+          const dx = (sys.px[i] - sys.ox[i]) * gain
+          const dy = (sys.py[i] - sys.oy[i]) * gain
+          const x0 = sx(sys.ox[i])
+          const y0 = sy(sys.oy[i])
+          const x1p = sx(sys.ox[i] + dx)
+          const y1p = sy(sys.oy[i] + dy)
+          if (Math.abs(x1p - x0) < 1 && Math.abs(y1p - y0) < 1) continue
+          ctx.moveTo(x0, y0)
+          ctx.lineTo(x1p, y1p)
+        }
+        ctx.stroke()
       }
 
       // fixed measurement probes
@@ -387,9 +448,9 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       }
 
       // foil silhouette
-      const qc = QC_START - sys.t
+      const qc = sys.qcStart - sys.t
       const ox = qc - 0.25
-      if (ox + geo.bbox.xMax > X0 - 0.2 && ox + geo.bbox.xMin < X1 + 0.2) {
+      if (ox + geo.bbox.xMax > -0.2 && ox + geo.bbox.xMin < sys.x1 + 0.2) {
         foilPath(ctx, sx, sy, ox)
         ctx.fillStyle = INK
         ctx.fill()
@@ -406,6 +467,33 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       if (downwashRef.current) {
         const net = 0.5 * (sys.probeVAbove + sys.probeVBelow)
         downwashRef.current.textContent = net.toFixed(3)
+      }
+      if (statsRef.current) {
+        // whole-field particle statistics: the net-motion answer
+        let sumDy = 0
+        let sumAbsDy = 0
+        let sumDxAbove = 0
+        let nAbove = 0
+        let sumDxBelow = 0
+        let nBelow = 0
+        const n = sys.px.length
+        for (let i = 0; i < n; i++) {
+          const dx = sys.px[i] - sys.ox[i]
+          const dy = sys.py[i] - sys.oy[i]
+          sumDy += dy
+          sumAbsDy += Math.abs(dy)
+          if (sys.oy[i] > 0) {
+            sumDxAbove += dx
+            nAbove++
+          } else {
+            sumDxBelow += dx
+            nBelow++
+          }
+        }
+        const f = (x: number) => (x >= 0 ? '+' : '') + x.toFixed(4)
+        statsRef.current.textContent =
+          `⟨Δy⟩ ${f(sumDy / n)} · ⟨|Δy|⟩ ${(sumAbsDy / n).toFixed(4)} · ` +
+          `⟨Δx⟩ above ${f(sumDxAbove / Math.max(1, nAbove))} · below ${f(sumDxBelow / Math.max(1, nBelow))} · n=${n}`
       }
     }
 
@@ -437,15 +525,16 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
 
       if (playingRef.current) {
         if (sys.phase === 'running') {
-          step(dtReal * BASE_SPEED * slowmoRef.current)
-          if (QC_START - sys.t < QC_END) {
+          // cap per-frame sim time so extreme zoom x speed stays integrable
+          step(Math.min(dtReal * BASE_SPEED * sys.zoom * slowmoRef.current, 0.8))
+          if (sys.qcStart - sys.t < QC_END) {
             sys.phase = 'hold'
             sys.holdLeft = HOLD_SECONDS
           }
         } else {
           sys.holdLeft -= dtReal
           if (sys.holdLeft <= 0) {
-            const fresh = seed()
+            const fresh = seed(sys.zoom, density)
             sys.px = fresh.px
             sys.py = fresh.py
             sys.ox = fresh.ox
@@ -453,10 +542,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
             sys.lines = fresh.lines
             sys.hlines = fresh.hlines
             sys.t = 0
-            sys.probeAbove = tailAbove.u
-            sys.probeBelow = tailBelow.u
-            sys.probeVAbove = tailAbove.v
-            sys.probeVBelow = tailBelow.v
+            applyTails()
             sys.phase = 'running'
             needsClear = true
           }
@@ -475,7 +561,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       raf = requestAnimationFrame(frame)
     })
     return () => cancelAnimationFrame(raf)
-  }, [gridState, resetTick])
+  }, [gridState, resetTick, zoom, density])
 
   return (
     <div ref={wrapRef}>
@@ -502,10 +588,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         <button className="button-secondary" onClick={() => setPlaying((p) => !p)}>
           {playing ? 'Pause' : 'Play'}
         </button>
-        <button
-          className="button-secondary"
-          onClick={() => setResetTick((n) => n + 1)}
-        >
+        <button className="button-secondary" onClick={() => setResetTick((n) => n + 1)}>
           Restart
         </button>
         <label className="flex items-center gap-3">
@@ -522,6 +605,35 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
           />
           <span className="data-strip w-14 text-[var(--ink)]">{slowmo.toFixed(2)}×</span>
         </label>
+        <label className="flex items-center gap-3">
+          <span className="data-strip">zoom out</span>
+          <input
+            ref={noWheel}
+            type="range"
+            min={1}
+            max={8}
+            step={0.5}
+            value={zoom}
+            onChange={(e) => setZoom(Number(e.target.value))}
+            style={{ accentColor: 'var(--accent)' }}
+          />
+          <span className="data-strip w-20 text-[var(--ink)]">{(BASE_W * zoom).toFixed(0)} chords</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <span className="data-strip">particles</span>
+          <select
+            value={density}
+            onChange={(e) => setDensity(e.target.value as Density)}
+            className="data-strip rounded-[2px] border border-[var(--rule)] bg-[var(--paper-raised)] px-2 py-1 text-[var(--ink)]"
+          >
+            <option value="sparse">sparse</option>
+            <option value="normal">normal</option>
+            <option value="dense">dense</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-3">
         <label className="flex cursor-pointer items-center gap-2">
           <input type="checkbox" checked={trails} onChange={(e) => setTrails(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
           <span className="data-strip">trails</span>
@@ -534,32 +646,64 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
           <input type="checkbox" checked={showHLines} onChange={(e) => setShowHLines(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
           <span className="data-strip">horizontal lines</span>
         </label>
+        <label className="flex cursor-pointer items-center gap-2">
+          <input
+            type="checkbox"
+            checked={showVectors}
+            onChange={(e) => setShowVectors(e.target.checked)}
+            style={{ accentColor: 'var(--accent)' }}
+          />
+          <span className="data-strip">displacement vectors</span>
+        </label>
+        {showVectors && (
+          <label className="flex items-center gap-3">
+            <span className="data-strip">× gain</span>
+            <input
+              ref={noWheel}
+              type="range"
+              min={0}
+              max={3}
+              step={0.1}
+              value={Math.log10(vecGain)}
+              onChange={(e) => setVecGain(10 ** Number(e.target.value))}
+              style={{ accentColor: 'var(--accent)' }}
+            />
+            <span className="data-strip w-14 text-[var(--ink)]">{vecGain.toFixed(0)}×</span>
+          </label>
+        )}
+      </div>
 
-        <div className="ml-auto flex items-baseline gap-5 border-l border-[var(--rule)] pl-6">
-          <div>
-            <span className="data-strip">measured U·ΔΔx&nbsp;</span>
-            <span ref={measuredRef} className="font-mono text-lg font-bold tabular-nums text-[var(--ink)]">
-              —
-            </span>
-          </div>
-          <div>
-            <span className="data-strip">−Γ solved&nbsp;</span>
-            <span ref={predictedRef} className="font-mono text-lg font-bold tabular-nums" style={{ color: 'var(--accent-deep)' }}>
-              —
-            </span>
-          </div>
-          <div>
-            <span className="data-strip">net ∫v&thinsp;dt&nbsp;</span>
-            <span ref={downwashRef} className="font-mono text-lg font-bold tabular-nums text-[var(--ink)]">
-              —
-            </span>
-          </div>
+      <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2 border-t border-[var(--rule)] pt-3">
+        <div>
+          <span className="data-strip">measured U·ΔΔx&nbsp;</span>
+          <span ref={measuredRef} className="font-mono text-lg font-bold tabular-nums text-[var(--ink)]">
+            —
+          </span>
+        </div>
+        <div>
+          <span className="data-strip">−Γ solved&nbsp;</span>
+          <span ref={predictedRef} className="font-mono text-lg font-bold tabular-nums" style={{ color: 'var(--accent-deep)' }}>
+            —
+          </span>
+        </div>
+        <div>
+          <span className="data-strip">net ∫v&thinsp;dt&nbsp;</span>
+          <span ref={downwashRef} className="font-mono text-lg font-bold tabular-nums text-[var(--ink)]">
+            —
+          </span>
+        </div>
+        <div className="w-full">
+          <span className="data-strip">field drift&nbsp;</span>
+          <span ref={statsRef} className="font-mono text-sm tabular-nums text-[var(--ink)]">
+            —
+          </span>
         </div>
       </div>
       <p className="data-strip mt-2">
         probes fixed in the room (+) at y = ±0.3c integrate air velocity as the foil passes (tails
         beyond the window pre-integrated) · U·ΔΔx positive = below-path air dragged with the foil ·
-        net ∫v&thinsp;dt is the accumulated downwash — watch it return to zero
+        net ∫v&thinsp;dt is the accumulated downwash — watch it return to zero · field drift
+        averages every tracked particle&apos;s permanent displacement, in chords
       </p>
     </div>
   )
