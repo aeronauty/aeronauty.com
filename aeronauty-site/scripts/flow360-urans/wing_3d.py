@@ -53,7 +53,7 @@ def write_csm(case_id: str, span: float) -> Path:
     return csm
 
 
-def build_params(fl, case_id: str, semispan: float, quasi2d: bool):
+def build_params(fl, geometry, case_id: str, semispan: float, quasi2d: bool):
     from flow360 import u  # unit system
 
     te_wake_x = [1.1, 1.5, 2.0, 3.0, 6.0]  # crossflow planes, x/c from LE
@@ -67,6 +67,7 @@ def build_params(fl, case_id: str, semispan: float, quasi2d: bool):
         for x in te_wake_x
     ]
 
+    farfield = fl.AutomatedFarfield(method="quasi-3d" if quasi2d else "auto")
     with fl.SI_unit_system:
         params = fl.SimulationParams(
             meshing=fl.MeshingParams(
@@ -74,21 +75,20 @@ def build_params(fl, case_id: str, semispan: float, quasi2d: bool):
                     boundary_layer_first_layer_thickness=2e-6,  # y+ < 1 at Re 1e6
                     surface_max_edge_length=0.03,
                 ),
-                volume_zones=[
-                    fl.AutomatedFarfield(method="quasi-3d" if quasi2d else "auto")
-                ],
+                volume_zones=[farfield],
             ),
             reference_geometry=fl.ReferenceGeometry(
                 area=semispan * 1.0, moment_length=1.0, moment_center=(0.25, 0, 0)
             ),
             operating_condition=fl.AerospaceCondition.from_mach_reynolds(
-                mach=MACH, reynolds=REYNOLDS, alpha=ALPHA_DEG * u.deg, project_length_unit=1 * u.m
+                mach=MACH, reynolds_mesh_unit=REYNOLDS, alpha=ALPHA_DEG * u.deg,
+                project_length_unit=1 * u.m,
             ),
             models=[
                 fl.Fluid(turbulence_model_solver=fl.SpalartAllmaras()),
-                fl.Wall(surfaces=["*wing*"]),
-                # symmetry/farfield boundaries are created by the automated
-                # farfield; adjust names after the draft mesh if needed
+                fl.Wall(surfaces=[geometry["*"]]),
+                fl.Freestream(surfaces=[farfield.farfield]),
+                fl.SlipWall(surfaces=[farfield.symmetry_planes]),
             ],
             time_stepping=fl.Steady(max_steps=6000),
             outputs=[
@@ -102,9 +102,10 @@ def build_params(fl, case_id: str, semispan: float, quasi2d: bool):
                     output_fields=["primitiveVars", "vorticity", "velocity", "Cp"],
                 ),
                 fl.SurfaceOutput(
-                    surfaces=["*"], output_format="paraview", output_fields=["Cp", "Cf", "yPlus"]
+                    surfaces=[geometry["*"]], output_format="paraview", output_fields=["Cp", "Cf", "yPlus"]
                 ),
-                fl.ForceDistributionOutput(),  # spanwise loading -> Gamma(y) vs the VLM
+                # spanwise loading -> Gamma(y) vs the VLM
+                fl.ForceDistributionOutput(name="spanwise_loading", distribution_direction=(0, 1, 0)),
             ],
         )
     return params
@@ -127,7 +128,9 @@ def main() -> int:
     import flow360 as fl
 
     project = fl.Project.from_geometry(str(csm), name=f"circulation-machine {case_id}")
-    params = build_params(fl, case_id, semispan, quasi2d)
+    geometry = project.geometry
+    geometry.group_faces_by_tag("faceId")
+    params = build_params(fl, geometry, case_id, semispan, quasi2d)
     case = project.run_case(params, name=case_id, draft_only=False)
     print(f"submitted: {case.id if hasattr(case, 'id') else case}")
     print("when finished: download volume/slice/surface outputs into "
