@@ -227,6 +227,32 @@ export function WingSection({ core }: { core: FoilCore | null }) {
         ctx.setLineDash([])
       }
 
+      // the field itself: quiver arrows over the plane
+      if (mode === 'tip') {
+        const S = 2.6 // chords of arrow per unit velocity
+        ctx.strokeStyle = 'rgba(26, 23, 20, 0.45)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        const stepQ = ar / 14
+        for (let yq = -halfW + stepQ / 2; yq < halfW; yq += stepQ) {
+          for (let zq = -halfH + stepQ / 2; zq < halfH; zq += stepQ * 0.8) {
+            vel(yq, zq, v)
+            const m2 = Math.hypot(v.y, v.z)
+            if (m2 < 0.006) continue
+            const x0q = sx(yq)
+            const y0q = sy(zq)
+            const x1q = sx(yq + v.y * S)
+            const y1q = sy(zq + v.z * S)
+            ctx.moveTo(x0q, y0q)
+            ctx.lineTo(x1q, y1q)
+            // arrowhead dot at the tip
+            ctx.moveTo(x1q + 1.4, y1q)
+            ctx.arc(x1q, y1q, 1.4, 0, 2 * Math.PI)
+          }
+        }
+        ctx.stroke()
+      }
+
       for (let i = 0; i < px.length; i++) {
         const x = sx(px[i])
         const y = sy(pz[i])

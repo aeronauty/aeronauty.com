@@ -298,7 +298,25 @@ export function Wing3DCanvas({
           line([...pane, pane[0]], INK, 0.8, 0.35)
         }
       } else if (usePca) {
-        // no drawn filaments: the field itself is the URANS reduced-order model
+        // the ROM field made visible: vector glyphs on each snapshot plane
+        const S = 3.2
+        const g = { y: 0, z: 0 }
+        for (const xs of (pca as PcaField).stations) {
+          ctx.strokeStyle = 'rgba(26, 23, 20, 0.4)'
+          ctx.lineWidth = 0.9
+          ctx.beginPath()
+          for (let yq = -half - 1; yq <= half + 1; yq += 0.55) {
+            for (let zq = -1.5; zq <= 1.5; zq += 0.5) {
+              pcaVelocity(pca as PcaField, xs, yq, zq, g)
+              if (Math.hypot(g.y, g.z) < 0.012) continue
+              const [ax, ay] = proj(xs, yq, zq)
+              const [bx, by] = proj(xs, yq + g.y * S, zq + g.z * S)
+              ctx.moveTo(ax, ay)
+              ctx.lineTo(bx, by)
+            }
+          }
+          ctx.stroke()
+        }
       } else {
         // trailed filaments, opacity by strength
         const tMax = Math.max(...wake.ts.map(Math.abs), 1e-9)
