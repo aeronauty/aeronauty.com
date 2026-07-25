@@ -94,22 +94,32 @@ export function Wing3DCanvas({
     const canvas = canvasRef.current
     if (!canvas) return
 
-    // particles riding the wake field
-    const NP = 500
+    // particles seeded on a uniform lattice upstream of the wing, streaming
+    // downstream and recycling to their own column: clean streaklines that
+    // show exactly which tubes of air the wake winds up
+    const NY = 25
+    const NZ = 5
+    const NX = 4
+    const NP = NY * NZ * NX
+    const X_START = -0.6
+    const X_END = 1 + WAKE_LEN_FACTOR * ar
+    const SPAN_TOTAL = X_END - X_START
     const px = new Float64Array(NP)
     const py = new Float64Array(NP)
     const pz = new Float64Array(NP)
-    const seedP = (i: number, anywhere: boolean) => {
-      px[i] = anywhere ? 1 + Math.random() * WAKE_LEN_FACTOR * ar : 1 + Math.random() * 0.3
-      const r = 0.12 * ar * Math.sqrt(Math.random())
-      const th = Math.random() * 2 * Math.PI
-      // cluster near the tips and sprinkle the span
-      const tipSide = Math.random()
-      const yc = tipSide < 0.4 ? -ar / 2 : tipSide < 0.8 ? ar / 2 : (Math.random() - 0.5) * ar
-      py[i] = yc + r * Math.cos(th)
-      pz[i] = r * Math.sin(th)
+    const oy = new Float64Array(NP)
+    const oz = new Float64Array(NP)
+    for (let i = 0; i < NP; i++) {
+      const col = i % (NY * NZ)
+      const iy = col % NY
+      const iz = Math.floor(col / NY)
+      const layer = Math.floor(i / (NY * NZ))
+      oy[i] = ((iy + 0.5) / NY - 0.5) * 1.3 * ar
+      oz[i] = ((iz + 0.5) / NZ - 0.5) * 0.36 * ar
+      px[i] = X_START + ((layer + 0.5) / NX) * SPAN_TOTAL
+      py[i] = oy[i]
+      pz[i] = oz[i]
     }
-    for (let i = 0; i < NP; i++) seedP(i, true)
 
     const wakeVel = (x: number, y: number, z: number, out: { y: number; z: number }) => {
       out.y = 0
@@ -154,7 +164,11 @@ export function Wing3DCanvas({
         px[i] += dt
         py[i] += v.y * dt
         pz[i] += v.z * dt
-        if (px[i] > 1 + WAKE_LEN_FACTOR * ar) seedP(i, false)
+        if (px[i] > X_END) {
+          px[i] = X_START
+          py[i] = oy[i]
+          pz[i] = oz[i]
+        }
       }
 
       // ---- projection ----
@@ -239,7 +253,7 @@ export function Wing3DCanvas({
       // particles
       for (let i = 0; i < NP; i++) {
         const [X, Y] = proj(px[i], py[i], pz[i])
-        ctx.fillStyle = pz[i] > 0 ? RED_DOT : BLUE_DOT
+        ctx.fillStyle = oz[i] > 0 ? RED_DOT : BLUE_DOT
         ctx.fillRect(X - 1, Y - 1, 2.2, 2.2)
       }
 
@@ -260,8 +274,8 @@ export function Wing3DCanvas({
     }
     const move = (e: PointerEvent) => {
       if (!view.current.dragging) return
-      view.current.az += (e.clientX - view.current.px) * 0.008
-      view.current.el = Math.max(-1.4, Math.min(1.4, view.current.el + (e.clientY - view.current.py) * 0.008))
+      view.current.az -= (e.clientX - view.current.px) * 0.008
+      view.current.el = Math.max(-1.4, Math.min(1.4, view.current.el - (e.clientY - view.current.py) * 0.008))
       view.current.px = e.clientX
       view.current.py = e.clientY
     }
