@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FoilCore } from '@/lib/foil/wasm'
 import { noWheel, BLUE, RED_DEEP } from './CirculationLab'
+import { Wing3DCanvas } from './Wing3DCanvas'
 
 /**
  * The third dimension: a Weissinger-L vortex lattice (in the same WASM core)
@@ -229,6 +230,10 @@ export function WingSection({ core }: { core: FoilCore | null }) {
         <em>permanent</em> — balanced by upwash outside. That is where the momentum bookkeeping
         moves when the wing gets an end.
       </p>
+
+      <div className="mt-6">
+        <Wing3DCanvas mode={mode} ar={ar} wake={wake} ys={ys} gammas={gammas} gamma2d={GAMMA_2D} />
+      </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.35fr_1fr]">
         <div>
