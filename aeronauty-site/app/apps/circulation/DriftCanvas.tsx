@@ -151,6 +151,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
   const predictedRef = useRef<HTMLSpanElement>(null)
   const downwashRef = useRef<HTMLSpanElement>(null)
   const statsRef = useRef<HTMLSpanElement>(null)
+  const historyRef = useRef<HTMLCanvasElement>(null)
 
   const [playing, setPlaying] = useState(true)
   const [slowmo, setSlowmo] = useState(0.2)
@@ -202,6 +203,8 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
     const geo = sol.geo
 
     const sys = seed(zoom, density)
+    // time histories of the two net-vertical measures, kept through the hold
+    const hist: { t: number[]; dy: number[]; vint: number[] } = { t: [], dy: [], vint: [] }
     let raf = 0
     let lastMs = 0
     let lastReadout = 0
@@ -468,6 +471,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         const net = 0.5 * (sys.probeVAbove + sys.probeVBelow)
         downwashRef.current.textContent = net.toFixed(3)
       }
+      let meanDyNow = 0
       if (statsRef.current) {
         // whole-field particle statistics: the net-motion answer
         let sumDy = 0
@@ -490,10 +494,67 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
             nBelow++
           }
         }
+        meanDyNow = sumDy / n
         const f = (x: number) => (x >= 0 ? '+' : '') + x.toFixed(4)
         statsRef.current.textContent =
           `⟨Δy⟩ ${f(sumDy / n)} · ⟨|Δy|⟩ ${(sumAbsDy / n).toFixed(4)} · ` +
           `⟨Δx⟩ above ${f(sumDxAbove / Math.max(1, nAbove))} · below ${f(sumDxBelow / Math.max(1, nBelow))} · n=${n}`
+      }
+
+      // ---- net-vertical strip chart: the whole argument in one trace ----
+      if (sys.phase === 'running') {
+        hist.t.push(sys.t)
+        hist.dy.push(meanDyNow)
+        hist.vint.push(0.5 * (sys.probeVAbove + sys.probeVBelow))
+        if (hist.t.length > 2400) {
+          hist.t.shift()
+          hist.dy.shift()
+          hist.vint.shift()
+        }
+      }
+      const hc = historyRef.current
+      if (hc && hist.t.length > 1) {
+        const w = hc.clientWidth
+        const hgt = w / 9
+        const dpr2 = window.devicePixelRatio || 1
+        if (hc.width !== Math.round(w * dpr2)) {
+          hc.width = Math.round(w * dpr2)
+          hc.height = Math.round(hgt * dpr2)
+        }
+        const hctx = hc.getContext('2d')
+        if (hctx) {
+          hctx.setTransform(dpr2, 0, 0, dpr2, 0, 0)
+          hctx.fillStyle = '#fbf8f1'
+          hctx.fillRect(0, 0, w, hgt)
+          const tMax = sys.qcStart - QC_END
+          const amp = Math.max(0.06, ...hist.dy.map(Math.abs), ...hist.vint.map(Math.abs)) * 1.2
+          const hx = (t: number) => (t / tMax) * w
+          const hy = (v: number) => hgt / 2 - (v / amp) * (hgt / 2 - 4)
+          hctx.strokeStyle = RULE
+          hctx.lineWidth = 1
+          hctx.beginPath()
+          hctx.moveTo(0, hgt / 2)
+          hctx.lineTo(w, hgt / 2)
+          hctx.stroke()
+          const trace = (vals: number[], style: string, dash: number[]) => {
+            hctx.strokeStyle = style
+            hctx.setLineDash(dash)
+            hctx.lineWidth = 1.6
+            hctx.beginPath()
+            for (let i = 0; i < hist.t.length; i++) {
+              const X = hx(hist.t[i])
+              const Y = hy(vals[i])
+              i === 0 ? hctx.moveTo(X, Y) : hctx.lineTo(X, Y)
+            }
+            hctx.stroke()
+            hctx.setLineDash([])
+          }
+          trace(hist.vint, '#a81c2e', [4, 3])
+          trace(hist.dy, '#1a1714', [])
+          hctx.fillStyle = '#6b635a'
+          hctx.font = `10px ui-monospace, monospace`
+          hctx.fillText(`±${amp.toFixed(2)} c`, 6, 12)
+        }
       }
     }
 
@@ -545,6 +606,9 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
             applyTails()
             sys.phase = 'running'
             needsClear = true
+            hist.t.length = 0
+            hist.dy.length = 0
+            hist.vint.length = 0
           }
         }
       }
@@ -698,6 +762,21 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
             —
           </span>
         </div>
+      </div>
+      <div className="mt-3">
+        <canvas
+          ref={historyRef}
+          className="w-full rounded-[2px] border border-[var(--rule)]"
+          style={{ aspectRatio: '9' }}
+          role="img"
+          aria-label="Time history of net vertical displacement through the pass"
+        />
+        <p className="data-strip mt-1">
+          net vertical, through the whole pass: <span style={{ color: 'var(--ink)' }}>⟨Δy⟩ of every
+          particle</span> · <span style={{ color: 'var(--accent-deep)' }}>∫v dt at the probes
+          (dashed)</span> — both swell while the foil passes and collapse back to zero. That is the
+          whole argument.
+        </p>
       </div>
       <p className="data-strip mt-2">
         probes fixed in the room (+) at y = ±0.3c integrate air velocity as the foil passes (tails
