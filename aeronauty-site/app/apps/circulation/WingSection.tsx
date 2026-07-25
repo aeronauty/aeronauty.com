@@ -143,8 +143,11 @@ export function WingSection({ core }: { core: FoilCore | null }) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const halfW = 0.75 * ar
-    const halfH = 0.375 * ar
+    // the URANS grid covers |y| < 5.6, |z| < 1.8: crop the window to the
+    // data so there are no frozen zero-velocity zones at the edges
+    const useUransWin = source === 'urans' && urans !== null && urans !== 'missing'
+    const halfW = useUransWin ? 5.5 : 0.75 * ar
+    const halfH = useUransWin ? 1.75 : 0.375 * ar
     const aspect = halfW / halfH
 
     const px: number[] = []

@@ -155,7 +155,9 @@ export function Wing3DCanvas({
     const NZ = 5
     const NX = 4
     const NP = NY * NZ * NX
-    const X_START = -0.6
+    // seed as far upstream as the wake runs downstream: the upwash ahead of
+    // and outboard of the wing gets equal screen time
+    const X_START = -0.5 * (1 + WAKE_LEN_FACTOR * ar)
     const X_END = 1 + WAKE_LEN_FACTOR * ar
     const SPAN_TOTAL = X_END - X_START
     const px = new Float64Array(NP)
@@ -176,14 +178,52 @@ export function Wing3DCanvas({
     }
 
     const usePca = source === 'urans' && pca !== null
+
+    // 3D Biot-Savart of a segment a->b with circulation G; adds (y,z) comps
+    const seg3 = (ax: number, ay: number, az: number, bx: number, by: number, bz: number, G: number, px2: number, py2: number, pz2: number, out: { y: number; z: number }) => {
+      const r1x = px2 - ax, r1y = py2 - ay, r1z = pz2 - az
+      const r2x = px2 - bx, r2y = py2 - by, r2z = pz2 - bz
+      const cxv = r1y * r2z - r1z * r2y
+      const cyv = r1z * r2x - r1x * r2z
+      const czv = r1x * r2y - r1y * r2x
+      const m1 = Math.hypot(r1x, r1y, r1z)
+      const m2 = Math.hypot(r2x, r2y, r2z)
+      const denom = m1 * m2 * (m1 * m2 + r1x * r2x + r1y * r2y + r1z * r2z)
+      if (Math.abs(denom) < 1e-10) return
+      const f = (G * (m1 + m2)) / (4 * Math.PI * denom)
+      out.y += f * cyv
+      out.z += f * czv
+      void cxv
+    }
+
+    // bound vortex at c/4: this is what makes upwash exist ahead of the wing
+    let boundSign = 1
+    const boundVel = (x: number, y: number, z: number, out: { y: number; z: number }) => {
+      if (mode === 'walls') {
+        seg3(0.25, -60, 0, 0.25, 60, 0, boundSign * gamma2d, x, y, z, out)
+        return
+      }
+      for (let i = 0; i < ys.length; i++) {
+        const e0 = i === 0 ? -ar / 2 : (ys[i - 1] + ys[i]) / 2
+        const e1 = i === ys.length - 1 ? ar / 2 : (ys[i] + ys[i + 1]) / 2
+        seg3(0.25, e0, 0, 0.25, e1, 0, boundSign * gammas[i], x, y, z, out)
+      }
+    }
+    {
+      const probe = { y: 0, z: 0 }
+      boundVel(-1, 0, 0, probe)
+      if (probe.z < 0) boundSign = -1 // lift up means upwash ahead
+    }
+
     const wakeVel = (x: number, y: number, z: number, out: { y: number; z: number }) => {
       out.y = 0
       out.z = 0
-      if (mode === 'walls' || x < 1) return
       if (usePca) {
-        pcaVelocity(pca as PcaField, x, y, z, out)
+        if (x >= 1) pcaVelocity(pca as PcaField, x, y, z, out)
         return
       }
+      boundVel(x, y, z, out)
+      if (mode === 'walls' || x < 1) return
       const s = Math.min(WAKE_STEPS - 1, Math.max(0, Math.floor((x - 1) / rolled.dx)))
       const n = wake.ys.length
       for (let j = 0; j < n; j++) {
