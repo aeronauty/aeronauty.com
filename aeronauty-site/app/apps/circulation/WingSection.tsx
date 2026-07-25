@@ -25,6 +25,44 @@ const RED_DOT = 'rgba(215, 38, 61, 0.78)'
 const BLUE_DOT = 'rgba(31, 95, 139, 0.78)'
 
 type Mode = 'walls' | 'tip'
+type WakeSource = 'vlm' | 'urans'
+
+interface UransField {
+  semispan: number
+  y0: number
+  z0: number
+  ny: number
+  nz: number
+  dy: number
+  dz: number
+  v: number[]
+  w: number[]
+}
+
+/** bilinear sample of the URANS crossflow grid, mirrored across the root */
+function uransVelocity(f: UransField, y: number, z: number, out: { y: number; z: number }) {
+  const sgn = y < 0 ? -1 : 1
+  const ya = Math.abs(y)
+  const fy = (ya - f.y0) / f.dy
+  const fz = (z - f.z0) / f.dz
+  if (fy < 0 || fy > f.ny - 1.001 || fz < 0 || fz > f.nz - 1.001) {
+    out.y = 0
+    out.z = 0
+    return
+  }
+  const iy = Math.floor(fy)
+  const iz = Math.floor(fz)
+  const ty = fy - iy
+  const tz = fz - iz
+  const k = (a: number, b: number) => a * f.nz + b
+  const lerp = (arr: number[]) =>
+    arr[k(iy, iz)] * (1 - ty) * (1 - tz) +
+    arr[k(iy + 1, iz)] * ty * (1 - tz) +
+    arr[k(iy, iz + 1)] * (1 - ty) * tz +
+    arr[k(iy + 1, iz + 1)] * ty * tz
+  out.y = sgn * lerp(f.v)
+  out.z = lerp(f.w)
+}
 
 interface Wake {
   /** trailing vortex positions (y) and strengths, crossflow-plane 2D field */
@@ -49,6 +87,19 @@ function crossflowVelocity(wake: Wake, y: number, z: number, out: { y: number; z
 export function WingSection({ core }: { core: FoilCore | null }) {
   const [mode, setMode] = useState<Mode>('tip')
   const [ar, setAr] = useState(8)
+  const [source, setSource] = useState<WakeSource>('vlm')
+  const [urans, setUrans] = useState<UransField | 'missing' | null>(null)
+  const pickUrans = () => {
+    setSource('urans')
+    setMode('tip')
+    setAr(8) // the CFD case is AR 8
+    if (urans === null) {
+      fetch('/urans/crossflow-tip-a6.json')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setUrans(d ?? 'missing'))
+        .catch(() => setUrans('missing'))
+    }
+  }
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const statsRef = useRef<HTMLSpanElement>(null)
   const [resetTick, setResetTick] = useState(0)
@@ -127,12 +178,15 @@ export function WingSection({ core }: { core: FoilCore | null }) {
       const dt = Math.min((ms - lastMs) / 1000, 0.3) * 1.2
       lastMs = ms
 
-      // advect (midpoint), frozen wake field
+      // advect (midpoint), frozen wake field — VLM sheet or the URANS vectors
+      const useUrans = source === 'urans' && urans !== null && urans !== 'missing'
+      const vel = (yy: number, zz: number, o: { y: number; z: number }) =>
+        useUrans ? uransVelocity(urans as UransField, yy, zz, o) : crossflowVelocity(wake, yy, zz, o)
       for (let i = 0; i < px.length; i++) {
-        crossflowVelocity(wake, px[i], pz[i], v)
+        vel(px[i], pz[i], v)
         const my = px[i] + 0.5 * dt * v.y
         const mz = pz[i] + 0.5 * dt * v.z
-        crossflowVelocity(wake, my, mz, v)
+        vel(my, mz, v)
         px[i] += dt * v.y
         pz[i] += dt * v.z
       }
@@ -202,7 +256,7 @@ export function WingSection({ core }: { core: FoilCore | null }) {
       raf = requestAnimationFrame(frame)
     })
     return () => cancelAnimationFrame(raf)
-  }, [wake, ar, mode, resetTick])
+  }, [wake, ar, mode, resetTick, source, urans])
 
   // ---- Gamma(y) plot ----
   const plot = useMemo(() => {
@@ -263,14 +317,32 @@ export function WingSection({ core }: { core: FoilCore | null }) {
           <p className="data-strip mt-2">spanwise circulation Γ(y) vs the 2D value</p>
           <div className="mt-5 space-y-4">
             <div className="flex gap-4">
-              <button className={mode === 'walls' ? 'button-primary' : 'button-secondary'} onClick={() => setMode('walls')}>
+              <button className={mode === 'walls' ? 'button-primary' : 'button-secondary'} onClick={() => { setMode('walls'); setSource('vlm') }}>
                 Symmetry both ends
               </button>
               <button className={mode === 'tip' ? 'button-primary' : 'button-secondary'} onClick={() => setMode('tip')}>
                 Free tip
               </button>
             </div>
-            <label className="block max-w-xs">
+            <div className="flex items-center gap-4">
+              <span className="data-strip">crossflow field</span>
+              <button className={source === 'vlm' ? 'button-primary' : 'button-secondary'} onClick={() => setSource('vlm')}>
+                VLM
+              </button>
+              <button className={source === 'urans' ? 'button-primary' : 'button-secondary'} onClick={pickUrans}>
+                URANS (Flow360)
+              </button>
+            </div>
+            {source === 'urans' && urans === 'missing' && (
+              <p className="data-strip">URANS field data not generated — run the extraction in scripts/flow360-urans</p>
+            )}
+            {source === 'urans' && urans !== null && urans !== 'missing' && (
+              <p className="data-strip">
+                same dots, real vectors: Flow360 SA velocity at x/c = 2 behind the AR-8 wing,
+                freestream removed, mirrored at the root · AR pinned to 8
+              </p>
+            )}
+            <label className={`block max-w-xs ${source === 'urans' ? 'opacity-40' : ''}`}>
               <span className="data-strip flex justify-between">
                 <span>Aspect ratio</span>
                 <span className="text-[var(--ink)]">{ar.toFixed(0)}</span>
@@ -282,6 +354,7 @@ export function WingSection({ core }: { core: FoilCore | null }) {
                 max={16}
                 step={1}
                 value={ar}
+                disabled={source === 'urans'}
                 onChange={(e) => setAr(Number(e.target.value))}
                 className="mt-1 w-full"
                 style={{ accentColor: 'var(--accent)' }}
