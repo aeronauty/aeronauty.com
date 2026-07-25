@@ -28,6 +28,56 @@ export interface WakeData {
   ts: number[]
 }
 
+/** PCA reduced-order model of the URANS wake: u(x,y,z) = mean + sum a_k(x) phi_k(y,z) */
+export interface PcaField {
+  semispan: number
+  stations: number[]
+  k: number
+  y0: number
+  z0: number
+  ny: number
+  nz: number
+  dy: number
+  dz: number
+  mean: number[]
+  modes: number[][]
+  coeffs: number[][]
+}
+
+function pcaVelocity(f: PcaField, x: number, y: number, z: number, out: { y: number; z: number }) {
+  out.y = 0
+  out.z = 0
+  const sgn = y < 0 ? -1 : 1
+  const ya = Math.abs(y)
+  const fy = (ya - f.y0) / f.dy
+  const fz = (z - f.z0) / f.dz
+  if (fy < 0 || fy > f.ny - 1.001 || fz < 0 || fz > f.nz - 1.001) return
+  // interpolate mode coefficients downstream (clamped)
+  const xs = f.stations
+  const xc = Math.min(Math.max(x, xs[0]), xs[xs.length - 1])
+  let si = 0
+  while (si < xs.length - 2 && xs[si + 1] < xc) si++
+  const t = (xc - xs[si]) / (xs[si + 1] - xs[si])
+  const a: number[] = []
+  for (let k = 0; k < f.k; k++) a.push(f.coeffs[si][k] * (1 - t) + f.coeffs[si + 1][k] * t)
+
+  const iy = Math.floor(fy)
+  const iz = Math.floor(fz)
+  const ty = fy - iy
+  const tz = fz - iz
+  const N = f.ny * f.nz
+  const sample = (off: number): number => {
+    const k00 = off + iy * f.nz + iz
+    const bil = (arr: number[]) =>
+      arr[k00] * (1 - ty) * (1 - tz) + arr[k00 + f.nz] * ty * (1 - tz) + arr[k00 + 1] * (1 - ty) * tz + arr[k00 + f.nz + 1] * ty * tz
+    let val = bil(f.mean)
+    for (let k = 0; k < f.k; k++) val += a[k] * bil(f.modes[k])
+    return val
+  }
+  out.y = sgn * sample(0)
+  out.z = sample(N)
+}
+
 /** filament paths [k][station] = (y, z), marched with mutual induction */
 function rollUpWake(wake: WakeData, span: number): { paths: Float64Array[]; dx: number } {
   const n = wake.ys.length
@@ -72,6 +122,8 @@ export function Wing3DCanvas({
   ys,
   gammas,
   gamma2d,
+  source = 'vlm',
+  pca = null,
 }: {
   mode: 'walls' | 'tip'
   ar: number
@@ -79,6 +131,8 @@ export function Wing3DCanvas({
   ys: number[]
   gammas: number[]
   gamma2d: number
+  source?: 'vlm' | 'urans'
+  pca?: PcaField | null
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const view = useRef({ az: -0.7, el: 0.42, dragging: false, px: 0, py: 0 })
@@ -121,10 +175,15 @@ export function Wing3DCanvas({
       pz[i] = oz[i]
     }
 
+    const usePca = source === 'urans' && pca !== null
     const wakeVel = (x: number, y: number, z: number, out: { y: number; z: number }) => {
       out.y = 0
       out.z = 0
       if (mode === 'walls' || x < 1) return
+      if (usePca) {
+        pcaVelocity(pca as PcaField, x, y, z, out)
+        return
+      }
       const s = Math.min(WAKE_STEPS - 1, Math.max(0, Math.floor((x - 1) / rolled.dx)))
       const n = wake.ys.length
       for (let j = 0; j < n; j++) {
@@ -238,6 +297,8 @@ export function Wing3DCanvas({
           ctx.globalAlpha = 0.35
           line([...pane, pane[0]], INK, 0.8, 0.35)
         }
+      } else if (usePca) {
+        // no drawn filaments: the field itself is the URANS reduced-order model
       } else {
         // trailed filaments, opacity by strength
         const tMax = Math.max(...wake.ts.map(Math.abs), 1e-9)
@@ -293,7 +354,7 @@ export function Wing3DCanvas({
       canvas.removeEventListener('pointerup', up)
       canvas.removeEventListener('pointercancel', up)
     }
-  }, [mode, ar, wake, rolled, sections, ys, gammas, gamma2d])
+  }, [mode, ar, wake, rolled, sections, ys, gammas, gamma2d, source, pca])
 
   return (
     <div>
@@ -305,8 +366,10 @@ export function Wing3DCanvas({
         aria-label="Rotatable 3D view of the wing, its spanwise loading and the rolled-up wake"
       />
       <p className="data-strip mt-2">
-        drag to rotate · <span style={{ color: 'var(--accent-deep)' }}>Γ(y) curtain</span> at c/4 ·
-        wake filaments marched with mutual induction — the roll-up is computed, not drawn
+        drag to rotate · <span style={{ color: 'var(--accent-deep)' }}>Γ(y) curtain</span> at c/4 ·{' '}
+        {source === 'urans'
+          ? 'particles ride the URANS wake compressed to 3 PCA modes (99.8% of variance), coefficients interpolated downstream'
+          : 'wake filaments marched with mutual induction — the roll-up is computed, not drawn'}
       </p>
     </div>
   )

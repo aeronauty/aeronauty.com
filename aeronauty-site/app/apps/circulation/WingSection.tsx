@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FoilCore } from '@/lib/foil/wasm'
 import { noWheel, BLUE, RED_DEEP } from './CirculationLab'
-import { Wing3DCanvas } from './Wing3DCanvas'
+import { Wing3DCanvas, PcaField } from './Wing3DCanvas'
 
 /**
  * The third dimension: a Weissinger-L vortex lattice (in the same WASM core)
@@ -89,6 +89,7 @@ export function WingSection({ core }: { core: FoilCore | null }) {
   const [ar, setAr] = useState(8)
   const [source, setSource] = useState<WakeSource>('vlm')
   const [urans, setUrans] = useState<UransField | 'missing' | null>(null)
+  const [pca3d, setPca3d] = useState<PcaField | null>(null)
   const pickUrans = () => {
     setSource('urans')
     setMode('tip')
@@ -98,6 +99,10 @@ export function WingSection({ core }: { core: FoilCore | null }) {
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => setUrans(d ?? 'missing'))
         .catch(() => setUrans('missing'))
+      fetch('/urans/wake3d-pca.json')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setPca3d(d ?? null))
+        .catch(() => setPca3d(null))
     }
   }
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -286,7 +291,7 @@ export function WingSection({ core }: { core: FoilCore | null }) {
       </p>
 
       <div className="mt-6">
-        <Wing3DCanvas mode={mode} ar={ar} wake={wake} ys={ys} gammas={gammas} gamma2d={GAMMA_2D} />
+        <Wing3DCanvas mode={mode} ar={ar} wake={wake} ys={ys} gammas={gammas} gamma2d={GAMMA_2D} source={source} pca={pca3d} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.35fr_1fr]">
