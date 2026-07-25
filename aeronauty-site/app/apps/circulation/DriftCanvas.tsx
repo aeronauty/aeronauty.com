@@ -34,8 +34,8 @@ const RED_DOT = 'rgba(215, 38, 61, 0.78)'
 const BLUE_DOT = 'rgba(31, 95, 139, 0.78)'
 
 // Eulerian probes: fixed lab points near the path whose time-integrated air
-// velocity gives the circulation (u) and the net downwash -> 0 (v)
-const PROBE_X = 3.3
+// velocity gives the circulation (u) and the net downwash -> 0 (v).
+// The x station is user-adjustable (fraction of the window width).
 const PROBE_Y = 0.3
 
 // material-line stations as fractions of the window
@@ -161,6 +161,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
   const [showLines, setShowLines] = useState(true)
   const [showHLines, setShowHLines] = useState(true)
   const [showVectors, setShowVectors] = useState(false)
+  const [probeFrac, setProbeFrac] = useState(0.52)
   const [vecGain, setVecGain] = useState(30)
   const [resetTick, setResetTick] = useState(0)
 
@@ -203,6 +204,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
     const geo = sol.geo
 
     const sys = seed(zoom, density)
+    const probeX = probeFrac * sys.x1
     // time histories of the two net-vertical measures, kept through the hold
     const hist: { t: number[]; dy: number[]; vint: number[] } = { t: [], dy: [], vint: [] }
     let raf = 0
@@ -226,12 +228,12 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       let accV = 0
       const far = sys.qcStart + 90
       for (let qc = sys.qcStart + 0.5 * dt; qc < far; qc += dt) {
-        airVelocity(PROBE_X, py, qc, v)
+        airVelocity(probeX, py, qc, v)
         accU += v.x * dt
         accV += v.y * dt
       }
       for (let qc = QC_END - 0.5 * dt; qc > -90; qc -= dt) {
-        airVelocity(PROBE_X, py, qc, v)
+        airVelocity(probeX, py, qc, v)
         accU += v.x * dt
         accV += v.y * dt
       }
@@ -290,10 +292,10 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         for (const hline of sys.hlines) advect(hline.lx, hline.ly, hline.n, sys.t, h)
         // accumulate the impulse integrals at the two fixed probes (midpoint rule)
         const qcMid = sys.qcStart - (sys.t + 0.5 * h)
-        airVelocity(PROBE_X, PROBE_Y, qcMid, v)
+        airVelocity(probeX, PROBE_Y, qcMid, v)
         sys.probeAbove += v.x * h
         sys.probeVAbove += v.y * h
-        airVelocity(PROBE_X, -PROBE_Y, qcMid, v)
+        airVelocity(probeX, -PROBE_Y, qcMid, v)
         sys.probeBelow += v.x * h
         sys.probeVBelow += v.y * h
         sys.t += h
@@ -438,7 +440,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
 
       // fixed measurement probes
       for (const py of [PROBE_Y, -PROBE_Y]) {
-        const cx = sx(PROBE_X)
+        const cx = sx(probeX)
         const cy = sy(py)
         ctx.strokeStyle = 'rgba(168, 28, 46, 0.85)'
         ctx.lineWidth = 1.2
@@ -515,7 +517,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       const hc = historyRef.current
       if (hc && hist.t.length > 1) {
         const w = hc.clientWidth
-        const hgt = w / 9
+        const hgt = w / 5
         const dpr2 = window.devicePixelRatio || 1
         if (hc.width !== Math.round(w * dpr2)) {
           hc.width = Math.round(w * dpr2)
@@ -536,10 +538,21 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
           hctx.moveTo(0, hgt / 2)
           hctx.lineTo(w, hgt / 2)
           hctx.stroke()
-          const trace = (vals: number[], style: string, dash: number[]) => {
+          // when the foil crosses the probe station
+          const tCross = sys.qcStart - probeX
+          hctx.strokeStyle = '#6b635a'
+          hctx.setLineDash([2, 4])
+          hctx.lineWidth = 1
+          hctx.beginPath()
+          hctx.moveTo(hx(tCross), 4)
+          hctx.lineTo(hx(tCross), hgt - 4)
+          hctx.stroke()
+          hctx.setLineDash([])
+
+          const trace = (vals: number[], style: string, dash: number[], label: string) => {
             hctx.strokeStyle = style
             hctx.setLineDash(dash)
-            hctx.lineWidth = 1.6
+            hctx.lineWidth = 2.2
             hctx.beginPath()
             for (let i = 0; i < hist.t.length; i++) {
               const X = hx(hist.t[i])
@@ -548,12 +561,21 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
             }
             hctx.stroke()
             hctx.setLineDash([])
+            const lastX = hx(hist.t[hist.t.length - 1])
+            const lastY = hy(vals[vals.length - 1])
+            hctx.fillStyle = style
+            hctx.beginPath()
+            hctx.arc(lastX, lastY, 3, 0, 2 * Math.PI)
+            hctx.fill()
+            hctx.font = `11px ui-monospace, monospace`
+            hctx.fillText(label, Math.min(lastX + 7, w - 78), lastY + 4)
           }
-          trace(hist.vint, '#a81c2e', [4, 3])
-          trace(hist.dy, '#1a1714', [])
+          trace(hist.vint, '#a81c2e', [5, 3], '∫v dt')
+          trace(hist.dy, '#1a1714', [], '⟨Δy⟩')
           hctx.fillStyle = '#6b635a'
           hctx.font = `10px ui-monospace, monospace`
           hctx.fillText(`±${amp.toFixed(2)} c`, 6, 12)
+          hctx.fillText('foil at probe', hx(tCross) + 4, hgt - 8)
         }
       }
     }
@@ -625,7 +647,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
       raf = requestAnimationFrame(frame)
     })
     return () => cancelAnimationFrame(raf)
-  }, [gridState, resetTick, zoom, density])
+  }, [gridState, resetTick, zoom, density, probeFrac])
 
   return (
     <div ref={wrapRef}>
@@ -682,6 +704,20 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
             style={{ accentColor: 'var(--accent)' }}
           />
           <span className="data-strip w-20 text-[var(--ink)]">{(BASE_W * zoom).toFixed(0)} chords</span>
+        </label>
+        <label className="flex items-center gap-3">
+          <span className="data-strip">probe x</span>
+          <input
+            ref={noWheel}
+            type="range"
+            min={0.1}
+            max={0.9}
+            step={0.01}
+            value={probeFrac}
+            onChange={(e) => setProbeFrac(Number(e.target.value))}
+            style={{ accentColor: 'var(--accent)' }}
+          />
+          <span className="data-strip w-14 text-[var(--ink)]">{(probeFrac * BASE_W * zoom).toFixed(1)} c</span>
         </label>
         <label className="flex items-center gap-2">
           <span className="data-strip">particles</span>
@@ -767,7 +803,7 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         <canvas
           ref={historyRef}
           className="w-full rounded-[2px] border border-[var(--rule)]"
-          style={{ aspectRatio: '9' }}
+          style={{ aspectRatio: '5' }}
           role="img"
           aria-label="Time history of net vertical displacement through the pass"
         />
@@ -779,7 +815,8 @@ export function DriftCanvas({ gridState }: { gridState: GridState | null }) {
         </p>
       </div>
       <p className="data-strip mt-2">
-        probes fixed in the room (+) at y = ±0.3c integrate air velocity as the foil passes (tails
+        probes fixed in the room (+) at y = ±0.3c, x set by the probe-x slider, integrate air
+        velocity as the foil passes (tails
         beyond the window pre-integrated) · U·ΔΔx positive = below-path air dragged with the foil ·
         net ∫v&thinsp;dt is the accumulated downwash — watch it return to zero · field drift
         averages every tracked particle&apos;s permanent displacement, in chords

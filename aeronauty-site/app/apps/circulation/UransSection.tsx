@@ -28,12 +28,17 @@ interface UransCase {
  */
 export function UransSection() {
   const [cases, setCases] = useState<UransCase[] | null>(null)
+  const [gallery, setGallery] = useState<Array<{ src: string; caption: string }>>([])
 
   useEffect(() => {
     fetch('/urans/cases.json')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => setCases(data?.cases ?? null))
       .catch(() => setCases(null))
+    fetch('/urans/gallery.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setGallery(data?.items ?? []))
+      .catch(() => setGallery([]))
   }, [])
 
   if (!cases || cases.length === 0) return null
@@ -52,6 +57,21 @@ export function UransSection() {
           <UransCaseView key={c.id} c={c} />
         ))}
       </div>
+      {gallery.length > 0 && (
+        <div className="mt-12 border-t border-[var(--rule)] pt-8">
+          <h3 className="text-xl font-semibold">The flowfields themselves</h3>
+          <p className="data-strip mt-2">rendered from the downloaded slice exports · full volume data on the cloud</p>
+          <div className="mt-5 grid gap-6 sm:grid-cols-2">
+            {gallery.map((g) => (
+              <figure key={g.src}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={g.src} alt={g.caption} className="w-full rounded-[2px] border border-[var(--rule)]" loading="lazy" />
+                <figcaption className="mt-2 text-sm leading-6 text-stone-500">{g.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }
