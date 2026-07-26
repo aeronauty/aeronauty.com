@@ -307,7 +307,7 @@ export function WingSection({ core }: { core: FoilCore | null }) {
 
   return (
     <section className="card mt-10 p-6 sm:p-8">
-      <p className="eyebrow">03 · The third dimension</p>
+      <p className="eyebrow">04 · The third dimension</p>
       <h2 className="mt-3 text-3xl font-semibold">Give the wing an end</h2>
       <p className="mt-3 max-w-3xl leading-7 text-stone-600">
         A vortex-lattice solve (same WASM core) for a rectangular wing, and the crossflow plane far

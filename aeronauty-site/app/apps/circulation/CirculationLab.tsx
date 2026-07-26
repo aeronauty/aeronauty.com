@@ -18,6 +18,7 @@ import { CpPlot } from './CpPlot'
 import { DriftCanvas } from './DriftCanvas'
 import { PolarChart } from './PolarChart'
 import { WingSection } from './WingSection'
+import { ControlVolumeSection } from './ControlVolumeSection'
 
 const N_PANELS = 140
 export const BLUE = '#1f5f8b'
@@ -492,6 +493,8 @@ export default function CirculationLab() {
           opposite signs. The lasting signature is horizontal, and it is exactly Γ/U.
         </p>
       </section>
+
+      <ControlVolumeSection sol={sol} />
 
       <WingSection core={core} />
     </div>

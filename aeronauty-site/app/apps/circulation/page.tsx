@@ -37,7 +37,7 @@ export default function CirculationPage() {
         <UransSection />
 
         <section className="card mt-10 p-6 sm:p-8">
-          <p className="eyebrow">04 · Notes for the sceptical</p>
+          <p className="eyebrow">05 · Notes for the sceptical</p>
           <h2 className="mt-3 text-3xl font-semibold">What is actually being solved</h2>
           <div className="mt-4 max-w-3xl space-y-4 leading-7 text-stone-600">
             <p>
