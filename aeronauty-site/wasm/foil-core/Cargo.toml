@@ -1,0 +1,17 @@
+[package]
+name = "foil-core"
+version = "0.1.0"
+edition = "2021"
+description = "Hess-Smith panel solver + velocity-grid fill for aeronauty.com's Circulation Machine, compiled to WASM. Mirrors lib/foil exactly; the TS harness checks parity."
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

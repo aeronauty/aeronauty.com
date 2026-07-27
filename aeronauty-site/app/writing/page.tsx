@@ -4,6 +4,14 @@ import { SiteNav } from "@/components/SiteNav";
 import { topologyArticles } from "@/lib/topology-articles";
 
 const pieces = [
+  {
+    title: "Newton, for fluids",
+    description:
+      "A scrollytelling derivation of the momentum equation: what momentum actually is, the Reynolds transport theorem, and why every box you draw around a wing reports the same lift. Every animation runs live on the validated panel code.",
+    tags: ["Fluid mechanics", "Momentum", "Scrollytelling", "Interactive"],
+    link: "/writing/momentum",
+    type: "Interactive essay",
+  },
   ...topologyArticles.map((article) => ({
     title: article.title,
     description: article.description,

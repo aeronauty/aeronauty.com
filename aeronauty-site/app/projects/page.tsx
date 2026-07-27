@@ -20,6 +20,14 @@ const projects = [
     status: "Live",
   },
   {
+    title: "The Circulation Machine",
+    description:
+      "A from-scratch 2D panel method with camber, thickness and incidence sliders — validated against exact conformal-map solutions, plus a still-air view where the drift the foil leaves behind measures its own circulation.",
+    tech: ["TypeScript", "Panel methods", "Kármán–Trefftz", "Canvas"],
+    link: "/apps/circulation",
+    status: "Live",
+  },
+  {
     title: "Panel Code / Kutta Demo",
     description:
       "A browser-based panel-method demonstration for explaining circulation, pressure, and the equal-transit-time myth.",

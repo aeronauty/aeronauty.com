@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "build:wasm": "cd wasm/foil-core && wasm-pack build --target web --release --out-dir ../../public/foil-core && rm -f ../../public/foil-core/.gitignore",
+    "validate:foil": "tsx scripts/validate-foil.ts",
     "sync-lift-explainer": "rm -rf public/lift-explainer && cp -r submodules/LiftExplainer public/lift-explainer",
     "sync-wind-turbine": "mkdir -p public/wind-turbine && cp submodules/WindTurbineExplainer/turbine_3d_interactive.html public/wind-turbine/ && cp submodules/WindTurbineExplainer/blade_harmonics.html public/wind-turbine/ && cp -r submodules/WindTurbineExplainer/blade-harmonics-app/whythreeblades public/wind-turbine/blade-harmonics"
   },
