@@ -213,8 +213,12 @@ export default function GoogleIdentityButton({
           overflowFrame = null;
           if (disposed || buttonHost.dataset.googleButtonLayout !== "standard") return;
           const availableWidth = Math.floor(buttonHost.getBoundingClientRect().width);
+          // GIS keeps a small, invisible overflow region inside an otherwise
+          // correctly sized wrapper. Judge the rendered control by its outer
+          // bounds so that internal iframe bookkeeping does not force the icon
+          // variant on every viewport.
           const renderedWidth = Math.max(
-            buttonHost.scrollWidth,
+            0,
             ...Array.from(buttonHost.children, (child) => child.getBoundingClientRect().width),
           );
           if (renderedWidth <= availableWidth + 1) return;
