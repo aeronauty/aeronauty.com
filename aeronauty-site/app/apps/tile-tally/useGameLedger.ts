@@ -13,6 +13,7 @@ import type {
   AppendLedgerEventInput,
   CreateLedgerGameInput,
   FinishLedgerGameInput,
+  LedgerActiveMediaCount,
   LedgerEntity,
   LedgerEvent,
   LedgerGame,
@@ -30,6 +31,14 @@ const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "ima
 const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 
 type PageResult<T> = { data: T[] | null; error: unknown };
+
+type HistorySnapshot = {
+  entities: LedgerEntity[];
+  games: LedgerGame[];
+  participants: LedgerParticipant[];
+  events: LedgerEvent[];
+  activeMediaCounts: LedgerActiveMediaCount[];
+};
 
 type PendingStartOperation = {
   gameId: string;
@@ -61,6 +70,44 @@ function messageFromError(error: unknown) {
     if (typeof message === "string") return message;
   }
   return "Something went wrong. Please try again.";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isMissingHistorySnapshotError(error: unknown) {
+  if (!isRecord(error)) return false;
+  const code = typeof error.code === "string" ? error.code : "";
+  const message = typeof error.message === "string" ? error.message : "";
+  return code === "PGRST202" || code === "42883" || /gameledger_history_snapshot.*(?:not find|not found|does not exist|schema cache)/i.test(message);
+}
+
+function historySnapshotRows(value: unknown, field: string) {
+  if (!Array.isArray(value) || value.some((row) => !isRecord(row))) {
+    throw new Error(`Game history snapshot has an invalid ${field} collection.`);
+  }
+  return value as Record<string, unknown>[];
+}
+
+function parseHistorySnapshot(value: unknown, ownerId: string): HistorySnapshot {
+  if (!isRecord(value) || value.schema_version !== 1) {
+    throw new Error("Game history snapshot has an unsupported shape.");
+  }
+  const withOwner = <T,>(rows: Record<string, unknown>[]) => rows.map((row) => ({ ...row, owner_id: ownerId }) as T);
+  const activeMediaCounts = historySnapshotRows(value.active_media_counts, "media counts").map((row) => {
+    if (typeof row.game_id !== "string" || typeof row.active_media_count !== "number") {
+      throw new Error("Game history snapshot has an invalid media count.");
+    }
+    return { game_id: row.game_id, active_media_count: row.active_media_count };
+  });
+  return {
+    entities: withOwner<LedgerEntity>(historySnapshotRows(value.entities, "entities")),
+    games: withOwner<LedgerGame>(historySnapshotRows(value.games, "games")),
+    participants: withOwner<LedgerParticipant>(historySnapshotRows(value.participants, "participants")),
+    events: withOwner<LedgerEvent>(historySnapshotRows(value.events, "events")),
+    activeMediaCounts,
+  };
 }
 
 function isAuthError(error: unknown) {
@@ -219,6 +266,7 @@ export function useGameLedger() {
   const [participants, setParticipants] = useState<LedgerParticipant[]>([]);
   const [events, setEvents] = useState<LedgerEvent[]>([]);
   const [media, setMedia] = useState<LedgerMedia[]>([]);
+  const [activeMediaCounts, setActiveMediaCounts] = useState<LedgerActiveMediaCount[]>([]);
   const authRevision = useRef(0);
   const refreshGeneration = useRef(0);
   const activeUserId = useRef<string | null>(null);
@@ -233,6 +281,7 @@ export function useGameLedger() {
     setParticipants([]);
     setEvents([]);
     setMedia([]);
+    setActiveMediaCounts([]);
   }, []);
 
   const applySession = useCallback((nextSession: Session | null, forceClear = false) => {
@@ -322,13 +371,40 @@ export function useGameLedger() {
     setDataLoading(true);
     setError(null);
     try {
-      const [nextEntities, nextGames, nextParticipants, nextEvents, nextMedia] = await Promise.all([
-        collectPages<LedgerEntity>((from, to) => supabase.from("gameledger_entities").select("*").order("created_at").order("id").range(from, to)),
-        collectPages<LedgerGame>((from, to) => supabase.from("gameledger_games").select("*").order("started_at", { ascending: false }).order("id").range(from, to)),
-        collectPages<LedgerParticipant>((from, to) => supabase.from("gameledger_participants").select("*").order("game_id").order("seat").range(from, to)),
-        collectPages<LedgerEvent>((from, to) => supabase.from("gameledger_events").select("*").order("occurred_at").order("seq").range(from, to)),
-        collectPages<LedgerMedia>((from, to) => supabase.from("gameledger_media").select("*").is("deleted_at", null).order("captured_at").range(from, to)),
+      const [snapshotResult, nextMedia] = await Promise.all([
+        supabase.rpc("gameledger_history_snapshot"),
+        collectPages<LedgerMedia>((from, to) => supabase
+          .from("gameledger_media")
+          .select("*")
+          .is("deleted_at", null)
+          .order("captured_at")
+          .order("created_at")
+          .order("id")
+          .range(from, to)),
       ]);
+      let snapshot: HistorySnapshot;
+      if (snapshotResult.error) {
+        if (!isMissingHistorySnapshotError(snapshotResult.error)) throw snapshotResult.error;
+        // A short-lived compatibility path keeps an already-deployed POC usable
+        // while the additive snapshot RPC migration is being rolled out.
+        const [nextEntities, nextGames, nextParticipants, nextEvents] = await Promise.all([
+          collectPages<LedgerEntity>((from, to) => supabase.from("gameledger_entities").select("*").order("created_at").order("id").range(from, to)),
+          collectPages<LedgerGame>((from, to) => supabase.from("gameledger_games").select("*").order("started_at").order("created_at").order("id").range(from, to)),
+          collectPages<LedgerParticipant>((from, to) => supabase.from("gameledger_participants").select("*").order("game_id").order("seat").order("id").range(from, to)),
+          collectPages<LedgerEvent>((from, to) => supabase.from("gameledger_events").select("*").order("game_id").order("seq").order("id").range(from, to)),
+        ]);
+        const mediaCounts = new Map<string, number>();
+        nextMedia.forEach((item) => mediaCounts.set(item.game_id, (mediaCounts.get(item.game_id) ?? 0) + 1));
+        snapshot = {
+          entities: nextEntities,
+          games: nextGames,
+          participants: nextParticipants,
+          events: nextEvents,
+          activeMediaCounts: Array.from(mediaCounts, ([game_id, active_media_count]) => ({ game_id, active_media_count })),
+        };
+      } else {
+        snapshot = parseHistorySnapshot(snapshotResult.data, userId);
+      }
       if (!isCurrent()) return;
       const paths = nextMedia.map((item) => item.storage_path);
       let signedByPath = new Map<string, string>();
@@ -344,10 +420,13 @@ export function useGameLedger() {
         }
       }
       if (!isCurrent()) return;
-      setEntities(nextEntities);
-      setGames(nextGames.map((game) => ({ ...game, definition: normaliseGameProfile(game.definition) })));
-      setParticipants(nextParticipants);
-      setEvents(nextEvents);
+      setEntities(snapshot.entities);
+      setGames(snapshot.games
+        .map((game) => ({ ...game, definition: normaliseGameProfile(game.definition) }))
+        .sort((left, right) => Date.parse(right.started_at) - Date.parse(left.started_at) || right.id.localeCompare(left.id)));
+      setParticipants(snapshot.participants);
+      setEvents(snapshot.events);
+      setActiveMediaCounts(snapshot.activeMediaCounts);
       setMedia(nextMedia.map((item) => ({
         ...item,
         signed_url: signedByPath.get(item.storage_path) ?? null,
@@ -384,23 +463,58 @@ export function useGameLedger() {
       setParticipants([]);
       setEvents([]);
       setMedia([]);
+      setActiveMediaCounts([]);
       return;
     }
     void refresh();
   }, [refresh, session]);
 
+  const renewMediaPreviews = useCallback(async () => {
+    if (!supabase || !session || media.length === 0) return;
+    const revision = authRevision.current;
+    const userId = session.user.id;
+    const paths = media.map((item) => item.storage_path);
+    try {
+      const { data: signedRows, error: signingError } = await supabase.storage
+        .from(MEDIA_BUCKET)
+        .createSignedUrls(paths, SIGNED_URL_SECONDS);
+      if (signingError) throw signingError;
+      if (authRevision.current !== revision || activeUserId.current !== userId) return;
+      const signedByPath = new Map((signedRows ?? []).flatMap((row) =>
+        row.path && row.signedUrl ? [[row.path, row.signedUrl] as const] : [],
+      ));
+      setMedia((current) => current.map((item) => ({
+        ...item,
+        signed_url: signedByPath.get(item.storage_path) ?? item.signed_url ?? null,
+        transfer: signedByPath.has(item.storage_path)
+          ? { status: "ready" }
+          : {
+              status: "error",
+              error: "This private preview link could not be renewed. Reopen the game to retry.",
+            },
+      })));
+      if (signedByPath.size !== paths.length) {
+        setError("Your game is available, but one or more private media previews could not be renewed.");
+      }
+    } catch (renewalError) {
+      if (authRevision.current !== revision || activeUserId.current !== userId) return;
+      if (isLedgerAuthError(renewalError)) recoverSession();
+      else setError(`Your game is available, but private media previews could not be renewed: ${messageFromError(renewalError)}`);
+    }
+  }, [media, recoverSession, session, supabase]);
+
   useEffect(() => {
     if (!session || media.length === 0) return;
-    const timer = window.setInterval(() => void refresh(), SIGNED_URL_REFRESH_MS);
+    const timer = window.setInterval(() => void renewMediaPreviews(), SIGNED_URL_REFRESH_MS);
     const renewWhenVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
+      if (document.visibilityState === "visible") void renewMediaPreviews();
     };
     document.addEventListener("visibilitychange", renewWhenVisible);
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", renewWhenVisible);
     };
-  }, [media.length, refresh, session]);
+  }, [media.length, renewMediaPreviews, session]);
 
   const mutate = useCallback(async <T,>(operation: () => Promise<T>) => {
     setBusy(true);
@@ -477,7 +591,9 @@ export function useGameLedger() {
     const encodedDefinition = JSON.stringify(input.definition);
     if (encodedDefinition.length > 128_000) throw new Error("That game definition is too large.");
     const selected = Array.from(new Set(input.entityIds));
-    const selectedEntities = selected.map((id) => entities.find((entity) => entity.id === id)).filter((entity): entity is LedgerEntity => Boolean(entity));
+    const selectedEntities = selected
+      .map((id) => entities.find((entity) => entity.id === id && !entity.archived_at))
+      .filter((entity): entity is LedgerEntity => Boolean(entity));
     if (selectedEntities.length !== selected.length) throw new Error("One of those participants no longer exists.");
     const location = cleanName(input.location ?? "") || null;
     const operationKey = stableOperationKey({
@@ -774,6 +890,7 @@ export function useGameLedger() {
     participants,
     events,
     media,
+    activeMediaCounts,
     setError,
     refresh,
     signInWithGoogleToken,

@@ -15,11 +15,17 @@ JSON numbers retain decimal values. Counter names, units, targets, participant
 roles, event fields, result fields, and display hints all live in `definition` and
 `event_data`; the database does not assume that a game even has a score.
 
+Longitudinal analytics rest on two durable layers. `gameledger_entities.id` is the
+identity carried across games and is retired with `archived_at`, never hard-deleted
+through the authenticated API. `gameledger_participants` is the immutable
+game-time label, seat, role, and entity join. That separation lets a later rename
+improve current display without rewriting what was recorded at the table.
+
 ## Application contract
 
 | Object | Purpose |
 | --- | --- |
-| `gameledger_entities` | Reusable people, teams, sides, or other identities. |
+| `gameledger_entities` | Reusable people, teams, sides, or other durable identities; retire with `archived_at`. |
 | `gameledger_profiles` | Editable/archivable templates with automatically incremented `revision`. |
 | `gameledger_games` | Session header and complete `definition` snapshot. Open workflow states are free lowercase slugs; `complete` is the sole terminal state. |
 | `gameledger_participants` | Stable per-game label/seat snapshots; `entity_id` is optional for guests and roles. |
@@ -29,8 +35,10 @@ roles, event fields, result fields, and display hints all live in `definition` a
 | `gameledger-media` | Private Supabase Storage bucket containing the bytes. |
 
 Entity display names are not globally unique—two real people or teams may share a
-name. Deleting a reusable entity nulls only historical participants' `entity_id`;
-their copied `label` and every game/event remain intact.
+name. Archive an identity when it should disappear from new-game pickers. Its UUID,
+copied participant labels, and every game/event remain intact. The participant FK
+uses `ON DELETE RESTRICT`, authenticated callers have no entity `DELETE` grant, and
+trusted account erasure must delete the guarded game graphs before their entities.
 
 Start application games through the atomic RPC rather than separate header and
 participant inserts:
@@ -52,7 +60,10 @@ Each participant is `{id, entity_id?, label, seat, metadata?}`. The RPC takes a
 transaction lock on the client-generated game UUID, checks profile/entity ownership,
 and creates the definition plus all label snapshots together. A repeated game UUID
 returns `{idempotent: true, game, participants}`; invalid or duplicate participant
-data rolls the entire first call back.
+data rolls the entire first call back. Once this call commits, authenticated clients
+have SELECT only on `gameledger_participants`: even an open game's entity join,
+label, seat, and metadata cannot be inserted, changed, or removed directly. Guarded
+whole-game deletion still cascades these snapshots.
 
 When a profile is supplied, the RPC holds a share lock and requires both
 `p_profile_version` and `p_definition` to equal the current active profile. This
@@ -124,14 +135,90 @@ transaction. The same result event UUID is an idempotent retry. Direct clients
 cannot append a `result`, insert/update a completed game, or set `ended_at`, so the
 result and header cannot be left in contradictory states.
 
-Outcomes such as win, draw, abandonment, timeout, or a custom result belong in
-`p_result`; they are not competing terminal status values. Open games may use
-custom workflow statuses such as `paused` or `awaiting_review`, but must return to
-`in_progress` before the finish RPC.
+Most of `p_result` remains arbitrary bounded JSON, but two optional root keys form
+the normalized cross-game analytics contract:
+
+```json
+{
+  "_outcome": "completed",
+  "_winner_participant_ids": [
+    "34000000-0000-4000-8000-000000000001",
+    "35000000-0000-4000-8000-000000000002"
+  ],
+  "house_fact": { "label": "shared victory", "streak": 3 }
+}
+```
+
+- `_outcome`, when present, is a normalized lowercase slug of 1–64 characters.
+  Values such as `completed`, `draw`, `abandoned`, `custom`, and `no-decision`
+  share one stable vocabulary without restricting games to those examples.
+- `_winner_participant_ids`, when present, is a unique array of at most 128 UUID
+  strings. Every UUID must identify a participant snapshot in this same owned game;
+  co-winners are valid only when the game's immutable
+  `definition.result.allow_multiple_winners` is the JSON boolean `true`. Missing,
+  false, or non-boolean values keep the single-winner rule. Accepted UUID spellings
+  are stored in canonical lowercase form.
+- `draw` and `abandoned` require an empty or omitted winner array. Other outcomes
+  may have zero or more winners because a game can end without a decided winner.
+- A `draw` outcome is rejected when the game's immutable
+  `definition.result.allow_draw` is the JSON boolean `false`. A missing value keeps
+  the forward-compatible default that draws are allowed.
+
+Invalid UUIDs, duplicates, cross-game IDs, contradictory draw/abandoned winners,
+and definition-disallowed draw or co-winner results abort the entire finish. Other
+result keys remain byte-for-byte JSON facts subject to the event payload size
+bound. Open games may use custom workflow statuses such as `paused` or
+`awaiting_review`, but must return to `in_progress` before the finish RPC.
 
 Undo and correction are append-only: create a new event whose `voids_event_id`
 points to the earlier event. Never rewrite or remove the earlier observation. A
 void can itself be voided, which gives redo semantics without destroying history.
+
+## Cumulative history and subhistories
+
+Read the analytics graph through one owner-derived RPC:
+
+```sql
+gameledger_history_snapshot() returns jsonb
+```
+
+It accepts no owner argument and derives the account only from `auth.uid()`. One
+SQL statement returns a single MVCC-consistent object:
+
+```json
+{
+  "schema_version": 1,
+  "entities": [],
+  "games": [],
+  "participants": [],
+  "events": [],
+  "active_media_counts": []
+}
+```
+
+Arrays have deterministic orders: entities by `created_at, id`; games by
+`started_at, created_at, id`; participants by `game_id, seat, id`; events by
+`game_id, seq, id`; and active-media counts by `game_id`. Every game has one count,
+including zero. The explicit objects omit `owner_id`, source envelopes, Storage
+paths, binary content, and signed URLs. Custom definition/metadata/event JSON is
+included under its existing per-row size bounds so an analytics worker can
+recompute facts without receiving media credentials.
+
+Before any JSON aggregation, the RPC preflights a deliberately generous POC
+support envelope for the owner: at most 10,000 identities, 50,000 games, 250,000
+participant snapshots, 500,000 events, 250,000 active media rows, and an estimated
+64 MiB serialized response. The byte estimate includes every variable JSON/text
+field plus conservative per-row structural overhead. Exceeding any ceiling raises
+SQLSTATE `54000` (`program_limit_exceeded`) rather than attempting an unbounded
+`jsonb_agg`; a future paginated/export API is the intended path beyond that scale.
+
+The immutable graph supports cumulative totals and arbitrary subhistories without
+database-specific game rules. For example, a client can group by entity UUID across
+all time, filter games by dates/profile/location/definition metadata, compare a
+pair of entities head-to-head, reconstruct active counter values from ordered
+events and void edges, then calculate wins, margins, streaks, best performances,
+frequency, and unusual records. Derived statistics should remain reproducible
+cache/materialization outputs; the append-only game facts are authoritative.
 
 ## Definition and event examples
 
@@ -230,8 +317,9 @@ clients have no direct game/participant INSERT grant. Those snapshot columns als
 have no UPDATE grant; later profile or rules corrections are events. Trusted admin
 roles retain direct maintenance access. Session header fields such as title, status,
 start time, and location remain editable while the game is open. Participant
-snapshots, game headers, and event facts lock at completion except for whole-game
-deletion; media and extra source envelopes may still be added for replay.
+snapshots lock immediately after atomic start; game headers and event facts lock at
+completion except for whole-game deletion. Media and extra source envelopes may
+still be added for replay.
 
 Deletion is a two-step, retryable workflow:
 
@@ -246,23 +334,27 @@ preventing old provenance from silently referring to different bytes. When delet
 an entire game, the application must fetch and remove all Storage objects first,
 tombstone their metadata, then call `gameledger_delete_game(game_id)`. Direct game
 DELETE is not granted, and this RPC refuses while any active media remains. Cascades
-remove database rows, but never pretend to remove Storage bytes. Orphan cleanup
-after a broken client flow requires a trusted server using the service role; it is
-not broadened to arbitrary authenticated object paths. Account deletion likewise
-needs trusted media cleanup before the Auth user is removed.
+remove participants and the rest of the game graph, but never pretend to remove
+Storage bytes. Durable reusable entities remain and may then be archived. Orphan
+cleanup after a broken client flow requires a trusted server using the service role;
+it is not broadened to arbitrary authenticated object paths. Account deletion
+likewise needs trusted media cleanup and guarded game deletion before the Auth user
+is removed, because referenced entity deletion is intentionally restricted.
 
 ## Security and limits
 
 All seven application tables enable and force RLS. Authenticated users can see only
-rows whose `owner_id = auth.uid()`, and `anon` receives no table access. Composite
-foreign keys prevent an owner, participant, media item, event, or source from being
-attached across accounts or games.
+rows whose `owner_id = auth.uid()`, and `anon` receives no table or RPC access.
+Composite foreign keys prevent an owner, participant, media item, event, or source
+from being attached across accounts or games. The history RPC is `STABLE SECURITY
+DEFINER`, has an empty `search_path`, accepts no owner parameter, and is executable
+only by `authenticated`.
 
-Events and sources are immutable through authenticated grants. JSON inputs must be
-objects and are bounded (64–256 KiB, depending on purpose); strings, sequence
-numbers, media dimensions, MIME types, durations, and byte sizes also have explicit
-limits. `SECURITY DEFINER` RPCs use an empty `search_path` and independently verify
-`auth.uid()` before writing.
+Participant snapshots, events, and event sources are immutable through
+authenticated grants. JSON inputs must be objects and are bounded (64–256 KiB,
+depending on purpose); strings, sequence numbers, media dimensions, MIME types,
+durations, and byte sizes also have explicit limits. `SECURITY DEFINER` RPCs use an
+empty `search_path` and independently verify `auth.uid()` before reading or writing.
 
 Authenticated column grants exclude server-managed revisions, tombstones, and
 creation/update timestamps. Profile/entity/game triggers and RPCs supply those

@@ -532,6 +532,7 @@ export default function GameSetup({ entities, busy, onAddEntity, onStartGame, on
                         ...current.result,
                         mode: event.target.value as "derived" | "manual" | "none",
                         allow_draw: current.result?.allow_draw !== false,
+                        allow_multiple_winners: current.result?.allow_multiple_winners === true,
                       },
                     }))}
                   >
@@ -558,17 +559,30 @@ export default function GameSetup({ entities, busy, onAddEntity, onStartGame, on
                   </label>
                 )}
                 {(definition.result?.mode ?? "manual") !== "none" && (
-                  <label className={styles.booleanField}>
-                    <input
-                      type="checkbox"
-                      checked={definition.result?.allow_draw !== false}
-                      onChange={(event) => setDefinition((current) => ({
-                        ...current,
-                        result: { ...current.result!, allow_draw: event.target.checked },
-                      }))}
-                    />
-                    <span>Allow a draw</span>
-                  </label>
+                  <>
+                    <label className={styles.booleanField}>
+                      <input
+                        type="checkbox"
+                        checked={definition.result?.allow_draw !== false}
+                        onChange={(event) => setDefinition((current) => ({
+                          ...current,
+                          result: { ...current.result!, allow_draw: event.target.checked },
+                        }))}
+                      />
+                      <span>Allow a draw</span>
+                    </label>
+                    <label className={styles.booleanField}>
+                      <input
+                        type="checkbox"
+                        checked={definition.result?.allow_multiple_winners === true}
+                        onChange={(event) => setDefinition((current) => ({
+                          ...current,
+                          result: { ...current.result!, allow_multiple_winners: event.target.checked },
+                        }))}
+                      />
+                      <span>Allow co-winners</span>
+                    </label>
+                  </>
                 )}
               </div>
             </section>

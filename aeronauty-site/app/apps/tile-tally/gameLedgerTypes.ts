@@ -25,6 +25,11 @@ export type LedgerMedia = GameLedgerMedia & {
   };
 };
 
+export type LedgerActiveMediaCount = {
+  game_id: string;
+  active_media_count: number;
+};
+
 export type CreateLedgerGameInput = {
   title: string;
   definition: GameLedgerProfile;

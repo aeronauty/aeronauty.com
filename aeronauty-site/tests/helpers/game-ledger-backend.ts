@@ -21,6 +21,7 @@ export type MockLedgerEntity = {
   entity_type: string;
   name: string;
   metadata: unknown;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -171,6 +172,7 @@ export class GameLedgerBackend {
   loseNextAppendResponse = false;
   loseNextFinishResponse = false;
   loseNextMediaReservationResponse = false;
+  missingHistorySnapshot = false;
 
   private sequence = 1;
 
@@ -233,6 +235,7 @@ export class GameLedgerBackend {
         entity_type: stringValue(body.entity_type, "other"),
         name: stringValue(body.name),
         metadata: body.metadata ?? {},
+        archived_at: null,
         created_at: FIXED_NOW,
         updated_at: FIXED_NOW,
       };
@@ -336,6 +339,37 @@ export class GameLedgerBackend {
 
   private async handleRpc(route: Route, rpc: string) {
     const body = await postData(route);
+
+    if (rpc === "gameledger_history_snapshot") {
+      if (this.missingHistorySnapshot) {
+        await route.fulfill({
+          body: JSON.stringify({ code: "PGRST202", message: "Could not find the function public.gameledger_history_snapshot in the schema cache" }),
+          contentType: "application/json",
+          status: 404,
+        });
+        return;
+      }
+      const withoutOwner = <T extends { owner_id: string }>(row: T) => {
+        const { owner_id: _ownerId, ...visible } = row;
+        return visible;
+      };
+      await route.fulfill({
+        body: JSON.stringify({
+          schema_version: 1,
+          entities: this.entities.map(withoutOwner),
+          games: this.games.map(withoutOwner),
+          participants: this.participants.map(withoutOwner),
+          events: this.events.map(withoutOwner),
+          active_media_counts: this.games.map((game) => ({
+            game_id: game.id,
+            active_media_count: this.media.filter((item) => item.game_id === game.id && !item.deleted_at).length,
+          })),
+        }),
+        contentType: "application/json",
+        status: 200,
+      });
+      return;
+    }
 
     if (rpc === "gameledger_start_game") {
       const gameId = stringValue(body.p_game_id, this.nextId(2));

@@ -6,6 +6,14 @@ const STORAGE_KEY = `tile-tally:tiles:v3:${ACCOUNT_ID}`;
 const TILE_WIDTH = 54;
 const TILE_HEIGHT = 58;
 const JOIN_STEP = 58;
+const EMPTY_HISTORY_SNAPSHOT = {
+  schema_version: 1,
+  entities: [],
+  games: [],
+  participants: [],
+  events: [],
+  active_media_counts: [],
+};
 
 type FixtureBody = {
   blankAs?: string;
@@ -82,6 +90,10 @@ test.beforeEach(async ({ context, page }) => {
   await page.route("**/__e2e_supabase__/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
+    if (url.pathname.endsWith("/rest/v1/rpc/gameledger_history_snapshot")) {
+      await route.fulfill({ body: JSON.stringify(EMPTY_HISTORY_SNAPSHOT), contentType: "application/json", status: 200 });
+      return;
+    }
     if (url.pathname.includes("/rest/v1/tiletally_players")) {
       await route.fulfill({
         body: JSON.stringify([player]),

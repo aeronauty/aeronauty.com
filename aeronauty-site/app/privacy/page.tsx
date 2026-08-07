@@ -22,7 +22,7 @@ export default function PrivacyPage() {
             ],
             [
               "Game Ledger",
-              "If you use Game Ledger, Supabase stores your Google account identity; named people, teams, or other scoring entities; user-defined game definitions; participants; chronological score, state, note, void, and result events; and photo or short-video metadata. Each game stores a snapshot of its definition so a later template edit cannot reinterpret an old game. Your Supabase session is kept in browser local storage so sign-in survives a reload; signing out removes that local session. In the optional Tile table, groups, letters, blank assignments, and order are stored only in versioned browser local storage under a key scoped to your signed-in account; they are not sent to Supabase or synced to another device. Tile selection, full-screen mode, motion permission, and word-check state are not retained.",
+              "If you use Game Ledger, Supabase stores your Google account identity; named people, teams, or other scoring entities; user-defined game definitions; participants; chronological score, state, note, void, and result events; and photo or short-video metadata. Each game stores a snapshot of its definition so a later template edit cannot reinterpret an old game. Reusable participant identities are archived rather than detached from old games, preserving the history behind career and matchup statistics. Your Supabase session is kept in browser local storage so sign-in survives a reload; signing out removes that local session. In the optional Tile table, groups, letters, blank assignments, and order are stored only in versioned browser local storage under a key scoped to your signed-in account; they are not sent to Supabase or synced to another device. Tile selection, full-screen mode, motion permission, and word-check state are not retained.",
             ],
             [
               "Game photos and clips",
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             ],
             [
               "AI processing",
-              "The current Game Ledger scoring, notes, photo, and video flows do not invoke an AI model. Other Aeronauty experiments may use Anthropic or OpenAI only when their own interface explicitly says so; those providers do not receive your Supabase or Google credentials.",
+              "The current Game Ledger scoring, notes, photo, video, cumulative statistics, and interesting-fact flows do not invoke an AI model. History summaries are deterministic calculations over the games selected in the app and remain inside the signed-in experience. Other Aeronauty experiments may use Anthropic or OpenAI only when their own interface explicitly says so; those providers do not receive your Supabase or Google credentials.",
             ],
             [
               "Consent",

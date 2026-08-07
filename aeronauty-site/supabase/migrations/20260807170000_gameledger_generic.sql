@@ -13,6 +13,7 @@ create table if not exists public.gameledger_entities (
   entity_type text not null default 'person',
   name text not null,
   metadata jsonb not null default '{}'::jsonb,
+  archived_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint gameledger_entities_id_owner_unique unique (id, owner_id),
@@ -26,14 +27,30 @@ create table if not exists public.gameledger_entities (
     jsonb_typeof(metadata) = 'object'
     and octet_length(metadata::text) <= 65536
   ),
-  constraint gameledger_entities_timestamps_check
-    check (updated_at >= created_at)
+  constraint gameledger_entities_timestamps_check check (
+    updated_at >= created_at
+    and (archived_at is null or archived_at >= created_at)
+  )
 );
+
+-- Keep this additive migration safe to re-run against a database that received an
+-- earlier POC revision of the table before durable entity archival was added.
+alter table public.gameledger_entities
+  add column if not exists archived_at timestamptz;
+alter table public.gameledger_entities
+  drop constraint if exists gameledger_entities_timestamps_check;
+alter table public.gameledger_entities
+  add constraint gameledger_entities_timestamps_check check (
+    updated_at >= created_at
+    and (archived_at is null or archived_at >= created_at)
+  );
 
 comment on table public.gameledger_entities is
   'Reusable owner-private people, teams, sides, or other participant identities; entity_type is a free slug, not an enum.';
 comment on column public.gameledger_entities.metadata is
   'Arbitrary display and application metadata; game history uses participant label snapshots rather than depending on later edits here.';
+comment on column public.gameledger_entities.archived_at is
+  'Nullable retirement marker. Authenticated clients archive identities instead of deleting them so lifetime and subgroup analytics retain a durable join key.';
 
 create index if not exists gameledger_entities_owner_type_name_idx
   on public.gameledger_entities (owner_id, entity_type, lower(btrim(name)));
@@ -151,7 +168,7 @@ create table if not exists public.gameledger_participants (
   constraint gameledger_participants_entity_owner_fk
     foreign key (entity_id, owner_id)
     references public.gameledger_entities (id, owner_id)
-    on delete set null (entity_id)
+    on delete restrict
     deferrable initially deferred,
   constraint gameledger_participants_label_check
     check (char_length(btrim(label)) between 1 and 120),
@@ -166,7 +183,18 @@ create table if not exists public.gameledger_participants (
 comment on table public.gameledger_participants is
   'Per-game participant snapshots. entity_id is optional so guests, teams, colors, or roles need no reusable identity.';
 comment on column public.gameledger_participants.label is
-  'Historical display label copied at game creation; later entity edits/deletion do not rewrite the game, and entity deletion only nulls entity_id.';
+  'Immutable historical display label copied at atomic game creation; later entity edits or archival never rewrite the game.';
+
+-- Replace the earlier POC FK action when this migration is re-run. Historical
+-- participant-to-entity joins are durable: an entity must be archived, not erased.
+alter table public.gameledger_participants
+  drop constraint if exists gameledger_participants_entity_owner_fk;
+alter table public.gameledger_participants
+  add constraint gameledger_participants_entity_owner_fk
+  foreign key (entity_id, owner_id)
+  references public.gameledger_entities (id, owner_id)
+  on delete restrict
+  deferrable initially deferred;
 
 create index if not exists gameledger_participants_owner_entity_idx
   on public.gameledger_participants (owner_id, entity_id, game_id)
@@ -689,9 +717,11 @@ begin
 
     if v_entity_id is not null and not exists (
       select 1 from public.gameledger_entities
-      where id = v_entity_id and owner_id = v_uid
+      where id = v_entity_id
+        and owner_id = v_uid
+        and archived_at is null
     ) then
-      raise no_data_found using message = 'Participant entity not found';
+      raise no_data_found using message = 'Active participant entity not found';
     end if;
 
     insert into public.gameledger_participants (
@@ -902,6 +932,10 @@ declare
   v_seq bigint;
   v_source_id uuid;
   v_ended_at timestamptz := coalesce(p_ended_at, now());
+  v_outcome text;
+  v_winner jsonb;
+  v_winner_id uuid;
+  v_winner_ids uuid[] := array[]::uuid[];
 begin
   if v_uid is null then
     raise insufficient_privilege using message = 'Authentication required';
@@ -911,12 +945,111 @@ begin
     raise check_violation using message = 'Result must be a JSON object';
   end if;
 
+  -- These two underscore-prefixed fields are the normalized cross-game analytics
+  -- contract. Every other bounded result key remains application-defined JSON.
+  if p_result ? '_outcome' then
+    if jsonb_typeof(p_result->'_outcome') <> 'string' then
+      raise check_violation
+        using message = 'Reserved result _outcome must be a lowercase slug';
+    end if;
+    v_outcome := p_result->>'_outcome';
+    if v_outcome <> btrim(v_outcome)
+      or v_outcome !~ '^[a-z][a-z0-9_.-]{0,63}$'
+    then
+      raise check_violation
+        using message = 'Reserved result _outcome must be a lowercase slug';
+    end if;
+  end if;
+
+  if p_result ? '_winner_participant_ids' then
+    if jsonb_typeof(p_result->'_winner_participant_ids') <> 'array'
+      or jsonb_array_length(p_result->'_winner_participant_ids') > 128
+    then
+      raise check_violation using message =
+        'Reserved result _winner_participant_ids must be an array of at most 128 UUID strings';
+    end if;
+
+    for v_winner in
+      select value
+      from jsonb_array_elements(p_result->'_winner_participant_ids')
+    loop
+      if jsonb_typeof(v_winner) <> 'string' then
+        raise check_violation using message =
+          'Reserved result _winner_participant_ids must contain only UUID strings';
+      end if;
+
+      begin
+        v_winner_id := (v_winner #>> '{}')::uuid;
+      exception
+        when invalid_text_representation then
+          raise check_violation using message =
+            'Reserved result _winner_participant_ids contains an invalid UUID';
+      end;
+
+      if v_winner_id = any(v_winner_ids) then
+        raise check_violation using message =
+          'Reserved result _winner_participant_ids must not contain duplicates';
+      end if;
+      v_winner_ids := array_append(v_winner_ids, v_winner_id);
+    end loop;
+
+    -- UUID input accepts several valid textual spellings. Store the reserved
+    -- field canonically so analytics clients can compare it to snapshot UUIDs as
+    -- text without re-implementing PostgreSQL UUID normalization.
+    p_result := jsonb_set(
+      p_result,
+      '{_winner_participant_ids}',
+      to_jsonb(v_winner_ids),
+      false
+    );
+  end if;
+
+  if v_outcome in ('draw', 'abandoned')
+    and cardinality(v_winner_ids) <> 0
+  then
+    raise check_violation
+      using message = 'Draw and abandoned results cannot name winners';
+  end if;
+
   select * into v_game
   from public.gameledger_games
   where id = p_game_id and owner_id = v_uid
   for update;
   if not found then
     raise no_data_found using message = 'Game not found';
+  end if;
+
+  -- The immutable per-game definition is authoritative for normalized result
+  -- cardinality. Missing allow_draw keeps the application default (draws are
+  -- allowed), while co-winners require an explicit JSON boolean true.
+  if v_outcome = 'draw'
+    and v_game.definition @> '{"result":{"allow_draw":false}}'::jsonb
+  then
+    raise check_violation
+      using message = 'This game definition does not allow a draw result';
+  end if;
+
+  if cardinality(v_winner_ids) > 1
+    and (v_game.definition #> '{result,allow_multiple_winners}')
+      is distinct from 'true'::jsonb
+  then
+    raise check_violation
+      using message = 'This game definition does not allow multiple winners';
+  end if;
+
+  if exists (
+    select 1
+    from unnest(v_winner_ids) as requested(id)
+    where not exists (
+      select 1
+      from public.gameledger_participants as participant
+      where participant.id = requested.id
+        and participant.game_id = p_game_id
+        and participant.owner_id = v_uid
+    )
+  ) then
+    raise check_violation using message =
+      'Every reserved result winner must be a participant in the owned game';
   end if;
 
   -- A committed retry is successful only for this exact result event UUID.
@@ -1028,7 +1161,7 @@ $function$;
 comment on function public.gameledger_finish_game(
   uuid, uuid, jsonb, text, timestamptz, uuid, text, jsonb, uuid, integer
 ) is
-  'Atomically appends an explicit immutable result plus provenance and completes an owned in-progress game; retries use the result event UUID.';
+  'Atomically validates normalized outcome/winner fields against the owned game definition, appends an immutable result plus provenance, and completes an owned in-progress game; retries use the result event UUID.';
 
 -- Tombstoning is intentionally irreversible through the authenticated API. The app
 -- calls this after Storage API removal; retries return the same tombstone.
@@ -1137,6 +1270,271 @@ $function$;
 comment on function public.gameledger_delete_game(uuid) is
   'Deletes an owned game graph only after every media object has been removed and its metadata tombstoned.';
 
+-- Analytics clients need one MVCC-consistent read across the durable identities,
+-- immutable participant snapshots, game definitions, and event ledgers. This RPC
+-- deliberately emits an explicit, bounded field set and media counts only: no
+-- Storage object paths, binaries, source envelopes, or ephemeral signed URLs.
+create or replace function public.gameledger_history_snapshot()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
+declare
+  v_uid uuid := auth.uid();
+  v_snapshot jsonb;
+  v_entity_count bigint;
+  v_game_count bigint;
+  v_participant_count bigint;
+  v_event_count bigint;
+  v_active_media_count bigint;
+  v_payload_bytes bigint;
+  c_max_entities constant bigint := 10000;
+  c_max_games constant bigint := 50000;
+  c_max_participants constant bigint := 250000;
+  c_max_events constant bigint := 500000;
+  c_max_active_media constant bigint := 250000;
+  c_max_payload_bytes constant bigint := 67108864; -- 64 MiB
+begin
+  if v_uid is null then
+    raise insufficient_privilege using message = 'Authentication required';
+  end if;
+
+  -- Refuse accounts outside the POC support envelope before jsonb_agg can build
+  -- a very large in-memory value. The byte total covers every variable-length
+  -- value emitted below with its JSON escaping, plus a conservative allowance
+  -- for array/root punctuation and the one media-count object per game.
+  select
+    (select count(*)
+     from public.gameledger_entities as entity
+     where entity.owner_id = v_uid),
+    (select count(*)
+     from public.gameledger_games as game
+     where game.owner_id = v_uid),
+    (select count(*)
+     from public.gameledger_participants as participant
+     where participant.owner_id = v_uid),
+    (select count(*)
+     from public.gameledger_events as event
+     where event.owner_id = v_uid),
+    (select count(*)
+     from public.gameledger_media as media
+     where media.owner_id = v_uid and media.deleted_at is null),
+    coalesce((
+      select sum(
+        octet_length(jsonb_build_object(
+          'id', entity.id,
+          'entity_type', entity.entity_type,
+          'name', entity.name,
+          'metadata', entity.metadata,
+          'archived_at', entity.archived_at,
+          'created_at', entity.created_at,
+          'updated_at', entity.updated_at
+        )::text)
+      )
+      from public.gameledger_entities as entity
+      where entity.owner_id = v_uid
+    ), 0)
+    + coalesce((
+      select sum(
+        octet_length(jsonb_build_object(
+          'id', game.id,
+          'profile_id', game.profile_id,
+          'profile_version', game.profile_version,
+          'title', game.title,
+          'definition', game.definition,
+          'status', game.status,
+          'started_at', game.started_at,
+          'ended_at', game.ended_at,
+          'location', game.location,
+          'created_at', game.created_at,
+          'updated_at', game.updated_at
+        )::text)
+      )
+      from public.gameledger_games as game
+      where game.owner_id = v_uid
+    ), 0)
+    + coalesce((
+      select sum(
+        octet_length(jsonb_build_object(
+          'id', participant.id,
+          'game_id', participant.game_id,
+          'entity_id', participant.entity_id,
+          'label', participant.label,
+          'seat', participant.seat,
+          'metadata', participant.metadata,
+          'created_at', participant.created_at
+        )::text)
+      )
+      from public.gameledger_participants as participant
+      where participant.owner_id = v_uid
+    ), 0)
+    + coalesce((
+      select sum(
+        octet_length(jsonb_build_object(
+          'id', event.id,
+          'game_id', event.game_id,
+          'actor_participant_id', event.actor_participant_id,
+          'seq', event.seq,
+          'event_kind', event.event_kind,
+          'event_data', event.event_data,
+          'note', event.note,
+          'occurred_at', event.occurred_at,
+          'voids_event_id', event.voids_event_id,
+          'created_at', event.created_at
+        )::text)
+      )
+      from public.gameledger_events as event
+      where event.owner_id = v_uid
+    ), 0)
+    + coalesce((
+      select count(*) * 128 + 4096
+      from public.gameledger_games as game
+      where game.owner_id = v_uid
+    ), 0)
+  into
+    v_entity_count,
+    v_game_count,
+    v_participant_count,
+    v_event_count,
+    v_active_media_count,
+    v_payload_bytes;
+
+  if v_entity_count > c_max_entities
+    or v_game_count > c_max_games
+    or v_participant_count > c_max_participants
+    or v_event_count > c_max_events
+    or v_active_media_count > c_max_active_media
+    or v_payload_bytes > c_max_payload_bytes
+  then
+    raise program_limit_exceeded using message =
+      'History snapshot exceeds the supported account size; narrow/export history before requesting one full snapshot';
+  end if;
+
+  -- All five aggregates are subqueries of this one SQL statement, so under
+  -- READ COMMITTED they observe the same statement-level MVCC snapshot.
+  with entity_rows as (
+    select
+      jsonb_build_object(
+        'id', entity.id,
+        'entity_type', entity.entity_type,
+        'name', entity.name,
+        'metadata', entity.metadata,
+        'archived_at', entity.archived_at,
+        'created_at', entity.created_at,
+        'updated_at', entity.updated_at
+      ) as item,
+      entity.created_at,
+      entity.id
+    from public.gameledger_entities as entity
+    where entity.owner_id = v_uid
+  ),
+  game_rows as (
+    select
+      jsonb_build_object(
+        'id', game.id,
+        'profile_id', game.profile_id,
+        'profile_version', game.profile_version,
+        'title', game.title,
+        'definition', game.definition,
+        'status', game.status,
+        'started_at', game.started_at,
+        'ended_at', game.ended_at,
+        'location', game.location,
+        'created_at', game.created_at,
+        'updated_at', game.updated_at
+      ) as item,
+      game.started_at,
+      game.created_at,
+      game.id
+    from public.gameledger_games as game
+    where game.owner_id = v_uid
+  ),
+  participant_rows as (
+    select
+      jsonb_build_object(
+        'id', participant.id,
+        'game_id', participant.game_id,
+        'entity_id', participant.entity_id,
+        'label', participant.label,
+        'seat', participant.seat,
+        'metadata', participant.metadata,
+        'created_at', participant.created_at
+      ) as item,
+      participant.game_id,
+      participant.seat,
+      participant.id
+    from public.gameledger_participants as participant
+    where participant.owner_id = v_uid
+  ),
+  event_rows as (
+    select
+      jsonb_build_object(
+        'id', event.id,
+        'game_id', event.game_id,
+        'actor_participant_id', event.actor_participant_id,
+        'seq', event.seq,
+        'event_kind', event.event_kind,
+        'event_data', event.event_data,
+        'note', event.note,
+        'occurred_at', event.occurred_at,
+        'voids_event_id', event.voids_event_id,
+        'created_at', event.created_at
+      ) as item,
+      event.game_id,
+      event.seq,
+      event.id
+    from public.gameledger_events as event
+    where event.owner_id = v_uid
+  ),
+  active_media_count_rows as (
+    select
+      jsonb_build_object(
+        'game_id', game.id,
+        'active_media_count', count(media.id)
+      ) as item,
+      game.id
+    from public.gameledger_games as game
+    left join public.gameledger_media as media
+      on media.game_id = game.id
+      and media.owner_id = v_uid
+      and media.deleted_at is null
+    where game.owner_id = v_uid
+    group by game.id
+  )
+  select jsonb_build_object(
+    'schema_version', 1,
+    'entities', coalesce(
+      (select jsonb_agg(item order by created_at, id) from entity_rows),
+      '[]'::jsonb
+    ),
+    'games', coalesce(
+      (select jsonb_agg(item order by started_at, created_at, id) from game_rows),
+      '[]'::jsonb
+    ),
+    'participants', coalesce(
+      (select jsonb_agg(item order by game_id, seat, id) from participant_rows),
+      '[]'::jsonb
+    ),
+    'events', coalesce(
+      (select jsonb_agg(item order by game_id, seq, id) from event_rows),
+      '[]'::jsonb
+    ),
+    'active_media_counts', coalesce(
+      (select jsonb_agg(item order by id) from active_media_count_rows),
+      '[]'::jsonb
+    )
+  )
+  into v_snapshot;
+
+  return v_snapshot;
+end
+$function$;
+
+comment on function public.gameledger_history_snapshot() is
+  'Returns one deterministic owner-private JSON snapshot for cumulative and subgroup analytics, with a 64 MiB estimated-payload ceiling and generous row-count guards, active media counts, but no object paths or signed URLs.';
+
 -- Every application table is owner-private, including table-owner execution paths.
 alter table public.gameledger_entities enable row level security;
 alter table public.gameledger_entities force row level security;
@@ -1153,15 +1551,45 @@ alter table public.gameledger_events force row level security;
 alter table public.gameledger_event_sources enable row level security;
 alter table public.gameledger_event_sources force row level security;
 
+-- Earlier POC revisions used broad entity and open-game participant write
+-- policies. Drop them explicitly so re-running this migration tightens an
+-- existing database as well as a fresh one.
+drop policy if exists gameledger_entities_owner_all
+  on public.gameledger_entities;
+drop policy if exists gameledger_participants_owner_insert_open
+  on public.gameledger_participants;
+drop policy if exists gameledger_participants_owner_update_open
+  on public.gameledger_participants;
+drop policy if exists gameledger_participants_owner_delete_open
+  on public.gameledger_participants;
+
 do $policies$
 begin
   if not exists (
     select 1 from pg_policies where schemaname = 'public'
       and tablename = 'gameledger_entities'
-      and policyname = 'gameledger_entities_owner_all'
+      and policyname = 'gameledger_entities_owner_select'
   ) then
-    create policy gameledger_entities_owner_all
-      on public.gameledger_entities for all to authenticated
+    create policy gameledger_entities_owner_select
+      on public.gameledger_entities for select to authenticated
+      using (owner_id = (select auth.uid()));
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public'
+      and tablename = 'gameledger_entities'
+      and policyname = 'gameledger_entities_owner_insert'
+  ) then
+    create policy gameledger_entities_owner_insert
+      on public.gameledger_entities for insert to authenticated
+      with check (owner_id = (select auth.uid()));
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public'
+      and tablename = 'gameledger_entities'
+      and policyname = 'gameledger_entities_owner_update'
+  ) then
+    create policy gameledger_entities_owner_update
+      on public.gameledger_entities for update to authenticated
       using (owner_id = (select auth.uid()))
       with check (owner_id = (select auth.uid()));
   end if;
@@ -1225,70 +1653,6 @@ begin
     create policy gameledger_participants_owner_select
       on public.gameledger_participants for select to authenticated
       using (owner_id = (select auth.uid()));
-  end if;
-  if not exists (
-    select 1 from pg_policies where schemaname = 'public'
-      and tablename = 'gameledger_participants'
-      and policyname = 'gameledger_participants_owner_insert_open'
-  ) then
-    create policy gameledger_participants_owner_insert_open
-      on public.gameledger_participants for insert to authenticated
-      with check (
-        owner_id = (select auth.uid())
-        and exists (
-          select 1 from public.gameledger_games as g
-          where g.id = game_id
-            and g.owner_id = (select auth.uid())
-            and g.status <> 'complete'
-            and g.ended_at is null
-        )
-      );
-  end if;
-  if not exists (
-    select 1 from pg_policies where schemaname = 'public'
-      and tablename = 'gameledger_participants'
-      and policyname = 'gameledger_participants_owner_update_open'
-  ) then
-    create policy gameledger_participants_owner_update_open
-      on public.gameledger_participants for update to authenticated
-      using (
-        owner_id = (select auth.uid())
-        and exists (
-          select 1 from public.gameledger_games as g
-          where g.id = game_id
-            and g.owner_id = (select auth.uid())
-            and g.status <> 'complete'
-            and g.ended_at is null
-        )
-      )
-      with check (
-        owner_id = (select auth.uid())
-        and exists (
-          select 1 from public.gameledger_games as g
-          where g.id = game_id
-            and g.owner_id = (select auth.uid())
-            and g.status <> 'complete'
-            and g.ended_at is null
-        )
-      );
-  end if;
-  if not exists (
-    select 1 from pg_policies where schemaname = 'public'
-      and tablename = 'gameledger_participants'
-      and policyname = 'gameledger_participants_owner_delete_open'
-  ) then
-    create policy gameledger_participants_owner_delete_open
-      on public.gameledger_participants for delete to authenticated
-      using (
-        owner_id = (select auth.uid())
-        and exists (
-          select 1 from public.gameledger_games as g
-          where g.id = game_id
-            and g.owner_id = (select auth.uid())
-            and g.status <> 'complete'
-            and g.ended_at is null
-        )
-      );
   end if;
 
   if not exists (
@@ -1457,10 +1821,10 @@ revoke all on table public.gameledger_media from anon, authenticated;
 revoke all on table public.gameledger_events from anon, authenticated;
 revoke all on table public.gameledger_event_sources from anon, authenticated;
 
-grant select, delete on table public.gameledger_entities to authenticated;
-grant insert (id, owner_id, entity_type, name, metadata)
+grant select on table public.gameledger_entities to authenticated;
+grant insert (id, owner_id, entity_type, name, metadata, archived_at)
   on table public.gameledger_entities to authenticated;
-grant update (entity_type, name, metadata)
+grant update (entity_type, name, metadata, archived_at)
   on table public.gameledger_entities to authenticated;
 
 grant select, delete on table public.gameledger_profiles to authenticated;
@@ -1473,9 +1837,7 @@ grant select on table public.gameledger_games to authenticated;
 grant update (title, status, started_at, location)
   on table public.gameledger_games to authenticated;
 
-grant select, delete on table public.gameledger_participants to authenticated;
-grant update (entity_id, label, seat, metadata)
-  on table public.gameledger_participants to authenticated;
+grant select on table public.gameledger_participants to authenticated;
 
 grant select on table public.gameledger_media to authenticated;
 grant insert (
@@ -1506,6 +1868,8 @@ revoke all on function public.gameledger_finish_game(
 ) from public, anon;
 revoke all on function public.gameledger_mark_media_deleted(uuid) from public, anon;
 revoke all on function public.gameledger_delete_game(uuid) from public, anon;
+revoke all on function public.gameledger_history_snapshot()
+  from public, anon, authenticated;
 grant execute on function public.gameledger_append_event(
   uuid, uuid, text, uuid, jsonb, text, timestamptz, uuid, uuid, text, jsonb, uuid, integer
 ) to authenticated;
@@ -1514,6 +1878,7 @@ grant execute on function public.gameledger_finish_game(
 ) to authenticated;
 grant execute on function public.gameledger_mark_media_deleted(uuid) to authenticated;
 grant execute on function public.gameledger_delete_game(uuid) to authenticated;
+grant execute on function public.gameledger_history_snapshot() to authenticated;
 grant execute on function public.gameledger_storage_upload_allowed(text, text, text)
   to authenticated;
 grant execute on function public.gameledger_start_game(

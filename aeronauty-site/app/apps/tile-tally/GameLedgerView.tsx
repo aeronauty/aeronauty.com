@@ -116,7 +116,7 @@ export default function GameLedgerView(props: Props) {
 
       {creating && (
         <GameSetup
-          entities={entities}
+          entities={entities.filter((entity) => !entity.archived_at)}
           busy={busy}
           onAddEntity={onAddEntity}
           onStartGame={startGame}

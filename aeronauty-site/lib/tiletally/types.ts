@@ -93,6 +93,7 @@ export type GameLedgerProfile = {
     mode: "derived" | "manual" | "none";
     winner_counter_id?: string;
     allow_draw?: boolean;
+    allow_multiple_winners?: boolean;
   };
   tools?: string[];
   extra?: Record<string, JsonValue>;
@@ -104,6 +105,7 @@ export type GameLedgerEntity = {
   entity_type: string;
   name: string;
   metadata: JsonValue;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
 };

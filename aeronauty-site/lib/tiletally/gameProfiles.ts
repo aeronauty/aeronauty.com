@@ -339,6 +339,7 @@ export function normaliseGameProfile(value: unknown): GameLedgerProfile {
       mode: resultMode,
       winner_counter_id: cleanString(resultValue.winner_counter_id) || undefined,
       allow_draw: resultValue.allow_draw !== false,
+      allow_multiple_winners: resultValue.allow_multiple_winners === true,
     },
     tools: Array.isArray(value.tools) ? value.tools.map((tool) => cleanString(tool)).filter(Boolean).slice(0, 24) : undefined,
     extra: isRecord(value.extra) ? value.extra as Record<string, JsonValue> : undefined,

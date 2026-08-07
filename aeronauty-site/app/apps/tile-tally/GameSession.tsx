@@ -401,6 +401,7 @@ export default function GameSession({
       let finalWinnerIds = profile.result?.mode === "none" || finalOutcome === "draw" || finalOutcome === "abandoned"
         ? []
         : winnerParticipantIds;
+      if (profile.result?.allow_multiple_winners !== true) finalWinnerIds = finalWinnerIds.slice(0, 1);
       if (profile.preset === "chess") {
         const chessResult = cleanedResult.result;
         const white = sortedParticipants.find((participant, index) => participantRole(participant, profile.participant?.roles?.[index])?.id === "white")
@@ -654,7 +655,10 @@ export default function GameSession({
         <button className={styles.finishButton} type="button" onClick={() => {
           const suggestedDraw = suggestedWinnerIds.length > 1;
           const drawAllowed = profile.result?.allow_draw !== false;
-          setWinnerParticipantIds(suggestedDraw && !drawAllowed ? [] : suggestedWinnerIds);
+          const coWinnersAllowed = profile.result?.allow_multiple_winners === true;
+          setWinnerParticipantIds(suggestedDraw
+            ? drawAllowed ? [] : coWinnersAllowed ? suggestedWinnerIds : []
+            : suggestedWinnerIds);
           setOutcome(suggestedDraw && drawAllowed ? "draw" : "completed");
           setShowFinish(true);
         }}>
@@ -690,10 +694,10 @@ export default function GameSession({
                     {sortedParticipants.map((participant) => (
                       <label key={participant.id}>
                         <input
-                          type={profile.result?.allow_draw === false ? "radio" : "checkbox"}
-                          name={profile.result?.allow_draw === false ? "winner-participant" : undefined}
+                          type={profile.result?.allow_multiple_winners === true ? "checkbox" : "radio"}
+                          name={profile.result?.allow_multiple_winners === true ? undefined : "winner-participant"}
                           checked={winnerParticipantIds.includes(participant.id)}
-                          onChange={() => setWinnerParticipantIds((current) => profile.result?.allow_draw === false
+                          onChange={() => setWinnerParticipantIds((current) => profile.result?.allow_multiple_winners !== true
                             ? [participant.id]
                             : current.includes(participant.id)
                               ? current.filter((id) => id !== participant.id)

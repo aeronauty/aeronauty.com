@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpenText, Grid3X3, LoaderCircle, LogOut, RotateCw, X } from "lucide-react";
+import { BarChart3, BookOpenText, Grid3X3, LoaderCircle, LogOut, RotateCw, X } from "lucide-react";
 import GameLedgerView from "./GameLedgerView";
+import GameLedgerInsightsView from "./GameLedgerInsightsView";
 import GoogleIdentityButton from "./GoogleIdentityButton";
 import TilesView from "./TilesView";
 import { useGameLedger } from "./useGameLedger";
 import styles from "./tile-tally.module.css";
 
-type Tab = "games" | "tiles";
+type Tab = "games" | "insights" | "tiles";
 
 const TABS: Array<{ id: Tab; label: string; icon: typeof BookOpenText }> = [
   { id: "games", label: "Games", icon: BookOpenText },
+  { id: "insights", label: "History & stats", icon: BarChart3 },
   { id: "tiles", label: "Tile table", icon: Grid3X3 },
 ];
 
@@ -51,11 +53,11 @@ function LoginScreen({
         <Wordmark />
         <p className={styles.loginEyebrow}>A private record of play</p>
         <h1>Keep the story, not only the final score.</h1>
-        <p className={styles.loginLead}>Define any game, tally it your way, and replay its scores, notes, photos and short clips later.</p>
+        <p className={styles.loginLead}>Define any game, keep its score, and watch a cumulative history of records, streaks and shared memories grow over time.</p>
         <ul className={styles.loginFeatures}>
           <li><span>01</span> Counters and fields shaped by you</li>
-          <li><span>02</span> One chronological game timeline</li>
-          <li><span>03</span> Private, account-isolated media</li>
+          <li><span>02</span> Career totals and subhistories worked out for you</li>
+          <li><span>03</span> Private timelines, photos and short clips</li>
         </ul>
         {error && <div className={styles.inlineError} role="alert">{error}</div>}
         <GoogleIdentityButton
@@ -193,6 +195,16 @@ export default function TileTallyApp() {
             onFinishGame={ledger.finishGame}
             onUploadMedia={ledger.uploadMedia}
             onDeleteMedia={ledger.deleteMedia}
+          />
+        )}
+        {tab === "insights" && (
+          <GameLedgerInsightsView
+            entities={ledger.entities}
+            games={ledger.games}
+            participants={ledger.participants}
+            events={ledger.events}
+            media={ledger.media}
+            activeMediaCounts={ledger.activeMediaCounts}
           />
         )}
         {tab === "tiles" && <TilesView key={ledger.session.user.id} userId={ledger.session.user.id} />}

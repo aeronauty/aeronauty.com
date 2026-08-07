@@ -17,6 +17,13 @@ The POC keeps the user's game in one chronological record:
 - consent-gated photos and short video clips captured by the phone; and
 - a replay view that merges events and media by capture time.
 
+It also turns those individual ledgers into a cumulative history. The
+**History & stats** tab can make a temporary subhistory by period, exact ruleset,
+place, and any set of recurring people. It then recalculates career totals,
+averages, records, W–D–L, streaks, running charts, and short interesting facts
+from exactly that slice. These facts are deterministic local arithmetic, not
+LLM output.
+
 The optional **Tile table** is a separate tool within the same app. It does not
 constrain the ledger model or search for words. See `TILE_TALLY.md` for its
 interaction and persistence boundaries.
@@ -49,6 +56,12 @@ contract and local SQL smoke-test instructions are in
 | `gameledger_media` | Private photo/video metadata and deletion tombstones. |
 | `gameledger-media` | Private Supabase Storage bucket for media bytes. |
 
+Reusable identities are archived rather than deleted once they appear in a
+game. Their UUID remains joined to immutable per-game participant snapshots,
+so a later rename or retirement cannot erase or reassign somebody's career
+history. Guests remain game-local and are never merged merely because two labels
+look alike.
+
 There is no game-kind enum and no fixed score column. Counter names, units,
 aggregation, ranking, targets, event fields, and result fields live in the
 game's JSON definition. Values and fields live in event JSON. JSON inputs are
@@ -57,6 +70,52 @@ bounded and validated at both the UI and database boundary.
 Games are started, appended to, finished, and deleted through transactional
 RPCs. Direct event mutation is not granted to authenticated clients. Every
 table has forced RLS and is isolated by `auth.uid()`.
+
+The history client reads games, participants, events, and identities through a
+single owner-scoped snapshot RPC. This gives one statement-level database view
+with deterministic ordering; media bytes, paths, and signed URLs are excluded
+from the analytics payload.
+
+## Cumulative history rules
+
+A subhistory is a filter over the source games, not a copied or editable second
+record. The current POC supports all time, this year, the last 30 days, latest
+game, last 5/10, or custom dates, combined with:
+
+- one structural ruleset;
+- an exact normalized location string;
+- every selected recurring identity being present; and
+- completed games by default, with open games explicitly opt-in.
+
+The aggregator first resolves the complete append-only void graph inside each
+selected game, computes final per-game counter values, maps participant
+snapshots through stable entity UUIDs, and only then rolls those records up in
+game order. It does not infer a winner from the score. W–D–L and streaks require
+the normalized result saved by the finish transaction, whose winner UUIDs are
+validated against that game's participants.
+
+Counters are combined only when their scoring contracts match. The
+compatibility fingerprint includes counter ID, scope, numeric type, unit,
+aggregation, ranking, initial value, target, counter extensions, and result
+semantics. It canonicalizes the raw definition as well as today's understood
+fields: labels, placeholders, and quick-entry buttons are omitted, while every
+unknown field is conservatively treated as scoring-relevant. Thus a future
+house-rule key cannot silently merge incompatible histories. A 61-point
+Cribbage game, a 121-point game, and an unrelated counter also called “Points”
+remain separate metrics. The UI shows the number of games covered by the chosen
+compatible metric.
+
+Within-game aggregation and across-history rollup are separate operations.
+`sum`, `latest`, `min`, and `max` counters keep the same deterministic meaning
+across games by default; a counter may explicitly override it with
+`extra.history_rollup` using one of those four values. Only `sum` is described
+as cumulative. Latest/minimum/maximum values replace or bound the running value
+instead of being blindly added. Stable entity UUIDs use the entity's current
+display name in stats, while game-local guests retain their immutable snapshot
+labels and are never merged by name.
+
+Generated facts retain their source identity/game IDs in the analytics model.
+Names, notes, locations, media, and statistics are not sent to an AI provider.
 
 The new app reads only `gameledger_*` objects. No legacy game backfill is
 required because this project has no existing game records. The migration has

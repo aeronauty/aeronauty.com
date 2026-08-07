@@ -4,6 +4,14 @@ import { createHash } from "node:crypto";
 const ACCOUNT_ID = "00000000-0000-4000-8000-000000000042";
 const AUTH_STORAGE_KEY = "aeronauty-tiletally-auth";
 const EXPIRED_SESSION_MESSAGE = "Your session expired. Continue with Google to sign in again.";
+const EMPTY_HISTORY_SNAPSHOT = {
+  schema_version: 1,
+  entities: [],
+  games: [],
+  participants: [],
+  events: [],
+  active_media_counts: [],
+};
 
 const player = {
   created_at: "2026-01-01T00:00:00.000Z",
@@ -267,6 +275,10 @@ test("exchanges the Google Identity Services token with a bound nonce", async ({
   });
   await page.route("**/__e2e_supabase__/rest/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/rpc/gameledger_history_snapshot")) {
+      await route.fulfill({ body: JSON.stringify(EMPTY_HISTORY_SNAPSHOT), contentType: "application/json", status: 200 });
+      return;
+    }
     await route.fulfill({
       body: JSON.stringify(path.endsWith("/tiletally_players") ? [player] : []),
       contentType: "application/json",
@@ -298,7 +310,127 @@ test("exchanges the Google Identity Services token with a bound nonce", async ({
   );
 });
 
-test("a user switch cannot commit an older account's overlapping refresh", async ({ context, page }) => {
+test("visible media renews its signed URL without reloading ledger history", async ({ context, page }) => {
+  const activeSession = session(4_102_444_800);
+  const gameId = "20000000-0000-4000-8000-000000000078";
+  const mediaPath = `${ACCOUNT_ID}/${gameId}/50000000-0000-4000-8000-000000000078/memory.png`;
+  const game = {
+    id: gameId,
+    profile_id: null,
+    profile_version: null,
+    title: "Renewal proof",
+    definition: {
+      version: 1,
+      name: "Renewal proof",
+      preset: "freeform",
+      participant: { min: 0, max: 32 },
+      counters: [],
+      event_fields: [],
+      result_fields: [],
+      result: { mode: "none", allow_draw: true },
+    },
+    status: "in_progress",
+    location: null,
+    started_at: "2026-08-07T18:00:00.000Z",
+    ended_at: null,
+    created_at: "2026-08-07T18:00:00.000Z",
+    updated_at: "2026-08-07T18:00:00.000Z",
+  };
+  const media = {
+    bucket_id: "gameledger-media",
+    byte_size: 68,
+    caption: null,
+    captured_at: "2026-08-07T18:00:00.000Z",
+    created_at: "2026-08-07T18:00:00.000Z",
+    deleted_at: null,
+    duration_ms: null,
+    game_id: gameId,
+    height: 1,
+    id: "50000000-0000-4000-8000-000000000078",
+    media_data: {},
+    media_kind: "photo",
+    mime_type: "image/png",
+    owner_id: ACCOUNT_ID,
+    storage_path: mediaPath,
+    width: 1,
+  };
+  await seedBrowser(context, activeSession);
+
+  let historySnapshotRequests = 0;
+  let signedUrlRequests = 0;
+  const ledgerTableReads: string[] = [];
+  await page.route("**/__e2e_supabase__/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+
+    if (url.pathname.endsWith("/rest/v1/rpc/gameledger_history_snapshot")) {
+      historySnapshotRequests += 1;
+      await route.fulfill({
+        body: JSON.stringify({
+          ...EMPTY_HISTORY_SNAPSHOT,
+          games: [game],
+          active_media_counts: [{ game_id: gameId, active_media_count: 1 }],
+        }),
+        contentType: "application/json",
+        status: 200,
+      });
+      return;
+    }
+    if (url.pathname.includes("/rest/v1/")) {
+      const table = url.pathname.split("/rest/v1/")[1]?.split("/")[0] ?? "unknown";
+      if (request.method() === "GET") ledgerTableReads.push(table);
+      const rows = table === "gameledger_media" ? [media] : [];
+      await route.fulfill({
+        body: JSON.stringify(rows),
+        contentType: "application/json",
+        headers: { "content-range": rows.length ? "0-0/1" : "*/0" },
+        status: 200,
+      });
+      return;
+    }
+    if (request.method() === "POST" && url.pathname.endsWith("/storage/v1/object/sign/gameledger-media")) {
+      signedUrlRequests += 1;
+      const body = request.postDataJSON() as { paths?: string[] };
+      await route.fulfill({
+        body: JSON.stringify((body.paths ?? []).map((path) => ({
+          path,
+          signedURL: `/object/sign/gameledger-media/${path}?token=renewal-${signedUrlRequests}`,
+        }))),
+        contentType: "application/json",
+        status: 200,
+      });
+      return;
+    }
+    if (request.method() === "GET" && url.pathname.includes("/storage/v1/object/sign/gameledger-media/")) {
+      await route.fulfill({
+        body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nAAAAABJRU5ErkJggg==", "base64"),
+        contentType: "image/png",
+        status: 200,
+      });
+      return;
+    }
+    await route.fulfill({ body: "{}", contentType: "application/json", status: 200 });
+  });
+
+  await page.goto("/apps/tile-tally");
+  await page.getByRole("button", { name: /Renewal proof/ }).click();
+  const photo = page.getByRole("img", { name: "Photo from this game" });
+  await expect(photo).toHaveAttribute("src", /token=renewal-1/);
+  expect(historySnapshotRequests).toBe(1);
+  expect(ledgerTableReads).toEqual(["gameledger_media"]);
+  expect(signedUrlRequests).toBe(1);
+
+  const snapshotsBeforeRenewal = historySnapshotRequests;
+  const tableReadsBeforeRenewal = [...ledgerTableReads];
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+
+  await expect.poll(() => signedUrlRequests).toBe(2);
+  await expect(photo).toHaveAttribute("src", /token=renewal-2/);
+  expect(historySnapshotRequests).toBe(snapshotsBeforeRenewal);
+  expect(ledgerTableReads).toEqual(tableReadsBeforeRenewal);
+});
+
+test("a user switch cannot commit an older account's overlapping media renewal", async ({ context, page }) => {
   const firstSession = session(4_102_444_800);
   const secondAccountId = "00000000-0000-4000-8000-000000000099";
   const secondSession = {
@@ -346,7 +478,7 @@ test("a user switch cannot commit an older account's overlapping refresh", async
   };
   await seedBrowser(context, firstSession);
 
-  let holdFirstAccountRefresh = false;
+  let holdFirstAccountRenewal = false;
   let heldRequests = 0;
   let releaseHeldRequests: () => void = () => undefined;
   const heldRequestGate = new Promise<void>((resolve) => {
@@ -368,9 +500,15 @@ test("a user switch cannot commit an older account's overlapping refresh", async
     }
     if (url.pathname.includes("/rest/v1/")) {
       const isFirstAccount = authorization.includes(firstSession.access_token);
-      if (holdFirstAccountRefresh && isFirstAccount) {
-        heldRequests += 1;
-        await heldRequestGate;
+      if (url.pathname.endsWith("/rest/v1/rpc/gameledger_history_snapshot")) {
+        const entity = isFirstAccount ? firstEntity : secondEntity;
+        const { owner_id: _ownerId, ...snapshotEntity } = entity;
+        await route.fulfill({
+          body: JSON.stringify({ ...EMPTY_HISTORY_SNAPSHOT, entities: [snapshotEntity] }),
+          contentType: "application/json",
+          status: 200,
+        });
+        return;
       }
       const table = url.pathname.split("/rest/v1/")[1]?.split("/")[0];
       const rows = table === "gameledger_entities"
@@ -387,6 +525,11 @@ test("a user switch cannot commit an older account's overlapping refresh", async
       return;
     }
     if (url.pathname.endsWith("/storage/v1/object/sign/gameledger-media")) {
+      const isFirstAccount = authorization.includes(firstSession.access_token);
+      if (holdFirstAccountRenewal && isFirstAccount) {
+        heldRequests += 1;
+        await heldRequestGate;
+      }
       const body = request.postDataJSON() as { paths?: string[] };
       await route.fulfill({
         body: JSON.stringify((body.paths ?? []).map((path) => ({
@@ -404,7 +547,7 @@ test("a user switch cannot commit an older account's overlapping refresh", async
   await page.goto("/apps/tile-tally");
   await expect(page.getByText("First account secret", { exact: true })).toBeVisible();
 
-  holdFirstAccountRefresh = true;
+  holdFirstAccountRenewal = true;
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await expect.poll(() => heldRequests).toBeGreaterThan(0);
 
@@ -415,7 +558,7 @@ test("a user switch cannot commit an older account's overlapping refresh", async
   await expect(page.getByText("Second account player", { exact: true })).toBeVisible();
 
   releaseHeldRequests();
-  await expect.poll(() => heldRequests).toBe(5);
+  await expect.poll(() => heldRequests).toBe(1);
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("First account secret", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Second account player", { exact: true })).toBeVisible();
@@ -488,6 +631,10 @@ test("accepts a successful OAuth callback, stores the session, and opens the led
   });
   await page.route("**/__e2e_supabase__/rest/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/rpc/gameledger_history_snapshot")) {
+      await route.fulfill({ body: JSON.stringify(EMPTY_HISTORY_SNAPSHOT), contentType: "application/json", status: 200 });
+      return;
+    }
     await route.fulfill({
       body: JSON.stringify(path.endsWith("/tiletally_players") ? [player] : []),
       contentType: "application/json",
