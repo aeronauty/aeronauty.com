@@ -7,11 +7,14 @@
   --replay-accent: #3559b7;
   --replay-accent-dark: #27438f;
   --replay-coral: #d96854;
+  box-sizing: border-box;
   color: var(--replay-ink);
   display: grid;
   gap: 1.25rem;
   margin: 0 auto;
   max-width: 820px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 1.25rem 1rem calc(1.75rem + env(safe-area-inset-bottom));
   width: 100%;
 }
@@ -55,6 +58,13 @@
   gap: 1rem;
 }
 
+.sessionHeader > div:first-child,
+.panelHeading > div,
+.timelineHeading > div,
+.replayHeader > div {
+  min-width: 0;
+}
+
 .sessionHeader h2,
 .capturePanel h3,
 .timelineSection h3,
@@ -67,6 +77,8 @@
 .sessionHeader h2 {
   font-size: clamp(1.65rem, 5vw, 2.2rem);
   letter-spacing: -0.035em;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .kicker {
@@ -81,6 +93,8 @@
 .subtitle {
   color: var(--replay-muted);
   margin: 0.3rem 0 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .sessionMeta {
@@ -109,6 +123,7 @@
   font-size: 0.7rem;
   font-weight: 750;
   gap: 0.3rem;
+  max-width: 100%;
   white-space: nowrap;
 }
 
@@ -143,6 +158,10 @@
   margin-top: 0.1rem;
 }
 
+.privacyCard > div {
+  min-width: 0;
+}
+
 .privacyCard h3 {
   font-size: 1rem;
 }
@@ -166,14 +185,27 @@
   font-weight: 650;
   gap: 0.6rem;
   line-height: 1.4;
+  min-height: 44px;
 }
 
-.consentRow input {
+.consentRow input[type="checkbox"] {
   accent-color: var(--replay-accent);
+  appearance: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   flex: 0 0 auto;
   height: 20px;
   margin: 0;
+  min-height: 20px;
+  padding: 0;
   width: 20px;
+}
+
+.consentRow > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .capturePanel,
@@ -205,7 +237,7 @@
 .captureActions {
   display: grid;
   gap: 0.6rem;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .captureButton {
@@ -218,6 +250,7 @@
   display: flex;
   gap: 0.65rem;
   min-height: 58px;
+  min-width: 0;
   padding: 0.7rem;
   text-align: left;
 }
@@ -282,13 +315,17 @@
 }
 
 .visuallyHidden {
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
+  border: 0 !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  min-height: 1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  white-space: nowrap !important;
+  width: 1px !important;
 }
 
 .previewCard {
@@ -387,7 +424,7 @@
   font-weight: 750;
   gap: 0.4rem;
   justify-content: center;
-  min-height: 42px;
+  min-height: 44px;
 }
 
 .primaryButton,
@@ -460,6 +497,8 @@
   gap: 0.35rem;
   line-height: 1.4;
   margin: 0.55rem 0 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .errorMessage svg {
@@ -469,7 +508,7 @@
 
 .replayButton {
   flex: 0 0 auto;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .timelineList {
@@ -518,6 +557,7 @@
   border: 1px solid var(--replay-line);
   border-radius: 13px;
   margin-bottom: 0.9rem;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -530,7 +570,13 @@
 .momentHeader > div {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.45rem;
+  min-width: 0;
+}
+
+.momentHeader time {
+  flex: 0 0 auto;
 }
 
 .momentKind {
@@ -540,6 +586,8 @@
 .author {
   color: var(--replay-muted);
   font-size: 0.68rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .mediaFrame {
@@ -552,6 +600,7 @@
   display: flex;
   gap: 0.7rem;
   line-height: 1.55;
+  min-width: 0;
   padding: 1rem;
 }
 
@@ -563,7 +612,13 @@
 
 .textMoment p {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+
+.textMoment > div {
+  min-width: 0;
 }
 
 .eventMoment {
@@ -576,12 +631,14 @@
 }
 
 .mediaDetails {
+  min-width: 0;
   padding: 0.7rem 0.75rem 0.75rem;
 }
 
 .mediaDetails > p:first-child {
   line-height: 1.45;
   margin: 0 0 0.55rem;
+  overflow-wrap: anywhere;
 }
 
 .transferLabel {
@@ -609,6 +666,8 @@
   align-items: center;
   display: inline-flex;
   gap: 0.35rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .transferProgress progress {
@@ -625,7 +684,7 @@
   background: transparent;
   border: 0;
   color: var(--replay-accent-dark);
-  min-height: 38px;
+  min-height: 44px;
   padding: 0.35rem 0.4rem;
 }
 
@@ -649,6 +708,8 @@
   flex: 1 1 180px;
   font-size: 0.75rem;
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .emptyTimeline {
@@ -679,7 +740,11 @@
   display: flex;
   inset: 0;
   justify-content: center;
-  padding: max(0.75rem, env(safe-area-inset-top)) 0 0;
+  padding:
+    max(0.75rem, env(safe-area-inset-top))
+    env(safe-area-inset-right)
+    0
+    env(safe-area-inset-left);
   position: fixed;
   z-index: 100;
 }
@@ -692,6 +757,7 @@
   flex-direction: column;
   max-height: calc(100dvh - max(0.75rem, env(safe-area-inset-top)));
   max-width: 760px;
+  min-width: 0;
   overflow: hidden;
   width: 100%;
 }
@@ -704,6 +770,8 @@
 
 .replayHeader h3 {
   font-size: 1.1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .iconButton {
@@ -711,9 +779,9 @@
   border: 1px solid var(--replay-line);
   color: var(--replay-ink);
   flex: 0 0 auto;
-  height: 42px;
+  height: 44px;
   padding: 0;
-  width: 42px;
+  width: 44px;
 }
 
 .replayStage {
@@ -745,6 +813,7 @@
 .replayCaption p {
   line-height: 1.45;
   margin: 0.35rem 0;
+  overflow-wrap: anywhere;
 }
 
 .replayControls {
@@ -786,7 +855,11 @@
 @media (min-width: 760px) {
   .replayOverlay {
     align-items: center;
-    padding: 1rem;
+    padding:
+      max(1rem, env(safe-area-inset-top))
+      max(1rem, env(safe-area-inset-right))
+      max(1rem, env(safe-area-inset-bottom))
+      max(1rem, env(safe-area-inset-left));
   }
 
   .replayDialog {
@@ -863,6 +936,30 @@
   .replayControls .primaryButton,
   .replayControls .secondaryButton {
     min-width: 102px;
+  }
+}
+
+@media (max-width: 280px) {
+  .replayControls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+
+  .replayDots {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-width: 100%;
+  }
+
+  .replayControls .primaryButton,
+  .replayControls .secondaryButton {
+    grid-row: 2;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
   }
 }
 

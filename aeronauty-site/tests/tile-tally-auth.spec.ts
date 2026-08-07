@@ -53,6 +53,8 @@ async function installGoogleIdentityMock(context: BrowserContext) {
       initialiseCount: number;
       nonce: string | null;
       nonceHistory: string[];
+      renderLayouts: string[];
+      renderWidths: number[];
     };
     type GoogleCredentialCallback = (response: { credential?: string }) => void;
     type GoogleTestWindow = Window & {
@@ -65,7 +67,7 @@ async function installGoogleIdentityMock(context: BrowserContext) {
               client_id: string;
               nonce: string;
             }) => void;
-            renderButton: (parent: HTMLElement) => void;
+            renderButton: (parent: HTMLElement, options: { type: "icon" | "standard"; width?: number }) => void;
           };
         };
       };
@@ -78,6 +80,8 @@ async function installGoogleIdentityMock(context: BrowserContext) {
       initialiseCount: 0,
       nonce: null,
       nonceHistory: [],
+      renderLayouts: [],
+      renderWidths: [],
     };
     testWindow.google = {
       accounts: {
@@ -89,14 +93,27 @@ async function installGoogleIdentityMock(context: BrowserContext) {
             testWindow.__tileTallyGis.nonce = options.nonce;
             testWindow.__tileTallyGis.nonceHistory.push(options.nonce);
           },
-          renderButton(parent) {
+          renderButton(parent, options) {
             const button = document.createElement("button");
             button.type = "button";
-            button.textContent = "Continue with Google";
+            button.textContent = options.type === "icon" ? "G" : "Continue with Google";
+            button.setAttribute("aria-label", "Continue with Google");
             button.dataset.googleIdentityServices = "true";
+            button.dataset.googleButtonLayout = options.type;
+            const requestedWidth = options.width ?? 44;
+            // GIS documents width as a minimum. Mimic localized/personalized
+            // copy expanding a narrow standard button so the component must
+            // switch to Google's responsive icon variant instead of clipping.
+            const renderedWidth = options.type === "standard" && requestedWidth < 400
+              ? Math.min(400, requestedWidth + 96)
+              : requestedWidth;
+            button.dataset.renderedWidth = String(renderedWidth);
+            button.style.width = `${renderedWidth}px`;
             button.addEventListener("click", () => {
               credentialCallback({ credential: "e2e-google-id-token" });
             });
+            testWindow.__tileTallyGis.renderLayouts.push(options.type);
+            testWindow.__tileTallyGis.renderWidths.push(requestedWidth);
             parent.appendChild(button);
           },
         },
@@ -129,6 +146,12 @@ async function expectRecoveredLogin(page: Page) {
   });
   await expect(page.getByText(EXPIRED_SESSION_MESSAGE, { exact: true })).toBeVisible();
   await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), AUTH_STORAGE_KEY)).toBeNull();
+}
+
+async function expectNoHorizontalDocumentOverflow(page: Page) {
+  await expect.poll(() => page.evaluate(() =>
+    document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+  )).toBe(true);
 }
 
 test("breaks a refresh-rate-limit loop and offers a clean Google sign-in", async ({ context, page }) => {
@@ -308,6 +331,64 @@ test("exchanges the Google Identity Services token with a bound nonce", async ({
   expect(createHash("sha256").update(exchangeBody.nonce ?? "").digest("hex")).toBe(
     gisState.nonce,
   );
+});
+
+test("uses the responsive Google icon when localized button text would overflow", async ({
+  context,
+  page,
+}) => {
+  await seedBrowser(context);
+  await page.setViewportSize({ width: 800, height: 900 });
+  await page.goto("/apps/tile-tally");
+
+  const host = page.getByTestId("google-identity-button");
+  const button = page.getByRole("button", { name: "Continue with Google", exact: true });
+  await expect(button).toBeVisible();
+
+  const expectCurrentRenderFits = async (expectedLayout: "icon" | "standard") => {
+    await expect.poll(() => page.evaluate(() => {
+      const testWindow = window as unknown as Window & {
+        __tileTallyGis: { renderLayouts: string[]; renderWidths: number[] };
+      };
+      const buttonHost = document.querySelector<HTMLElement>('[data-testid="google-identity-button"]');
+      const renderedButton = buttonHost?.querySelector<HTMLElement>('[data-google-identity-services="true"]');
+      if (!buttonHost || !renderedButton) return null;
+      const hostRect = buttonHost.getBoundingClientRect();
+      const buttonRect = renderedButton.getBoundingClientRect();
+      return {
+        buttonInsideHost:
+          buttonRect.left >= hostRect.left - 0.5
+          && buttonRect.right <= hostRect.right + 0.5,
+        layout: renderedButton.dataset.googleButtonLayout,
+        hostLayout: buttonHost.dataset.googleButtonLayout,
+        latestWidth: testWindow.__tileTallyGis.renderWidths.at(-1),
+      };
+    })).toMatchObject({
+      buttonInsideHost: true,
+      layout: expectedLayout,
+      hostLayout: expectedLayout,
+      latestWidth: expectedLayout === "standard"
+        ? await host.evaluate((element) => Math.min(400, Math.floor(element.getBoundingClientRect().width)))
+        : 44,
+    });
+    await expectNoHorizontalDocumentOverflow(page);
+  };
+
+  await expectCurrentRenderFits("standard");
+  await page.setViewportSize({ width: 320, height: 700 });
+  await expectCurrentRenderFits("icon");
+  await page.setViewportSize({ width: 844, height: 900 });
+  await expectCurrentRenderFits("standard");
+
+  const renderWidths = await page.evaluate(() => {
+    const testWindow = window as unknown as Window & {
+      __tileTallyGis: { renderWidths: number[] };
+    };
+    return testWindow.__tileTallyGis.renderWidths;
+  });
+  expect(renderWidths[0]).toBe(400);
+  expect(renderWidths.some((width) => width < 400)).toBe(true);
+  expect(renderWidths.at(-1)).toBe(400);
 });
 
 test("visible media renews its signed URL without reloading ledger history", async ({ context, page }) => {
@@ -613,6 +694,198 @@ test("shows a Google callback failure once and removes it from the address", asy
   await expect(
     page.getByText("Google sign-in could not finish: The Google sign-in was cancelled", { exact: true }),
   ).toHaveCount(0);
+});
+
+test("wraps a long unbroken Google callback error without widening a phone viewport", async ({
+  context,
+  page,
+}) => {
+  await seedBrowser(context);
+  await page.setViewportSize({ width: 320, height: 568 });
+  const callbackDetail = `provider_${"unbroken".repeat(48)}`;
+  const expectedMessage = `Google sign-in could not finish: ${callbackDetail}`;
+
+  await page.goto(
+    `/apps/tile-tally?error=access_denied&error_code=provider_error&error_description=${encodeURIComponent(callbackDetail)}`,
+  );
+
+  const alert = page.getByRole("alert").filter({ hasText: expectedMessage });
+  await expect(alert).toBeVisible();
+  await expect(alert).toHaveText(expectedMessage);
+  const geometry = await alert.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      clientWidth: element.clientWidth,
+      left: rect.left,
+      overflowWrap: getComputedStyle(element).overflowWrap,
+      right: rect.right,
+      scrollWidth: element.scrollWidth,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  expect(geometry.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+  expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
+  expect(geometry.overflowWrap).toBe("anywhere");
+  await expectNoHorizontalDocumentOverflow(page);
+});
+
+test("contains a long signed-in email without overlapping the mobile header", async ({
+  context,
+  page,
+}) => {
+  const longEmail = `${"long-account-identifier-".repeat(12)}@example.test`;
+  const activeSession = {
+    ...session(4_102_444_800),
+    user: {
+      ...session(4_102_444_800).user,
+      email: longEmail,
+    },
+  };
+  await seedBrowser(context, activeSession);
+  await page.setViewportSize({ width: 320, height: 700 });
+
+  await page.route("**/__e2e_supabase__/**", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/auth/v1/user")) {
+      await route.fulfill({
+        body: JSON.stringify(activeSession.user),
+        contentType: "application/json",
+        status: 200,
+      });
+      return;
+    }
+    if (url.pathname.endsWith("/rest/v1/rpc/gameledger_history_snapshot")) {
+      await route.fulfill({
+        body: JSON.stringify(EMPTY_HISTORY_SNAPSHOT),
+        contentType: "application/json",
+        status: 200,
+      });
+      return;
+    }
+    if (url.pathname.includes("/rest/v1/")) {
+      await route.fulfill({
+        body: "[]",
+        contentType: "application/json",
+        headers: { "content-range": "*/0" },
+        status: 200,
+      });
+      return;
+    }
+    await route.fulfill({ body: "{}", contentType: "application/json", status: 200 });
+  });
+
+  await page.goto("/apps/tile-tally");
+  const wordmark = page.getByLabel("Aeronauty Game Ledger");
+  const email = page.getByText(longEmail, { exact: true });
+  const signOut = page.getByRole("button", { name: "Sign out", exact: true });
+  await expect(email).toBeVisible();
+  await expect(signOut).toBeVisible();
+
+  const geometry = await page.evaluate((accountEmail) => {
+    const wordmarkElement = document.querySelector<HTMLElement>('[aria-label="Aeronauty Game Ledger"]');
+    const emailElement = Array.from(document.querySelectorAll<HTMLElement>("span"))
+      .find((element) => element.textContent === accountEmail);
+    const signOutElement = Array.from(document.querySelectorAll<HTMLButtonElement>("button"))
+      .find((element) => element.textContent?.trim() === "Sign out");
+    if (!wordmarkElement || !emailElement || !signOutElement) return null;
+    const wordmarkRect = wordmarkElement.getBoundingClientRect();
+    const emailRect = emailElement.getBoundingClientRect();
+    const signOutRect = signOutElement.getBoundingClientRect();
+    const overlaps = (first: DOMRect, second: DOMRect) =>
+      first.left < second.right
+      && first.right > second.left
+      && first.top < second.bottom
+      && first.bottom > second.top;
+    return {
+      emailClientWidth: emailElement.clientWidth,
+      emailRight: emailRect.right,
+      emailScrollWidth: emailElement.scrollWidth,
+      emailTextOverflow: getComputedStyle(emailElement).textOverflow,
+      signOutRight: signOutRect.right,
+      viewportWidth: window.innerWidth,
+      wordmarkOverlapsEmail: overlaps(wordmarkRect, emailRect),
+      wordmarkOverlapsSignOut: overlaps(wordmarkRect, signOutRect),
+    };
+  }, longEmail);
+
+  expect(geometry).not.toBeNull();
+  expect(geometry?.emailScrollWidth).toBeGreaterThan(geometry?.emailClientWidth ?? 0);
+  expect(geometry?.emailTextOverflow).toBe("ellipsis");
+  expect(geometry?.emailRight).toBeLessThanOrEqual((geometry?.viewportWidth ?? 0) + 1);
+  expect(geometry?.signOutRight).toBeLessThanOrEqual((geometry?.viewportWidth ?? 0) + 1);
+  expect(geometry?.wordmarkOverlapsEmail).toBe(false);
+  expect(geometry?.wordmarkOverlapsSignOut).toBe(false);
+  await expect(wordmark).toBeVisible();
+  await expectNoHorizontalDocumentOverflow(page);
+});
+
+test("keeps analytics consent controls reachable in short viewports", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem("aeronauty-analytics-consent");
+    localStorage.removeItem("aeronauty-tiletally-auth");
+  });
+  await page.setViewportSize({ width: 320, height: 240 });
+  await page.goto("/apps/tile-tally");
+
+  const banner = page.getByTestId("analytics-consent-banner");
+  const buttons = [
+    page.getByRole("button", { name: "No thanks", exact: true }),
+    page.getByRole("button", { name: "That's fine", exact: true }),
+  ];
+
+  const expectBannerFits = async () => {
+    await expect(banner).toBeVisible();
+    const bannerGeometry = await banner.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        bottom: rect.bottom,
+        clientHeight: element.clientHeight,
+        left: rect.left,
+        overflowY: getComputedStyle(element).overflowY,
+        right: rect.right,
+        scrollHeight: element.scrollHeight,
+        top: rect.top,
+        viewportHeight: window.innerHeight,
+        viewportWidth: window.innerWidth,
+      };
+    });
+    expect(bannerGeometry.left).toBeGreaterThanOrEqual(-1);
+    expect(bannerGeometry.right).toBeLessThanOrEqual(bannerGeometry.viewportWidth + 1);
+    expect(bannerGeometry.top).toBeGreaterThanOrEqual(-1);
+    expect(bannerGeometry.bottom).toBeLessThanOrEqual(bannerGeometry.viewportHeight + 1);
+    if (bannerGeometry.scrollHeight > bannerGeometry.clientHeight + 1) {
+      expect(bannerGeometry.overflowY).toBe("auto");
+    }
+
+    for (const button of buttons) {
+      await button.scrollIntoViewIfNeeded();
+      await expect(button).toBeVisible();
+      const buttonGeometry = await button.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          bottom: rect.bottom,
+          height: rect.height,
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          viewportHeight: window.innerHeight,
+          viewportWidth: window.innerWidth,
+        };
+      });
+      expect(buttonGeometry.height).toBeGreaterThanOrEqual(44);
+      expect(buttonGeometry.left).toBeGreaterThanOrEqual(-1);
+      expect(buttonGeometry.right).toBeLessThanOrEqual(buttonGeometry.viewportWidth + 1);
+      expect(buttonGeometry.top).toBeGreaterThanOrEqual(-1);
+      expect(buttonGeometry.bottom).toBeLessThanOrEqual(buttonGeometry.viewportHeight + 1);
+    }
+    await expectNoHorizontalDocumentOverflow(page);
+  };
+
+  await expectBannerFits();
+  await page.setViewportSize({ width: 844, height: 390 });
+  await banner.evaluate((element) => { element.scrollTop = 0; });
+  await expectBannerFits();
 });
 
 test("accepts a successful OAuth callback, stores the session, and opens the ledger", async ({

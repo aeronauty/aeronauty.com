@@ -294,3 +294,26 @@ h4 {
   border-top: 1px solid #e7e5e4;
   margin: 2rem 0;
 }
+
+/* Consent stays reachable in short/notched viewports and yields to an inert app modal. */
+.analytics-consent-banner {
+  max-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding:
+    max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+}
+
+.analytics-consent-banner[inert] {
+  display: none;
+}
+
+@media (max-width: 260px) {
+  .analytics-consent-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

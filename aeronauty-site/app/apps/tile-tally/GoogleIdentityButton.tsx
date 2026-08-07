@@ -19,13 +19,13 @@ type GoogleIdentityApi = {
   renderButton: (
     parent: HTMLElement,
     options: {
-      logo_alignment: "left";
-      shape: "rectangular";
+      logo_alignment?: "left";
+      shape: "rectangular" | "square";
       size: "large";
       text: "continue_with";
       theme: "outline";
-      type: "standard";
-      width: number;
+      type: "standard" | "icon";
+      width?: number;
     },
   ) => void;
 };
@@ -95,6 +95,13 @@ export default function GoogleIdentityButton({
     let script: HTMLScriptElement | null = null;
     let scriptCreatedHere = false;
     let removeScriptListeners = () => undefined;
+    let resizeObserver: ResizeObserver | null = null;
+    let renderObserver: MutationObserver | null = null;
+    let resizeFrame: number | null = null;
+    let overflowFrame: number | null = null;
+    let lastRenderKey = "";
+    let forcedIconAtWidth = 0;
+    let removeResizeListener: () => void = () => undefined;
 
     setReady(false);
     setLoadError(null);
@@ -166,17 +173,87 @@ export default function GoogleIdentityButton({
           },
         });
 
-        const availableWidth = Math.floor(buttonHost.getBoundingClientRect().width || 320);
-        google.renderButton(buttonHost, {
-          type: "standard",
-          theme: "outline",
-          size: "large",
-          text: "continue_with",
-          shape: "rectangular",
-          logo_alignment: "left",
-          width: Math.min(400, Math.max(220, availableWidth)),
+        const renderGoogleButton = (layout: "icon" | "standard", availableWidth: number) => {
+          const width = Math.min(400, availableWidth);
+          const renderKey = `${layout}:${width}`;
+          if (renderKey === lastRenderKey && buttonHost.childElementCount > 0) return;
+          lastRenderKey = renderKey;
+          buttonHost.replaceChildren();
+          buttonHost.dataset.googleButtonLayout = layout;
+          google.renderButton(buttonHost, layout === "standard" ? {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            text: "continue_with",
+            shape: "rectangular",
+            logo_alignment: "left",
+            width,
+          } : {
+            type: "icon",
+            theme: "outline",
+            size: "large",
+            text: "continue_with",
+            shape: "square",
+          });
+          setReady(true);
+        };
+
+        const renderAtCurrentWidth = () => {
+          if (disposed) return;
+          const availableWidth = Math.floor(buttonHost.getBoundingClientRect().width);
+          if (availableWidth <= 0) return;
+          if (forcedIconAtWidth && forcedIconAtWidth !== availableWidth) forcedIconAtWidth = 0;
+          const layout = availableWidth < 200 || forcedIconAtWidth === availableWidth
+            ? "icon"
+            : "standard";
+          renderGoogleButton(layout, availableWidth);
+        };
+
+        const inspectRenderedWidth = () => {
+          overflowFrame = null;
+          if (disposed || buttonHost.dataset.googleButtonLayout !== "standard") return;
+          const availableWidth = Math.floor(buttonHost.getBoundingClientRect().width);
+          const renderedWidth = Math.max(
+            buttonHost.scrollWidth,
+            ...Array.from(buttonHost.children, (child) => child.getBoundingClientRect().width),
+          );
+          if (renderedWidth <= availableWidth + 1) return;
+          forcedIconAtWidth = availableWidth;
+          renderGoogleButton("icon", availableWidth);
+        };
+
+        const scheduleOverflowInspection = () => {
+          if (overflowFrame !== null) window.cancelAnimationFrame(overflowFrame);
+          overflowFrame = window.requestAnimationFrame(inspectRenderedWidth);
+        };
+        const scheduleRender = () => {
+          if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
+          resizeFrame = window.requestAnimationFrame(() => {
+            resizeFrame = null;
+            try {
+              renderAtCurrentWidth();
+            } catch {
+              if (!disposed) setLoadError("Google sign-in could not be resized.");
+            }
+          });
+        };
+
+        renderAtCurrentWidth();
+        renderObserver = new MutationObserver(scheduleOverflowInspection);
+        renderObserver.observe(buttonHost, {
+          attributes: true,
+          childList: true,
+          subtree: true,
+          attributeFilter: ["style", "width"],
         });
-        setReady(true);
+        scheduleOverflowInspection();
+        if (typeof globalThis.ResizeObserver === "function") {
+          resizeObserver = new ResizeObserver(scheduleRender);
+          resizeObserver.observe(buttonHost);
+        } else {
+          window.addEventListener("resize", scheduleRender);
+          removeResizeListener = () => window.removeEventListener("resize", scheduleRender);
+        }
       } catch (error) {
         if (!disposed) {
           setLoadError(error instanceof Error ? error.message : "Google sign-in could not be loaded.");
@@ -189,6 +266,11 @@ export default function GoogleIdentityButton({
     return () => {
       disposed = true;
       removeScriptListeners();
+      resizeObserver?.disconnect();
+      renderObserver?.disconnect();
+      removeResizeListener();
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
+      if (overflowFrame !== null) window.cancelAnimationFrame(overflowFrame);
       buttonHost.replaceChildren();
       if (scriptCreatedHere) script?.remove();
     };

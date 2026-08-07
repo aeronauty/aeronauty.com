@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -362,10 +361,19 @@ export default function GameLedgerInsightsView({ entities, games, participants, 
                           ) : (
                             <Line type="monotone" dataKey="cumulativeGameValue" name={selectedMetric.label} stroke={CHART_COLORS[0]} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
                           )}
-                          {selectedMetric.scope === "participant" && <Legend formatter={(value) => identityByKey.get(String(value))?.label ?? String(value)} />}
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
+                    {selectedMetric.scope === "participant" && chartIdentities.length > 0 && (
+                      <ul className={styles.chartLegend} aria-label="Chart series">
+                        {chartIdentities.map((identity, index) => (
+                          <li key={identity.identityKey}>
+                            <span style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} aria-hidden="true" />
+                            <span>{identity.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
               </>
