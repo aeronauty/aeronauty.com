@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title description">
+  <title id="title">Aeronauty Game Ledger</title>
+  <desc id="description">An open game book with a chronological trail of recorded moments.</desc>
+  <defs>
+    <linearGradient id="background" x1="88" y1="52" x2="936" y2="972" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#315ee8"/>
+      <stop offset="1" stop-color="#17243b"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="246" y1="226" x2="774" y2="794" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8eef9"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="155%">
+      <feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#081329" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="196" fill="url(#background)"/>
+  <circle cx="838" cy="186" r="88" fill="#23a6a0" opacity="0.28"/>
+  <circle cx="168" cy="828" r="116" fill="#e65f55" opacity="0.2"/>
+  <g filter="url(#shadow)">
+    <path d="M196 246c0-38 31-69 69-69h199c34 0 62 28 62 62v542c-24-27-61-41-110-41H265c-38 0-69-31-69-69V246Z" fill="url(#paper)"/>
+    <path d="M828 246c0-38-31-69-69-69H560c-34 0-62 28-62 62v542c24-27 61-41 110-41h151c38 0 69-31 69-69V246Z" fill="url(#paper)"/>
+    <path d="M498 235c0-30 24-54 54-54" fill="none" stroke="#c7d3e7" stroke-width="18" stroke-linecap="round"/>
+  </g>
+  <g fill="none" stroke-linecap="round">
+    <path d="M302 320h112M302 430h112M302 540h112M302 650h112" stroke="#7d8dab" stroke-width="26"/>
+    <path d="M610 332h104M610 442h104M610 552h104M610 662h104" stroke="#7d8dab" stroke-width="26"/>
+    <path d="M262 320v330" stroke="#ccd6e8" stroke-width="14"/>
+  </g>
+  <circle cx="262" cy="320" r="27" fill="#23a6a0"/>
+  <circle cx="262" cy="430" r="27" fill="#315ee8"/>
+  <circle cx="262" cy="540" r="27" fill="#e65f55"/>
+  <circle cx="262" cy="650" r="27" fill="#23a6a0"/>
+  <path d="m643 385 92 57-92 57V385Z" fill="#315ee8"/>
+</svg>
