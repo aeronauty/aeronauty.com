@@ -108,7 +108,16 @@ async function installGoogleIdentityMock(context: BrowserContext) {
               ? Math.min(400, requestedWidth + 96)
               : requestedWidth;
             button.dataset.renderedWidth = String(renderedWidth);
+            button.style.position = "relative";
             button.style.width = `${renderedWidth}px`;
+            const gisInternalOverflow = document.createElement("span");
+            gisInternalOverflow.setAttribute("aria-hidden", "true");
+            gisInternalOverflow.style.height = "1px";
+            gisInternalOverflow.style.left = "0";
+            gisInternalOverflow.style.position = "absolute";
+            gisInternalOverflow.style.top = "0";
+            gisInternalOverflow.style.width = `${renderedWidth + 10}px`;
+            button.appendChild(gisInternalOverflow);
             button.addEventListener("click", () => {
               credentialCallback({ credential: "e2e-google-id-token" });
             });
