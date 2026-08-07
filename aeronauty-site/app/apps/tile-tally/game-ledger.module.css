@@ -5,12 +5,14 @@
   --ledger-blue: #315ee8;
   --ledger-blue-dark: #2347b6;
   --ledger-aqua: #23a6a0;
-  --ledger-coral: #e65f55;
+  --ledger-coral: #bd413a;
   --ledger-paper: #ffffff;
   --ledger-wash: #f3f6fb;
   --ledger-rule: #d8dfeb;
   --ledger-muted: #607087;
   color: var(--ledger-navy);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .ledgerHome {
@@ -23,6 +25,10 @@
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+}
+
+.ledgerHomeHeader > div {
+  min-width: 0;
 }
 
 .ledgerHomeHeader h1 {
@@ -103,7 +109,7 @@
 .gameCardGrid {
   display: grid;
   gap: 0.8rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
 }
 
 .gameCard {
@@ -113,6 +119,7 @@
   color: var(--ledger-navy);
   cursor: pointer;
   min-height: 220px;
+  min-width: 0;
   padding: 1rem;
   position: relative;
   text-align: left;
@@ -130,12 +137,16 @@
   font-size: 1.45rem;
   line-height: 1.1;
   margin: 0.7rem 0 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .gameCard > p {
   color: var(--ledger-muted);
   font-size: 0.8rem;
   margin: 0.4rem 0 0.8rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .cardLive,
@@ -145,6 +156,8 @@
   font-size: 0.64rem;
   font-weight: 850;
   letter-spacing: 0.08em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 0.3rem 0.5rem;
   text-transform: uppercase;
 }
@@ -171,6 +184,12 @@
   font-size: 0.74rem;
   gap: 0.38rem;
   line-height: 1.35;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cardMeta svg {
+  flex: 0 0 auto;
 }
 
 .openGame {
@@ -256,6 +275,7 @@
   flex-direction: column;
   gap: 0.35rem;
   min-height: 118px;
+  min-width: 0;
   padding: 0.9rem;
   text-align: left;
   transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
@@ -289,6 +309,7 @@
 .entryForm {
   display: grid;
   gap: 1rem;
+  min-width: 0;
 }
 
 .setupForm input,
@@ -349,6 +370,17 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.twoColumns > *,
+.dynamicGrid > *,
+.builderGrid > *,
+.resultControls > *,
+.resultDefinitionGrid > *,
+.roleAssignments > *,
+.inlineEntityForm > *,
+.fieldBuilderRow > * {
+  min-width: 0;
+}
+
 .participantPicker,
 .quickParticipants,
 .winnerPicker {
@@ -381,7 +413,7 @@
 .roleAssignments {
   display: grid;
   gap: 0.7rem;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
   margin-top: 0.9rem;
 }
 
@@ -397,6 +429,8 @@
   border-radius: 999px;
   color: var(--ledger-navy);
   font-size: 0.78rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 0.45rem 0.7rem;
 }
 
@@ -412,8 +446,18 @@
   cursor: pointer;
   display: inline-flex;
   gap: 0.45rem;
+  max-width: 100%;
   min-height: 44px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0.55rem 0.8rem;
+  white-space: normal;
+}
+
+.entityChoice > span,
+.entitySelected > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .entitySelected,
@@ -469,7 +513,13 @@
   gap: 0.55rem;
   justify-content: flex-start;
   min-height: 48px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0.7rem 0.85rem;
+}
+
+.definitionToggle svg {
+  flex: 0 0 auto;
 }
 
 .definitionToggle svg:last-child {
@@ -487,6 +537,7 @@
   border-radius: 16px;
   display: grid;
   gap: 1.4rem;
+  min-width: 0;
   padding: 1rem;
 }
 
@@ -501,6 +552,11 @@
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+}
+
+.definitionHeading > div,
+.entryHeading > div {
+  min-width: 0;
 }
 
 .definitionHeading h4 {
@@ -536,6 +592,7 @@
   background: #fff;
   border: 1px solid var(--ledger-rule);
   border-radius: 13px;
+  min-width: 0;
   padding: 0.85rem;
 }
 
@@ -554,7 +611,7 @@
   font-size: 0.74rem;
   gap: 0.3rem;
   margin-top: 0.65rem;
-  min-height: 36px;
+  min-height: 44px;
   padding: 0.3rem;
 }
 
@@ -628,7 +685,7 @@
 
 .smallButton {
   font-size: 0.76rem;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0.5rem 0.7rem;
 }
 
@@ -694,6 +751,8 @@
 .gameHeroMeta > span:last-child {
   color: rgba(255, 255, 255, 0.72);
   font-size: 0.78rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .liveStatus,
@@ -706,8 +765,12 @@
   font-size: 0.72rem;
   font-weight: 800;
   gap: 0.4rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0.35rem 0.6rem;
   text-transform: uppercase;
+  white-space: normal;
 }
 
 .liveStatus > span {
@@ -721,7 +784,7 @@
 .scoreboard {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
 }
 
 .scoreCard,
@@ -755,6 +818,8 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   margin-bottom: 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
@@ -765,7 +830,11 @@
 .counterValues {
   display: grid;
   gap: 0.85rem;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(110px, 100%), 1fr));
+}
+
+.counterValues > div {
+  min-width: 0;
 }
 
 .counterValues strong {
@@ -780,6 +849,8 @@
   display: block;
   font-size: 0.69rem;
   margin-top: 0.25rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .counterValues progress {
@@ -810,7 +881,13 @@
   display: flex;
   gap: 0.55rem;
   line-height: 1.45;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0.85rem 1rem;
+}
+
+.journalBanner svg {
+  flex: 0 0 auto;
 }
 
 .cribbageBoard {
@@ -837,12 +914,16 @@
   display: flex;
   font-size: 0.76rem;
   font-weight: 800;
+  gap: 0.5rem;
   justify-content: space-between;
   margin-bottom: 0.35rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .pegTrackRow > span strong {
   color: var(--ledger-blue);
+  flex: 0 0 auto;
   font-size: 1rem;
 }
 
@@ -922,8 +1003,8 @@
   cursor: pointer;
   font-size: 0.74rem;
   font-weight: 800;
-  min-height: 34px;
-  min-width: 42px;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .finishButton {
@@ -1069,6 +1150,12 @@
   .formActions > button,
   .entryForm > .primaryButton {
     width: 100%;
+  }
+}
+
+@media (max-width: 559px) {
+  .setupCard {
+    margin-inline: -0.8rem;
   }
 }
 

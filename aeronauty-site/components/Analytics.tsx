@@ -503,7 +503,10 @@ export default function Analytics() {
   if (consent !== "unknown") return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-gray-800 bg-gray-950/95 px-4 py-4 text-white shadow-2xl backdrop-blur">
+    <div
+      className="analytics-consent-banner fixed inset-x-0 bottom-0 z-[200] border-t border-gray-800 bg-gray-950/95 text-white shadow-2xl backdrop-blur"
+      data-testid="analytics-consent-banner"
+    >
       <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-6 text-gray-300">
           I track first-party page views, approximate region, active dwell time, scroll depth, and
@@ -514,18 +517,18 @@ export default function Analytics() {
           </Link>
           .
         </p>
-        <div className="flex shrink-0 gap-3">
+        <div className="analytics-consent-actions flex w-full shrink-0 flex-wrap gap-3 sm:w-auto">
           <button
             type="button"
             onClick={() => choose("declined")}
-            className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-semibold text-gray-300 transition hover:border-gray-500 hover:text-white"
+            className="min-h-11 min-w-0 flex-1 rounded-lg border border-gray-700 px-4 py-2 text-sm font-semibold text-gray-300 transition hover:border-gray-500 hover:text-white sm:flex-none"
           >
             No thanks
           </button>
           <button
             type="button"
             onClick={() => choose("accepted")}
-            className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-400"
+            className="min-h-11 min-w-0 flex-1 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-400 sm:flex-none"
           >
             That's fine
           </button>

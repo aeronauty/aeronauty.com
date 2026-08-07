@@ -2,15 +2,25 @@
   display: grid;
   gap: 0.55rem;
   justify-items: center;
+  min-width: 0;
   width: 100%;
 }
 
 .googleButtonHost {
+  align-items: center;
+  contain: inline-size;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
   min-height: 44px;
   max-width: 400px;
-  overflow: hidden;
+  overflow: clip;
   transition: opacity 140ms ease;
   width: 100%;
+}
+
+.googleButtonHost > * {
+  flex: 0 0 auto;
 }
 
 .googleButtonHost.busy {
@@ -23,6 +33,9 @@
 .fallbackNote {
   line-height: 1.4;
   margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: center;
 }
 
@@ -45,7 +58,7 @@
   cursor: pointer;
   font-size: 0.72rem;
   font-weight: 750;
-  min-height: 36px;
+  min-height: 44px;
   padding: 0.35rem 0.6rem;
   text-decoration: underline;
   text-underline-offset: 0.16em;

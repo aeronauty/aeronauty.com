@@ -326,6 +326,7 @@ export default function GameLedgerReplayView({
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
+  const replayOverlayRef = useRef<HTMLDivElement>(null);
   const replayDialogRef = useRef<HTMLDivElement>(null);
   const replayCloseRef = useRef<HTMLButtonElement>(null);
   const consentId = useId();
@@ -363,8 +364,26 @@ export default function GameLedgerReplayView({
     if (!replayOpen) return undefined;
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
+    const isolated: Array<{ ariaHidden: string | null; element: HTMLElement; inert: boolean }> = [];
     document.body.style.overflow = "hidden";
     replayCloseRef.current?.focus();
+
+    let current: HTMLElement | null = replayOverlayRef.current;
+    while (current && current !== document.body) {
+      const parent: HTMLElement | null = current.parentElement;
+      if (!parent) break;
+      for (const sibling of Array.from(parent.children)) {
+        if (sibling === current || !(sibling instanceof HTMLElement)) continue;
+        isolated.push({
+          ariaHidden: sibling.getAttribute("aria-hidden"),
+          element: sibling,
+          inert: sibling.inert,
+        });
+        sibling.inert = true;
+        sibling.setAttribute("aria-hidden", "true");
+      }
+      current = parent;
+    }
 
     function handleReplayKeydown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -392,6 +411,11 @@ export default function GameLedgerReplayView({
     return () => {
       document.removeEventListener("keydown", handleReplayKeydown);
       document.body.style.overflow = previousOverflow;
+      for (const item of isolated) {
+        item.element.inert = item.inert;
+        if (item.ariaHidden === null) item.element.removeAttribute("aria-hidden");
+        else item.element.setAttribute("aria-hidden", item.ariaHidden);
+      }
       previouslyFocused?.focus();
     };
   }, [replayOpen]);
@@ -845,7 +869,7 @@ export default function GameLedgerReplayView({
       </div>
 
       {replayEntry && (
-        <div className={styles.replayOverlay} role="dialog" aria-modal="true" aria-labelledby="replay-dialog-title">
+        <div className={styles.replayOverlay} ref={replayOverlayRef} role="dialog" aria-modal="true" aria-labelledby="replay-dialog-title">
           <div className={styles.replayDialog} ref={replayDialogRef}>
             <header className={styles.replayHeader}>
               <div>
