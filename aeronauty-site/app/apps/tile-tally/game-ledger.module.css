@@ -1,0 +1,1081 @@
+.setupCard,
+.sessionStack,
+.ledgerHome {
+  --ledger-navy: #17243b;
+  --ledger-blue: #315ee8;
+  --ledger-blue-dark: #2347b6;
+  --ledger-aqua: #23a6a0;
+  --ledger-coral: #e65f55;
+  --ledger-paper: #ffffff;
+  --ledger-wash: #f3f6fb;
+  --ledger-rule: #d8dfeb;
+  --ledger-muted: #607087;
+  color: var(--ledger-navy);
+}
+
+.ledgerHome {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.ledgerHomeHeader {
+  align-items: flex-end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.ledgerHomeHeader h1 {
+  color: var(--ledger-navy);
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 760px;
+}
+
+.ledgerHomeHeader p:last-child {
+  color: var(--ledger-muted);
+  line-height: 1.55;
+  margin: 0.75rem 0 0;
+  max-width: 680px;
+}
+
+.emptyLedger {
+  align-items: center;
+  background: #fff;
+  border: 1px dashed #b9c5d7;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(2rem, 8vw, 4.5rem) 1rem;
+  text-align: center;
+}
+
+.emptyLedger > svg {
+  color: var(--ledger-blue);
+}
+
+.emptyLedger h2 {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  margin: 0.8rem 0 0;
+}
+
+.emptyLedger p {
+  color: var(--ledger-muted);
+  line-height: 1.5;
+  margin: 0.5rem auto 1.1rem;
+  max-width: 530px;
+}
+
+.gameGroup {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gameGroupHeading {
+  align-items: center;
+  display: flex;
+  gap: 0.55rem;
+}
+
+.gameGroupHeading h2 {
+  color: var(--ledger-navy);
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.gameGroupHeading > span {
+  align-items: center;
+  background: #dfe6f1;
+  border-radius: 999px;
+  color: #52627a;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 800;
+  height: 23px;
+  justify-content: center;
+  min-width: 23px;
+  padding-inline: 0.35rem;
+}
+
+.gameCardGrid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.gameCard {
+  background: #fff;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 16px;
+  color: var(--ledger-navy);
+  cursor: pointer;
+  min-height: 220px;
+  padding: 1rem;
+  position: relative;
+  text-align: left;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.gameCard:hover {
+  border-color: #9babca;
+  box-shadow: 0 14px 34px rgba(25, 40, 70, 0.1);
+  transform: translateY(-2px);
+}
+
+.gameCard h3 {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  margin: 0.7rem 0 0;
+}
+
+.gameCard > p {
+  color: var(--ledger-muted);
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.cardLive,
+.cardComplete {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.cardLive {
+  background: #dff7ee;
+  color: #087055;
+}
+
+.cardComplete {
+  background: #e8edf5;
+  color: #5a687d;
+}
+
+.cardMeta {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.cardMeta span {
+  align-items: center;
+  color: #52627a;
+  display: flex;
+  font-size: 0.74rem;
+  gap: 0.38rem;
+  line-height: 1.35;
+}
+
+.openGame {
+  align-items: center;
+  bottom: 0.9rem;
+  color: var(--ledger-blue);
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 800;
+  gap: 0.25rem;
+  position: absolute;
+  right: 0.9rem;
+}
+
+.setupCard,
+.entryCard,
+.finishCard,
+.gameHero,
+.gameCounterStrip {
+  background: var(--ledger-paper, #fff);
+  border: 1px solid var(--ledger-rule, #d8dfeb);
+  border-radius: 18px;
+  box-shadow: 0 14px 38px rgba(25, 40, 70, 0.08);
+}
+
+.setupCard {
+  padding: clamp(1.1rem, 3vw, 2rem);
+}
+
+.sectionIntro {
+  max-width: 700px;
+}
+
+.sectionIntro h2,
+.gameHero h2,
+.entryHeading h3,
+.finishCard h3 {
+  color: var(--ledger-navy);
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.sectionIntro h2 {
+  font-size: clamp(1.8rem, 5vw, 2.7rem);
+}
+
+.sectionIntro > p:last-child,
+.definitionHeading p,
+.participantPicker > p,
+.gameHero > p {
+  color: var(--ledger-muted);
+  line-height: 1.55;
+  margin: 0.55rem 0 0;
+}
+
+.kicker {
+  color: var(--ledger-blue);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.presetGrid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 1.6rem 0;
+}
+
+.presetCard,
+.presetSelected {
+  align-items: flex-start;
+  background: var(--ledger-wash);
+  border: 1px solid var(--ledger-rule);
+  border-radius: 13px;
+  color: var(--ledger-navy);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 118px;
+  padding: 0.9rem;
+  text-align: left;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.presetCard:hover,
+.presetSelected {
+  border-color: var(--ledger-blue);
+  box-shadow: 0 7px 20px rgba(49, 94, 232, 0.12);
+  transform: translateY(-1px);
+}
+
+.presetSelected {
+  background: #eef2ff;
+  box-shadow: inset 0 0 0 1px var(--ledger-blue), 0 7px 20px rgba(49, 94, 232, 0.12);
+}
+
+.presetCard strong,
+.presetSelected strong {
+  font-size: 0.94rem;
+}
+
+.presetCard span,
+.presetSelected span {
+  color: var(--ledger-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.setupForm,
+.entryForm {
+  display: grid;
+  gap: 1rem;
+}
+
+.setupForm input,
+.setupForm select,
+.setupForm textarea,
+.entryForm input,
+.entryForm select,
+.entryForm textarea {
+  background: #fff;
+  border: 1px solid #bfc9d9;
+  border-radius: 10px;
+  color: var(--ledger-navy);
+  font: inherit;
+  min-height: 46px;
+  padding: 0.7rem 0.8rem;
+  width: 100%;
+}
+
+.setupForm input:focus,
+.setupForm select:focus,
+.setupForm textarea:focus,
+.entryForm input:focus,
+.entryForm select:focus,
+.entryForm textarea:focus {
+  border-color: var(--ledger-blue);
+  box-shadow: 0 0 0 3px rgba(49, 94, 232, 0.14);
+  outline: none;
+}
+
+.setupForm label > span:first-child,
+.entryForm label > span:first-child,
+.builderCard label > span:first-child {
+  color: #45546a;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.setupForm label em,
+.entryForm label em {
+  color: var(--ledger-muted);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 550;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.twoColumns,
+.dynamicGrid,
+.builderGrid,
+.resultControls {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.participantPicker,
+.quickParticipants,
+.winnerPicker {
+  border: 1px solid var(--ledger-rule);
+  border-radius: 14px;
+  margin: 0;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.participantPicker legend,
+.quickParticipants legend,
+.winnerPicker legend {
+  align-items: center;
+  color: var(--ledger-navy);
+  display: flex;
+  font-size: 0.86rem;
+  font-weight: 820;
+  gap: 0.4rem;
+  padding: 0 0.35rem;
+}
+
+.entityChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.roleAssignments {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 0.9rem;
+}
+
+.roleSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.roleSummary span {
+  background: var(--ledger-wash);
+  border: 1px solid var(--ledger-rule);
+  border-radius: 999px;
+  color: var(--ledger-navy);
+  font-size: 0.78rem;
+  padding: 0.45rem 0.7rem;
+}
+
+.entityChoice,
+.entitySelected,
+.quickParticipant,
+.quickParticipantSelected,
+.winnerPicker label {
+  align-items: center;
+  background: var(--ledger-wash);
+  border: 1px solid var(--ledger-rule);
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+}
+
+.entitySelected,
+.quickParticipantSelected {
+  background: #eaf7f6;
+  border-color: var(--ledger-aqua);
+  box-shadow: inset 0 0 0 1px var(--ledger-aqua);
+}
+
+.entityChoice input,
+.entitySelected input,
+.quickParticipant input,
+.quickParticipantSelected input,
+.winnerPicker input,
+.requiredField input,
+.booleanField input {
+  accent-color: var(--ledger-blue);
+  min-height: auto;
+  padding: 0;
+  width: auto;
+}
+
+.entityChoice small,
+.entitySelected small {
+  color: var(--ledger-muted);
+  font-size: 0.67rem;
+  text-transform: capitalize;
+}
+
+.inlineEntityForm {
+  align-items: end;
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: 120px minmax(150px, 1fr) auto;
+  margin-top: 0.9rem;
+}
+
+.fieldHint {
+  color: var(--ledger-coral);
+  font-size: 0.78rem;
+  margin: 0.75rem 0 0;
+}
+
+.definitionToggle {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 12px;
+  color: var(--ledger-navy);
+  cursor: pointer;
+  display: flex;
+  font-weight: 760;
+  gap: 0.55rem;
+  justify-content: flex-start;
+  min-height: 48px;
+  padding: 0.7rem 0.85rem;
+}
+
+.definitionToggle svg:last-child {
+  margin-left: auto;
+  transition: transform 150ms ease;
+}
+
+.definitionToggle .chevronOpen {
+  transform: rotate(180deg);
+}
+
+.definitionBuilder {
+  background: var(--ledger-wash);
+  border: 1px solid var(--ledger-rule);
+  border-radius: 16px;
+  display: grid;
+  gap: 1.4rem;
+  padding: 1rem;
+}
+
+.definitionSection + .definitionSection {
+  border-top: 1px solid var(--ledger-rule);
+  padding-top: 1.3rem;
+}
+
+.definitionHeading,
+.entryHeading {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.definitionHeading h4 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.definitionHeading p {
+  font-size: 0.8rem;
+}
+
+.definitionEmpty {
+  color: var(--ledger-muted);
+  font-size: 0.82rem;
+  margin: 0.8rem 0 0;
+}
+
+.builderList {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.resultDefinitionGrid {
+  align-items: end;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.9rem;
+}
+
+.builderCard {
+  background: #fff;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 13px;
+  padding: 0.85rem;
+}
+
+.builderGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.removeButton,
+.iconButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #a13f3a;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.74rem;
+  gap: 0.3rem;
+  margin-top: 0.65rem;
+  min-height: 36px;
+  padding: 0.3rem;
+}
+
+.fieldBuilderRow {
+  align-items: end;
+  background: #fff;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 12px;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: minmax(150px, 1fr) 130px minmax(180px, 1fr) auto auto;
+  padding: 0.75rem;
+}
+
+.fieldBuilderRow .iconButton {
+  align-self: end;
+  border: 1px solid #f0c4c0;
+  border-radius: 8px;
+  justify-content: center;
+  margin: 0;
+  min-height: 44px;
+  width: 44px;
+}
+
+.requiredField,
+.booleanField {
+  align-items: center;
+  display: flex;
+  gap: 0.45rem;
+  min-height: 44px;
+}
+
+.optionsField:empty {
+  display: none;
+}
+
+.primaryButton,
+.secondaryButton,
+.smallButton,
+.backButton,
+.finishButton {
+  align-items: center;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 780;
+  gap: 0.42rem;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+}
+
+.primaryButton {
+  background: var(--ledger-blue);
+  border: 1px solid var(--ledger-blue);
+  color: #fff;
+}
+
+.primaryButton:hover {
+  background: var(--ledger-blue-dark);
+}
+
+.secondaryButton,
+.smallButton,
+.backButton {
+  background: #fff;
+  border: 1px solid var(--ledger-rule);
+  color: var(--ledger-navy);
+}
+
+.smallButton {
+  font-size: 0.76rem;
+  min-height: 40px;
+  padding: 0.5rem 0.7rem;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.smallButton:disabled,
+.finishButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.formActions {
+  display: flex;
+  gap: 0.7rem;
+  justify-content: flex-end;
+  margin-top: 0.2rem;
+}
+
+.inlineError {
+  background: #fff0ef;
+  border: 1px solid #f0b9b5;
+  border-radius: 10px;
+  color: #8c312b;
+  padding: 0.75rem;
+}
+
+.sessionStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.backButton {
+  justify-self: start;
+}
+
+.gameHero {
+  background:
+    radial-gradient(circle at 88% 10%, rgba(35, 166, 160, 0.22), transparent 17rem),
+    linear-gradient(135deg, #17243b, #243c67);
+  border: 0;
+  color: #fff;
+  padding: clamp(1.2rem, 4vw, 2rem);
+}
+
+.gameHero h2 {
+  color: #fff;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  margin-top: 0.55rem;
+}
+
+.gameHero > p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.gameHeroMeta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: space-between;
+}
+
+.gameHeroMeta > span:last-child {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+}
+
+.liveStatus,
+.completeStatus {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 800;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  text-transform: uppercase;
+}
+
+.liveStatus > span {
+  background: #4ee0b8;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(78, 224, 184, 0.15);
+  height: 7px;
+  width: 7px;
+}
+
+.scoreboard {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.scoreCard,
+.scoreCardSelected,
+.gameCounterStrip {
+  background: #fff;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 16px;
+  color: var(--ledger-navy);
+  min-width: 0;
+  padding: 1rem;
+  text-align: left;
+}
+
+.scoreCard,
+.scoreCardSelected {
+  cursor: pointer;
+}
+
+.scoreCardSelected {
+  border-color: var(--ledger-blue);
+  box-shadow: inset 0 0 0 1px var(--ledger-blue), 0 10px 28px rgba(49, 94, 232, 0.12);
+}
+
+.scoreCard > span,
+.scoreCardSelected > span,
+.gameCounterStrip > span {
+  color: var(--ledger-muted);
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+}
+
+.gameCounterStrip {
+  grid-column: 1 / -1;
+}
+
+.counterValues {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+
+.counterValues strong {
+  display: block;
+  font-size: clamp(1.75rem, 6vw, 2.7rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.counterValues small {
+  color: var(--ledger-muted);
+  display: block;
+  font-size: 0.69rem;
+  margin-top: 0.25rem;
+}
+
+.counterValues progress {
+  accent-color: var(--ledger-aqua);
+  display: block;
+  height: 7px;
+  margin-top: 0.45rem;
+  width: 100%;
+}
+
+.counterValues i {
+  align-items: center;
+  color: #08776f;
+  display: flex;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 780;
+  gap: 0.2rem;
+  margin-top: 0.35rem;
+}
+
+.journalBanner {
+  align-items: center;
+  background: #eaf7f6;
+  border: 1px solid #a9dcd8;
+  border-radius: 13px;
+  color: #176a65;
+  display: flex;
+  gap: 0.55rem;
+  line-height: 1.45;
+  padding: 0.85rem 1rem;
+}
+
+.cribbageBoard {
+  background: linear-gradient(145deg, #fbfcff, #e9eef8);
+  border: 1px solid #c9d3e3;
+  border-radius: 16px;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.cribbageBoard h3 {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  margin: 0;
+}
+
+.pegTracks {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.pegTrackRow > span {
+  align-items: baseline;
+  display: flex;
+  font-size: 0.76rem;
+  font-weight: 800;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.pegTrackRow > span strong {
+  color: var(--ledger-blue);
+  font-size: 1rem;
+}
+
+.pegTrack {
+  display: grid;
+  gap: 3px;
+  grid-template-columns: repeat(31, minmax(3px, 1fr));
+}
+
+.pegTrack i {
+  aspect-ratio: 1;
+  background: #c2ccdc;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 1px rgba(23, 36, 59, 0.2);
+  min-width: 3px;
+  position: relative;
+}
+
+.pegTrack .pegFive {
+  background: #93a2bb;
+}
+
+.pegTrack .pegCurrent {
+  background: var(--ledger-blue);
+  box-shadow: 0 0 0 3px rgba(49, 94, 232, 0.2), 0 3px 7px rgba(23, 36, 59, 0.28);
+  transform: scale(1.45);
+  z-index: 1;
+}
+
+.pegTrack .pegCurrent[data-player="1"] {
+  background: var(--ledger-coral);
+  box-shadow: 0 0 0 3px rgba(230, 95, 85, 0.2), 0 3px 7px rgba(23, 36, 59, 0.28);
+}
+
+.pegTrack .pegCurrent[data-player="2"] {
+  background: var(--ledger-aqua);
+}
+
+.pegTrack .pegCurrent[data-player="3"] {
+  background: #9a62d5;
+}
+
+.entryCard,
+.finishCard {
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.entryHeading h3,
+.finishCard h3 {
+  font-size: clamp(1.35rem, 4vw, 1.8rem);
+}
+
+.entryForm {
+  margin-top: 1rem;
+}
+
+.quickParticipants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.quickValues {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  letter-spacing: 0 !important;
+  margin-top: 0.4rem !important;
+  text-transform: none !important;
+}
+
+.quickValues button {
+  background: #eef2ff;
+  border: 1px solid #c3cef4;
+  border-radius: 8px;
+  color: var(--ledger-blue-dark);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+  min-height: 34px;
+  min-width: 42px;
+}
+
+.finishButton {
+  background: var(--ledger-navy);
+  border: 1px solid var(--ledger-navy);
+  color: #fff;
+  justify-self: stretch;
+}
+
+.winnerPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.winnerPicker legend span {
+  color: var(--ledger-muted);
+  font-size: 0.68rem;
+  font-weight: 550;
+}
+
+.provenanceNote {
+  color: var(--ledger-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  margin: 0.2rem auto;
+  max-width: 680px;
+  text-align: center;
+}
+
+.srOnly {
+  border: 0 !important;
+  clip: rect(0 0 0 0) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  white-space: nowrap !important;
+  width: 1px !important;
+}
+
+@media (max-width: 900px) {
+  .presetGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .builderGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resultDefinitionGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fieldBuilderRow {
+    grid-template-columns: minmax(150px, 1fr) 130px auto;
+  }
+
+  .fieldBuilderRow .optionsField {
+    grid-column: 1 / 3;
+  }
+}
+
+@media (max-width: 620px) {
+  .ledgerHomeHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ledgerHomeHeader > button {
+    align-self: stretch;
+  }
+
+  .setupCard {
+    border-left: 0;
+    border-radius: 0;
+    border-right: 0;
+    margin-inline: -1rem;
+  }
+
+  .presetGrid,
+  .twoColumns,
+  .dynamicGrid,
+  .builderGrid,
+  .resultControls,
+  .resultDefinitionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .presetCard,
+  .presetSelected {
+    min-height: 96px;
+  }
+
+  .inlineEntityForm {
+    grid-template-columns: 108px minmax(0, 1fr);
+  }
+
+  .inlineEntityForm > button {
+    grid-column: 1 / -1;
+  }
+
+  .definitionHeading,
+  .entryHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .definitionHeading > button,
+  .entryHeading > button {
+    align-self: flex-start;
+  }
+
+  .fieldBuilderRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .fieldBuilderRow > label {
+    grid-column: 1 / -1;
+  }
+
+  .fieldBuilderRow .iconButton {
+    grid-column: 2;
+  }
+
+  .gameHero {
+    border-radius: 14px;
+  }
+
+  .scoreboard {
+    grid-template-columns: 1fr;
+  }
+
+  .pegTrack {
+    gap: 2px;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .formActions > button,
+  .entryForm > .primaryButton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presetCard,
+  .presetSelected,
+  .definitionToggle svg:last-child {
+    transition: none;
+  }
+}

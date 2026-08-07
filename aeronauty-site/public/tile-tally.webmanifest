@@ -1,0 +1,41 @@
+{
+  "id": "/apps/tile-tally",
+  "name": "Aeronauty Game Ledger",
+  "short_name": "Game Ledger",
+  "description": "A private, flexible game ledger with scores, notes, photos, clips, and optional tabletop tools.",
+  "lang": "en",
+  "start_url": "/apps/tile-tally",
+  "scope": "/apps/tile-tally",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef2f7",
+  "theme_color": "#17243b",
+  "categories": ["games", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/tile-tally-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/tile-tally-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/tile-tally-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/tile-tally-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

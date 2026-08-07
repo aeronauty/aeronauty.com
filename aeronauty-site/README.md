@@ -24,6 +24,11 @@ Personal website for Harry Smith - aerodynamicist, systems engineer, and builder
 
 ## Getting Started
 
+Game Ledger has additional Supabase Auth, row-level security, private media,
+and PWA setup. See [`GAME_LEDGER.md`](./GAME_LEDGER.md) before enabling it in
+production. Its optional low-friction letter-tile table is documented in
+[`TILE_TALLY.md`](./TILE_TALLY.md).
+
 ### Installation
 
 ```bash
@@ -101,4 +106,3 @@ aeronauty_dot_com/
 ## License
 
 MIT
-

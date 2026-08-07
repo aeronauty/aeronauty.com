@@ -4,6 +4,14 @@ import { SiteNav } from "@/components/SiteNav";
 
 const projects = [
   {
+    title: "Game Ledger",
+    description:
+      "A private, schema-driven scorekeeper for any game, with a chronological notes, photo, and short-video replay.",
+    tech: ["Supabase", "RLS", "PWA", "Media capture"],
+    link: "/apps/tile-tally",
+    status: "POC",
+  },
+  {
     title: "Polynomial vs Power Fit Explorer",
     description:
       "Compare polynomial, spline, and power-law fits for aircraft fuel-efficiency data, including extrapolation behaviour.",
