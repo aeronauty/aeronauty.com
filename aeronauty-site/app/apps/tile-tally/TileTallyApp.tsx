@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, BookOpenText, Grid3X3, LoaderCircle, LogOut, RotateCw, X } from "lucide-react";
+import { BarChart3, BookOpenText, Bot, Grid3X3, LoaderCircle, LogOut, RotateCw, X } from "lucide-react";
+import GameLedgerAssistantView from "./GameLedgerAssistantView";
 import GameLedgerView from "./GameLedgerView";
 import GameLedgerInsightsView from "./GameLedgerInsightsView";
 import GoogleIdentityButton from "./GoogleIdentityButton";
@@ -9,13 +10,21 @@ import TilesView from "./TilesView";
 import { useGameLedger } from "./useGameLedger";
 import styles from "./tile-tally.module.css";
 
-type Tab = "games" | "insights" | "tiles";
+type Tab = "games" | "insights" | "assistant" | "tiles";
 
 const TABS: Array<{ id: Tab; label: string; icon: typeof BookOpenText }> = [
   { id: "games", label: "Games", icon: BookOpenText },
-  { id: "insights", label: "History & stats", icon: BarChart3 },
-  { id: "tiles", label: "Tile table", icon: Grid3X3 },
+  { id: "insights", label: "Stats", icon: BarChart3 },
+  { id: "assistant", label: "Assistant", icon: Bot },
+  { id: "tiles", label: "Tiles", icon: Grid3X3 },
 ];
+
+const TAB_ACCESSIBLE_LABELS: Record<Tab, string> = {
+  games: "Games",
+  insights: "History & stats",
+  assistant: "Assistant",
+  tiles: "Tile table",
+};
 
 function Wordmark() {
   return (
@@ -95,7 +104,7 @@ function LedgerErrorScreen({
   onSignOut,
 }: {
   message: string;
-  onRetry: () => Promise<void>;
+  onRetry: () => Promise<unknown>;
   onSignOut: () => Promise<void>;
 }) {
   return (
@@ -161,6 +170,7 @@ export default function TileTallyApp() {
               type="button"
               key={id}
               onClick={() => setTab(id)}
+              aria-label={TAB_ACCESSIBLE_LABELS[id]}
               aria-current={tab === id ? "page" : undefined}
             >
               <Icon size={18} aria-hidden="true" />
@@ -171,11 +181,14 @@ export default function TileTallyApp() {
         </div>
       </nav>
 
-      <main className={`${styles.main} ${tab === "tiles" ? styles.mainWide : ""}`}>
+      <main className={`${styles.main} ${tab === "tiles" || tab === "assistant" ? styles.mainWide : ""}`}>
         {ledger.dataLoading && <div className={styles.syncing}><LoaderCircle size={14} className={styles.spinner} aria-hidden="true" /> Syncing game book…</div>}
         {ledger.error && (
           <div className={styles.errorBanner} role="alert">
             <span>{ledger.error}</span>
+            <button type="button" onClick={() => void ledger.refresh()} disabled={ledger.dataLoading}>
+              <RotateCw size={16} aria-hidden="true" /> <span>{ledger.dataLoading ? "Retrying…" : "Retry"}</span>
+            </button>
             <button type="button" onClick={() => ledger.setError(null)} aria-label="Dismiss error"><X size={17} /></button>
           </div>
         )}
@@ -205,6 +218,17 @@ export default function TileTallyApp() {
             events={ledger.events}
             media={ledger.media}
             activeMediaCounts={ledger.activeMediaCounts}
+          />
+        )}
+        {tab === "assistant" && (
+          <GameLedgerAssistantView
+            accessToken={ledger.session.access_token}
+            games={ledger.games}
+            participants={ledger.participants}
+            events={ledger.events}
+            busy={ledger.busy}
+            onUploadMedia={ledger.uploadMedia}
+            onRefresh={ledger.refresh}
           />
         )}
         {tab === "tiles" && <TilesView key={ledger.session.user.id} userId={ledger.session.user.id} />}

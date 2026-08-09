@@ -8,7 +8,7 @@ export default function PrivacyPage() {
       <main className="mx-auto max-w-3xl px-5 py-16 sm:px-8 lg:px-10">
         <p className="eyebrow">Privacy</p>
         <h1 className="mt-4 text-5xl font-semibold tracking-tight">Privacy notice</h1>
-        <p className="mt-4 text-sm text-stone-500">Last updated: 7 August 2026</p>
+        <p className="mt-4 text-sm text-stone-500">Last updated: 9 August 2026</p>
 
         <div className="mt-12 divide-y divide-stone-200 border-y border-stone-200 bg-white">
           {[
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
             ],
             [
               "Game photos and clips",
-              "Photo and short-video capture happens only after you tap a capture or file-picker control and confirm that everyone being recorded has agreed. Game Ledger does not record in the background. Chosen files are uploaded to private, account-isolated Supabase Storage and shown through short-lived signed links; they may contain faces, voices, children, home interiors, or device metadata. The current app does not send game media to an AI service. You can remove a media item from its game timeline in the app; the underlying private object is removed before its metadata is marked deleted.",
+              "Photo and short-video capture or import happens only after you tap a capture or file-picker control and confirm that everyone being recorded has agreed. Game Ledger does not record in the background. Chosen timeline files are uploaded to private, account-isolated Supabase Storage and shown through short-lived signed links; they may contain faces, voices, children, home interiors, or device metadata. If you explicitly tap Analyze board, the browser decodes your selected image, resizes it, paints it onto a fresh canvas, and exports a metadata-stripped JPEG copy. That normalized copy is stored privately with the game and sent to the configured AI provider; merely choosing a photo does not contact the provider. You can remove a media item from its game timeline in the app; the underlying private object is removed before its metadata is marked deleted.",
             ],
             [
               "Shake to shuffle",
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             ],
             [
               "AI processing",
-              "The current Game Ledger scoring, notes, photo, video, cumulative statistics, and interesting-fact flows do not invoke an AI model. History summaries are deterministic calculations over the games selected in the app and remain inside the signed-in experience. Other Aeronauty experiments may use Anthropic or OpenAI only when their own interface explicitly says so; those providers do not receive your Supabase or Google credentials.",
+              "Game Ledger invokes Anthropic or OpenAI only when you send a message in Assistant or tap Analyze board. Chat sends a minimal selected-game context: game identifiers and state, the scoring/result contract, participant IDs/display labels/seats, totals, a bounded timeline tail, and the conversation; it omits game location, arbitrary participant metadata, and arbitrary definition extras. Board analysis sends the normalized image copy, board mode, your guidance, the same limited participant identity fields, and any applied correction examples enabled for that ruleset. Proposed content remains editable and is not written until you apply it. Applied AI-assisted rows are stored as user-reviewed, user-asserted records, not independently attested facts. History summaries and interesting facts remain deterministic calculations. AI providers do not receive your Supabase or Google credentials.",
             ],
             [
               "Consent",
