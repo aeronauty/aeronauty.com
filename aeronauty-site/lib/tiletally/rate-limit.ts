@@ -7,10 +7,19 @@ const HOUR_TTL_SECONDS = 2 * 60 * 60;
 const DAY_TTL_SECONDS = 2 * 24 * 60 * 60;
 const MONTH_TTL_SECONDS = 35 * 24 * 60 * 60;
 
-const RESERVE_SCRIPT = `
+const REQUEST_SCRIPT = `
 local requests = redis.call('INCR', KEYS[1])
 if requests == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
 if requests > tonumber(ARGV[2]) then return {0, 1} end
+return {1, 0}
+`;
+
+const RESERVE_SCRIPT = `
+if ARGV[8] == '1' then
+  local requests = redis.call('INCR', KEYS[1])
+  if requests == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+  if requests > tonumber(ARGV[2]) then return {0, 1} end
+end
 
 local reserve = tonumber(ARGV[3])
 local daily = tonumber(redis.call('GET', KEYS[2]) or '0')
@@ -94,12 +103,26 @@ function memoryIncrement(
 }
 
 function reserveInMemory(userId: string, reserveTokens: number): AiBudgetReservation {
+  return reserveBudgetInMemory(userId, reserveTokens, true);
+}
+
+function reserveRequestInMemory(userId: string): void {
   const config = getAiBudgetConfig();
   const current = stamps();
   const hourly = memoryIncrement(memoryRequests, userId, current.hour, 1);
   if (hourly > config.requestsPerHour) {
     throw new TileTallyHttpError(429, "hourly_ai_limit", "Too many AI requests. Try again later.");
   }
+}
+
+function reserveBudgetInMemory(
+  userId: string,
+  reserveTokens: number,
+  countRequest: boolean,
+): AiBudgetReservation {
+  const config = getAiBudgetConfig();
+  const current = stamps();
+  if (countRequest) reserveRequestInMemory(userId);
 
   const dailyCurrent = memoryDaily.get(userId);
   const monthlyCurrent = memoryMonthly.get(userId);
@@ -122,11 +145,12 @@ function reserveInMemory(userId: string, reserveTokens: number): AiBudgetReserva
   };
 }
 
-export async function reserveAiBudget(
-  userId: string,
-  requestedTokens: number
-): Promise<AiBudgetReservation> {
-  const reserveTokens = Math.max(1, Math.ceil(requestedTokens));
+/**
+ * Reserve the cheap per-request allowance before loading any user-owned ledger
+ * context. Provider calls made after this must pass `requestAlreadyReserved` so
+ * the same request is not counted twice when its token budget is reserved.
+ */
+export async function reserveAiRequest(userId: string): Promise<void> {
   const redis = getRedisClient();
   if (!redis) {
     if (process.env.NODE_ENV === "production") {
@@ -136,7 +160,51 @@ export async function reserveAiBudget(
         "Tile Tally AI is temporarily unavailable."
       );
     }
-    return reserveInMemory(userId, reserveTokens);
+    reserveRequestInMemory(userId);
+    return;
+  }
+
+  const config = getAiBudgetConfig();
+  const current = stamps();
+  const hourlyKey = `${PREFIX}:requests:${userId}:${current.hour}`;
+  let result: number[];
+  try {
+    result = await redis.eval<string[], number[]>(
+      REQUEST_SCRIPT,
+      [hourlyKey],
+      [String(HOUR_TTL_SECONDS), String(config.requestsPerHour)],
+    );
+  } catch {
+    throw new TileTallyHttpError(
+      503,
+      "ai_limiter_unavailable",
+      "Tile Tally AI is temporarily unavailable."
+    );
+  }
+  if (Number(result[0]) !== 1) {
+    throw new TileTallyHttpError(429, "hourly_ai_limit", "Too many AI requests. Try again later.");
+  }
+}
+
+export async function reserveAiBudget(
+  userId: string,
+  requestedTokens: number,
+  options: { requestAlreadyReserved?: boolean } = {},
+): Promise<AiBudgetReservation> {
+  const reserveTokens = Math.max(1, Math.ceil(requestedTokens));
+  const countRequest = options.requestAlreadyReserved !== true;
+  const redis = getRedisClient();
+  if (!redis) {
+    if (process.env.NODE_ENV === "production") {
+      throw new TileTallyHttpError(
+        503,
+        "ai_limiter_unavailable",
+        "Tile Tally AI is temporarily unavailable."
+      );
+    }
+    return countRequest
+      ? reserveInMemory(userId, reserveTokens)
+      : reserveBudgetInMemory(userId, reserveTokens, false);
   }
 
   const config = getAiBudgetConfig();
@@ -158,6 +226,7 @@ export async function reserveAiBudget(
         String(config.monthlyTokenCap),
         String(DAY_TTL_SECONDS),
         String(MONTH_TTL_SECONDS),
+        countRequest ? "1" : "0",
       ]
     );
   } catch {

@@ -35,7 +35,7 @@ type Props = {
     file: File,
     capturedAt: string,
     durationSeconds?: number,
-  ) => Promise<void>;
+  ) => Promise<string>;
   onDeleteMedia: (media: LedgerMedia) => Promise<void>;
 };
 

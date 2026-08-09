@@ -1,6 +1,7 @@
 import {
   test as base,
   type BrowserContext,
+  type Page,
   type Route,
 } from "@playwright/test";
 
@@ -14,6 +15,141 @@ const TINY_PNG = Buffer.from(
 );
 
 type JsonRecord = Record<string, unknown>;
+
+export type MockGameLedgerAiEndpoint = "apply" | "chat" | "vision";
+
+export type MockGameLedgerAiRequest = {
+  endpoint: MockGameLedgerAiEndpoint;
+  method: string;
+  body: unknown;
+  authorization: string | null;
+  url: string;
+};
+
+export type MockGameLedgerAiResponse = {
+  body: unknown;
+  status?: number;
+  headers?: Record<string, string>;
+  delayMs?: number;
+};
+
+export type MockGameLedgerAiResponder = (
+  request: MockGameLedgerAiRequest,
+) => MockGameLedgerAiResponse | Promise<MockGameLedgerAiResponse>;
+
+const GAME_LEDGER_AI_API_PATTERN = /\/api\/tile-tally\/(apply|chat|vision)(?:\?.*)?$/;
+
+async function aiRequestBody(route: Route): Promise<unknown> {
+  try {
+    return route.request().postDataJSON();
+  } catch {
+    return route.request().postData() ?? null;
+  }
+}
+
+/**
+ * Deterministic same-origin API mock for Game Ledger AI UI tests.
+ *
+ * Page routing is intentional: the general suite blocks service workers, so
+ * these handlers intercept browser fetches in both Chromium and mobile WebKit.
+ * They do not intercept fetches made inside the Next.js server process; route
+ * implementation tests should use pure injected dependencies instead.
+ */
+export class GameLedgerAiApiMock {
+  readonly requests: MockGameLedgerAiRequest[] = [];
+
+  private readonly responders: Record<MockGameLedgerAiEndpoint, MockGameLedgerAiResponder[]> = {
+    apply: [],
+    chat: [],
+    vision: [],
+  };
+
+  enqueue(endpoint: MockGameLedgerAiEndpoint, response: MockGameLedgerAiResponse | MockGameLedgerAiResponder) {
+    this.responders[endpoint].push(
+      typeof response === "function" ? response : () => response,
+    );
+  }
+
+  enqueueChat(response: MockGameLedgerAiResponse | MockGameLedgerAiResponder) {
+    this.enqueue("chat", response);
+  }
+
+  enqueueApply(response: MockGameLedgerAiResponse | MockGameLedgerAiResponder) {
+    this.enqueue("apply", response);
+  }
+
+  enqueueApplySuccess(body: unknown = { applied: true }) {
+    this.enqueueApply({ body, status: 200 });
+  }
+
+  enqueueApplyStale(message = "The game changed after this proposal was prepared.") {
+    this.enqueueApply({
+      status: 409,
+      body: { code: "stale_proposal", error: message },
+    });
+  }
+
+  enqueueVision(response: MockGameLedgerAiResponse | MockGameLedgerAiResponder) {
+    this.enqueue("vision", response);
+  }
+
+  count(endpoint?: MockGameLedgerAiEndpoint) {
+    return endpoint
+      ? this.requests.filter((request) => request.endpoint === endpoint).length
+      : this.requests.length;
+  }
+
+  async handle(route: Route) {
+    const request = route.request();
+    const match = new URL(request.url()).pathname.match(/\/api\/tile-tally\/(apply|chat|vision)$/);
+    const endpoint = match?.[1] as MockGameLedgerAiEndpoint | undefined;
+    if (!endpoint) {
+      await route.fallback();
+      return;
+    }
+
+    const captured: MockGameLedgerAiRequest = {
+      endpoint,
+      method: request.method(),
+      body: await aiRequestBody(route),
+      authorization: request.headers().authorization ?? null,
+      url: request.url(),
+    };
+    this.requests.push(captured);
+
+    const responder = this.responders[endpoint].shift();
+    const response: MockGameLedgerAiResponse = responder
+      ? await responder(captured)
+      : {
+          status: 500,
+          body: { error: `No mocked ${endpoint} response was queued.` },
+        };
+    if (response.delayMs && response.delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, Math.min(response.delayMs!, 5_000)));
+    }
+    await route.fulfill({
+      status: response.status ?? 200,
+      contentType: "application/json",
+      headers: {
+        "Cache-Control": "no-store",
+        ...response.headers,
+      },
+      body: JSON.stringify(response.body),
+    });
+  }
+}
+
+export async function registerGameLedgerAiApiMocks(page: Page) {
+  const mock = new GameLedgerAiApiMock();
+  const handler = (route: Route) => mock.handle(route);
+  await page.route(GAME_LEDGER_AI_API_PATTERN, handler);
+  return {
+    mock,
+    async dispose() {
+      await page.unroute(GAME_LEDGER_AI_API_PATTERN, handler);
+    },
+  };
+}
 
 export type MockLedgerEntity = {
   id: string;
@@ -172,6 +308,7 @@ export class GameLedgerBackend {
   loseNextAppendResponse = false;
   loseNextFinishResponse = false;
   loseNextMediaReservationResponse = false;
+  failNextHistorySnapshot = false;
   missingHistorySnapshot = false;
 
   private sequence = 1;
@@ -341,6 +478,15 @@ export class GameLedgerBackend {
     const body = await postData(route);
 
     if (rpc === "gameledger_history_snapshot") {
+      if (this.failNextHistorySnapshot) {
+        this.failNextHistorySnapshot = false;
+        await route.fulfill({
+          body: JSON.stringify({ code: "08006", message: "Simulated ledger refresh interruption" }),
+          contentType: "application/json",
+          status: 503,
+        });
+        return;
+      }
       if (this.missingHistorySnapshot) {
         await route.fulfill({
           body: JSON.stringify({ code: "PGRST202", message: "Could not find the function public.gameledger_history_snapshot in the schema cache" }),
@@ -592,10 +738,16 @@ async function seedAuthenticatedBrowser(context: BrowserContext) {
 }
 
 type LedgerFixtures = {
+  ledgerAiApi: GameLedgerAiApiMock;
   ledgerBackend: GameLedgerBackend;
 };
 
 export const test = base.extend<LedgerFixtures>({
+  ledgerAiApi: async ({ page }, use) => {
+    const registration = await registerGameLedgerAiApiMocks(page);
+    await use(registration.mock);
+    await registration.dispose();
+  },
   ledgerBackend: async ({ context, page }, use) => {
     await seedAuthenticatedBrowser(context);
     const backend = new GameLedgerBackend();

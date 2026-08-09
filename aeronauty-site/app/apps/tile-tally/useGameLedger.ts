@@ -357,10 +357,10 @@ export function useGameLedger() {
   }, [applySession, oauthCallbackError, recoverSession, supabase]);
 
   const refresh = useCallback(async () => {
-    if (!supabase || !session) return;
+    if (!supabase || !session) return false;
     const revision = authRevision.current;
     const userId = session.user.id;
-    if (activeUserId.current !== userId) return;
+    if (activeUserId.current !== userId) return false;
     const generation = refreshGeneration.current + 1;
     refreshGeneration.current = generation;
     const isCurrent = () => (
@@ -405,7 +405,7 @@ export function useGameLedger() {
       } else {
         snapshot = parseHistorySnapshot(snapshotResult.data, userId);
       }
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       const paths = nextMedia.map((item) => item.storage_path);
       let signedByPath = new Map<string, string>();
       let signingMessage: string | null = null;
@@ -419,7 +419,7 @@ export function useGameLedger() {
           signingMessage = "One or more private media previews could not be renewed.";
         }
       }
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       setEntities(snapshot.entities);
       setGames(snapshot.games
         .map((game) => ({ ...game, definition: normaliseGameProfile(game.definition) }))
@@ -438,12 +438,13 @@ export function useGameLedger() {
             },
       })));
       if (signingMessage) setError(`Your game loaded, but some private media previews are unavailable: ${signingMessage}`);
+      return true;
     } catch (refreshError) {
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       if (isAmbiguousPermissionError(refreshError)) {
         try {
           const { data, error: verificationError } = await supabase.auth.getUser(session.access_token);
-          if (!isCurrent()) return;
+          if (!isCurrent()) return false;
           if ((verificationError && isAuthError(verificationError)) || (!verificationError && !data.user)) recoverSession();
           else setError(messageFromError(refreshError));
         } catch {
@@ -451,6 +452,7 @@ export function useGameLedger() {
         }
       } else if (isLedgerAuthError(refreshError)) recoverSession();
       else setError(messageFromError(refreshError));
+      return false;
     } finally {
       if (isCurrent()) setDataLoading(false);
     }
@@ -532,7 +534,7 @@ export function useGameLedger() {
 
   const signInWithGoogleToken = useCallback(async (credential: string, nonce: string) => {
     if (!supabase) return;
-    await mutate(async () => {
+    return mutate(async () => {
       clearTileTallyBrowserAuthStorage();
       applySession(null, true);
       const { data, error: signInError } = await supabase.auth.signInWithIdToken({ provider: "google", token: credential, nonce });
@@ -649,11 +651,14 @@ export function useGameLedger() {
 
   const appendEvent = useCallback(async (input: AppendLedgerEventInput) => {
     if (!supabase || !session) return null;
-    const eventData: Record<string, JsonValue> = {};
+    const eventData: Record<string, JsonValue> = { ...(input.data ?? {}) };
     if (input.values && Object.keys(input.values).length) eventData.values = input.values;
     if (input.fields && Object.keys(input.fields).length) eventData.fields = input.fields;
+    if (JSON.stringify(eventData).length > 128_000) throw new Error("That game entry is too large.");
     const eventKind = cleanSlug(input.kind, "moment");
     const note = cleanName(input.note ?? "") || null;
+    const sourceKind = cleanSlug(input.source?.kind ?? "manual", "manual").replace(/_/g, ".");
+    const sourceData = input.source?.data ?? { client: "game_ledger_web" };
     const operationKey = stableOperationKey({
       actorParticipantId: input.participantId ?? null,
       eventData,
@@ -662,6 +667,9 @@ export function useGameLedger() {
       note,
       occurredAt: input.occurredAt ?? null,
       ownerId: session.user.id,
+      sourceData,
+      sourceKind,
+      sourceMediaId: input.source?.mediaId ?? null,
       voidsEventId: input.voidsEventId ?? null,
     });
     let operation = pendingEventOperations.current.get(operationKey);
@@ -685,8 +693,9 @@ export function useGameLedger() {
         p_occurred_at: operation.occurredAt,
         p_voids_event_id: input.voidsEventId ?? null,
         p_source_id: operation.sourceId,
-        p_source_kind: "manual",
-        p_source_data: { client: "game_ledger_web" },
+        p_source_kind: sourceKind,
+        p_source_data: sourceData,
+        p_media_id: input.source?.mediaId ?? null,
       });
       if (rpcError) throw rpcError;
       const created = parseRpcEvent(data);
@@ -705,12 +714,16 @@ export function useGameLedger() {
   const finishGame = useCallback(async (input: FinishLedgerGameInput) => {
     if (!supabase || !session) return;
     const note = cleanName(input.note ?? "") || null;
+    const sourceKind = cleanSlug(input.source?.kind ?? "manual", "manual").replace(/_/g, ".");
+    const sourceData = input.source?.data ?? { client: "game_ledger_web" };
     const operationKey = stableOperationKey({
       endedAt: input.endedAt ?? null,
       gameId: input.gameId,
       note,
       ownerId: session.user.id,
       result: input.result,
+      sourceData,
+      sourceKind,
     });
     let operation = pendingFinishOperations.current.get(operationKey);
     if (!operation) {
@@ -730,8 +743,8 @@ export function useGameLedger() {
         p_note: note,
         p_ended_at: operation.endedAt,
         p_source_id: operation.sourceId,
-        p_source_kind: "manual",
-        p_source_data: { client: "game_ledger_web" },
+        p_source_kind: sourceKind,
+        p_source_data: sourceData,
       });
       if (rpcError) throw rpcError;
       if (pendingFinishOperations.current.get(operationKey) === operation) {
@@ -747,6 +760,7 @@ export function useGameLedger() {
     file: File,
     capturedAt: string,
     durationSeconds?: number,
+    timestampKind: "captured_at" | "imported_at" = "captured_at",
   ) => {
     if (!supabase || !session) throw new Error("Sign in before adding media.");
     const mimeType = mimeTypeFor(file, kind);
@@ -777,6 +791,7 @@ export function useGameLedger() {
       kind,
       mimeType,
       ownerId: session.user.id,
+      timestampKind,
     });
     let operation = pendingMediaOperations.current.get(operationKey);
     if (!operation) {
@@ -788,7 +803,7 @@ export function useGameLedger() {
       pendingMediaOperations.current.set(operationKey, operation);
     }
 
-    await mutate(async () => {
+    return mutate(async () => {
       const { error: rowError } = await supabase.from("gameledger_media").insert({
         id: operation.mediaId,
         owner_id: session.user.id,
@@ -802,7 +817,12 @@ export function useGameLedger() {
         height: null,
         captured_at: capturedAt,
         caption: null,
-        media_data: { original_name: file.name, last_modified: file.lastModified },
+        media_data: {
+          original_name: file.name,
+          last_modified: file.lastModified,
+          timeline_timestamp_kind: timestampKind,
+          [timestampKind]: capturedAt,
+        },
       });
       if (rowError) {
         const { data: existingRows, error: lookupError } = await supabase
@@ -863,6 +883,7 @@ export function useGameLedger() {
         pendingMediaOperations.current.delete(operationKey);
       }
       await refresh();
+      return operation.mediaId;
     });
   }, [mutate, refresh, session, supabase]);
 

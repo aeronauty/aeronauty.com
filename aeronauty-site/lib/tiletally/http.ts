@@ -1,19 +1,8 @@
 import "server-only";
 import { NextResponse } from "next/server";
+import { TileTallyHttpError } from "@/lib/tiletally/http-error";
 
-export class TileTallyHttpError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly publicMessage: string;
-
-  constructor(status: number, code: string, publicMessage: string) {
-    super(code);
-    this.name = "TileTallyHttpError";
-    this.status = status;
-    this.code = code;
-    this.publicMessage = publicMessage;
-  }
-}
+export { TileTallyHttpError } from "@/lib/tiletally/http-error";
 
 export async function readBoundedJson(req: Request, maxBytes: number): Promise<unknown> {
   const contentType = req.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();

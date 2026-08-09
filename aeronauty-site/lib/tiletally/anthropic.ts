@@ -42,12 +42,14 @@ type AnthropicCall = {
   messages: AnthropicMessage[];
   tools?: AnthropicToolDefinition[];
   forceTool?: string;
+  maxTokens?: number;
+  requestAlreadyReserved?: boolean;
 };
 
-function readMaxTokens(): number {
-  const parsed = Number(process.env.TILETALLY_AI_MAX_TOKENS ?? "1200");
+function readMaxTokens(requested?: number): number {
+  const parsed = Number(requested ?? process.env.TILETALLY_AI_MAX_TOKENS ?? "1200");
   if (!Number.isInteger(parsed)) return 1_200;
-  return Math.max(256, Math.min(4_096, parsed));
+  return Math.max(256, Math.min(8_192, parsed));
 }
 
 export function getTileTallyClaudeModel(kind: "chat" | "vision"): string {
@@ -117,7 +119,7 @@ export async function callTileTallyClaude(input: AnthropicCall): Promise<Anthrop
     );
   }
 
-  const maxTokens = readMaxTokens();
+  const maxTokens = readMaxTokens(input.maxTokens);
   const requestBody = {
     model: input.model,
     max_tokens: maxTokens,
@@ -134,7 +136,8 @@ export async function callTileTallyClaude(input: AnthropicCall): Promise<Anthrop
   };
   const reservation = await reserveAiBudget(
     input.userId,
-    estimateInputTokens(requestBody) + maxTokens
+    estimateInputTokens(requestBody) + maxTokens,
+    { requestAlreadyReserved: input.requestAlreadyReserved },
   );
 
   const controller = new AbortController();

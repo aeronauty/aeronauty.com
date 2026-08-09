@@ -42,11 +42,18 @@ export type AppendLedgerEventInput = {
   gameId: string;
   participantId?: string | null;
   kind: string;
+  /** Additional schema-driven event payload beyond the conventional values/fields keys. */
+  data?: Record<string, JsonValue>;
   values?: Record<string, JsonValue>;
   fields?: Record<string, JsonValue>;
   note?: string;
   occurredAt?: string;
   voidsEventId?: string | null;
+  source?: {
+    kind: string;
+    data?: Record<string, JsonValue>;
+    mediaId?: string | null;
+  };
 };
 
 export type FinishLedgerGameInput = {
@@ -54,4 +61,8 @@ export type FinishLedgerGameInput = {
   result: Record<string, JsonValue>;
   note?: string;
   endedAt?: string;
+  source?: {
+    kind: string;
+    data?: Record<string, JsonValue>;
+  };
 };

@@ -45,7 +45,7 @@ type Props = {
     file: File,
     capturedAt: string,
     durationSeconds?: number,
-  ) => Promise<void>;
+  ) => Promise<string>;
   onDeleteMedia: (media: LedgerMedia) => Promise<void>;
 };
 
@@ -648,7 +648,7 @@ export default function GameSession({
         onDeleteMedia={deleteReplayMedia}
         disabled={busy}
         limits={{ maxVideoBytes: 45 * 1024 * 1024, maxVideoSeconds: 60, maxImageBytes: 12 * 1024 * 1024, maxMediaItems: 20 }}
-        privacyNotice={<>Photos and clips stay in private account-isolated storage. Nothing records in the background, and media is never sent to an AI service unless you explicitly choose a future analysis feature.</>}
+        privacyNotice={<>Photos and clips stay in private account-isolated storage. Nothing records in the background. Only a metadata-free copy of a photo you explicitly choose to analyze is sent to the configured AI service.</>}
       />
 
       {game.status === "in_progress" && !showFinish && (

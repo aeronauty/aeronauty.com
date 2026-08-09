@@ -560,7 +560,7 @@ test("an interrupted upload removes partial bytes and releases its media reserva
   });
   await page.getByRole("button", { name: "Add to timeline" }).click();
 
-  await expect(page.getByRole("alert").filter({ hasText: /^Simulated upload interruption$/ }).first()).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Simulated upload interruption" }).first()).toBeVisible();
   await expect.poll(() => ledgerBackend.removedPaths.length).toBe(1);
   expect(ledgerBackend.media).toHaveLength(1);
   expect(ledgerBackend.media[0]?.deleted_at).not.toBeNull();
