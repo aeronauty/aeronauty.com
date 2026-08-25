@@ -16,16 +16,31 @@ export type PrivateArticle = {
   assetPrefix: string;
 };
 
-export const privateArticles: PrivateArticle[] = topologyArticles.map((article) => ({
-  slug: article.slug,
-  title: article.title,
-  description: article.description,
-  date: article.date,
-  status: article.status,
-  tags: article.tags,
-  buildFile: article.buildFile,
-  assetPrefix: article.labAssetPrefix,
-}));
+const computationalExperimentation: PrivateArticle = {
+  slug: "computational-experimentation",
+  title: "Computational Experimentation",
+  description:
+    "What changes when engineering code becomes cheap to produce, but trust still has to be earned one known case at a time.",
+  date: "2026-08-25",
+  status: "Draft",
+  tags: ["Aerodynamics", "AI", "Verification", "Interactive"],
+  buildFile: "computational-experimentation/article.html",
+  assetPrefix: "/lab/articles/topology-instinct/assets",
+};
+
+export const privateArticles: PrivateArticle[] = [
+  ...topologyArticles.map((article) => ({
+    slug: article.slug,
+    title: article.title,
+    description: article.description,
+    date: article.date,
+    status: article.status,
+    tags: article.tags,
+    buildFile: article.buildFile,
+    assetPrefix: article.labAssetPrefix,
+  })),
+  computationalExperimentation,
+];
 
 export function getPrivateArticle(slug: string): PrivateArticle | undefined {
   return privateArticles.find((a) => a.slug === slug);
