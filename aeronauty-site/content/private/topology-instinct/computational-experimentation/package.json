@@ -3,9 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node build_article.mjs",
-    "check": "node build_article.mjs --check",
     "sync": "node sync-google-doc.mjs",
-    "test": "node test-vortex-core.mjs && node test-calibration.mjs && node build_article.mjs --check"
+    "validate": "node validate-article.mjs",
+    "test": "node test-vortex-core.mjs && node validate-article.mjs"
   }
 }
