@@ -20,8 +20,8 @@ const standalonePrivateArticles: PrivateArticle[] = [
     date: "2026-08-25",
     status: "Draft",
     tags: ["Engineering", "AI", "Verification", "Interactive", "Long read"],
-    buildFile: "article.html",
-    assetPrefix: "/lab/computational-experimentation/assets",
+    buildFile: "computational-experimentation/article.html",
+    assetPrefix: "/lab/articles/topology-instinct/assets",
   },
 ];
 
