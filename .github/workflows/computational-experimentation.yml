@@ -23,13 +23,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check article scripts
+      - name: Check scripts
         run: |
-          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/article-runtime.js
-          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/build_article.mjs
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/vortex-core.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs
-          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/figures/calibration-bench.mjs
-      - name: Test shared aerodynamic primitives
-        run: node --test aeronauty-site/content/private/topology-instinct/computational-experimentation/test-calibration.mjs
-      - name: Check generated article is current
-        run: node aeronauty-site/content/private/topology-instinct/computational-experimentation/build_article.mjs --check
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
+      - name: Test shared aerodynamic primitives and article package
+        run: |
+          node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-vortex-core.mjs
+          node aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
