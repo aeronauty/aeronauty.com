@@ -10,65 +10,55 @@ The prose lives in the Google Doc, not in this directory:
 - Tab: `t.0`
 - URL: <https://docs.google.com/document/d/1Kr4WRmlAJeHkxZPBLpQl3Wz2U2rHTvRkh3a8EDhLMEs/edit?tab=t.0>
 
-`source.generated.txt` and `source.json` are generated derivatives. Do not edit the prose snapshot by hand as a normal authoring workflow. `article.html` is a stable article shell; `render-source.js` turns the synchronised prose and its editorial markers into the actual article at runtime.
+`article-source.md` and `source-metadata.json` are generated derivatives. Do not hand-edit the prose snapshot. `article.html` owns only presentation and reads the snapshot at runtime.
 
-That split is deliberate: prose changes happen in Docs; article presentation, callouts and numerical instruments live here.
+## Sync and validate
 
-## Sync, build and test
-
-The sync script uses Application Default Credentials through the existing `googleapis` dependency. The authenticated principal must be able to read the Doc.
+The sync script uses Application Default Credentials through the site’s existing `googleapis` dependency. The authenticated principal must be able to read the Doc.
 
 ```bash
-cd aeronauty-site/content/private/topology-instinct/computational-experimentation
-npm run sync
-npm test
+cd aeronauty-site
+npm run sync:computational-experimentation
+npm run test:computational-experimentation
 ```
 
-`npm run sync`:
+That workflow:
 
-1. reads the authoritative Google Doc and selected tab;
-2. writes a normalised text snapshot and revision metadata;
-3. rewrites the stable article shell.
+1. reads the authoritative Google Doc and tab;
+2. writes `article-source.md` plus revision metadata;
+3. validates the marker contract and article shell;
+4. runs the numerical acceptance tests used by the visible vortex demonstrations.
 
-Useful individual commands:
-
-```bash
-npm run build
-npm run check
-node test-vortex-core.mjs
-node test-calibration.mjs
-```
-
-For local user credentials, `gcloud auth application-default login` is the simplest route. CI can use a service account whose email has been granted read access to the Doc.
+For local user credentials, `gcloud auth application-default login` is the simplest route. CI does not need Doc credentials because it validates the committed snapshot rather than silently pulling mutable prose.
 
 ## Editorial markers
 
-The runtime renderer turns the prose editor's markers into article components:
+The runtime renderer turns the editor’s markers into article components:
 
 - `[<callout>... ]` → interactive asterisk aside;
-- `[<put this in a little side callout>... ]` → a wider side aside;
-- the five panel/wake instructions → five modes of the shared calibration bench;
-- `[<Show the page of my dissertation.>]` → `figures/peters-he-dissertation.png` when present.
+- `[<put this in a little side callout>... ]` → wider side aside;
+- the five panel/wake instructions → the corresponding interactive calibration instruments;
+- `[<Show the page of my dissertation.>]` → an explicitly labelled schematic until the archival page is supplied;
+- `— — —` → a styled section boundary.
 
-The dissertation page is intentionally not fabricated. Until that source image is supplied, the private preview shows a clearly labelled asset gap.
+Unrecognised top-level `[<...>]` instructions render as visible errors rather than disappearing.
 
 ## Numerical trust case
 
-`vortex-core.js` / `calibration-core.mjs` are used by the browser figures and the automated checks. The tests cover:
+`article.html` and `test-vortex-core.mjs` use `vortex-core.js`. The test checks:
 
-- a canonical finite-vortex-segment Biot–Savart case;
-- closed-form influence against numerical quadrature;
+- the canonical unit-panel result;
+- closed form against independent midpoint quadrature;
 - vector superposition;
-- trailing-vorticity strength bookkeeping;
-- shed/bound circulation balance;
-- Theodorsen reference anchors generated from the Hankel-function definition.
+- closure of discrete trailing-circulation jumps;
+- Kelvin balance between bound and shed circulation.
 
 This is deliberate: the demonstration and the automated check are two views of the same primitive.
 
 ## Private preview
 
-The package is served through the existing gated topology-article asset route and is registered only in the private article list:
+The package is served by the existing gated topology-article asset route and registered in private writing at:
 
 `/lab/articles/computational-experimentation`
 
-It is not added to the public writing registry by this branch.
+It is not added to the public writing index.
