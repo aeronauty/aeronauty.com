@@ -20,7 +20,8 @@ const parseableSource = source.replace(/^\uFEFF/, '');
 const sourceTitle = parseableSource
   .split(/\r?\n/)
   .map((line) => line.trim())
-  .find((line) => line && !line.startsWith('<!--'));
+  .find((line) => line && !line.startsWith('<!--'))
+  ?.replace(/^#\s+/, '');
 assert.equal(sourceTitle, 'Computational Experimentation');
 assert.equal((parseableSource.match(/^— — —$/gm) || []).length, 5, 'expected five section boundaries');
 assert.ok(parseableSource.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
