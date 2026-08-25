@@ -13,23 +13,27 @@ const [source, article, metadataText] = await Promise.all([
 ]);
 const metadata = JSON.parse(metadataText);
 
-// Google exports can retain a UTF-8 BOM ahead of the generated-source
-// comments. Strip it for structural parsing while keeping the original bytes
-// intact for the provenance hash below.
+// Google exports can retain a UTF-8 BOM. The checked-in snapshot also carries
+// two generated-file warnings which are deliberately excluded from the
+// provenance hash recorded by the sync step.
 const parseableSource = source.replace(/^\uFEFF/, '');
-const sourceTitle = parseableSource
+const hashedSource = parseableSource.replace(
+  /^<!-- GENERATED FROM GOOGLE DOC[^\n]*-->\n<!-- EDIT THE GOOGLE DOC[^\n]*-->\n\n/,
+  '',
+);
+const sourceTitle = hashedSource
   .split(/\r?\n/)
   .map((line) => line.trim())
-  .find((line) => line && !line.startsWith('<!--'))
+  .find(Boolean)
   ?.replace(/^#\s+/, '');
 assert.equal(sourceTitle, 'Computational Experimentation');
-assert.equal((parseableSource.match(/^— — —$/gm) || []).length, 5, 'expected five section boundaries');
-assert.ok(parseableSource.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
-assert.ok(parseableSource.includes('Chengjian He knew this'));
+assert.equal((hashedSource.match(/^— — —$/gm) || []).length, 5, 'expected five section boundaries');
+assert.ok(hashedSource.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
+assert.ok(hashedSource.includes('Chengjian He knew this'));
 assert.ok(metadata.revisionId?.startsWith('AIroW37Tx'));
-assert.equal(createHash('sha256').update(source, 'utf8').digest('hex'), metadata.sourceSha256);
+assert.equal(createHash('sha256').update(hashedSource, 'utf8').digest('hex'), metadata.sourceSha256);
 
-const markerParagraphs = parseableSource
+const markerParagraphs = hashedSource
   .split(/\n\s*\n/)
   .map((value) => value.trim())
   .filter((value) => /^\[<.*>\]$/s.test(value));
