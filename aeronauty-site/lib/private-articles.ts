@@ -7,16 +7,14 @@ export type PrivateArticle = {
   date: string;
   status: string;
   tags: string[];
-  /** Filename inside the article package's build root, served via the
-   *  gated asset route. e.g. "article-1.html" → resolved to
-   *  /lab/articles/topology-instinct/assets/article-1.html */
+  /** Filename or nested path inside the topology-instinct article package,
+   *  served through the gated asset route. */
   buildFile: string;
-  /** Asset-route prefix (mostly here for forward-compatibility if more
-   *  packages are added later). */
+  /** Asset-route prefix for the package containing buildFile. */
   assetPrefix: string;
 };
 
-export const privateArticles: PrivateArticle[] = topologyArticles.map((article) => ({
+const topologyPrivateArticles: PrivateArticle[] = topologyArticles.map((article) => ({
   slug: article.slug,
   title: article.title,
   description: article.description,
@@ -26,6 +24,21 @@ export const privateArticles: PrivateArticle[] = topologyArticles.map((article) 
   buildFile: article.buildFile,
   assetPrefix: article.labAssetPrefix,
 }));
+
+export const privateArticles: PrivateArticle[] = [
+  ...topologyPrivateArticles,
+  {
+    slug: "computational-experimentation",
+    title: "Computational Experimentation",
+    description:
+      "What changes when engineering code becomes cheap to produce, but trust still has to be earned against known physical behaviour.",
+    date: "2026-08-25",
+    status: "Draft",
+    tags: ["Computational aerodynamics", "AI", "Verification", "Interactive"],
+    buildFile: "computational-experimentation/article.html",
+    assetPrefix: "/lab/articles/topology-instinct/assets",
+  },
+];
 
 export function getPrivateArticle(slug: string): PrivateArticle | undefined {
   return privateArticles.find((a) => a.slug === slug);
