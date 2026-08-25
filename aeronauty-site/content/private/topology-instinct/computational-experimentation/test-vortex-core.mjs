@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import vm from 'node:vm';
 
-const require = createRequire(import.meta.url);
+// Load the exact browser-delivered UMD file in a browser-like global context.
+// This avoids Node's package-type rules silently turning a browser script into
+// an empty ESM namespace while still testing the implementation users run.
+const source = readFileSync(new URL('./vortex-core.js', import.meta.url), 'utf8');
+const sandbox = {};
+sandbox.globalThis = sandbox;
+vm.runInNewContext(source, sandbox, { filename: 'vortex-core.js' });
+
 const {
   addVelocities,
   shedCirculation,
@@ -11,7 +19,7 @@ const {
   vectorDifferenceMagnitude,
   vortexPanelVelocity,
   vortexQuadrature,
-} = require('./vortex-core.js');
+} = sandbox.ComputationalExperimentKernels;
 
 test('closed-form vortex panel agrees with independent quadrature', () => {
   const cases = [
