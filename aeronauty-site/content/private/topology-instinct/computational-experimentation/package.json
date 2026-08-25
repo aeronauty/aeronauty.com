@@ -1,0 +1,11 @@
+{
+  "name": "@aeronauty/computational-experimentation-article",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build_article.mjs",
+    "check": "node build_article.mjs --check",
+    "sync": "node sync-google-doc.mjs",
+    "test": "node test-vortex-core.mjs && node test-calibration.mjs && node build_article.mjs --check"
+  }
+}
