@@ -3,16 +3,14 @@ name: Computational experimentation essay
 on:
   pull_request:
     paths:
-      - 'aeronauty-site/content/private/computational-experimentation/**'
-      - 'aeronauty-site/app/lab/computational-experimentation/**'
+      - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
       - 'aeronauty-site/lib/private-articles.ts'
       - 'aeronauty-site/package.json'
       - '.github/workflows/computational-experimentation.yml'
   push:
     branches: [main]
     paths:
-      - 'aeronauty-site/content/private/computational-experimentation/**'
-      - 'aeronauty-site/app/lab/computational-experimentation/**'
+      - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
       - 'aeronauty-site/lib/private-articles.ts'
       - 'aeronauty-site/package.json'
       - '.github/workflows/computational-experimentation.yml'
@@ -27,10 +25,11 @@ jobs:
           node-version: 22
       - name: Check article scripts
         run: |
-          node --check aeronauty-site/content/private/computational-experimentation/article.js
-          node --check aeronauty-site/content/private/computational-experimentation/build-article.mjs
-          node --check aeronauty-site/content/private/computational-experimentation/sync-google-doc.mjs
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/article-runtime.js
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/build_article.mjs
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/figures/calibration-bench.mjs
       - name: Test shared aerodynamic primitives
-        run: node aeronauty-site/content/private/computational-experimentation/test-vortex-core.mjs
-      - name: Rebuild the article from the Google Doc snapshot
-        run: node aeronauty-site/content/private/computational-experimentation/build-article.mjs
+        run: node --test aeronauty-site/content/private/topology-instinct/computational-experimentation/test-calibration.mjs
+      - name: Check generated article is current
+        run: node aeronauty-site/content/private/topology-instinct/computational-experimentation/build_article.mjs --check
