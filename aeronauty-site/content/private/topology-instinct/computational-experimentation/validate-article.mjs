@@ -13,27 +13,27 @@ const [source, article, metadataText] = await Promise.all([
 ]);
 const metadata = JSON.parse(metadataText);
 
-// Google exports can retain a UTF-8 BOM. The checked-in snapshot also carries
-// two generated-file warnings which are deliberately excluded from the
-// provenance hash recorded by the sync step.
+// Provenance is byte-exact: metadata hashes the checked-in snapshot exactly as
+// served. Generated comments and a possible UTF-8 BOM are stripped only for
+// structural parsing below.
+assert.equal(createHash('sha256').update(source, 'utf8').digest('hex'), metadata.sourceSha256);
 const parseableSource = source.replace(/^\uFEFF/, '');
-const hashedSource = parseableSource.replace(
+const essaySource = parseableSource.replace(
   /^<!-- GENERATED FROM GOOGLE DOC[^\n]*-->\n<!-- EDIT THE GOOGLE DOC[^\n]*-->\n\n/,
   '',
 );
-const sourceTitle = hashedSource
+const sourceTitle = essaySource
   .split(/\r?\n/)
   .map((line) => line.trim())
   .find(Boolean)
   ?.replace(/^#\s+/, '');
 assert.equal(sourceTitle, 'Computational Experimentation');
-assert.equal((hashedSource.match(/^— — —$/gm) || []).length, 5, 'expected five section boundaries');
-assert.ok(hashedSource.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
-assert.ok(hashedSource.includes('Chengjian He knew this'));
+assert.equal((essaySource.match(/^— — —$/gm) || []).length, 5, 'expected five section boundaries');
+assert.ok(essaySource.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
+assert.ok(essaySource.includes('Chengjian He knew this'));
 assert.ok(metadata.revisionId?.startsWith('AIroW37Tx'));
-assert.equal(createHash('sha256').update(hashedSource, 'utf8').digest('hex'), metadata.sourceSha256);
 
-const markerParagraphs = hashedSource
+const markerParagraphs = essaySource
   .split(/\n\s*\n/)
   .map((value) => value.trim())
   .filter((value) => /^\[<.*>\]$/s.test(value));
