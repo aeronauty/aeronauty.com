@@ -13,18 +13,22 @@ const [source, article, metadataText] = await Promise.all([
 ]);
 const metadata = JSON.parse(metadataText);
 
-const sourceTitle = source
+// Google exports can retain a UTF-8 BOM ahead of the generated-source
+// comments. Strip it for structural parsing while keeping the original bytes
+// intact for the provenance hash below.
+const parseableSource = source.replace(/^\uFEFF/, '');
+const sourceTitle = parseableSource
   .split(/\r?\n/)
   .map((line) => line.trim())
   .find((line) => line && !line.startsWith('<!--'));
 assert.equal(sourceTitle, 'Computational Experimentation');
-assert.equal((source.match(/^— — —$/gm) || []).length, 5, 'expected five section boundaries');
-assert.ok(source.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
-assert.ok(source.includes('Chengjian He knew this'));
+assert.equal((parseableSource.match(/^— — —$/gm) || []).length, 5, 'expected five section boundaries');
+assert.ok(parseableSource.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
+assert.ok(parseableSource.includes('Chengjian He knew this'));
 assert.ok(metadata.revisionId?.startsWith('AIroW37Tx'));
 assert.equal(createHash('sha256').update(source, 'utf8').digest('hex'), metadata.sourceSha256);
 
-const markerParagraphs = source
+const markerParagraphs = parseableSource
   .split(/\n\s*\n/)
   .map((value) => value.trim())
   .filter((value) => /^\[<.*>\]$/s.test(value));
