@@ -29,6 +29,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Verify computational-experimentation primitives
+        run: npm run test:computational-experimentation
+
       # Temporarily move dynamic routes out so static export succeeds
       # (dashboard + API routes can't be statically exported)
       - name: Prepare for static export
@@ -38,14 +41,14 @@ jobs:
           mv app/api /tmp/dynamic-routes/ 2>/dev/null || true
           mv middleware.ts /tmp/dynamic-routes/ 2>/dev/null || true
           # Add static export config
-          cat > next.config.mjs << 'EOF'
+          cat > next.config.mjs << 'CONFIG'
           /** @type {import('next').NextConfig} */
           const nextConfig = {
             output: "export",
             images: { unoptimized: true },
           };
           export default nextConfig;
-          EOF
+          CONFIG
 
       - run: npm run build
 
