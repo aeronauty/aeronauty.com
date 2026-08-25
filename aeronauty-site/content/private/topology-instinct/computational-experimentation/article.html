@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Computational Experimentation — Aeronauty</title>
+<meta name="description" content="What changes when engineering code becomes cheap to produce, but trust still has to be earned one known case at a time."/>
+<meta name="author" content="Harry Smith"/>
+<link rel="preconnect" href="https://rsms.me/"/>
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+<link rel="stylesheet" href="article.css"/>
+<style>
+@media(max-width:480px){
+  .ti-hero h1{
+    font-size:clamp(2.05rem,10.6vw,2.65rem);
+    letter-spacing:-.065em;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+}
+</style>
+</head>
+<body>
+<div class="ti-progress" aria-hidden="true"></div>
+<main class="ti-page">
+  <header class="ti-mast"><a href="/writing" class="ti-mast-brand">aeronauty.com</a><span>Computational experimentation · draft</span></header>
+  <section class="ti-hero"><canvas id="ce-hero-canvas" aria-hidden="true"></canvas><div class="ti-hero-copy"><span class="ti-kicker">Engineering · AI · verification</span><h1>Computational<br/>Experimentation</h1><p class="ti-hero-dek">I stopped treating authorship as evidence and started treating the computation like an instrument.</p></div></section>
+  <article id="ce-article" class="ti-prose ti-narrow"><p>Loading the Google Doc snapshot…</p></article>
+  <footer class="ti-foot ti-narrow"><span id="ce-source-note">Google Doc source</span><a href="https://docs.google.com/document/d/1Kr4WRmlAJeHkxZPBLpQl3Wz2U2rHTvRkh3a8EDhLMEs/edit?tab=t.0" target="_blank" rel="noreferrer">Open prose source ↗</a></footer>
+</main>
+<script src="vortex-core.js"></script>
+<script type="module">
+  import { renderArticle } from './article-renderer.mjs';
+  await renderArticle();
+  await import('./article.js');
+</script>
+</body>
+</html>

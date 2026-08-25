@@ -1,0 +1,30 @@
+name: Computational experimentation article
+
+on:
+  pull_request:
+    paths:
+      - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
+      - 'aeronauty-site/scripts/sync-computational-experimentation.mjs'
+      - 'aeronauty-site/lib/private-articles.ts'
+      - 'aeronauty-site/package.json'
+      - '.github/workflows/computational-experimentation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
+      - 'aeronauty-site/scripts/sync-computational-experimentation.mjs'
+      - 'aeronauty-site/lib/private-articles.ts'
+      - 'aeronauty-site/package.json'
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aeronauty-site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run test:computational-experimentation

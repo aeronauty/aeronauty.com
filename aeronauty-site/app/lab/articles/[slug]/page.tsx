@@ -16,20 +16,20 @@ export default function LabArticlePage({ params }: { params: { slug: string } })
 
   return (
     <main className="flex min-h-screen flex-col bg-[var(--paper)] text-stone-950">
-      <header className="flex flex-shrink-0 items-center justify-between border-b border-stone-200 bg-[var(--paper)] px-6 py-3">
-        <div className="flex items-center gap-4">
+      <header className="flex flex-shrink-0 items-center justify-between border-b border-stone-200 bg-[var(--paper)] px-4 py-3 sm:px-6">
+        <div className="flex min-w-0 items-center gap-4">
           <Link
             href="/lab/writing"
-            className="text-sm font-semibold text-[var(--accent)] hover:text-stone-950"
+            className="whitespace-nowrap text-sm font-semibold text-[var(--accent)] hover:text-stone-950"
           >
             Private writing
           </Link>
-          <span className="text-sm text-stone-400">/</span>
-          <span className="text-sm text-stone-500">{article.title}</span>
+          <span className="hidden text-sm text-stone-400 sm:inline">/</span>
+          <span className="hidden truncate text-sm text-stone-500 sm:inline">{article.title}</span>
         </div>
         <a
           href="/api/lab/logout"
-          className="text-sm text-stone-500 hover:text-stone-950"
+          className="ml-4 whitespace-nowrap text-sm text-stone-500 hover:text-stone-950"
         >
           Sign out
         </a>
