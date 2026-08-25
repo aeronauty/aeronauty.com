@@ -1,7 +1,7 @@
 {
   "name": "@aeronauty/computational-experimentation-article",
   "private": true,
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "sync": "node sync-google-doc.mjs",
     "validate": "node validate-article.mjs",
