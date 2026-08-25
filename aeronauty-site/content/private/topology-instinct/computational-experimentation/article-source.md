@@ -1,0 +1,135 @@
+<!-- GENERATED FROM GOOGLE DOC 1Kr4WRmlAJeHkxZPBLpQl3Wz2U2rHTvRkh3a8EDhLMEs. DO NOT EDIT PROSE HERE. Run npm run sync:computational-experimentation. -->
+
+# Computational Experimentation
+
+For the last year or so, there’s been a niggling thought in my head: I might be a fraud. Sometimes I still think so.
+
+Not because I'd discovered I didn't understand the field in which I’ve become a bit of an accidental expert: computational aerodynamics. I've written panel codes in MATLAB, Python and Rust. \[\<put this in a little side callout\>I've written bits of them in fucking VB inside Excel, which is the kind of thing one admits only after the statute of limitations has run out.\] I know what these methods are meant to do. I know the equations. More usefully these days, I know most of the ways you can mess them up, what the wrong answers look like, and which symptoms give the game away.
+
+The fraudulent feeling started when I realised I was building them without writing most of the code myself.
+
+Over the last few months I've used large language models to help port parts of XFOIL into Rust, build a modern panel-code playground, and reach for numerical machinery I understand mathematically but would never previously have had the time — or the GPU fluency — to implement properly.
+
+I could have built versions of these things before. I have built versions of them before. I just couldn't have built this much, in this many unfamiliar languages, this fast.
+
+This felt like cheating. If I’m not struggling and writing every line, then am I really accomplishing anything?
+
+There's a comforting physicality to writing code yourself \[\<callout\>Though I’ll confess, it’s incredibly freeing not to have to write all of it.\]. You type each line. You watch the variables move through it. You give them silly names you regret later. You suffer every off-by-one personally, and by the time the thing works you feel you've earned the result in blood.
+
+Writing code this way feels like evidence of understanding and ability because the struggle is memorable.
+
+But struggling is not a verification method.
+
+— — —
+
+Over long car drives of introspection — in which I admittedly fleshed out the bones of this essay with voice-to-text — I assuaged some of the guilt by realising that even when I wrote code “acoustically”, I never really wrote every line \[\<callout\>Do we have a name for non-agentic coding? My vote is for acoustic.\].
+
+What I've always done — since long before any of the LLM tools — is take a physical relationship and turn it into something I can play with.
+
+It started small and stupid with MATLAB as an undergrad. Write a Kδ=P finite-element solver, courtesy of Chris York’s class, plot the truss, change a hard-coded constant, run it again, watch the structure move. Put it in a loop. Add a dimension. Then Python \[\<callout\>I switched during Covid, when my students couldn’t access MATLAB off campus. I’ve never looked back. I react to MATLAB users like a former smoker: “I don’t understand how you can still do that to yourself.” Unlike cigarettes, I don’t crave MATLAB when I’m drunk. My wife might prefer it if I came home smelling of toolboxes.\]. Then sliders, interactive plots, Dash, JavaScript — eventually my own plotting library, because I needed views to stay in sync in a way nothing off the shelf would do.
+
+The tools kept changing. The instinct never did. Give me a relationship and I will build you a thing you can poke \[\<callout\>Anyone who knows me knows I couldn’t write that sentence without admitting it’s risqué.\].
+
+Because that's what understanding is to me. A curve is an operator \[\<callout\>Not the cool kind. \<add a pic of Obi-Wan-Nairobi\>\] — a rule that takes a number and hands you back another one. A surface is the same move made visible; higher dimensions are just more of it. A proof can tell me the relationship is sound, and the mathematics can tell me why. I trust myself to use it once I've built a little widget that lets me push on it and watch it push back.
+
+Which means the code was never the point. The instrument was.
+
+— — —
+
+Take NumPy. When I first leaned on `np.linalg`, I checked matrix multiplication, addition and inversion against a 3×3 I could grind out by hand — back when I could do that without checking the result with NumPy. Then orthogonal matrices, whose inverse is just the transpose, because those are cheap to check. That did not validate the whole linear-algebra stack. It gave me enough local confidence in the operations I needed.
+
+I could inspect the implementation. I can read C++ and Fortran well enough to trace how information flows. But that is the expensive path — one I did not want or need to take \[\<callout\>I’d also 100% not have done it before an ADHD diagnosis and prescription. “Adderall on tap” is funnier, but probably less fair.\]. Comparing the tool with an answer I already knew was cheap. I’ve come to realise that this is calibration \[\<callout\>The idea of verification being cheaper than recreation is a large part of my thesis.\].
+
+I don’t need to know how to manufacture a strain gauge to trust one. I need enough appreciation of a full or half bridge to understand its limits and failure modes, and I need to know how to load it with something known and see whether it answers correctly. That is the experimental method in engineering. I reckon the new age of LLMs makes it just as relevant to code — provided you actually apply it.
+
+So my approach to building a panel method with LLMs is the same as my old approach to writing one in Python. I don’t say, “Claude — build me a panel method. Make no mistakes.” I don’t wait days, burn hundreds of credits, and only then ask whether the finished thing produces a pretty pressure distribution over an aircraft. It obviously would not.
+
+I start with the primitives.
+
+Here’s a single vortex element.
+
+\[\<insert widget of a single vortex element where you can vary the coordinates of each end and the interrogation point, P — compare to Katz and Plotkin examples\>\]
+
+Here’s the velocity it ought to induce at a known point. Here’s a canonical case out of Katz and Plotkin. Here’s what superposition should do.
+
+\[\<same widget — two vortices, sliders for strengths and positions\>\]
+
+Here’s how a trailing-vortex system should work.
+
+\[\<Show the algorithm for how any spanwise change in vorticity needs to trail vorticity\>\]
+
+Here’s what happens when I add shed vorticity.
+
+\[\<Have a sinusoidal loading — add shed vorticity convecting in time\>\]
+
+Make it show me you can compare against a known result.
+
+\[\<Show a 2D case with a lift-curve slope of 2π — show that it matches Theodorsen’s C(k)\>\]
+
+The interactive examples aren't decoration. They are the visible face of the test. The widget and automated check use the same numerical primitive and canonical case: one lets you poke it; the other applies the acceptance criterion in continuous integration. The demonstration and the test are two views of the same calibration.
+
+I didn't necessarily write the code inside that test. I decided what the test had to mean. When I say wanky things about ontology and epistemology, that’s what I mean: what is the thing, what would it mean to know something about it, and what test would justify that knowledge?
+
+That distinction is the part of the job I still have to own.
+
+— — —
+
+When I started tinkering with ChatGPT — around 3.5 — I went deep enough into embeddings, transformers, attention and RAG to stop treating it as magic. I understand an LLM roughly as I understand a Wheatstone bridge: I could not build the physical instrument from scratch tomorrow without practice, but I know the principles, what it is good at, and where my trust should run out.
+
+LLMs are bloody good at searching for information. They can find an equation faster than I can. They are also bloody good at translating semantic intent into structured language: translating an implementation, spitting out a GPU kernel, or making some horrible little closure relationship inspectable.
+
+What I cannot delegate is the decision about which known result genuinely constrains the unknown one I care about — which tests are sufficient to show that a tool is fit for my intended purpose.
+
+That is the value of my judgement — what I bring to the table. It is not just picking a benchmark off a shelf. It is knowing a tool’s region of applicability, which is never only a list of inputs. A panel method will quite happily return an answer in separated flow; that does not mean the answer describes the aircraft. Right tool, right job. You first learn the boundary as feel, by testing until you can sense where the method bites. Then you discipline that feel into tests, applicability conditions and evidence.
+
+It's the same reason engineering training makes you do calculus by hand. I'd be lost doing a line integral now without a textbook — or Claude. But I kept the sense of what the operation does, how its output moves when you move its input, where it's safe and where it'll bite you. The by-hand suffering was never the trust \[\<callout\>Thank you, 9 a.m. maths lectures every day in 2005 and 2006.\]. It was how I earned the feel for what things are.
+
+I tend not to live at the bottom of every derivation. Arguably I’m more abstract — or less capable — but my working mode is to understand the mathematics well enough to build the instrument, then design cases that reveal whether it behaves. So I don't need to write my panel codes from scratch anymore. And here’s the part that killed the fraud feeling: not because I use someone else’s code, but because published work by people such as Mark Drela and Hal Youngren gives me reference cases against which to test mine. They are part of the known world I make my implementation answer to.
+
+I learned this the hard way before any of it was automated. In my PhD I coded the Peters–He dynamic wake formulation myself, in MATLAB, from the original. Writing it out didn't make me trust it. Comparing its output to He’s dissertation did — the same oscillation in blade loading, forced by the azimuthal load distribution, turning up exactly where it should.
+
+\[\<Show the page of my dissertation.\>\]
+
+I learned what the model could not do the same way. In my implementation it would not produce the blade phase lag I expected in unsteady loading \[\<callout\>David Peters knows this; Chengjian He knew this; some users of CHARM may not.\]. That was not a failure of the code to reproduce the model. It was the point at which the model I had implemented stopped representing the bit of physics I wanted it to answer.
+
+I know that because I built a bit of code I could play with and made the limitation show itself. Not because I re-derived the formulation \[\<callout\>And I doubt I could. I hate elliptical coordinates.\].
+
+— — —
+
+We already accept this move nearly everywhere else.
+
+Using a compiler doesn't make you a fraud because you didn't hand-translate your code to machine instructions. Practising engineering doesn't make you a fraud because you didn't re-derive the governing physics before writing a structural solver. We work on abstraction layers because earlier generations built not just tools, but mature ways of checking them and making failures legible. You don't inspect the arithmetic inside a calculator every time you multiply two numbers. You stand on the layer and use it to reach higher.
+
+But a large language model is not yet that kind of settled abstraction. Its output is cheap to produce and often expensive to trust. So I don't check less — quite the opposite.
+
+I check more. I check differently. I check at the seams of tools, outputs and interfaces.
+
+Engineering inherited physics, methods and grounds for trust from Prandtl, Glauert, Newton, Theodorsen and many more. For the settled layers beneath me, I inherit that assurance. For the things an LLM produces on demand, I still construct the local trust case each time.
+
+That's why computational experimentalist feels like the honest name — my laboratory is the machine, my apparatus is the solver and the model, and I run experiments the way someone else runs them in a tunnel \[\<callout\>Or, in fact, as I did when I worked in a 50 MW transonic tunnel. I don’t apply the experimentalist label without knowing what experiments are.\].
+
+During one of my long drives between collaborators, voice transcription slipped and handed me “compositional experimentalist”. I quite like it, though I doubt anyone else will. Computational describes where I work. Compositional describes the risk: I assemble systems out of parts I didn’t derive but understand well enough to trust conditionally, so the risk does not live in any one part.
+
+My errors live in the seams.
+
+Galileo didn't re-derive everything either. He built the instrument and demanded that it show him something repeatable. That is the tradition I’m trying to work in.
+
+I'm not using classical physics all the time. I'm doing things — and making things — with physics.
+
+— — —
+
+So the loop is shorter now, but it is the same loop. I have a hypothesis — say, a panelling scheme that ought to beat cosine spacing \[\<callout\>Watch this space. It’s coming.\]. Instead of spending three weeks learning and encoding a numerical scheme before I can even see it, I move sooner to the real work: show me the primitive; give me a playground where I can drag the panels and watch the vector maths; run it against the canonical case to a defined tolerance; then show me whether the convergence actually beats uniform spacing. Hypothesise, build, verify. Check the assumptions, establish the bounds, then let it run.
+
+I haven't lowered the bar. I've moved where the work lives — from authorship to experiment.
+
+The trust I earn this way is real — but here’s the kicker — it is local and, largely, personal. Every piece is checked against something I already know, one piece at a time. Nothing yet stitches those local verdicts into a claim about the whole aircraft.
+
+All of that is a long-winded way of getting to one sentence. For the kinds of engineered abstractions I rely on, the diagnostic is this:
+
+An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.
+
+For the mature tools beneath modern engineering, that bargain was made a long time ago.
+
+For generative systems producing new engineering code, workflows and claims on demand, it hasn't been.
+
+Not yet.
