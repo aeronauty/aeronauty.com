@@ -1,0 +1,66 @@
+:root {
+  --paper: #fbfaf7;
+  --panel: #ffffff;
+  --ink: #18181b;
+  --muted: #64646d;
+  --faint: #92929b;
+  --rule: #deddd7;
+  --accent: #0f766e;
+  --accent-soft: #ccfbf1;
+  --blue: #2563eb;
+  --red: #c2410c;
+  --amber: #b45309;
+  --purple: #7c3aed;
+  --good: #15803d;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: transparent; color: var(--ink); }
+body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button, input { font: inherit; }
+.bench { width: min(1120px, 100%); margin: 0 auto; border: 1px solid var(--rule); border-radius: 18px; background: var(--paper); overflow: hidden; box-shadow: 0 22px 70px rgba(24, 24, 27, .08); }
+.head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; padding: 24px 26px 18px; border-bottom: 1px solid var(--rule); }
+.eyebrow { margin: 0 0 5px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+h1 { margin: 0; font-size: clamp(23px, 3.4vw, 34px); letter-spacing: -.035em; line-height: 1.05; }
+.dek { max-width: 700px; margin: 9px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.tabs { display: flex; align-self: start; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 420px; }
+.tab { border: 1px solid var(--rule); background: var(--panel); color: var(--muted); padding: 7px 10px; border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 700; }
+.tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: white; }
+.body { display: grid; grid-template-columns: minmax(190px, 250px) minmax(0, 1fr); min-height: 500px; }
+.controls { padding: 18px; border-right: 1px solid var(--rule); background: rgba(255,255,255,.58); }
+.control { margin-bottom: 16px; }
+.control label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.value { color: var(--ink); font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.action { border: 1px solid var(--rule); background: white; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 750; }
+.action.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.stage-wrap { min-width: 0; padding: 16px; display: flex; flex-direction: column; }
+.stage { width: 100%; min-height: 420px; flex: 1; border: 1px solid var(--rule); border-radius: 14px; background: white; overflow: hidden; position: relative; }
+svg, canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+canvas { min-height: 420px; }
+.readout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; border-top: 1px solid var(--rule); background: var(--rule); }
+.metric { background: var(--panel); padding: 13px 16px; min-width: 0; }
+.metric span { display: block; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.metric strong { display: block; margin-top: 4px; font-size: 15px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric.good strong { color: var(--good); }
+.note { margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; color: var(--muted); font-size: 11px; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 99px; margin-right: 5px; }
+@media (max-width: 820px) {
+  .head { grid-template-columns: 1fr; }
+  .tabs { justify-content: flex-start; max-width: none; }
+  .body { grid-template-columns: 1fr; }
+  .controls { border-right: 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+  .stage { min-height: 360px; }
+  canvas { min-height: 360px; }
+  .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .head { padding: 20px 18px 16px; }
+  .controls { grid-template-columns: 1fr; }
+  .stage-wrap { padding: 10px; }
+  .stage { min-height: 330px; }
+  canvas { min-height: 330px; }
+  .readout { grid-template-columns: 1fr 1fr; }
+}

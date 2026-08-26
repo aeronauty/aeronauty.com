@@ -1,0 +1,96 @@
+name: Computational experimentation essay
+
+on:
+  pull_request:
+    paths:
+      - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
+      - 'aeronauty-site/lib/private-articles.ts'
+      - 'aeronauty-site/package.json'
+      - '.github/workflows/computational-experimentation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
+      - 'aeronauty-site/lib/private-articles.ts'
+      - 'aeronauty-site/package.json'
+      - '.github/workflows/computational-experimentation.yml'
+
+jobs:
+  trust-case:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check scripts
+        run: |
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/vortex-core.js
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
+      - name: Test shared aerodynamic primitives and article package
+        run: |
+          node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-vortex-core.mjs
+          node aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
+      - name: Prepare local preview bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE='aeronauty-site/content/private/topology-instinct/computational-experimentation'
+          BUNDLE='computational-experimentation-local-preview'
+          mkdir -p "$BUNDLE"
+          cp "$SOURCE/article.html" "$BUNDLE/index.html"
+          cp "$SOURCE/article-source.md" "$BUNDLE/article-source.md"
+          cp "$SOURCE/vortex-core.js" "$BUNDLE/vortex-core.js"
+          cat > "$BUNDLE/serve.py" <<'PY'
+          #!/usr/bin/env python3
+          from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+          from pathlib import Path
+          import os
+          import threading
+          import webbrowser
+
+          root = Path(__file__).resolve().parent
+          os.chdir(root)
+          address = 'http://127.0.0.1:8000/'
+          threading.Timer(0.35, lambda: webbrowser.open(address)).start()
+          print(f'Computational Experimentation preview: {address}')
+          print('Press Ctrl+C to stop the local server.')
+          ThreadingHTTPServer(('127.0.0.1', 8000), SimpleHTTPRequestHandler).serve_forever()
+          PY
+          cat > "$BUNDLE/preview.command" <<'SH'
+          #!/bin/sh
+          cd "$(dirname "$0")"
+          python3 serve.py
+          SH
+          cat > "$BUNDLE/preview.bat" <<'BAT'
+          @echo off
+          cd /d "%~dp0"
+          py serve.py
+          BAT
+          cat > "$BUNDLE/README.txt" <<'TXT'
+          COMPUTATIONAL EXPERIMENTATION — LOCAL PREVIEW
+
+          This bundle contains the same article HTML, Google Doc prose snapshot,
+          and vortex-panel numerical kernel used by the private Aeronauty preview.
+
+          macOS / Linux:
+            Double-click preview.command, or run: python3 serve.py
+
+          Windows:
+            Double-click preview.bat, or run: py serve.py
+
+          Then open http://127.0.0.1:8000/ if it does not open automatically.
+          Stop the preview with Ctrl+C in the terminal window.
+
+          The prose source of truth remains the Google Doc. Do not edit
+          article-source.md as though it were the manuscript.
+          TXT
+          chmod +x "$BUNDLE/serve.py" "$BUNDLE/preview.command"
+      - name: Upload local preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: computational-experimentation-local-preview
+          path: computational-experimentation-local-preview
+          if-no-files-found: error
+          retention-days: 14

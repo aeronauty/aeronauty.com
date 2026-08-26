@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Computational calibration bench</title>
+  <link rel="stylesheet" href="calibration-bench.css" />
+</head>
+<body>
+<main class="bench">
+  <header class="head">
+    <div>
+      <p class="eyebrow">Computational calibration bench</p>
+      <h1 id="title"></h1>
+      <p id="dek" class="dek"></p>
+    </div>
+    <nav class="tabs" aria-label="Calibration cases">
+      <button class="tab" data-mode="segment">One element</button>
+      <button class="tab" data-mode="superposition">Superposition</button>
+      <button class="tab" data-mode="trailing">Trailing wake</button>
+      <button class="tab" data-mode="shed">Shed wake</button>
+      <button class="tab" data-mode="theodorsen">Theodorsen</button>
+    </nav>
+  </header>
+  <div class="body">
+    <aside id="controls" class="controls"></aside>
+    <section class="stage-wrap">
+      <div id="stage" class="stage"></div>
+      <p id="note" class="note"></p>
+      <div id="legend" class="legend"></div>
+    </section>
+  </div>
+  <footer id="readout" class="readout"></footer>
+</main>
+
+<script type="module" src="calibration-bench.mjs"></script>
+</body>
+</html>
