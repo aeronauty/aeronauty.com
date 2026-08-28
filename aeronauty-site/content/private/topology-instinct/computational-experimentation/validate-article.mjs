@@ -54,6 +54,12 @@ assert.ok(article.includes("fetch('article-source.md'"), 'runtime must load the 
 assert.ok(article.includes('<script src="vortex-core.js"></script>'));
 assert.ok(article.includes('schematic reconstruction'));
 assert.ok(article.includes(metadata.googleDocUrl));
+assert.ok(article.includes('data-single-mode'));
+assert.ok(article.includes('data-double-mode'));
+assert.ok(article.includes('>2D panel</button>'));
+assert.ok(article.includes('>3D segment</button>'));
+assert.ok(article.includes('K.finiteVortexSegmentVelocity'));
+assert.ok(article.includes('K.finiteVortexSegmentQuadrature'));
 
 for (const match of article.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)) {
   // Parse without running: catches truncated strings, braces and other article-shell breakage.
