@@ -277,7 +277,7 @@ export async function serveTopologyAsset(
   }
 
   const data = polishReaderHtml(segments, await readFile(requested));
-  return new NextResponse(data, {
+  return new NextResponse(Uint8Array.from(data), {
     status: 200,
     headers: {
       "Content-Type": contentType(requested),
