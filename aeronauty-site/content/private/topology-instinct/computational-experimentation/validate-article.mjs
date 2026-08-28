@@ -6,12 +6,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const [source, article, metadataText] = await Promise.all([
+const [source, article, metadataText, referenceCasesText] = await Promise.all([
   readFile(join(ROOT, 'article-source.md'), 'utf8'),
   readFile(join(ROOT, 'article.html'), 'utf8'),
   readFile(join(ROOT, 'source-metadata.json'), 'utf8'),
+  readFile(join(ROOT, 'kp-reference-cases.json'), 'utf8'),
 ]);
 const metadata = JSON.parse(metadataText);
+const referenceCases = JSON.parse(referenceCasesText);
 
 // Provenance is byte-exact: metadata hashes the checked-in snapshot exactly as
 // served. Generated comments and a possible UTF-8 BOM are stripped only for
@@ -32,6 +34,16 @@ assert.equal((essaySource.match(/^— — —$/gm) || []).length, 5, 'expected f
 assert.ok(essaySource.includes('An abstraction layer is successfully formed when verifying its result becomes cheaper and easier than producing it yourself.'));
 assert.ok(essaySource.includes('Chengjian He knew this'));
 assert.ok(metadata.revisionId?.startsWith('AIroW37Tx'));
+assert.equal(referenceCases.source.title, 'Low-Speed Aerodynamics');
+assert.equal(referenceCases.source.edition, 'Second Edition');
+assert.deepEqual(referenceCases.cases.chapter9TwoElement.equations, ['9.31', '9.35', '9.39']);
+assert.deepEqual(referenceCases.cases.constantStrengthPanel.equations, [
+  '10.35',
+  '10.36',
+  '10.39',
+  '10.40',
+]);
+assert.ok(referenceCases.cases.finiteStraightSegment.equations.includes('2.72'));
 
 const markerParagraphs = essaySource
   .split(/\n\s*\n/)
@@ -57,7 +69,7 @@ assert.ok(article.includes(metadata.googleDocUrl));
 assert.ok(article.includes('data-single-mode'));
 assert.ok(article.includes('data-double-mode'));
 assert.ok(article.includes('>2D panel</button>'));
-assert.ok(article.includes('>3D segment</button>'));
+assert.ok(article.includes('>3D filament</button>'));
 assert.ok(article.includes('K.finiteVortexSegmentVelocity'));
 assert.ok(article.includes('K.finiteVortexSegmentQuadrature'));
 

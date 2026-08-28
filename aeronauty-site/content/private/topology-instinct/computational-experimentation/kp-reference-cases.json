@@ -1,0 +1,73 @@
+{
+  "source": {
+    "authors": "Joseph Katz and Allen Plotkin",
+    "title": "Low-Speed Aerodynamics",
+    "edition": "Second Edition",
+    "publisher": "Cambridge University Press",
+    "year": 2001,
+    "isbn": "978-0-521-66552-0"
+  },
+  "coordinateMapping": {
+    "twoDimensional": "K&P (x,z) and (u,w) map to kernel (x,y) and (x,y). Positive strength is clockwise in that mapped plane.",
+    "threeDimensional": "K&P point 1 is A, point 2 is B, r1=P-A, r2=P-B, and r0=B-A."
+  },
+  "cases": {
+    "chapter9TwoElement": {
+      "printedPages": [223, 224, 225, 226],
+      "pdfPages": [240, 241, 242, 243],
+      "equations": ["9.31", "9.35", "9.39"],
+      "chord": 1,
+      "vortexX": [0.125, 0.625],
+      "collocationX": [0.375, 0.875],
+      "unitInfluenceMatrix": [
+        [-0.6366197723675814, 0.6366197723675814],
+        [-0.2122065907891938, -0.6366197723675814]
+      ],
+      "circulationPerFreestreamNormal": [2.356194490192345, 0.7853981633974483],
+      "expectedBoundaryVelocityPerFreestreamNormal": [-1, -1]
+    },
+    "constantStrengthPanel": {
+      "printedPages": [236, 237],
+      "pdfPages": [253, 254],
+      "equations": ["10.35", "10.36", "10.39", "10.40"],
+      "A": { "x": -1, "y": 0 },
+      "B": { "x": 1, "y": 0 },
+      "P": { "x": 0, "y": 1 },
+      "strength": 1,
+      "expectedVelocity": { "x": 0.25, "y": 0 },
+      "additionalChecks": [
+        {
+          "name": "off-center",
+          "P": { "x": 0.5, "y": 1 },
+          "expectedVelocity": { "x": 0.23020828791971723, "y": -0.07603718482849816 }
+        },
+        {
+          "name": "exterior-collinear",
+          "P": { "x": 2, "y": 0 },
+          "expectedVelocity": { "x": 0, "y": -0.1748495762830299 }
+        }
+      ]
+    },
+    "finiteStraightSegment": {
+      "printedPages": [38, 39, 40, 41, 253, 254, 255],
+      "pdfPages": [55, 56, 57, 58, 270, 271, 272],
+      "equations": ["2.68b", "2.69", "2.72", "10.115"],
+      "A": { "x": -1, "y": 0, "z": 0 },
+      "B": { "x": 1, "y": 0, "z": 0 },
+      "P": { "x": 0, "y": 1, "z": 0 },
+      "circulation": 1,
+      "expectedVelocity": { "x": 0, "y": 0, "z": 0.11253953951963826 },
+      "nonSymmetricCheck": {
+        "A": { "x": 0, "y": 0, "z": 0 },
+        "B": { "x": 1, "y": 2, "z": 3 },
+        "P": { "x": 2, "y": -1, "z": 1 },
+        "circulation": 1,
+        "expectedVelocity": {
+          "x": 0.022093987517602404,
+          "y": 0.022093987517602404,
+          "z": -0.022093987517602404
+        }
+      }
+    }
+  }
+}

@@ -7,6 +7,9 @@ import vm from 'node:vm';
 // This avoids Node's package-type rules silently turning a browser script into
 // an empty ESM namespace while still testing the implementation users run.
 const source = readFileSync(new URL('./vortex-core.js', import.meta.url), 'utf8');
+const referenceCases = JSON.parse(
+  readFileSync(new URL('./kp-reference-cases.json', import.meta.url), 'utf8'),
+).cases;
 const sandbox = {};
 sandbox.globalThis = sandbox;
 vm.runInNewContext(source, sandbox, { filename: 'vortex-core.js' });
@@ -15,6 +18,7 @@ const {
   addVelocities,
   finiteVortexSegmentQuadrature,
   finiteVortexSegmentVelocity,
+  pointVortexVelocity,
   relativeVelocityError,
   shedCirculation,
   sum,
@@ -41,15 +45,89 @@ test('closed-form vortex panel agrees with independent quadrature', () => {
   }
 });
 
-test('canonical horizontal panel produces the expected velocity', () => {
+test('K&P constant-strength panel fixture fixes the 2D sign convention', () => {
+  const reference = referenceCases.constantStrengthPanel;
   const velocity = vortexPanelVelocity(
-    { x: -1, y: 0 },
-    { x: 1, y: 0 },
-    { x: 0, y: 1 },
-    1,
+    reference.A,
+    reference.B,
+    reference.P,
+    reference.strength,
   );
-  assert.ok(Math.abs(velocity.x + 0.25) < 1e-12);
-  assert.ok(Math.abs(velocity.y) < 1e-12);
+  assert.ok(vectorDifferenceMagnitude(velocity, reference.expectedVelocity) < 1e-12);
+
+  for (const check of reference.additionalChecks) {
+    const closedForm = vortexPanelVelocity(
+      reference.A,
+      reference.B,
+      check.P,
+      reference.strength,
+    );
+    const quadrature = vortexQuadrature(
+      reference.A,
+      reference.B,
+      check.P,
+      reference.strength,
+      24000,
+    );
+    assert.ok(
+      vectorDifferenceMagnitude(closedForm, check.expectedVelocity) < 2e-12,
+      `${check.name} closed form disagrees with K&P`,
+    );
+    assert.ok(
+      vectorDifferenceMagnitude(quadrature, check.expectedVelocity) < 2e-8,
+      `${check.name} quadrature disagrees with K&P`,
+    );
+  }
+});
+
+test('2D panel reports its on-sheet ambiguity and preserves K&P one-sided limits', () => {
+  const A = { x: -1, y: 0 };
+  const B = { x: 1, y: 0 };
+  for (const kernel of [vortexPanelVelocity, vortexQuadrature]) {
+    const onSheet = kernel(A, B, { x: 0, y: 0 }, 1);
+    assert.ok(Number.isNaN(onSheet.x));
+    assert.ok(Number.isNaN(onSheet.y));
+  }
+
+  const above = vortexPanelVelocity(A, B, { x: 0, y: 1e-7 }, 1);
+  const below = vortexPanelVelocity(A, B, { x: 0, y: -1e-7 }, 1);
+  assert.ok(Math.abs(above.x - 0.5) < 1e-6);
+  assert.ok(Math.abs(below.x + 0.5) < 1e-6);
+  assert.ok(Math.abs(above.y) < 1e-14);
+  assert.ok(Math.abs(below.y) < 1e-14);
+});
+
+test('K&P Chapter 9 two-element influence matrix and solution are reproduced', () => {
+  const reference = referenceCases.chapter9TwoElement;
+  const sources = reference.vortexX.map((x) => ({ x, y: 0 }));
+  const collocationPoints = reference.collocationX.map((x) => ({ x, y: 0 }));
+  const matrix = collocationPoints.map((P) => (
+    sources.map((sourcePoint) => pointVortexVelocity(sourcePoint, P, 1).y)
+  ));
+
+  for (let row = 0; row < matrix.length; row += 1) {
+    for (let column = 0; column < matrix[row].length; column += 1) {
+      assert.ok(
+        Math.abs(matrix[row][column] - reference.unitInfluenceMatrix[row][column]) < 1e-14,
+      );
+    }
+  }
+
+  const freestreamNormal = 0.2;
+  const circulations = reference.circulationPerFreestreamNormal.map(
+    (coefficient) => coefficient * freestreamNormal,
+  );
+  const inducedNormalVelocity = matrix.map((row) => (
+    row.reduce((total, influence, index) => total + influence * circulations[index], 0)
+  ));
+  inducedNormalVelocity.forEach((value, index) => {
+    assert.ok(
+      Math.abs(
+        value
+        - reference.expectedBoundaryVelocityPerFreestreamNormal[index] * freestreamNormal
+      ) < 1e-14,
+    );
+  });
 });
 
 test('superposition is exactly the sum of independently evaluated pieces', () => {
@@ -105,16 +183,26 @@ test('finite 3D vortex segment agrees with independent Biot-Savart quadrature', 
   }
 });
 
-test('canonical finite segment follows the right-hand rule', () => {
+test('K&P finite-segment fixture follows the right-hand rule', () => {
+  const reference = referenceCases.finiteStraightSegment;
   const velocity = finiteVortexSegmentVelocity(
-    { x: -1, y: 0, z: 0 },
-    { x: 1, y: 0, z: 0 },
-    { x: 0, y: 1, z: 0 },
-    1,
+    reference.A,
+    reference.B,
+    reference.P,
+    reference.circulation,
   );
-  assert.ok(Math.abs(velocity.x) < 1e-14);
-  assert.ok(Math.abs(velocity.y) < 1e-14);
-  assert.ok(Math.abs(velocity.z - Math.SQRT2 / (4 * Math.PI)) < 1e-14);
+  assert.ok(vectorDifferenceMagnitude(velocity, reference.expectedVelocity) < 1e-14);
+
+  const nonSymmetric = reference.nonSymmetricCheck;
+  const nonSymmetricVelocity = finiteVortexSegmentVelocity(
+    nonSymmetric.A,
+    nonSymmetric.B,
+    nonSymmetric.P,
+    nonSymmetric.circulation,
+  );
+  assert.ok(
+    vectorDifferenceMagnitude(nonSymmetricVelocity, nonSymmetric.expectedVelocity) < 1e-14,
+  );
 });
 
 test('finite segment orientation and circulation sign are consistent', () => {

@@ -75,18 +75,39 @@
     const r1Squared = X * X + Y * Y;
     const r2Squared = (X - length) ** 2 + Y * Y;
 
-    if (r1Squared < EPS ** 2 || r2Squared < EPS ** 2 || Math.abs(Y) < EPS) {
+    if (r1Squared < EPS ** 2 || r2Squared < EPS ** 2) {
+      return { x: Number.NaN, y: Number.NaN };
+    }
+    if (Math.abs(Y) < EPS && X > 0 && X < length) {
       return { x: Number.NaN, y: Number.NaN };
     }
 
     const theta1 = Math.atan2(Y, X);
     const theta2 = Math.atan2(Y, X - length);
-    const uLocal = -(gamma / TWO_PI) * (theta2 - theta1);
-    const vLocal = (gamma / FOUR_PI) * Math.log(r1Squared / r2Squared);
+    // Katz & Plotkin use positive gamma for clockwise rotation in their
+    // two-dimensional (x, z) plane. Here y is the planar counterpart of z.
+    const uLocal = (gamma / TWO_PI) * (theta2 - theta1);
+    const vLocal = -(gamma / FOUR_PI) * Math.log(r1Squared / r2Squared);
 
     return {
       x: uLocal * tx + vLocal * nx,
       y: uLocal * ty + vLocal * ny,
+    };
+  }
+
+  function pointVortexVelocity(source, P, circulation = 1) {
+    validatePoint('source', source);
+    validatePoint('P', P);
+    if (!Number.isFinite(circulation)) throw new TypeError('circulation must be finite');
+
+    const rx = P.x - source.x;
+    const ry = P.y - source.y;
+    const radiusSquared = rx * rx + ry * ry;
+    if (radiusSquared < EPS ** 2) return { x: Number.NaN, y: Number.NaN };
+
+    return {
+      x: circulation * ry / (TWO_PI * radiusSquared),
+      y: -circulation * rx / (TWO_PI * radiusSquared),
     };
   }
 
@@ -103,6 +124,16 @@
     const dy = B.y - A.y;
     const length = Math.hypot(dx, dy);
     if (length < EPS) throw new RangeError('panel endpoints must be distinct');
+    const tx = dx / length;
+    const ty = dy / length;
+    const nx = -ty;
+    const ny = tx;
+    const fromA = { x: P.x - A.x, y: P.y - A.y };
+    const X = fromA.x * tx + fromA.y * ty;
+    const Y = fromA.x * nx + fromA.y * ny;
+    if (Math.abs(Y) < EPS && X >= 0 && X <= length) {
+      return { x: Number.NaN, y: Number.NaN };
+    }
 
     let u = 0;
     let v = 0;
@@ -111,12 +142,14 @@
       const fraction = (i + 0.5) / panels;
       const sourceX = A.x + dx * fraction;
       const sourceY = A.y + dy * fraction;
-      const rx = P.x - sourceX;
-      const ry = P.y - sourceY;
-      const radiusSquared = rx * rx + ry * ry;
-      if (radiusSquared < EPS ** 2) return { x: Number.NaN, y: Number.NaN };
-      u += -discreteCirculation * ry / (TWO_PI * radiusSquared);
-      v += discreteCirculation * rx / (TWO_PI * radiusSquared);
+      const contribution = pointVortexVelocity(
+        { x: sourceX, y: sourceY },
+        P,
+        discreteCirculation,
+      );
+      if (!Number.isFinite(contribution.x)) return contribution;
+      u += contribution.x;
+      v += contribution.y;
     }
     return { x: u, y: v };
   }
@@ -276,6 +309,7 @@
     addVelocities,
     finiteVortexSegmentQuadrature,
     finiteVortexSegmentVelocity,
+    pointVortexVelocity,
     relativeVelocityError,
     shedCirculation,
     sum,
