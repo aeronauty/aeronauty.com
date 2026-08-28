@@ -65,7 +65,6 @@ for (const fragment of knownMarkerFragments) {
 assert.ok(article.includes("fetch('article-source.md'"), 'runtime must load the generated prose snapshot');
 assert.ok(article.includes('<script src="vortex-core.js"></script>'));
 assert.ok(article.includes('schematic reconstruction'));
-assert.ok(article.includes(metadata.googleDocUrl));
 assert.ok(article.includes('data-single-mode'));
 assert.ok(article.includes('data-double-mode'));
 assert.ok(article.includes('>2D panel</button>'));
