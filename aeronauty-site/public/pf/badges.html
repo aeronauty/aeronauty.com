@@ -141,6 +141,25 @@ textarea{min-height:84px;resize:vertical}
 .item{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 14px}
 .item .who{font-size:13px;color:var(--grey);margin-bottom:3px}
 .item .swatchline{display:flex;align-items:center;gap:8px;font-weight:600}
+.item img.shot{display:block;max-width:100%;height:auto;border-radius:8px;margin-top:9px;
+  border:1px solid var(--border);background:var(--bg)}
+.replybtn{background:none;border:0;padding:4px 0;margin-top:7px;font-size:13px;
+  color:var(--grey);text-decoration:underline;text-underline-offset:3px}
+.replybtn:hover{color:var(--c)}
+/* one level of nesting only — a rule down the left says "these belong to that" */
+.replies{margin:10px 0 0 0;padding-left:13px;border-left:2px solid var(--border);
+  display:flex;flex-direction:column;gap:9px}
+.replies .item{background:var(--page);padding:10px 12px}
+.replyform{margin-top:10px;display:none;gap:8px;flex-direction:column}
+.replyform.open{display:flex}
+.replyform textarea{min-height:62px}
+.attach{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:9px}
+.attach input[type=file]{display:none}
+.attachbtn{font-size:14px}
+.thumb{display:none;align-items:center;gap:9px}
+.thumb.show{display:flex}
+.thumb img{width:52px;height:52px;object-fit:cover;border-radius:7px;border:1px solid var(--border)}
+.thumb button{padding:5px 10px;font-size:13px}
 footer{margin-top:56px;color:var(--grey);font-size:13px;border-top:1px solid var(--border);padding-top:18px}
 .hidden{display:none}
 @media (max-width:560px){
@@ -266,6 +285,12 @@ footer{margin-top:56px;color:var(--grey);font-size:13px;border-top:1px solid var
   <h2>Say something</h2>
   <div class="panel">
     <div><textarea id="body" placeholder="What would you change? What works?"></textarea></div>
+    <div class="attach">
+      <input type="file" id="pic" accept="image/jpeg,image/png,image/webp">
+      <button type="button" class="attachbtn" id="picbtn">Attach a picture</button>
+      <span class="thumb" id="thumb"><img id="thumbimg" alt="Attached picture preview">
+        <button type="button" id="thumbx">Remove</button></span>
+    </div>
     <div class="field"><button type="button" class="primary" id="send">Send it</button></div>
     <div class="needname"></div>
     <div class="msg" id="fmsg"></div>
@@ -358,20 +383,60 @@ footer{margin-top:56px;color:var(--grey);font-size:13px;border-top:1px solid var
       btn.textContent = on ? "Backed \u2713" : "Vote for this";
     });
     var feed = $("#feed"); feed.innerHTML = "";
-    state.feedback.forEach(function(f){
-      var d = document.createElement("div"); d.className = "item";
-      var who = f.authorName ? esc(f.authorName) : "Anonymous";
-      var when = new Date(f.createdAt).toLocaleDateString(undefined,{day:"numeric",month:"short"});
-      if(f.kind === "palette" && f.palette && f.palette.accent){
-        d.innerHTML = '<div class="who">' + who + ' \u00b7 ' + when + '</div>' +
-          '<div class="swatchline"><span class="dot" style="width:19px;height:19px;border-radius:50%;' +
-          'border:1px solid rgba(0,0,0,.18);display:inline-block;background:' + esc(f.palette.accent) + '"></span>' +
-          esc(f.palette.name || f.palette.accent) + '</div>';
-      } else {
-        d.innerHTML = '<div class="who">' + who + ' \u00b7 ' + when + '</div><div>' + esc(f.body) + '</div>';
-      }
-      feed.appendChild(d);
-    });
+    state.feedback.forEach(function(f){ feed.appendChild(itemEl(f, true)); });
+  }
+
+  function itemEl(f, canReply){
+    var d = document.createElement("div"); d.className = "item";
+    var who  = f.authorName ? esc(f.authorName) : "Anonymous";
+    var when = new Date(f.createdAt).toLocaleDateString(undefined,{day:"numeric",month:"short"});
+    var html = '<div class="who">' + who + ' · ' + when + '</div>';
+    if(f.kind === "palette" && f.palette && f.palette.accent){
+      html += '<div class="swatchline"><span style="width:19px;height:19px;border-radius:50%;' +
+              'border:1px solid rgba(0,0,0,.18);display:inline-block;background:' +
+              esc(f.palette.accent) + '"></span>' + esc(f.palette.name || f.palette.accent) + '</div>';
+    } else if(f.body){
+      html += '<div>' + esc(f.body) + '</div>';
+    }
+    if(f.image && f.image.url){
+      // width/height are set so the feed does not jump around as pictures load
+      html += '<img class="shot" src="' + esc(f.image.url) + '" alt="Attached by ' + who + '"' +
+              (f.image.w ? ' width="' + f.image.w + '"' : '') +
+              (f.image.h ? ' height="' + f.image.h + '"' : '') + ' loading="lazy">';
+    }
+    d.innerHTML = html;
+
+    if(canReply){
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "replybtn"; btn.textContent = "Reply";
+      var form = document.createElement("div"); form.className = "replyform";
+      form.innerHTML = '<textarea placeholder="Reply…"></textarea>' +
+                       '<div><button type="button" class="primary rsend">Post reply</button></div>' +
+                       '<div class="msg"></div>';
+      btn.addEventListener("click", function(){
+        form.classList.toggle("open");
+        if(form.classList.contains("open")) form.querySelector("textarea").focus();
+      });
+      form.querySelector(".rsend").addEventListener("click", function(){
+        var ta = form.querySelector("textarea"), msg = form.querySelector(".msg");
+        var text = ta.value.trim();
+        if(!$("#name").value.trim()){ msg.className="msg err"; msg.textContent="Add your name above first."; return; }
+        if(!text){ msg.className="msg err"; msg.textContent="Write something first."; return; }
+        var b = form.querySelector(".rsend"); b.disabled = true;
+        post("/api/pf-badges/feedback",
+             {kind:"comment", name:$("#name").value, body:text, parentId:f.id})
+          .then(function(j){ apply(j); })
+          .catch(function(e){ msg.className="msg err"; msg.textContent = e.message; b.disabled = false; });
+      });
+      d.appendChild(btn); d.appendChild(form);
+    }
+
+    if(f.replies && f.replies.length){
+      var wrap = document.createElement("div"); wrap.className = "replies";
+      f.replies.forEach(function(r){ wrap.appendChild(itemEl(r, false)); });
+      d.appendChild(wrap);
+    }
+    return d;
   }
 
   function apply(data){
@@ -428,12 +493,83 @@ footer{margin-top:56px;color:var(--grey);font-size:13px;border-top:1px solid var
     if(savedName) $("#name").value = savedName;
   }catch(e){}
 
+  /* ---- attaching a picture ---- */
+  var pending = null;   // {blob, w, h} waiting to go with the next comment
+
+  /**
+   * Redraw the picture through a canvas at no more than MAX_EDGE on its long
+   * side and re-encode as JPEG. Three things fall out of this: phone photos stop
+   * being 4MB, the upload is quick on school wifi, and the canvas round-trip
+   * drops EXIF — so nobody accidentally publishes the GPS coordinates of their
+   * kitchen along with a badge mock-up.
+   */
+  function downscale(file){
+    var MAX_EDGE = 1600;
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function(){
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+        w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
+        var c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        c.toBlob(function(blob){
+          blob ? resolve({blob: blob, w: w, h: h}) : reject(new Error("Couldn't read that image."));
+        }, "image/jpeg", 0.85);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error("Couldn't read that image.")); };
+      img.src = url;
+    });
+  }
+
+  function clearPic(){
+    pending = null;
+    $("#pic").value = "";
+    $("#thumb").classList.remove("show");
+    $("#thumbimg").removeAttribute("src");
+  }
+
+  $("#picbtn").addEventListener("click", function(){ $("#pic").click(); });
+  $("#thumbx").addEventListener("click", clearPic);
+  $("#pic").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    say("#fmsg", "", false);
+    downscale(file).then(function(r){
+      pending = r;
+      $("#thumbimg").src = URL.createObjectURL(r.blob);
+      $("#thumb").classList.add("show");
+    }).catch(function(err){ say("#fmsg", err.message, true); clearPic(); });
+  });
+
   $("#send").addEventListener("click", function(){
     var text = $("#body").value.trim();
-    if(!text){ say("#fmsg","Write something first.",true); return; }
+    if(!text && !pending){ say("#fmsg","Write something, or attach a picture.",true); return; }
     $("#send").disabled = true;
-    post("/api/pf-badges/feedback", {kind:"comment", name:$("#name").value, body:text})
-      .then(function(j){ apply(j); $("#body").value=""; say("#fmsg","Thanks — that's in.",false); })
+    var req;
+    if(pending){
+      var fd = new FormData();
+      fd.append("kind","comment");
+      fd.append("name", $("#name").value);
+      fd.append("body", text);
+      fd.append("imageW", String(pending.w));
+      fd.append("imageH", String(pending.h));
+      fd.append("image", pending.blob, "photo.jpg");
+      req = fetch("/api/pf-badges/feedback", {method:"POST", body: fd}).then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(j){
+          if(!r.ok) throw new Error(j.error || "Something went wrong.");
+          return j;
+        });
+      });
+    } else {
+      req = post("/api/pf-badges/feedback", {kind:"comment", name:$("#name").value, body:text});
+    }
+    req.then(function(j){
+        apply(j); $("#body").value = ""; clearPic();
+        say("#fmsg","Thanks — that's in.",false);
+      })
       .catch(function(e){ say("#fmsg", e.message, true); })
       .then(gate);
   });

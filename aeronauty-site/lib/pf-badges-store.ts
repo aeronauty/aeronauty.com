@@ -1,8 +1,10 @@
 import "server-only";
 import { getSupabaseAdmin, hasSupabase } from "@/lib/supabase-storage";
 import {
+  IMAGE_TYPES,
   LAYOUTS,
   MAX_BODY_LEN,
+  MAX_IMAGE_BYTES,
   MAX_NAME_LEN,
   isLayoutId,
   normaliseHex,
@@ -13,6 +15,7 @@ import {
 
 const VOTES = "pf_badge_votes";
 const FEEDBACK = "pf_badge_feedback";
+const IMAGE_BUCKET = "pf-badge-images";
 const FEEDBACK_LIMIT = 200;
 const RATE_WINDOW_MINUTES = 60;
 const RATE_MAX_FEEDBACK = 10;
@@ -85,12 +88,63 @@ export async function rateLimitFeedback(ipHash: string | null): Promise<boolean>
   return (count ?? 0) < RATE_MAX_FEEDBACK;
 }
 
+/**
+ * Sniff the real format from the first bytes. The declared content-type is
+ * attacker-controlled, so it is never the thing we trust.
+ */
+function sniffImage(buf: Uint8Array): "image/jpeg" | "image/png" | "image/webp" | null {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return "image/png";
+  const ascii = (i: number, s: string) =>
+    s.split("").every((c, k) => buf[i + k] === c.charCodeAt(0));
+  if (ascii(0, "RIFF") && ascii(8, "WEBP")) return "image/webp";
+  return null;
+}
+
+export type UploadResult = { path: string } | { error: string };
+
+/** Store one image. Returns its object path, or a message safe to show a visitor. */
+export async function uploadFeedbackImage(file: File): Promise<UploadResult> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return { error: "Image uploads aren't configured." };
+  if (file.size > MAX_IMAGE_BYTES) return { error: "That image is too large." };
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const sniffed = sniffImage(bytes);
+  // Both must agree, and both must be on the allow-list.
+  if (!sniffed || !IMAGE_TYPES.includes(sniffed as (typeof IMAGE_TYPES)[number])) {
+    return { error: "That doesn't look like a JPEG, PNG or WebP." };
+  }
+
+  const ext = sniffed === "image/jpeg" ? "jpg" : sniffed === "image/png" ? "png" : "webp";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await sb.storage.from(IMAGE_BUCKET).upload(path, bytes, {
+    contentType: sniffed,
+    cacheControl: "31536000",
+    upsert: false,
+  });
+  if (error) {
+    console.error("pf badge image upload failed:", error.message);
+    return { error: "Couldn't store that image." };
+  }
+  return { path };
+}
+
+function publicImageUrl(sb: NonNullable<ReturnType<typeof getSupabaseAdmin>>, path: string) {
+  return sb.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
 export async function addFeedback(input: {
   kind: "comment" | "palette";
   authorName: unknown;
   body: unknown;
   paletteName?: unknown;
   paletteAccent?: unknown;
+  parentId?: string | null;
+  imagePath?: string | null;
+  imageW?: number | null;
+  imageH?: number | null;
   ipHash: string | null;
 }): Promise<BadgeFeedback | null> {
   const sb = getSupabaseAdmin();
@@ -104,7 +158,8 @@ export async function addFeedback(input: {
   // reading this to work out who wants what — an anonymous pile of opinions is
   // not useful to them, and half-anonymous entries would just look broken.
   if (!authorName) return null;
-  if (input.kind === "comment" && !body) return null;
+  // A comment needs words OR a picture — an image on its own is a fair comment.
+  if (input.kind === "comment" && !body && !input.imagePath) return null;
   if (input.kind === "palette" && !accent) return null;
 
   const { data, error } = await sb
@@ -117,6 +172,10 @@ export async function addFeedback(input: {
         input.kind === "palette"
           ? { name: trimOrNull(input.paletteName, MAX_NAME_LEN), accent }
           : null,
+      parent_id: input.parentId ?? null,
+      image_path: input.imagePath ?? null,
+      image_w: input.imageW ?? null,
+      image_h: input.imageH ?? null,
       ip_hash: input.ipHash,
     })
     .select()
@@ -126,7 +185,7 @@ export async function addFeedback(input: {
     console.error("pf badge feedback insert failed:", error?.message);
     return null;
   }
-  return toFeedback(data as FeedbackRow);
+  return toFeedback(data as FeedbackRow, (path) => publicImageUrl(sb, path));
 }
 
 type FeedbackRow = {
@@ -135,10 +194,14 @@ type FeedbackRow = {
   author_name: string | null;
   body: string | null;
   palette: { name?: string | null; accent?: string | null } | null;
+  parent_id: string | null;
+  image_path: string | null;
+  image_w: number | null;
+  image_h: number | null;
   created_at: string;
 };
 
-function toFeedback(row: FeedbackRow): BadgeFeedback {
+function toFeedback(row: FeedbackRow, imageUrl: (p: string) => string): BadgeFeedback {
   return {
     id: row.id,
     kind: row.kind === "palette" ? "palette" : "comment",
@@ -147,8 +210,54 @@ function toFeedback(row: FeedbackRow): BadgeFeedback {
     palette: row.palette
       ? { name: row.palette.name ?? undefined, accent: row.palette.accent ?? undefined }
       : null,
+    image: row.image_path
+      ? { url: imageUrl(row.image_path), w: row.image_w, h: row.image_h }
+      : null,
     createdAt: row.created_at,
+    replies: [],
   };
+}
+
+/**
+ * Flat rows -> one level of threads.
+ *
+ * Top-level items stay newest-first (the feed reads as a feed), but replies run
+ * oldest-first inside each thread, because a conversation should read downwards.
+ * A reply whose parent is missing is promoted to top level rather than dropped —
+ * losing someone's comment to a deleted parent would be worse than a stray one.
+ */
+function buildThreads(rows: FeedbackRow[], imageUrl: (p: string) => string): BadgeFeedback[] {
+  const byId = new Map<string, BadgeFeedback>();
+  for (const r of rows) byId.set(r.id, toFeedback(r, imageUrl));
+
+  const top: BadgeFeedback[] = [];
+  for (const r of rows) {
+    const item = byId.get(r.id)!;
+    const parent = r.parent_id ? byId.get(r.parent_id) : undefined;
+    if (parent) parent.replies.push(item);
+    else top.push(item);
+  }
+  for (const t of top) {
+    t.replies.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+  return top;
+}
+
+/** A reply's parent must exist and must itself be top level. Returns the id to store. */
+export async function resolveParent(parentId: unknown): Promise<string | null | "invalid"> {
+  if (parentId === undefined || parentId === null || parentId === "") return null;
+  if (typeof parentId !== "string") return "invalid";
+  const sb = getSupabaseAdmin();
+  if (!sb) return "invalid";
+  const { data, error } = await sb
+    .from(FEEDBACK)
+    .select("id, parent_id")
+    .eq("id", parentId)
+    .maybeSingle();
+  if (error || !data) return "invalid";
+  // one level only — you cannot reply to a reply
+  if ((data as { parent_id: string | null }).parent_id) return "invalid";
+  return parentId;
 }
 
 /* ---------------------------------------------------------------- summary */
@@ -184,7 +293,9 @@ export async function getSummary(voterKey: string | null): Promise<BadgeSummary>
   return {
     tallies: LAYOUTS.map((l) => ({ layout: l.id, votes: counts.get(l.id) ?? 0 })),
     totalVoters: voters.size,
-    feedback: ((feedbackRes.data ?? []) as FeedbackRow[]).map(toFeedback),
+    feedback: buildThreads((feedbackRes.data ?? []) as FeedbackRow[], (path) =>
+      publicImageUrl(sb, path)
+    ),
     yourVotes: yours,
   };
 }
