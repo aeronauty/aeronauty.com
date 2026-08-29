@@ -22,6 +22,37 @@
     }
   }
 
+  function validatePoint3(name, point) {
+    if (
+      !point
+      || !Number.isFinite(point.x)
+      || !Number.isFinite(point.y)
+      || !Number.isFinite(point.z)
+    ) {
+      throw new TypeError(`${name} must contain finite x, y and z coordinates`);
+    }
+  }
+
+  function subtract3(a, b) {
+    return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
+  }
+
+  function cross3(a, b) {
+    return {
+      x: a.y * b.z - a.z * b.y,
+      y: a.z * b.x - a.x * b.z,
+      z: a.x * b.y - a.y * b.x,
+    };
+  }
+
+  function dot3(a, b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+  }
+
+  function magnitude3(vector) {
+    return Math.hypot(vector.x, vector.y, vector.z);
+  }
+
   function vortexPanelVelocity(A, B, P, gamma = 1) {
     validatePoint('A', A);
     validatePoint('B', B);
@@ -44,18 +75,39 @@
     const r1Squared = X * X + Y * Y;
     const r2Squared = (X - length) ** 2 + Y * Y;
 
-    if (r1Squared < EPS ** 2 || r2Squared < EPS ** 2 || Math.abs(Y) < EPS) {
+    if (r1Squared < EPS ** 2 || r2Squared < EPS ** 2) {
+      return { x: Number.NaN, y: Number.NaN };
+    }
+    if (Math.abs(Y) < EPS && X > 0 && X < length) {
       return { x: Number.NaN, y: Number.NaN };
     }
 
     const theta1 = Math.atan2(Y, X);
     const theta2 = Math.atan2(Y, X - length);
-    const uLocal = -(gamma / TWO_PI) * (theta2 - theta1);
-    const vLocal = (gamma / FOUR_PI) * Math.log(r1Squared / r2Squared);
+    // Katz & Plotkin use positive gamma for clockwise rotation in their
+    // two-dimensional (x, z) plane. Here y is the planar counterpart of z.
+    const uLocal = (gamma / TWO_PI) * (theta2 - theta1);
+    const vLocal = -(gamma / FOUR_PI) * Math.log(r1Squared / r2Squared);
 
     return {
       x: uLocal * tx + vLocal * nx,
       y: uLocal * ty + vLocal * ny,
+    };
+  }
+
+  function pointVortexVelocity(source, P, circulation = 1) {
+    validatePoint('source', source);
+    validatePoint('P', P);
+    if (!Number.isFinite(circulation)) throw new TypeError('circulation must be finite');
+
+    const rx = P.x - source.x;
+    const ry = P.y - source.y;
+    const radiusSquared = rx * rx + ry * ry;
+    if (radiusSquared < EPS ** 2) return { x: Number.NaN, y: Number.NaN };
+
+    return {
+      x: circulation * ry / (TWO_PI * radiusSquared),
+      y: -circulation * rx / (TWO_PI * radiusSquared),
     };
   }
 
@@ -72,6 +124,16 @@
     const dy = B.y - A.y;
     const length = Math.hypot(dx, dy);
     if (length < EPS) throw new RangeError('panel endpoints must be distinct');
+    const tx = dx / length;
+    const ty = dy / length;
+    const nx = -ty;
+    const ny = tx;
+    const fromA = { x: P.x - A.x, y: P.y - A.y };
+    const X = fromA.x * tx + fromA.y * ty;
+    const Y = fromA.x * nx + fromA.y * ny;
+    if (Math.abs(Y) < EPS && X >= 0 && X <= length) {
+      return { x: Number.NaN, y: Number.NaN };
+    }
 
     let u = 0;
     let v = 0;
@@ -80,18 +142,119 @@
       const fraction = (i + 0.5) / panels;
       const sourceX = A.x + dx * fraction;
       const sourceY = A.y + dy * fraction;
-      const rx = P.x - sourceX;
-      const ry = P.y - sourceY;
-      const radiusSquared = rx * rx + ry * ry;
-      if (radiusSquared < EPS ** 2) return { x: Number.NaN, y: Number.NaN };
-      u += -discreteCirculation * ry / (TWO_PI * radiusSquared);
-      v += discreteCirculation * rx / (TWO_PI * radiusSquared);
+      const contribution = pointVortexVelocity(
+        { x: sourceX, y: sourceY },
+        P,
+        discreteCirculation,
+      );
+      if (!Number.isFinite(contribution.x)) return contribution;
+      u += contribution.x;
+      v += contribution.y;
     }
     return { x: u, y: v };
   }
 
+  /**
+   * Velocity induced by a finite straight vortex filament from A to B.
+   * Positive circulation follows the right-hand rule around the oriented segment.
+   */
+  function finiteVortexSegmentVelocity(A, B, P, circulation = 1) {
+    validatePoint3('A', A);
+    validatePoint3('B', B);
+    validatePoint3('P', P);
+    if (!Number.isFinite(circulation)) throw new TypeError('circulation must be finite');
+
+    const r0 = subtract3(B, A);
+    const r1 = subtract3(P, A);
+    const r2 = subtract3(P, B);
+    const segmentLength = magnitude3(r0);
+    const r1Magnitude = magnitude3(r1);
+    const r2Magnitude = magnitude3(r2);
+    if (segmentLength < EPS) throw new RangeError('filament endpoints must be distinct');
+
+    const perpendicular = cross3(r1, r2);
+    const perpendicularSquared = dot3(perpendicular, perpendicular);
+    if (r1Magnitude < EPS || r2Magnitude < EPS) {
+      return { x: Number.NaN, y: Number.NaN, z: Number.NaN };
+    }
+    const collinearTolerance = EPS * segmentLength * Math.max(r1Magnitude, r2Magnitude);
+    if (perpendicularSquared <= collinearTolerance ** 2) {
+      const projection = dot3(r1, r0) / segmentLength ** 2;
+      if (projection < 0 || projection > 1) return { x: 0, y: 0, z: 0 };
+      return { x: Number.NaN, y: Number.NaN, z: Number.NaN };
+    }
+
+    const endpointFactor = dot3(r0, {
+      x: r1.x / r1Magnitude - r2.x / r2Magnitude,
+      y: r1.y / r1Magnitude - r2.y / r2Magnitude,
+      z: r1.z / r1Magnitude - r2.z / r2Magnitude,
+    });
+    const coefficient = circulation * endpointFactor / (FOUR_PI * perpendicularSquared);
+
+    return {
+      x: coefficient * perpendicular.x,
+      y: coefficient * perpendicular.y,
+      z: coefficient * perpendicular.z,
+    };
+  }
+
+  /**
+   * Independent midpoint integration of the Biot-Savart line integral.
+   * It is intentionally slower than the closed form so the UI and tests can
+   * use it as a numerical calibration reference.
+   */
+  function finiteVortexSegmentQuadrature(A, B, P, circulation = 1, panels = 1200) {
+    validatePoint3('A', A);
+    validatePoint3('B', B);
+    validatePoint3('P', P);
+    if (!Number.isFinite(circulation)) throw new TypeError('circulation must be finite');
+    if (!Number.isInteger(panels) || panels < 8) {
+      throw new TypeError('panels must be an integer of at least 8');
+    }
+
+    const segment = subtract3(B, A);
+    const segmentLength = magnitude3(segment);
+    if (segmentLength < EPS) throw new RangeError('filament endpoints must be distinct');
+    const fromA = subtract3(P, A);
+    const fromAMagnitude = magnitude3(fromA);
+    const axisDistance = cross3(segment, fromA);
+    const collinearTolerance = EPS * segmentLength * Math.max(fromAMagnitude, segmentLength);
+    if (dot3(axisDistance, axisDistance) <= collinearTolerance ** 2) {
+      const projection = dot3(fromA, segment) / segmentLength ** 2;
+      if (projection < 0 || projection > 1) return { x: 0, y: 0, z: 0 };
+      return { x: Number.NaN, y: Number.NaN, z: Number.NaN };
+    }
+    const differential = {
+      x: segment.x / panels,
+      y: segment.y / panels,
+      z: segment.z / panels,
+    };
+    const total = { x: 0, y: 0, z: 0 };
+
+    for (let i = 0; i < panels; i += 1) {
+      const fraction = (i + 0.5) / panels;
+      const source = {
+        x: A.x + segment.x * fraction,
+        y: A.y + segment.y * fraction,
+        z: A.z + segment.z * fraction,
+      };
+      const radius = subtract3(P, source);
+      const radiusMagnitude = magnitude3(radius);
+      if (radiusMagnitude < EPS) {
+        return { x: Number.NaN, y: Number.NaN, z: Number.NaN };
+      }
+      const contribution = cross3(differential, radius);
+      const coefficient = circulation / (FOUR_PI * radiusMagnitude ** 3);
+      total.x += coefficient * contribution.x;
+      total.y += coefficient * contribution.y;
+      total.z += coefficient * contribution.z;
+    }
+
+    return total;
+  }
+
   function vectorDifferenceMagnitude(a, b) {
-    return Math.hypot(a.x - b.x, a.y - b.y);
+    return Math.hypot(a.x - b.x, a.y - b.y, (a.z ?? 0) - (b.z ?? 0));
   }
 
   function trailingFilamentStrengths(panelCirculations) {
@@ -117,15 +280,24 @@
   }
 
   function addVelocities(...vectors) {
-    return vectors.reduce(
-      (total, vector) => ({ x: total.x + vector.x, y: total.y + vector.y }),
-      { x: 0, y: 0 },
+    const hasZ = vectors.some((vector) => Object.hasOwn(vector, 'z'));
+    const total = vectors.reduce(
+      (result, vector) => ({
+        x: result.x + vector.x,
+        y: result.y + vector.y,
+        z: result.z + (vector.z ?? 0),
+      }),
+      { x: 0, y: 0, z: 0 },
     );
+    return hasZ ? total : { x: total.x, y: total.y };
   }
 
   function relativeVelocityError(actual, expected) {
     const difference = vectorDifferenceMagnitude(actual, expected);
-    const reference = Math.max(Math.hypot(expected.x, expected.y), Number.EPSILON);
+    const reference = Math.max(
+      Math.hypot(expected.x, expected.y, expected.z ?? 0),
+      Number.EPSILON,
+    );
     return difference / reference;
   }
 
@@ -135,6 +307,9 @@
 
   return {
     addVelocities,
+    finiteVortexSegmentQuadrature,
+    finiteVortexSegmentVelocity,
+    pointVortexVelocity,
     relativeVelocityError,
     shedCirculation,
     sum,

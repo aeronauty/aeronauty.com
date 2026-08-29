@@ -12,6 +12,18 @@ export type TopologyArticle = {
 
 export const topologyArticles: TopologyArticle[] = [
   {
+    slug: "computational-experimentation",
+    title: "Computational Experimentation",
+    description:
+      "Moving trust in machine-produced engineering work from authorship to experiment, with the panel-code calibration sequence made interactive.",
+    date: "2026-08-25",
+    status: "Published",
+    tags: ["Engineering", "AI", "Verification", "Interactive", "Long read"],
+    buildFile: "computational-experimentation/article.html",
+    publicAssetPrefix: "/writing/topology-instinct/assets",
+    labAssetPrefix: "/lab/articles/topology-instinct/assets",
+  },
+  {
     slug: "i-dont-like-data-entry",
     title: "I Don't Like Data Entry",
     description:

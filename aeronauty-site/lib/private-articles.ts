@@ -11,20 +11,6 @@ export type PrivateArticle = {
   assetPrefix: string;
 };
 
-const standalonePrivateArticles: PrivateArticle[] = [
-  {
-    slug: "computational-experimentation",
-    title: "Computational Experimentation",
-    description:
-      "Moving trust in machine-produced engineering work from authorship to experiment, with the panel-code calibration sequence made interactive.",
-    date: "2026-08-25",
-    status: "Draft",
-    tags: ["Engineering", "AI", "Verification", "Interactive", "Long read"],
-    buildFile: "computational-experimentation/article.html",
-    assetPrefix: "/lab/articles/topology-instinct/assets",
-  },
-];
-
 export const privateArticles: PrivateArticle[] = [
   ...topologyArticles.map((article) => ({
     slug: article.slug,
@@ -36,7 +22,6 @@ export const privateArticles: PrivateArticle[] = [
     buildFile: article.buildFile,
     assetPrefix: article.labAssetPrefix,
   })),
-  ...standalonePrivateArticles,
 ];
 
 export function getPrivateArticle(slug: string): PrivateArticle | undefined {

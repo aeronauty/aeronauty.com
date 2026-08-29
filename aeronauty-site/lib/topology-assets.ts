@@ -240,9 +240,32 @@ function polishReaderHtml(segments: string[], data: Buffer): Buffer {
   );
 }
 
+function stripComputationalExperimentationProvenance(
+  segments: string[],
+  data: Buffer,
+): Buffer {
+  if (
+    segments.join("/") !==
+    "computational-experimentation/article-source.md"
+  ) {
+    return data;
+  }
+
+  return Buffer.from(
+    data
+      .toString("utf8")
+      .replace(
+        /^\uFEFF?<!-- GENERATED FROM GOOGLE DOC[^\n]*-->\r?\n<!-- EDIT THE GOOGLE DOC[^\n]*-->\r?\n\r?\n/,
+        "",
+      ),
+    "utf8",
+  );
+}
+
 export async function serveTopologyAsset(
   segments: string[] = [],
   cacheControl = "public, max-age=300",
+  options: { stripSourceProvenance?: boolean } = {},
 ) {
   if (segments.length === 0) {
     return new NextResponse("Not Found", { status: 404 });
@@ -276,7 +299,11 @@ export async function serveTopologyAsset(
     return new NextResponse("Not Found", { status: 404 });
   }
 
-  const data = polishReaderHtml(segments, await readFile(requested));
+  const sourceData = await readFile(requested);
+  const readerData = options.stripSourceProvenance
+    ? stripComputationalExperimentationProvenance(segments, sourceData)
+    : sourceData;
+  const data = polishReaderHtml(segments, readerData);
   return new NextResponse(Uint8Array.from(data), {
     status: 200,
     headers: {
