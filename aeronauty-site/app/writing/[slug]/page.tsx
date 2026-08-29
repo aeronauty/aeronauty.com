@@ -11,9 +11,18 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const article = getTopologyArticle(params.slug);
   if (!article) return {};
 
+  const canonical = `https://www.aeronauty.com/writing/${article.slug}`;
+
   return {
     title: `${article.title} - Aeronauty`,
     description: article.description,
+    alternates: { canonical },
+    openGraph: {
+      title: article.title,
+      description: article.description,
+      type: "article",
+      url: canonical,
+    },
   };
 }
 
