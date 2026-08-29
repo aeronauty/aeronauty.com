@@ -50,14 +50,32 @@ export function normaliseHex(input: unknown): string | null {
 
 export type BadgeTally = { layout: LayoutId; votes: number };
 
+export type BadgeImage = { url: string; w: number | null; h: number | null };
+
 export type BadgeFeedback = {
   id: string;
   kind: "comment" | "palette";
   authorName: string | null;
   body: string | null;
   palette: { name?: string; accent?: string } | null;
+  image: BadgeImage | null;
   createdAt: string;
+  /** Replies to this item. One level only — see MAX_THREAD_DEPTH. */
+  replies: BadgeFeedback[];
 };
+
+/**
+ * Replies nest exactly one level. Arbitrary nesting is unreadable on a phone,
+ * which is where most of these parents will be reading it, and it invites
+ * threads that wander off the question being asked.
+ */
+export const MAX_THREAD_DEPTH = 1;
+
+/** What the browser may upload. Kept deliberately narrow. */
+export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+/** Longest edge after the browser downscales, before upload. */
+export const IMAGE_MAX_EDGE = 1600;
 
 export type BadgeSummary = {
   tallies: BadgeTally[];
