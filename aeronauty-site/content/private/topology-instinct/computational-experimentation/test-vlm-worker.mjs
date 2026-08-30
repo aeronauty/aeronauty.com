@@ -23,7 +23,7 @@ function createWorkerHarness() {
     },
     importScripts(...names) {
       names.forEach((name) => {
-        assert.equal(name, 'vlm-core.js');
+        assert.equal(name.split('?')[0], 'vlm-core.js');
         vm.runInContext(coreSource, context, { filename: name });
       });
     },
@@ -47,12 +47,12 @@ function createWorkerHarness() {
 
 test('worker filters unsupported messages and correlates solver errors', () => {
   const worker = createWorkerHarness();
-  assert.deepEqual(worker.dispatch({ type: 'ping', protocolVersion: 1 }), []);
-  assert.deepEqual(worker.dispatch({ type: 'solve', protocolVersion: 2 }), []);
+  assert.deepEqual(worker.dispatch({ type: 'ping', protocolVersion: 2 }), []);
+  assert.deepEqual(worker.dispatch({ type: 'solve', protocolVersion: 1 }), []);
 
   const messages = worker.dispatch({
     type: 'solve',
-    protocolVersion: 1,
+    protocolVersion: 2,
     requestId: 'bad-request',
     key: 'bad-key',
     aspectRatio: 8,
@@ -60,7 +60,7 @@ test('worker filters unsupported messages and correlates solver errors', () => {
   });
   assert.deepEqual(messages, [{
     type: 'result',
-    protocolVersion: 1,
+    protocolVersion: 2,
     requestId: 'bad-request',
     key: 'bad-key',
     error: 'spanPanels must be a positive integer',
@@ -71,7 +71,7 @@ test('straight worker solve clamps inputs and exposes steady pressure aliases', 
   const worker = createWorkerHarness();
   const messages = worker.dispatch({
     type: 'solve',
-    protocolVersion: 1,
+    protocolVersion: 2,
     requestId: 7,
     key: 'straight-clamped',
     wakeMode: 'straight',
@@ -83,7 +83,7 @@ test('straight worker solve clamps inputs and exposes steady pressure aliases', 
   const result = messages[0];
 
   assert.equal(result.type, 'result');
-  assert.equal(result.protocolVersion, 1);
+  assert.equal(result.protocolVersion, 2);
   assert.equal(result.requestId, 7);
   assert.equal(result.key, 'straight-clamped');
   assert.equal(result.wakeMode, 'straight');
@@ -110,75 +110,102 @@ test('straight worker solve clamps inputs and exposes steady pressure aliases', 
       1e-13,
     );
   }
+
+  const quick = worker.dispatch({
+    type: 'solve',
+    protocolVersion: 2,
+    requestId: 8,
+    key: 'straight-quick',
+    wakeMode: 'straight',
+    aspectRatio: 8,
+    alphaDeg: 6,
+    spanPanels: 6,
+  });
+  assert.equal(quick[0].config.spanPanels, 6);
+  assert.equal(quick[0].config.unknowns, 6);
 });
 
-test('free worker solve reports progress, wake invariants and transient pressure lift', () => {
+test('harmonic worker reports settled staged responses and retained wake history', () => {
   const worker = createWorkerHarness();
   const messages = worker.dispatch({
     type: 'solve',
-    protocolVersion: 1,
+    protocolVersion: 2,
     requestId: 11,
     key: 'free-default',
-    wakeMode: 'free',
+    wakeMode: 'harmonic',
     aspectRatio: 8,
     alphaDeg: 6,
-    spanPanels: 12,
+    spanPanels: 6,
+    reducedFrequency: 0.35,
+    amplitude: 0.03,
   });
 
-  assert.deepEqual(messages.map((message) => message.type), [
-    'progress',
-    'progress',
-    'progress',
-    'result',
-  ]);
+  assert.deepEqual(messages.map((message) => message.type), ['progress','progress','progress','result']);
   const progress = messages.slice(0, -1);
-  assert.deepEqual(progress.map((message) => message.completed), [4, 8, 12]);
+  assert.deepEqual(progress.map((message) => message.completed), [1, 2, 3]);
+  assert.deepEqual(progress.map((message) => message.stage), ['flat', 'te', 'free']);
   progress.forEach((message) => {
-    assert.equal(message.total, 16);
-    assert.equal(message.protocolVersion, 1);
+    assert.equal(message.total, 3);
+    assert.equal(message.protocolVersion, 2);
     assert.equal(message.requestId, 11);
     assert.equal(message.key, 'free-default');
   });
 
   const result = messages.at(-1);
-  assert.equal(result.wakeMode, 'free');
+  assert.equal(result.wakeMode, 'harmonic');
+  assert.equal(result.config.chordPanels, 2);
+  assert.equal(result.config.spanPanels, 6);
   assert.equal(result.config.unknowns, 12);
-  assert.equal(result.wake.step, 16);
-  close(result.wake.time, 1.92, 1e-12);
-  assert.equal(result.wake.nodeRows.length, 15);
-  assert.equal(result.wake.strengthRows.length, 15);
-  result.wake.nodeRows.forEach((row) => {
-    assert.equal(row.length, 13);
-    row.forEach((point) => point.forEach((coordinate) => {
-      assert.ok(Number.isFinite(coordinate));
-    }));
+  assert.equal(result.config.stepsPerCycle, 24);
+  assert.equal(result.config.cycles, 4);
+  assert.equal(result.config.activeWakeRows, 12);
+  assert.equal(result.snapshots.length, 24);
+  assert.equal(result.trace.length, 24);
+  assert.deepEqual(Object.keys(result.stages), ['flat', 'te', 'free']);
+  close(result.stages.flat.response.circulatory.magnitude, 0.8392133863665207, 1e-11);
+  close(result.stages.free.response.circulatory.phaseDegrees, -9.92263385600078, 1e-11);
+  for (const stage of Object.values(result.stages)) {
+    assert.equal(stage.snapshots.length, 24);
+    assert.equal(stage.periodicity.converged, true);
+    assert.equal(stage.periodicity.residualGate.passed, true);
+    assert.ok(stage.periodicity.magnitudeRelative < 0.001);
+    assert.ok(stage.periodicity.phaseDegrees < 0.01);
+    assert.ok(stage.diagnostics.maximumBoundaryResidual < 1e-12);
+    assert.ok(stage.diagnostics.maximumSheddingResidual < 1e-12);
+    assert.ok(stage.diagnostics.maximumContinuityResidual < 1e-12);
+    assert.ok(stage.diagnostics.normalizedBoundaryResidual < 1e-10);
+    assert.ok(stage.diagnostics.normalizedSheddingResidual < 1e-12);
+    assert.ok(stage.diagnostics.normalizedContinuityResidual < 1e-12);
+    assert.equal(stage.diagnostics.wakeRows, 95);
+    stage.trace.forEach((sample) => {
+      assert.ok(Number.isFinite(sample.pressureCirculatoryCL));
+      assert.ok(Number.isFinite(sample.apparentMassCL));
+    });
+    stage.snapshots.forEach((snapshot) => {
+      assert.ok(Number.isFinite(snapshot.h));
+      assert.ok(Number.isFinite(snapshot.pressureCirculatoryCL));
+      assert.equal(snapshot.wake.nodeRows.length, snapshot.wake.sourceIndices.length);
+      assert.equal(snapshot.wake.strengthRows.length, snapshot.wake.sourceIndices.length);
+      assert.equal(snapshot.wake.sourceIndices[0], 0);
+      assert.equal(snapshot.wake.sourceIndices.at(-1), snapshot.wake.totalRows - 1);
+    });
+  }
+  assert.ok(result.stages.free.diagnostics.maximumInducedSpeed > 0);
+  result.snapshots.forEach((snapshot, index) => {
+    assert.ok(snapshot.wake.totalRows >= 72 && snapshot.wake.totalRows <= 95);
+    if (index) assert.ok(snapshot.wake.totalRows > result.snapshots[index - 1].wake.totalRows);
+    assert.equal(snapshot.wake.nodeRows.length, 48);
+    assert.equal(snapshot.wake.strengthRows.length, 48);
+    assert.equal(snapshot.wake.sourceIndices.length, 48);
+    assert.deepEqual(snapshot.wake.sourceIndices.slice(0, 13), Array.from({ length: 13 }, (_, row) => row));
+    assert.equal(snapshot.wake.sourceIndices[0], 0);
+    assert.equal(snapshot.wake.sourceIndices.at(-1), snapshot.wake.totalRows - 1);
+    assert.ok(snapshot.wake.sourceIndices.every((row, rowIndex) => rowIndex === 0 || row > snapshot.wake.sourceIndices[rowIndex - 1]));
+    assert.equal(snapshot.wake.pendingAttachmentRow.points.length, 7);
+    assert.ok(snapshot.inducedDisplacement.maximum > 1e-3);
+    assert.ok(snapshot.inducedDisplacement.rms > 0);
+    assert.equal(snapshot.phaseDegrees, result.stages.te.snapshots[index].phaseDegrees);
+    assert.equal(snapshot.h, result.stages.te.snapshots[index].h);
   });
-  result.wake.strengthRows.forEach((row) => {
-    assert.equal(row.length, 12);
-    row.forEach((strength) => assert.ok(Number.isFinite(strength)));
-  });
-
-  const metrics = result.metrics;
-  close(metrics.CL, 0.4376940645054386, 5e-12);
-  close(metrics.pressureCirculatoryCL, metrics.CL, 1e-12);
-  close(metrics.accelerationCL, 0.030818612428744518, 5e-12);
-  close(metrics.totalPressureCL, 0.4685126769341831, 5e-12);
-  close(
-    metrics.totalPressureCL,
-    metrics.pressureCirculatoryCL + metrics.accelerationCL,
-    1e-12,
-  );
-  assert.ok(metrics.accelerationCL > 0);
-  assert.ok(Math.abs(metrics.totalPressureCL - metrics.CL) > 1e-3);
-  assert.ok(metrics.maxBoundaryResidual < 1e-12);
-  assert.ok(Math.abs(metrics.trailingClosure) < 1e-12);
-  assert.ok(metrics.sheddingResidual < 1e-12);
-  assert.ok(metrics.filamentContinuityResidual < 1e-12);
-  close(metrics.wakeAge, 1.92, 1e-12);
-  assert.equal(metrics.wakeRows, 15);
-  assert.equal(metrics.coreRadius, 0.05);
-  assert.ok(metrics.maxInducedSpeed > 0);
-  assert.equal(result.wake.diagnostics.mode, 'free');
-  assert.equal(result.wake.diagnostics.integrator, 'heun');
-  assert.ok(result.wake.diagnostics.skippedIncidentSegments > 0);
+  assert.equal(result.snapshots.at(-1).wake.totalRows, 95);
 });

@@ -203,16 +203,29 @@
     validatePoint('origin', origin);
 
     const dx = chord / chordPanels;
+    const wakeAttachOffset = options.wakeAttachOffset ?? null;
+    if (wakeAttachOffset) validatePoint('wakeAttachOffset', wakeAttachOffset);
+    const wakeAttachAtTrailingEdge = options.wakeAttachAtTrailingEdge === true
+      || wakeAttachOffset !== null;
     const xRows = [];
     for (let i = 0; i <= chordPanels; i += 1) {
-      xRows.push(origin.x + (i + 0.25) * dx);
+      xRows.push(
+        wakeAttachAtTrailingEdge && i === chordPanels
+          ? origin.x + chord + (wakeAttachOffset?.x ?? 0)
+          : origin.x + (i + 0.25) * dx,
+      );
     }
     const yEdges = spanSpacing === 'cosine'
       ? cosineSpanEdges(span, spanPanels, origin.y)
       : uniformSpanEdges(span, spanPanels, origin.y);
 
     const nodes = xRows.map((x, i) => yEdges.map((y, j) => (
-      point(x, y, origin.z, `bound:${i}:${j}`)
+      point(
+        x,
+        y + (i === chordPanels ? wakeAttachOffset?.y ?? 0 : 0),
+        origin.z + (i === chordPanels ? wakeAttachOffset?.z ?? 0 : 0),
+        `bound:${i}:${j}`,
+      )
     )));
     const panels = [];
     for (let i = 0; i < chordPanels; i += 1) {
@@ -252,6 +265,8 @@
       chordPanels,
       spanPanels,
       spanSpacing,
+      wakeAttachAtTrailingEdge,
+      wakeAttachOffset: wakeAttachOffset ? clonePoint(wakeAttachOffset) : null,
       origin: clonePoint(origin),
       dx,
       xRows,
@@ -521,6 +536,8 @@
       strengthRows: [],
       previousTrailingStrengths: null,
       boundStrengths: null,
+      previousBoundStrengths: null,
+      pendingAttachmentRow: null,
       time: 0,
       step: 0,
       nextRowId: 0,
@@ -543,6 +560,15 @@
         ? wake.previousTrailingStrengths.slice()
         : null,
       boundStrengths: wake.boundStrengths ? wake.boundStrengths.slice() : null,
+      previousBoundStrengths: wake.previousBoundStrengths
+        ? wake.previousBoundStrengths.slice()
+        : null,
+      pendingAttachmentRow: wake.pendingAttachmentRow
+        ? {
+          ...wake.pendingAttachmentRow,
+          points: wake.pendingAttachmentRow.points.map(clonePoint),
+        }
+        : null,
       lastConvectionDiagnostics: wake.lastConvectionDiagnostics
         ? { ...wake.lastConvectionDiagnostics }
         : null,
@@ -686,16 +712,20 @@
     return velocity;
   }
 
-  function translateFlatWake(wake, freestream, dt) {
+  function translatePrescribedWake(wake, freestream, dt, includeNormalMotion) {
     const translated = cloneWakeState(wake);
-    const distance = freestream.x * dt;
     for (const row of translated.nodeRows) {
-      for (const current of row.points) current.x += distance;
+      for (const current of row.points) {
+        current.x += freestream.x * dt;
+        current.y += freestream.y * dt;
+        if (includeNormalMotion) current.z += freestream.z * dt;
+      }
     }
     translated.lastConvectionDiagnostics = {
-      mode: 'flat',
+      mode: includeNormalMotion ? 'te' : 'flat',
       maxInducedSpeed: 0,
       skippedIncidentSegments: 0,
+      activeWakeRows: 0,
     };
     return translated;
   }
@@ -713,7 +743,15 @@
     return result;
   }
 
-  function freeWakeNodeVelocities(lattice, wake, boundStrengths, freestream, coreRadius, inductionScale) {
+  function freeWakeNodeVelocities(
+    lattice,
+    wake,
+    boundStrengths,
+    freestream,
+    coreRadius,
+    inductionScale,
+    activeWakeRows,
+  ) {
     const rings = [];
     if (boundStrengths) rings.push(...boundRings(lattice, boundStrengths));
     rings.push(...wakeRings(lattice, wake));
@@ -721,8 +759,13 @@
     const velocities = [];
     let skippedIncidentSegments = 0;
     let maxInducedSpeed = 0;
-    for (const row of wake.nodeRows) {
+    for (let rowIndex = 0; rowIndex < wake.nodeRows.length; rowIndex += 1) {
+      const row = wake.nodeRows[rowIndex];
       for (const current of row.points) {
+        if (rowIndex >= activeWakeRows) {
+          velocities.push(clonePoint(freestream));
+          continue;
+        }
         const result = inducedVelocityFromFilaments(current, filaments, {
           coreRadius,
           excludeNodeId: current.id,
@@ -742,12 +785,15 @@
     if (!lattice) throw new TypeError('lattice is required');
     const dt = assertPositive('dt', options.dt ?? 0.1);
     const mode = options.mode ?? options.wakeMode ?? 'flat';
-    if (mode !== 'flat' && mode !== 'free') {
-      throw new RangeError("wake mode must be 'flat' or 'free'");
+    if (mode !== 'flat' && mode !== 'te' && mode !== 'free') {
+      throw new RangeError("wake mode must be 'flat', 'te' or 'free'");
     }
     const { velocity: freestream } = resolveFreestream(options);
     if (mode === 'flat') {
-      return translateFlatWake(wake, freestream, dt);
+      return translatePrescribedWake(wake, freestream, dt, false);
+    }
+    if (mode === 'te') {
+      return translatePrescribedWake(wake, freestream, dt, true);
     }
     if (wake.nodeRows.length === 0) {
       const empty = cloneWakeState(wake);
@@ -761,6 +807,7 @@
         maxInducedSpeed: 0,
         skippedIncidentSegments: 0,
         filamentCount: 0,
+        activeWakeRows: 0,
       };
       return empty;
     }
@@ -776,6 +823,13 @@
       throw new RangeError("integrator must be 'euler' or 'heun'");
     }
     const boundStrengths = options.boundStrengths ?? wake.boundStrengths;
+    const activeWakeRows = Math.max(
+      1,
+      Math.min(
+        wake.nodeRows.length,
+        options.activeWakeRows ?? wake.nodeRows.length,
+      ),
+    );
     const first = freeWakeNodeVelocities(
       lattice,
       wake,
@@ -783,6 +837,7 @@
       freestream,
       coreRadius,
       inductionScale,
+      activeWakeRows,
     );
     const currentPositions = wake.nodeRows.flatMap((row) => row.points);
     let finalPositions = currentPositions.map((current, index) => (
@@ -799,6 +854,7 @@
         freestream,
         coreRadius,
         inductionScale,
+        activeWakeRows,
       );
       finalPositions = currentPositions.map((current, index) => add3(
         current,
@@ -820,11 +876,21 @@
       maxInducedSpeed: diagnostics.maxInducedSpeed,
       skippedIncidentSegments: diagnostics.skippedIncidentSegments,
       filamentCount: diagnostics.filamentCount,
+      activeWakeRows,
     };
     return result;
   }
 
-  function insertShedWakeRow(lattice, wake, freestream, dt, mode, shedFraction, maxWakeRows) {
+  function insertShedWakeRow(
+    lattice,
+    wake,
+    freestream,
+    dt,
+    mode,
+    shedFraction,
+    maxWakeRows,
+    shedOffset,
+  ) {
     if (!wake.previousTrailingStrengths) return { wake, shedStrengths: null };
     if (shedFraction <= 0 || shedFraction >= 1) {
       throw new RangeError('shedFraction must lie strictly between zero and one');
@@ -832,9 +898,10 @@
     const result = cloneWakeState(wake);
     const rowId = result.nextRowId;
     result.nextRowId += 1;
-    const offset = mode === 'flat'
+    const offset = shedOffset ?? (mode === 'flat'
       ? { x: shedFraction * freestream.x * dt, y: 0, z: 0 }
-      : scale3(freestream, shedFraction * dt);
+      : scale3(freestream, shedFraction * dt));
+    validatePoint('shedOffset', offset);
     const attachment = lattice.nodes[lattice.chordPanels];
     const newRow = {
       id: rowId,
@@ -856,8 +923,31 @@
     return { wake: result, shedStrengths };
   }
 
-  function pressureLoads(lattice, strengths, previousStrengths, freestream, dt, density = 1) {
+  function promotePendingAttachmentRow(wake) {
+    if (!wake.pendingAttachmentRow || !wake.previousTrailingStrengths) {
+      return { wake, shedStrengths: null };
+    }
+    const result = cloneWakeState(wake);
+    const shedStrengths = result.previousTrailingStrengths.slice();
+    result.nodeRows.unshift(result.pendingAttachmentRow);
+    result.strengthRows.unshift(shedStrengths.slice());
+    result.pendingAttachmentRow = null;
+    return { wake: result, shedStrengths };
+  }
+
+  function pressureLoads(
+    lattice,
+    strengths,
+    previousStrengths,
+    previousPreviousStrengths,
+    freestream,
+    dt,
+    density = 1,
+    wakeVelocities = null,
+    referenceSpeed = null,
+  ) {
     const previous = previousStrengths ?? new Array(strengths.length).fill(0);
+    const previousPrevious = previousPreviousStrengths ?? null;
     let circulatoryLift = 0;
     let accelerationLift = 0;
     for (const panel of lattice.panels) {
@@ -866,12 +956,29 @@
         : panel.index - lattice.spanPanels;
       const upstream = upstreamIndex < 0 ? 0 : strengths[upstreamIndex];
       const chordwiseJump = strengths[panel.index] - upstream;
-      circulatoryLift += density * freestream.x * chordwiseJump * panel.spanWidth;
+      const portIndex = panel.spanIndex === 0 ? -1 : panel.index - 1;
+      const portStrength = portIndex < 0 ? 0 : strengths[portIndex];
+      const spanwiseJump = strengths[panel.index] - portStrength;
+      const wakeVelocity = wakeVelocities?.[panel.index] ?? zeroVelocity();
+      const chordwiseSpeed = freestream.x + wakeVelocity.x;
+      const spanwiseSpeed = freestream.y + wakeVelocity.y;
+      circulatoryLift += density * (
+        chordwiseSpeed * chordwiseJump * panel.spanWidth
+        + spanwiseSpeed * spanwiseJump * panel.chordWidth
+      );
+      const strengthDerivative = previousPrevious
+        ? (
+          3 * strengths[panel.index]
+          - 4 * previous[panel.index]
+          + previousPrevious[panel.index]
+        ) / (2 * dt)
+        : (strengths[panel.index] - previous[panel.index]) / dt;
       accelerationLift += density
-        * (strengths[panel.index] - previous[panel.index]) / dt
+        * strengthDerivative
         * panel.area;
     }
-    const dynamicPressure = 0.5 * density * magnitude3(freestream) ** 2;
+    const normalizingSpeed = referenceSpeed ?? magnitude3(freestream);
+    const dynamicPressure = 0.5 * density * normalizingSpeed ** 2;
     const lift = circulatoryLift + accelerationLift;
     return {
       circulatoryLift,
@@ -883,9 +990,11 @@
 
   /**
    * Advance the Katz-Plotkin unsteady vortex-ring model by one step.
-   * Existing wake geometry is convected first; a new known-strength row is
-   * then shed from the previous trailing-edge solution; finally the current
-   * bound no-penetration system is solved.
+   * In dynamic-attachment mode, the prior unknown trailing closure is first
+   * promoted to a known wake row, convected, and connected to the current
+   * closure supplied by the lattice. The current bound system is then solved
+   * and its closure is retained for the next step. The legacy static-attach
+   * path remains available for the original fixed-incidence regression.
    */
   function stepUnsteadyVlm(options = {}) {
     const lattice = options.lattice ?? createRectangularWingLattice(options);
@@ -895,33 +1004,46 @@
     }
     const dt = assertPositive('dt', options.dt ?? 0.1);
     const mode = options.mode ?? options.wakeMode ?? 'flat';
-    if (mode !== 'flat' && mode !== 'free') {
-      throw new RangeError("wake mode must be 'flat' or 'free'");
+    if (mode !== 'flat' && mode !== 'te' && mode !== 'free') {
+      throw new RangeError("wake mode must be 'flat', 'te' or 'free'");
     }
     const { velocity: freestream, speed } = resolveFreestream(options);
+    const wakeFreestream = options.wakeFreestream
+      ? resolveFreestream({ freestream: options.wakeFreestream }).velocity
+      : freestream;
     if (speed <= EPS) throw new RangeError('freestream speed must be positive');
     const priorStrengths = initialWake.boundStrengths
       ? initialWake.boundStrengths.slice()
       : null;
+    const priorPriorStrengths = initialWake.previousBoundStrengths
+      ? initialWake.previousBoundStrengths.slice()
+      : null;
+    const dynamicWakeAttachment = options.dynamicWakeAttachment === true;
+    const promoted = dynamicWakeAttachment
+      ? promotePendingAttachmentRow(initialWake)
+      : { wake: initialWake, shedStrengths: null };
     let wake = convectWake({
       ...options,
       lattice,
-      wake: initialWake,
+      wake: promoted.wake,
       dt,
       mode,
-      freestream,
+      freestream: wakeFreestream,
       boundStrengths: priorStrengths,
     });
-    const inserted = insertShedWakeRow(
-      lattice,
-      wake,
-      freestream,
-      dt,
-      mode,
-      options.shedFraction ?? 0.25,
-      options.maxWakeRows ?? Infinity,
-    );
-    wake = inserted.wake;
+    const inserted = dynamicWakeAttachment
+      ? promoted
+      : insertShedWakeRow(
+        lattice,
+        wake,
+        freestream,
+        dt,
+        mode,
+        options.shedFraction ?? 0.25,
+        options.maxWakeRows ?? Infinity,
+        options.shedOffset,
+      );
+    if (!dynamicWakeAttachment) wake = inserted.wake;
 
     const influenceMatrix = buildBoundInfluenceMatrix(lattice);
     const wakeVelocities = lattice.panels.map((panel) => (
@@ -938,9 +1060,12 @@
       lattice,
       solved.solution,
       priorStrengths,
+      priorPriorStrengths,
       freestream,
       dt,
       density,
+      wakeVelocities,
+      options.referenceSpeed,
     );
     const trailingStrengths = lattice.trailingEdgePanelIndices.map(
       (index) => solved.solution[index],
@@ -952,7 +1077,22 @@
       : 0;
 
     wake.boundStrengths = solved.solution.slice();
+    wake.previousBoundStrengths = priorStrengths;
     wake.previousTrailingStrengths = trailingStrengths;
+    if (dynamicWakeAttachment) {
+      const pendingId = initialWake.nextRowId;
+      wake.nextRowId = pendingId + 1;
+      wake.pendingAttachmentRow = {
+        id: pendingId,
+        birthTime: initialWake.time + dt,
+        points: lattice.nodes[lattice.chordPanels].map((current, index) => point(
+          current.x,
+          current.y,
+          current.z,
+          `wake:${pendingId}:${index}`,
+        )),
+      };
+    }
     wake.time = initialWake.time + dt;
     wake.step = initialWake.step + 1;
     const allRings = [
@@ -1007,6 +1147,16 @@
       previousTrailingStrengths: wake.previousTrailingStrengths
         ? wake.previousTrailingStrengths.map((value) => roundTo(value, digits))
         : null,
+      pendingAttachmentRow: wake.pendingAttachmentRow
+        ? {
+          id: wake.pendingAttachmentRow.id,
+          points: wake.pendingAttachmentRow.points.map((current) => [
+            roundTo(current.x, digits),
+            roundTo(current.y, digits),
+            roundTo(current.z, digits),
+          ]),
+        }
+        : null,
     };
   }
 
@@ -1029,6 +1179,458 @@
     return { lattice, wake, history, snapshot: wakeSnapshot(wake) };
   }
 
+  function harmonicHeave(time, options = {}) {
+    const amplitude = options.amplitude ?? 0.03;
+    const omega = assertPositive('omega', options.omega ?? 1);
+    const phase = options.phase ?? 0;
+    assertFinite('amplitude', amplitude);
+    assertFinite('phase', phase);
+    const angle = omega * time + phase;
+    const h = amplitude * Math.sin(angle);
+    const hDot = amplitude * omega * Math.cos(angle);
+    return {
+      time,
+      phase: angle,
+      h,
+      hDot,
+      hDDot: -amplitude * omega ** 2 * Math.sin(angle),
+      normalVelocity: -hDot,
+    };
+  }
+
+  function fitHarmonicResponse(samples, omega, valueKey = 'value') {
+    assertPositive('omega', omega);
+    if (!Array.isArray(samples) || samples.length < 4) {
+      throw new RangeError('at least four harmonic samples are required');
+    }
+    const matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    const rightHandSide = [0, 0, 0];
+    for (const sample of samples) {
+      const time = assertFinite('sample time', sample.time);
+      const value = assertFinite('sample value', sample[valueKey]);
+      const row = [Math.cos(omega * time), Math.sin(omega * time), 1];
+      for (let i = 0; i < 3; i += 1) {
+        rightHandSide[i] += row[i] * value;
+        for (let j = 0; j < 3; j += 1) matrix[i][j] += row[i] * row[j];
+      }
+    }
+    const [cosine, sine, offset] = solveLinearSystem(matrix, rightHandSide).solution;
+    const real = cosine;
+    const imag = -sine;
+    let residualSquared = 0;
+    for (const sample of samples) {
+      const fitted = cosine * Math.cos(omega * sample.time)
+        + sine * Math.sin(omega * sample.time)
+        + offset;
+      residualSquared += (sample[valueKey] - fitted) ** 2;
+    }
+    const rmsResidual = Math.sqrt(residualSquared / samples.length);
+    const magnitude = Math.hypot(real, imag);
+    return {
+      real,
+      imag,
+      magnitude,
+      phaseRadians: Math.atan2(imag, real),
+      phaseDegrees: Math.atan2(imag, real) * 180 / Math.PI,
+      offset,
+      rmsResidual,
+      relativeRmsResidual: rmsResidual / Math.max(magnitude, EPS),
+    };
+  }
+
+  function dividePhasors(numerator, denominator) {
+    const denominatorSquared = denominator.real ** 2 + denominator.imag ** 2;
+    if (denominatorSquared <= EPS ** 2) return null;
+    const real = (
+      numerator.real * denominator.real + numerator.imag * denominator.imag
+    ) / denominatorSquared;
+    const imag = (
+      numerator.imag * denominator.real - numerator.real * denominator.imag
+    ) / denominatorSquared;
+    return {
+      real,
+      imag,
+      magnitude: Math.hypot(real, imag),
+      phaseRadians: Math.atan2(imag, real),
+      phaseDegrees: Math.atan2(imag, real) * 180 / Math.PI,
+    };
+  }
+
+  function harmonicTransfer(samples, omega, steadyLiftSlope, valueKey) {
+    const input = fitHarmonicResponse(samples, omega, 'normalVelocityRatio');
+    const output = fitHarmonicResponse(samples, omega, valueKey);
+    const denominator = {
+      real: steadyLiftSlope * input.real,
+      imag: steadyLiftSlope * input.imag,
+    };
+    return {
+      input,
+      output,
+      transfer: dividePhasors(output, denominator),
+    };
+  }
+
+  function addPhasors(a, b) {
+    return { real: a.real + b.real, imag: a.imag + b.imag };
+  }
+
+  function subtractPhasors(a, b) {
+    return { real: a.real - b.real, imag: a.imag - b.imag };
+  }
+
+  function imaginaryDerivativePhasor(value, omega) {
+    return { real: -omega * value.imag, imag: omega * value.real };
+  }
+
+  function phasorWithMetrics(value) {
+    return {
+      ...value,
+      magnitude: Math.hypot(value.real, value.imag),
+      phaseRadians: Math.atan2(value.imag, value.real),
+      phaseDegrees: Math.atan2(value.imag, value.real) * 180 / Math.PI,
+    };
+  }
+
+  function wrappedPhaseDifferenceDegrees(a, b) {
+    let difference = a - b;
+    while (difference > 180) difference -= 360;
+    while (difference < -180) difference += 360;
+    return difference;
+  }
+
+  function compactWakeSnapshot(wake, digits = 8) {
+    const snapshot = wakeSnapshot(wake, digits);
+    return {
+      time: snapshot.time,
+      step: snapshot.step,
+      nodeRows: snapshot.nodeRows.map((row) => row.points),
+      strengthRows: snapshot.strengthRows,
+      previousTrailingStrengths: snapshot.previousTrailingStrengths,
+      pendingAttachmentRow: snapshot.pendingAttachmentRow,
+    };
+  }
+
+  /**
+   * Pure-heave finite-wing UVLM trust case.
+   *
+   * The wing remains fixed in body axes. normalVelocity = -hDot supplies the
+   * equivalent ambient normal flow, while the wake is either kept on the mean
+   * plane (flat), retains the trailing-edge birth history (te), or rolls up
+   * under freestream plus bound/wake induction (free). Every shed ring remains
+   * in the state for the full run. Only the newest activeWakeRows are convected
+   * by induced velocity in free mode; older rows still convect with the body-
+   * frame freestream and continue to induce velocity on the wing and near wake.
+   */
+  function runHarmonicUvlm(options = {}) {
+    const stage = options.stage ?? options.mode ?? 'flat';
+    if (stage !== 'flat' && stage !== 'te' && stage !== 'free') {
+      throw new RangeError("stage must be 'flat', 'te' or 'free'");
+    }
+    const chord = assertPositive('chord', options.chord ?? 1);
+    const speed = assertPositive('speed', options.speed ?? 1);
+    const aspectRatio = assertPositive('aspectRatio', options.aspectRatio ?? 8);
+    const reducedFrequency = assertPositive('reducedFrequency', options.reducedFrequency ?? 0.35);
+    const amplitude = options.amplitude ?? 0.03 * chord;
+    assertFinite('amplitude', amplitude);
+    if (amplitude < 0) throw new RangeError('amplitude cannot be negative');
+    const phase = options.phase ?? 0;
+    assertFinite('phase', phase);
+    const spanPanels = assertPositiveInteger('spanPanels', options.spanPanels ?? 8);
+    const chordPanels = assertPositiveInteger('chordPanels', options.chordPanels ?? 2);
+    const stepsPerCycle = assertPositiveInteger('stepsPerCycle', options.stepsPerCycle ?? 32);
+    const cycles = assertPositiveInteger('cycles', options.cycles ?? 5);
+    const measureCycles = assertPositiveInteger('measureCycles', options.measureCycles ?? 2);
+    if (measureCycles >= cycles) throw new RangeError('measureCycles must be smaller than cycles');
+    const activeWakeRows = assertPositiveInteger(
+      'activeWakeRows',
+      options.activeWakeRows ?? Math.min(12, stepsPerCycle),
+    );
+    const snapshotCount = Math.max(0, Math.floor(options.snapshotCount ?? 12));
+    const omega = 2 * reducedFrequency * speed / chord;
+    const period = 2 * Math.PI / omega;
+    const dt = period / stepsPerCycle;
+    const shedFraction = options.shedFraction ?? 0.25;
+    const coreRadius = options.coreRadius ?? 0.04 * chord;
+    const density = options.density ?? 1;
+    const latticeOptions = {
+      chord,
+      span: aspectRatio * chord,
+      chordPanels,
+      spanPanels,
+      spanSpacing: options.spanSpacing ?? 'cosine',
+    };
+    const referenceLattice = createRectangularWingLattice({
+      ...latticeOptions,
+      wakeAttachAtTrailingEdge: true,
+    });
+    const harmonicReferenceLattice = createRectangularWingLattice({
+      ...latticeOptions,
+      wakeAttachOffset: {
+        x: shedFraction * speed * dt,
+        y: 0,
+        z: 0,
+      },
+    });
+    const referenceAlpha = 1e-4;
+    const steadyReference = solveSteadyVlm({
+      lattice: referenceLattice,
+      alpha: referenceAlpha,
+      speed,
+      density,
+      wakeLength: options.referenceWakeLength ?? 100 * referenceLattice.span,
+    });
+    const steadyLiftSlope = steadyReference.CL / referenceAlpha;
+    const noWakeMatrix = buildBoundInfluenceMatrix(harmonicReferenceLattice);
+    const unitNormalStrengths = solveLinearSystem(
+      noWakeMatrix,
+      harmonicReferenceLattice.panels.map((panel) => -speed * panel.normal.z),
+    ).solution;
+    const dynamicPressureAreaReference = 0.5 * density * speed ** 2
+      * harmonicReferenceLattice.referenceArea;
+    const addedMassPotentialGain = density * harmonicReferenceLattice.panels.reduce(
+      (sum, panel) => sum + unitNormalStrengths[panel.index] * panel.area,
+      0,
+    ) / dynamicPressureAreaReference;
+    let lattice = harmonicReferenceLattice;
+    let wake = options.wake ?? createWakeState(harmonicReferenceLattice);
+    const totalSteps = cycles * stepsPerCycle;
+    const retainedStart = (cycles - measureCycles) * stepsPerCycle;
+    const samples = [];
+    const snapshots = [];
+    const snapshotStride = snapshotCount > 0
+      ? Math.max(1, Math.floor(stepsPerCycle / snapshotCount))
+      : Infinity;
+    let maximumBoundaryResidual = 0;
+    let maximumSheddingResidual = 0;
+    let maximumContinuityResidual = 0;
+    let maximumInducedSpeed = 0;
+    let maximumCirculationScale = EPS;
+    let latest = null;
+
+    for (let step = 1; step <= totalSteps; step += 1) {
+      const time = step * dt;
+      const previousTime = (step - 1) * dt;
+      const motion = harmonicHeave(time, { amplitude, omega, phase });
+      const previousMotion = harmonicHeave(previousTime, { amplitude, omega, phase });
+      const averageNormalVelocity = (previousMotion.h - motion.h) / dt;
+      const shedMotion = harmonicHeave(time - shedFraction * dt, {
+        amplitude,
+        omega,
+        phase,
+      });
+      const shedOffset = {
+        x: shedFraction * speed * dt,
+        y: 0,
+        z: stage === 'flat' ? 0 : shedMotion.h - motion.h,
+      };
+      lattice = createRectangularWingLattice({
+        ...latticeOptions,
+        wakeAttachOffset: shedOffset,
+      });
+      latest = stepUnsteadyVlm({
+        lattice,
+        wake,
+        dt,
+        mode: stage,
+        freestream: { x: speed, y: 0, z: motion.normalVelocity },
+        wakeFreestream: {
+          x: speed,
+          y: 0,
+          z: stage === 'flat' ? 0 : averageNormalVelocity,
+        },
+        shedOffset,
+        shedFraction,
+        dynamicWakeAttachment: true,
+        maxWakeRows: Infinity,
+        activeWakeRows,
+        coreRadius,
+        integrator: options.integrator ?? 'heun',
+        inductionScale: options.inductionScale ?? 1,
+        referenceSpeed: speed,
+        density,
+      });
+      wake = latest.wake;
+      maximumBoundaryResidual = Math.max(
+        maximumBoundaryResidual,
+        latest.maxBoundaryResidual,
+      );
+      maximumSheddingResidual = Math.max(
+        maximumSheddingResidual,
+        latest.shedConsistencyResidual,
+      );
+      maximumContinuityResidual = Math.max(
+        maximumContinuityResidual,
+        latest.filamentContinuityResidual,
+      );
+      maximumInducedSpeed = Math.max(
+        maximumInducedSpeed,
+        wake.lastConvectionDiagnostics?.maxInducedSpeed ?? 0,
+      );
+      maximumCirculationScale = Math.max(
+        maximumCirculationScale,
+        ...latest.strengths.map((strength) => Math.abs(strength)),
+      );
+
+      const dynamicPressureArea = 0.5 * density * speed ** 2 * lattice.referenceArea;
+      const totalCL = latest.unsteadyLoads.lift / dynamicPressureArea;
+      const apparentMassCL = addedMassPotentialGain * (-motion.hDDot / speed);
+      const sample = {
+        time,
+        phaseDegrees: ((motion.phase * 180 / Math.PI) % 360 + 360) % 360,
+        h: motion.h,
+        normalVelocityRatio: motion.normalVelocity / speed,
+        circulatoryCL: latest.unsteadyLoads.circulatoryLift / dynamicPressureArea,
+        accelerationCL: latest.unsteadyLoads.accelerationLift / dynamicPressureArea,
+        totalCL,
+        apparentMassCL,
+        pressureCirculatoryCL: totalCL - apparentMassCL,
+        potentialCoefficient: density * lattice.panels.reduce(
+          (sum, panel) => sum + latest.strengths[panel.index] * panel.area,
+          0,
+        ) / dynamicPressureArea,
+      };
+      if (step > retainedStart) samples.push(sample);
+      if (
+        snapshotCount > 0
+        && step > totalSteps - stepsPerCycle
+        && ((step - (totalSteps - stepsPerCycle)) % snapshotStride === 0 || step === totalSteps)
+      ) {
+        snapshots.push({
+          ...sample,
+          wake: compactWakeSnapshot(wake),
+          spanwiseCirculation: latest.loads.spanwiseCirculation.map((value) => roundTo(value, 10)),
+        });
+      }
+    }
+
+    const normalizedBoundaryResidual = maximumBoundaryResidual / Math.max(speed, EPS);
+    const normalizedSheddingResidual = maximumSheddingResidual / maximumCirculationScale;
+    const normalizedContinuityResidual = maximumContinuityResidual / maximumCirculationScale;
+    const residualGate = {
+      boundary: normalizedBoundaryResidual <= (options.boundaryResidualTolerance ?? 1e-10),
+      shedding: normalizedSheddingResidual <= (options.sheddingResidualTolerance ?? 1e-12),
+      continuity: normalizedContinuityResidual <= (options.continuityResidualTolerance ?? 1e-12),
+    };
+    residualGate.passed = residualGate.boundary
+      && residualGate.shedding
+      && residualGate.continuity;
+    const latestCycle = samples.slice(-stepsPerCycle);
+    const previousCycle = samples.slice(-2 * stepsPerCycle, -stepsPerCycle);
+    const cycleResponse = (cycleSamples) => {
+      const input = fitHarmonicResponse(cycleSamples, omega, 'normalVelocityRatio');
+      const instantaneous = fitHarmonicResponse(cycleSamples, omega, 'circulatoryCL');
+      const potential = fitHarmonicResponse(cycleSamples, omega, 'potentialCoefficient');
+      const totalLift = phasorWithMetrics(addPhasors(
+        instantaneous,
+        imaginaryDerivativePhasor(potential, omega),
+      ));
+      const apparentMass = phasorWithMetrics(imaginaryDerivativePhasor({
+        real: addedMassPotentialGain * input.real,
+        imag: addedMassPotentialGain * input.imag,
+      }, omega));
+      const circulatoryLift = phasorWithMetrics(subtractPhasors(totalLift, apparentMass));
+      const denominator = {
+        real: steadyLiftSlope * input.real,
+        imag: steadyLiftSlope * input.imag,
+      };
+      return {
+        input,
+        instantaneous,
+        potential,
+        totalLift,
+        apparentMass,
+        circulatoryLift,
+        circulatoryTransfer: dividePhasors(circulatoryLift, denominator),
+        totalTransfer: dividePhasors(totalLift, denominator),
+      };
+    };
+    const latestResponse = cycleResponse(latestCycle);
+    let periodicity = null;
+    if (previousCycle.length === stepsPerCycle && latestResponse.circulatoryTransfer) {
+      const previousResponse = cycleResponse(previousCycle);
+      if (previousResponse.circulatoryTransfer) {
+        periodicity = {
+          magnitudeRelative: Math.abs(
+            latestResponse.circulatoryTransfer.magnitude
+            - previousResponse.circulatoryTransfer.magnitude,
+          ) / Math.max(latestResponse.circulatoryTransfer.magnitude, EPS),
+          phaseDegrees: Math.abs(wrappedPhaseDifferenceDegrees(
+            latestResponse.circulatoryTransfer.phaseDegrees,
+            previousResponse.circulatoryTransfer.phaseDegrees,
+          )),
+          fitRelativeRms: Math.max(
+            latestResponse.instantaneous.relativeRmsResidual,
+            latestResponse.potential.relativeRmsResidual,
+          ),
+          residualGate,
+        };
+        periodicity.converged = (
+          periodicity.magnitudeRelative <= (options.periodicityMagnitudeTolerance ?? 0.03)
+          && periodicity.phaseDegrees <= (options.periodicityPhaseTolerance ?? 2)
+          && periodicity.fitRelativeRms <= (
+            options.fitResidualTolerance ?? (stage === 'free' ? 0.05 : 0.02)
+          )
+          && residualGate.passed
+        );
+      }
+    }
+
+    return {
+      type: 'harmonic-uvlm-result',
+      stage,
+      config: {
+        chord,
+        speed,
+        aspectRatio,
+        reducedFrequency,
+        amplitude,
+        phase,
+        spanPanels,
+        chordPanels,
+        stepsPerCycle,
+        cycles,
+        measureCycles,
+        activeWakeRows: stage === 'free' ? activeWakeRows : 0,
+        coreRadius: stage === 'free' ? coreRadius : 0,
+        shedFraction,
+        dt,
+        omega,
+      },
+      lattice,
+      steadyReference,
+      steadyLiftSlope,
+      addedMassPotentialGain,
+      response: {
+        circulatory: latestResponse.circulatoryTransfer,
+        total: latestResponse.totalTransfer,
+        instantaneous: latestResponse.instantaneous,
+        apparentMass: latestResponse.apparentMass,
+        input: latestResponse.input,
+      },
+      periodicity,
+      diagnostics: {
+        maximumBoundaryResidual,
+        maximumSheddingResidual,
+        maximumContinuityResidual,
+        normalizedBoundaryResidual,
+        normalizedSheddingResidual,
+        normalizedContinuityResidual,
+        maximumCirculationScale,
+        residualGate,
+        maximumInducedSpeed,
+        wakeRows: wake.nodeRows.length,
+        wakeAge: wake.time,
+        wakeLength: wake.nodeRows.length
+          ? Math.max(...wake.nodeRows.at(-1).points.map((current) => current.x)) - lattice.trailingEdgeX
+          : 0,
+      },
+      trace: latestCycle,
+      snapshots,
+      finalState: wake,
+      latest,
+    };
+  }
+
   return {
     add3,
     assembleFilaments,
@@ -1048,6 +1650,7 @@
     magnitude3,
     matrixResidual,
     resolveFreestream,
+    runHarmonicUvlm,
     runWakeSimulation,
     solveLinearSystem,
     solveSteadyVlm,
@@ -1055,5 +1658,7 @@
     vortexRingVelocity,
     wakeRings,
     wakeSnapshot,
+    harmonicHeave,
+    fitHarmonicResponse,
   };
 }));

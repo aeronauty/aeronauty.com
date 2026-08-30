@@ -280,7 +280,7 @@ test('free-wake Heun run has a deterministic snapshot and self-exclusion diagnos
 
   assert.equal(JSON.stringify(run.snapshot), JSON.stringify(repeated.snapshot));
   close(run.history.at(-1).CL, 0.2712907762105489, 1e-12);
-  close(run.history.at(-1).pressureCL, 0.3835940373184751, 1e-12);
+  close(run.history.at(-1).pressureCL, 0.3644919660596843, 1e-12);
   close(snapshot.time, 0.4, 1e-14);
   assert.equal(snapshot.step, 4);
   assert.equal(snapshot.nodeRows.length, 3);
@@ -377,4 +377,217 @@ test('time step, core radius and span grid are active but numerically bounded', 
     Math.abs(result.CL - gridResults[index].CL)
   ));
   assert.ok(changes[0] > changes[1] && changes[1] > changes[2]);
+});
+
+test('dynamic trailing closure retains successive K&P wake lines', () => {
+  const dt = 0.1;
+  const makeLattice = () => V.createRectangularWingLattice({
+    chord: 1,
+    span: 4,
+    chordPanels: 1,
+    spanPanels: 4,
+    spanSpacing: 'cosine',
+    wakeAttachOffset: { x: 0.25 * dt, y: 0, z: 0 },
+  });
+  const firstLattice = makeLattice();
+  const first = V.stepUnsteadyVlm({
+    lattice: firstLattice,
+    wake: V.createWakeState(firstLattice),
+    freestream: { x: 1, y: 0, z: Math.tan(5 * Math.PI / 180) },
+    dt,
+    mode: 'flat',
+    dynamicWakeAttachment: true,
+  });
+  close(firstLattice.wakeAttachX, 1.025, 1e-14);
+  assert.equal(first.wake.nodeRows.length, 0);
+  assert.equal(first.wake.pendingAttachmentRow.points[0].x, 1.025);
+
+  const second = V.stepUnsteadyVlm({
+    lattice: makeLattice(),
+    wake: first.wake,
+    freestream: { x: 1, y: 0, z: Math.tan(5 * Math.PI / 180) },
+    dt,
+    mode: 'flat',
+    dynamicWakeAttachment: true,
+  });
+  assert.equal(second.wake.nodeRows.length, 1);
+  close(second.wake.nodeRows[0].points[0].x, 1.125, 1e-14);
+  close(
+    second.wake.nodeRows[0].points[0].x - second.lattice.wakeAttachX,
+    0.1,
+    1e-14,
+  );
+  first.trailingStrengths.forEach((strength, index) => {
+    close(second.shedStrengths[index], strength, 1e-14);
+  });
+  assert.ok(second.shedConsistencyResidual < 1e-14);
+  assert.ok(second.filamentContinuityResidual < 1e-12);
+});
+
+test('harmonic fitting recovers amplitude, phase and offset', () => {
+  const omega = 1.7;
+  const phase = -0.42;
+  const magnitude = 2.3;
+  const samples = Array.from({ length: 48 }, (_, index) => {
+    const time = index * 2 * Math.PI / (omega * 48);
+    return {
+      time,
+      value: 0.7 + magnitude * Math.cos(omega * time + phase),
+    };
+  });
+  const fit = V.fitHarmonicResponse(samples, omega);
+  close(fit.magnitude, magnitude, 1e-13);
+  close(fit.phaseRadians, phase, 1e-13);
+  close(fit.offset, 0.7, 1e-13);
+  assert.ok(fit.relativeRmsResidual < 1e-13);
+});
+
+test('TE-history and zero-induction free wake are frame-exact and identical', () => {
+  const options = {
+    aspectRatio: 6,
+    reducedFrequency: 0.5,
+    amplitude: 0.02,
+    spanPanels: 4,
+    chordPanels: 2,
+    stepsPerCycle: 12,
+    cycles: 3,
+    measureCycles: 2,
+    snapshotCount: 0,
+  };
+  const prescribed = V.runHarmonicUvlm({ ...options, stage: 'te' });
+  const zeroInduction = V.runHarmonicUvlm({
+    ...options,
+    stage: 'free',
+    inductionScale: 0,
+    activeWakeRows: 6,
+  });
+  assert.equal(prescribed.finalState.nodeRows.length, zeroInduction.finalState.nodeRows.length);
+  prescribed.finalState.nodeRows.forEach((row, rowIndex) => {
+    row.points.forEach((point, pointIndex) => {
+      const compared = zeroInduction.finalState.nodeRows[rowIndex].points[pointIndex];
+      close(point.x, compared.x, 1e-13);
+      close(point.y, compared.y, 1e-13);
+      close(point.z, compared.z, 1e-13);
+    });
+  });
+  close(
+    prescribed.response.circulatory.magnitude,
+    zeroInduction.response.circulatory.magnitude,
+    1e-13,
+  );
+  close(
+    prescribed.response.circulatory.phaseDegrees,
+    zeroInduction.response.circulatory.phaseDegrees,
+    1e-13,
+  );
+});
+
+test('harmonic UVLM settles, preserves its wake and refines in time', () => {
+  const common = {
+    stage: 'flat',
+    aspectRatio: 8,
+    reducedFrequency: 0.35,
+    amplitude: 0.03,
+    spanPanels: 6,
+    chordPanels: 2,
+    cycles: 4,
+    measureCycles: 2,
+    snapshotCount: 0,
+  };
+  const defaultRun = V.runHarmonicUvlm({ ...common, stepsPerCycle: 24 });
+  const refined = V.runHarmonicUvlm({ ...common, stepsPerCycle: 32 });
+  const gridRefined = V.runHarmonicUvlm({
+    ...common,
+    spanPanels: 8,
+    stepsPerCycle: 24,
+  });
+  close(defaultRun.addedMassPotentialGain, 2.1281671662566386, 1e-11);
+  close(defaultRun.response.circulatory.magnitude, 0.8392133863665207, 1e-11);
+  close(defaultRun.response.circulatory.phaseDegrees, -9.92298490074978, 1e-11);
+  assert.equal(defaultRun.diagnostics.wakeRows, 95);
+  assert.equal(defaultRun.finalState.pendingAttachmentRow.points.length, 7);
+  assert.equal(defaultRun.periodicity.converged, true);
+  assert.equal(defaultRun.periodicity.residualGate.passed, true);
+  assert.ok(defaultRun.periodicity.fitRelativeRms < 1e-4);
+  assert.ok(defaultRun.diagnostics.maximumBoundaryResidual < 1e-12);
+  assert.ok(defaultRun.diagnostics.maximumSheddingResidual < 1e-12);
+  assert.ok(defaultRun.diagnostics.maximumContinuityResidual < 1e-12);
+  assert.ok(defaultRun.diagnostics.normalizedBoundaryResidual < 1e-10);
+  assert.ok(defaultRun.diagnostics.normalizedSheddingResidual < 1e-12);
+  assert.ok(defaultRun.diagnostics.normalizedContinuityResidual < 1e-12);
+  const plotted = V.fitHarmonicResponse(
+    defaultRun.trace,
+    defaultRun.config.omega,
+    'pressureCirculatoryCL',
+  );
+  const input = V.fitHarmonicResponse(
+    defaultRun.trace,
+    defaultRun.config.omega,
+    'normalVelocityRatio',
+  );
+  const inputNorm = input.real ** 2 + input.imag ** 2;
+  const plottedReal = (
+    plotted.real * input.real + plotted.imag * input.imag
+  ) / inputNorm / defaultRun.steadyLiftSlope;
+  const plottedImag = (
+    plotted.imag * input.real - plotted.real * input.imag
+  ) / inputNorm / defaultRun.steadyLiftSlope;
+  const plottedMagnitude = Math.hypot(plottedReal, plottedImag);
+  const plottedPhase = Math.atan2(plottedImag, plottedReal) * 180 / Math.PI;
+  assert.ok(
+    Math.abs(plottedMagnitude - defaultRun.response.circulatory.magnitude)
+      / defaultRun.response.circulatory.magnitude < 0.01,
+  );
+  assert.ok(
+    Math.abs(plottedPhase - defaultRun.response.circulatory.phaseDegrees) < 1,
+  );
+  assert.ok(
+    Math.abs(refined.response.circulatory.magnitude
+      - defaultRun.response.circulatory.magnitude) / refined.response.circulatory.magnitude < 0.02,
+  );
+  assert.ok(
+    Math.abs(refined.response.circulatory.phaseDegrees
+      - defaultRun.response.circulatory.phaseDegrees) < 1.5,
+  );
+  assert.ok(
+    Math.abs(gridRefined.response.circulatory.magnitude
+      - defaultRun.response.circulatory.magnitude)
+      / gridRefined.response.circulatory.magnitude < 0.03,
+  );
+  assert.ok(
+    Math.abs(gridRefined.response.circulatory.phaseDegrees
+      - defaultRun.response.circulatory.phaseDegrees) < 2,
+  );
+});
+
+test('near-wake cutoff and core sensitivity stay inside the published free-wake gate', () => {
+  const common = {
+    stage: 'free',
+    aspectRatio: 6,
+    reducedFrequency: 0.5,
+    amplitude: 0.03,
+    spanPanels: 4,
+    chordPanels: 2,
+    stepsPerCycle: 12,
+    cycles: 3,
+    measureCycles: 2,
+    snapshotCount: 0,
+  };
+  const shortActive = V.runHarmonicUvlm({ ...common, activeWakeRows: 4, coreRadius: 0.02 });
+  const longActive = V.runHarmonicUvlm({ ...common, activeWakeRows: 8, coreRadius: 0.02 });
+  const wideCore = V.runHarmonicUvlm({ ...common, activeWakeRows: 8, coreRadius: 0.04 });
+  for (const compared of [shortActive, wideCore]) {
+    assert.ok(
+      Math.abs(compared.response.circulatory.magnitude
+        - longActive.response.circulatory.magnitude)
+        / longActive.response.circulatory.magnitude < 0.05,
+    );
+    assert.ok(
+      Math.abs(compared.response.circulatory.phaseDegrees
+        - longActive.response.circulatory.phaseDegrees) < 3,
+    );
+  }
+  assert.equal(shortActive.diagnostics.wakeRows, longActive.diagnostics.wakeRows);
+  assert.equal(longActive.periodicity.converged, true);
+  assert.equal(wideCore.periodicity.converged, true);
 });
