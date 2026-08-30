@@ -64,14 +64,22 @@ for (const fragment of knownMarkerFragments) {
 }
 
 assert.ok(article.includes("fetch('article-source.md'"), 'runtime must load the generated prose snapshot');
+assert.ok(article.includes('<script src="interaction-core.js"></script>'));
 assert.ok(article.includes('<script src="vortex-core.js"></script>'));
 assert.ok(article.includes('schematic reconstruction'));
 assert.ok(article.includes('data-single-mode'));
 assert.ok(article.includes('data-double-mode'));
+assert.ok(article.includes('data-single role="group"'));
+assert.ok(article.includes('data-double role="group"'));
 assert.ok(article.includes('>2D panel</button>'));
 assert.ok(article.includes('>3D filament</button>'));
+assert.ok(article.includes('>Reset view</button>'));
 assert.ok(article.includes('K.finiteVortexSegmentVelocity'));
 assert.ok(article.includes('K.finiteVortexSegmentQuadrature'));
+assert.ok(article.includes('bind3dInteractions'));
+assert.ok(article.includes("['A1','B1'],['A2','B2']"));
+assert.ok(article.includes("event.key==='Home'"));
+assert.ok(article.includes("event.ctrlKey&&!event.metaKey"));
 assert.ok(article.includes('src="obi-wan-nairobi.jpg"'));
 assert.ok(article.includes('Christian Craighead'));
 assert.ok(article.includes('Photograph by Drake Sweet/Bison films'));

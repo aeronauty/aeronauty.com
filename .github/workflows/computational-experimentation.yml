@@ -25,12 +25,14 @@ jobs:
           node-version: 22
       - name: Check scripts
         run: |
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/interaction-core.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/vortex-core.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
       - name: Test shared aerodynamic primitives and article package
         run: |
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-vortex-core.mjs
+          node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-interaction-core.mjs
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
       - name: Prepare local preview bundle
         shell: bash
@@ -41,6 +43,7 @@ jobs:
           mkdir -p "$BUNDLE"
           cp "$SOURCE/article.html" "$BUNDLE/index.html"
           cp "$SOURCE/article-source.md" "$BUNDLE/article-source.md"
+          cp "$SOURCE/interaction-core.js" "$BUNDLE/interaction-core.js"
           cp "$SOURCE/vortex-core.js" "$BUNDLE/vortex-core.js"
           cp "$SOURCE/obi-wan-nairobi.jpg" "$BUNDLE/obi-wan-nairobi.jpg"
           cat > "$BUNDLE/serve.py" <<'PY'
