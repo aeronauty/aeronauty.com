@@ -1,6 +1,6 @@
 # Computational Experimentation
 
-Private Aeronauty long-form essay package.
+Aeronauty long-form essay package.
 
 ## Source of truth
 
@@ -55,10 +55,16 @@ Unrecognised top-level `[<...>]` instructions render as visible errors rather th
 
 This is deliberate: the demonstration and the automated check are two views of the same primitive.
 
-## Private preview
+## Reader routes
 
-The package is served by the existing gated topology-article asset route and registered in private writing at:
+The published reader is available at:
+
+`/writing/computational-experimentation`
+
+The same package remains available through the gated Lab route at:
 
 `/lab/articles/computational-experimentation`
 
-It is not added to the public writing index.
+## Photograph source
+
+`obi-wan-nairobi.jpg` is the official Christian Craighead author portrait supplied in the high-resolution resources for *One Man In*. The rendered callout links to the [Simon & Schuster source page](https://www.simonandschuster.com/books/One-Man-In/Christian-Craighead/9781982177331) and includes its required credit: “Photograph by Drake Sweet/Bison films.”

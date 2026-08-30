@@ -4,6 +4,7 @@ import { serveTopologyAsset } from "@/lib/topology-assets";
 const COMPUTATIONAL_EXPERIMENTATION_RUNTIME_ASSETS = new Set([
   "computational-experimentation/article.html",
   "computational-experimentation/article-source.md",
+  "computational-experimentation/obi-wan-nairobi.jpg",
   "computational-experimentation/vortex-core.js",
 ]);
 

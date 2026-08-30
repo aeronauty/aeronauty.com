@@ -6,11 +6,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const [source, article, metadataText, referenceCasesText] = await Promise.all([
+const [source, article, metadataText, referenceCasesText, operatorPhoto] = await Promise.all([
   readFile(join(ROOT, 'article-source.md'), 'utf8'),
   readFile(join(ROOT, 'article.html'), 'utf8'),
   readFile(join(ROOT, 'source-metadata.json'), 'utf8'),
   readFile(join(ROOT, 'kp-reference-cases.json'), 'utf8'),
+  readFile(join(ROOT, 'obi-wan-nairobi.jpg')),
 ]);
 const metadata = JSON.parse(metadataText);
 const referenceCases = JSON.parse(referenceCasesText);
@@ -71,6 +72,10 @@ assert.ok(article.includes('>2D panel</button>'));
 assert.ok(article.includes('>3D filament</button>'));
 assert.ok(article.includes('K.finiteVortexSegmentVelocity'));
 assert.ok(article.includes('K.finiteVortexSegmentQuadrature'));
+assert.ok(article.includes('src="obi-wan-nairobi.jpg"'));
+assert.ok(article.includes('Christian Craighead'));
+assert.ok(article.includes('Photograph by Drake Sweet/Bison films'));
+assert.deepEqual([...operatorPhoto.subarray(0, 3)], [0xff, 0xd8, 0xff]);
 
 for (const match of article.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)) {
   // Parse without running: catches truncated strings, braces and other article-shell breakage.

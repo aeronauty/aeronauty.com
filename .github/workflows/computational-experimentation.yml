@@ -42,6 +42,7 @@ jobs:
           cp "$SOURCE/article.html" "$BUNDLE/index.html"
           cp "$SOURCE/article-source.md" "$BUNDLE/article-source.md"
           cp "$SOURCE/vortex-core.js" "$BUNDLE/vortex-core.js"
+          cp "$SOURCE/obi-wan-nairobi.jpg" "$BUNDLE/obi-wan-nairobi.jpg"
           cat > "$BUNDLE/serve.py" <<'PY'
           #!/usr/bin/env python3
           from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
@@ -72,7 +73,7 @@ jobs:
           COMPUTATIONAL EXPERIMENTATION — LOCAL PREVIEW
 
           This bundle contains the same article HTML, Google Doc prose snapshot,
-          and vortex-panel numerical kernel used by the private Aeronauty preview.
+          operator portrait, and vortex-panel numerical kernel used by Aeronauty.
 
           macOS / Linux:
             Double-click preview.command, or run: python3 serve.py
