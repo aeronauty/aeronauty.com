@@ -6,13 +6,28 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const [source, article, metadataText, referenceCasesText, operatorPhoto, theodorsenText] = await Promise.all([
+const [
+  source,
+  article,
+  metadataText,
+  referenceCasesText,
+  operatorPhoto,
+  theodorsenText,
+  vlmCore,
+  vlmWorker,
+  publicAssetRoute,
+  acceptanceWorkflow,
+] = await Promise.all([
   readFile(join(ROOT, 'article-source.md'), 'utf8'),
   readFile(join(ROOT, 'article.html'), 'utf8'),
   readFile(join(ROOT, 'source-metadata.json'), 'utf8'),
   readFile(join(ROOT, 'kp-reference-cases.json'), 'utf8'),
   readFile(join(ROOT, 'obi-wan-nairobi.jpg')),
   readFile(join(ROOT, 'assets', 'theodorsen-data.json'), 'utf8'),
+  readFile(join(ROOT, 'vlm-core.js'), 'utf8'),
+  readFile(join(ROOT, 'vlm-worker.js'), 'utf8'),
+  readFile(join(ROOT, '..', '..', '..', '..', 'app', 'writing', 'topology-instinct', 'assets', '[...path]', 'route.ts'), 'utf8'),
+  readFile(join(ROOT, '..', '..', '..', '..', '..', '.github', 'workflows', 'computational-experimentation.yml'), 'utf8'),
 ]);
 const metadata = JSON.parse(metadataText);
 const referenceCases = JSON.parse(referenceCasesText);
@@ -75,6 +90,7 @@ for (const fragment of knownMarkerFragments) {
 assert.ok(article.includes("fetch('article-source.md'"), 'runtime must load the generated prose snapshot');
 assert.ok(article.includes('<script src="interaction-core.js"></script>'));
 assert.ok(article.includes('<script src="vortex-core.js"></script>'));
+assert.ok(article.includes('<script src="vlm-core.js"></script>'));
 assert.ok(article.includes('<script src="unsteady-core.js"></script>'));
 assert.ok(article.includes('schematic reconstruction'));
 assert.ok(article.includes('data-single-mode'));
@@ -94,18 +110,40 @@ assert.ok(article.includes('src="obi-wan-nairobi.jpg"'));
 assert.ok(article.includes('Christian Craighead'));
 assert.ok(article.includes('Photograph by Drake Sweet/Bison films'));
 assert.ok(article.includes('initUnsteadyExperiment'));
+assert.ok(article.includes('initVlmExperiment'));
+assert.ok(article.includes("new Worker('vlm-worker.js')"));
+assert.ok(article.includes('data-vlm-mode="straight"'));
+assert.ok(article.includes('data-vlm-mode="free"'));
+assert.ok(article.includes('A real finite-wing vortex lattice'));
+assert.ok(article.includes('max no-penetration'));
+assert.ok(article.includes('impulsive-start snapshot'));
+assert.ok(article.includes('not a steady error'));
+assert.ok(article.includes('Vertical wake displacement is enlarged ×3'));
 assert.ok(article.includes("new Worker('unsteady-worker.js')"));
 assert.ok(article.includes("fetch('assets/theodorsen-data.json')"));
 assert.ok(article.includes('data-unsteady-frame="wing"'));
 assert.ok(article.includes('data-unsteady-frame="fixed"'));
 assert.ok(article.includes('data-unsteady-stage="flat"'));
 assert.ok(article.includes('data-unsteady-stage="te"'));
-assert.ok(article.includes('data-unsteady-stage="free"'));
+assert.ok(!article.includes('data-unsteady-stage="free"'));
 assert.ok(article.includes('Lift deficiency and phase lag'));
 assert.ok(article.includes('pressure-derived lift'));
 assert.ok(!article.includes('function J0('));
 assert.ok(!article.includes('function ck('));
 assert.deepEqual([...operatorPhoto.subarray(0, 3)], [0xff, 0xd8, 0xff]);
+assert.ok(vlmCore.includes('function solveSteadyVlm'));
+assert.ok(vlmCore.includes('function stepUnsteadyVlm'));
+assert.ok(vlmCore.includes('filamentContinuityResidual'));
+assert.ok(!vlmCore.includes('kelvinResidual'));
+assert.ok(vlmWorker.includes("importScripts('vlm-core.js')"));
+assert.ok(vlmWorker.includes("mode: 'free'"));
+assert.ok(vlmWorker.includes('pressureCirculatoryCL'));
+assert.ok(vlmWorker.includes('accelerationCL'));
+assert.ok(vlmWorker.includes('totalPressureCL'));
+for (const runtimeAsset of ['vlm-core.js', 'vlm-worker.js']) {
+  assert.ok(publicAssetRoute.includes(`computational-experimentation/${runtimeAsset}`));
+  assert.ok(acceptanceWorkflow.includes(`$SOURCE/${runtimeAsset}`));
+}
 
 for (const match of article.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)) {
   // Parse without running: catches truncated strings, braces and other article-shell breakage.

@@ -8,6 +8,8 @@ const COMPUTATIONAL_EXPERIMENTATION_RUNTIME_ASSETS = new Set([
   "computational-experimentation/obi-wan-nairobi.jpg",
   "computational-experimentation/unsteady-core.js",
   "computational-experimentation/unsteady-worker.js",
+  "computational-experimentation/vlm-core.js",
+  "computational-experimentation/vlm-worker.js",
   "computational-experimentation/vortex-core.js",
   "computational-experimentation/assets/theodorsen-data.json",
 ]);

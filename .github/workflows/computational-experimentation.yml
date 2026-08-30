@@ -30,6 +30,8 @@ jobs:
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/interaction-core.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/unsteady-core.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/unsteady-worker.js
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/vlm-core.js
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/vlm-worker.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/vortex-core.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
@@ -37,6 +39,8 @@ jobs:
         run: |
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-vortex-core.mjs
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-interaction-core.mjs
+          node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-vlm-core.mjs
+          node --test aeronauty-site/content/private/topology-instinct/computational-experimentation/test-vlm-worker.mjs
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-unsteady-core.mjs
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
       - name: Prepare local preview bundle
@@ -51,6 +55,8 @@ jobs:
           cp "$SOURCE/interaction-core.js" "$BUNDLE/interaction-core.js"
           cp "$SOURCE/unsteady-core.js" "$BUNDLE/unsteady-core.js"
           cp "$SOURCE/unsteady-worker.js" "$BUNDLE/unsteady-worker.js"
+          cp "$SOURCE/vlm-core.js" "$BUNDLE/vlm-core.js"
+          cp "$SOURCE/vlm-worker.js" "$BUNDLE/vlm-worker.js"
           cp "$SOURCE/vortex-core.js" "$BUNDLE/vortex-core.js"
           cp "$SOURCE/obi-wan-nairobi.jpg" "$BUNDLE/obi-wan-nairobi.jpg"
           mkdir -p "$BUNDLE/assets"
@@ -85,8 +91,9 @@ jobs:
           COMPUTATIONAL EXPERIMENTATION — LOCAL PREVIEW
 
           This bundle contains the same article HTML, Google Doc prose snapshot,
-          operator portrait, vortex-panel kernel, staged unsteady-wake solver,
-          and Theodorsen reference used by Aeronauty.
+          operator portrait, vortex-panel kernel, finite-wing VLM and coupled
+          wake worker, staged unsteady-wake solver, and Theodorsen reference
+          used by Aeronauty.
 
           macOS / Linux:
             Double-click preview.command, or run: python3 serve.py
