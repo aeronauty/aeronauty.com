@@ -5,6 +5,6 @@
   "scripts": {
     "sync": "node sync-google-doc.mjs",
     "validate": "node validate-article.mjs",
-    "test": "node test-vortex-core.mjs && node validate-article.mjs"
+    "test": "node test-vortex-core.mjs && node test-interaction-core.mjs && node validate-article.mjs"
   }
 }

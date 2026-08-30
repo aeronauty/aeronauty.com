@@ -45,7 +45,7 @@ Unrecognised top-level `[<...>]` instructions render as visible errors rather th
 
 ## Numerical trust case
 
-`article.html` and `test-vortex-core.mjs` use `vortex-core.js`. The test checks:
+`article.html` and `test-vortex-core.mjs` use `vortex-core.js`. The aerodynamic test checks:
 
 - the canonical unit-panel result;
 - closed form against independent midpoint quadrature;
@@ -54,6 +54,8 @@ Unrecognised top-level `[<...>]` instructions render as visible errors rather th
 - Kelvin balance between bound and shed circulation.
 
 This is deliberate: the demonstration and the automated check are two views of the same primitive.
+
+The 3D readers also share `interaction-core.js` with `test-interaction-core.mjs`. Those checks cover the orthographic camera basis, projection round-trips, pointer-plane dragging, rigid filament translation, pan direction, cursor-anchored zoom, and recoverable camera limits.
 
 ## Reader routes
 
