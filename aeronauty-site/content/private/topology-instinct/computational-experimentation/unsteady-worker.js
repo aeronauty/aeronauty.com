@@ -51,11 +51,6 @@ globalThis.addEventListener('message', (event) => {
         ...common,
         stage: 'sinusoidal',
       })),
-      free: compact(U.runHarmonicResponse({
-        ...common,
-        stage: 'free',
-        coreRadius: 0.005,
-      })),
     };
     postMessage({ type: 'result', requestId, k: message.k, responses });
   } catch (error) {
