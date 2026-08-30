@@ -6,15 +6,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const [source, article, metadataText, referenceCasesText, operatorPhoto] = await Promise.all([
+const [source, article, metadataText, referenceCasesText, operatorPhoto, theodorsenText] = await Promise.all([
   readFile(join(ROOT, 'article-source.md'), 'utf8'),
   readFile(join(ROOT, 'article.html'), 'utf8'),
   readFile(join(ROOT, 'source-metadata.json'), 'utf8'),
   readFile(join(ROOT, 'kp-reference-cases.json'), 'utf8'),
   readFile(join(ROOT, 'obi-wan-nairobi.jpg')),
+  readFile(join(ROOT, 'assets', 'theodorsen-data.json'), 'utf8'),
 ]);
 const metadata = JSON.parse(metadataText);
 const referenceCases = JSON.parse(referenceCasesText);
+const theodorsenRows = JSON.parse(theodorsenText);
 
 // Provenance is byte-exact: metadata hashes the checked-in snapshot exactly as
 // served. Generated comments and a possible UTF-8 BOM are stripped only for
@@ -45,6 +47,13 @@ assert.deepEqual(referenceCases.cases.constantStrengthPanel.equations, [
   '10.40',
 ]);
 assert.ok(referenceCases.cases.finiteStraightSegment.equations.includes('2.72'));
+assert.equal(theodorsenRows.length, 180);
+assert.ok(theodorsenRows[0].k <= 0.005 && theodorsenRows.at(-1).k >= 3);
+for (let index = 0; index < theodorsenRows.length; index += 1) {
+  const row = theodorsenRows[index];
+  assert.ok(Number.isFinite(row.k) && Number.isFinite(row.f) && Number.isFinite(row.g));
+  if (index) assert.ok(row.k > theodorsenRows[index - 1].k);
+}
 
 const markerParagraphs = essaySource
   .split(/\n\s*\n/)
@@ -66,6 +75,7 @@ for (const fragment of knownMarkerFragments) {
 assert.ok(article.includes("fetch('article-source.md'"), 'runtime must load the generated prose snapshot');
 assert.ok(article.includes('<script src="interaction-core.js"></script>'));
 assert.ok(article.includes('<script src="vortex-core.js"></script>'));
+assert.ok(article.includes('<script src="unsteady-core.js"></script>'));
 assert.ok(article.includes('schematic reconstruction'));
 assert.ok(article.includes('data-single-mode'));
 assert.ok(article.includes('data-double-mode'));
@@ -83,6 +93,18 @@ assert.ok(article.includes("event.ctrlKey&&!event.metaKey"));
 assert.ok(article.includes('src="obi-wan-nairobi.jpg"'));
 assert.ok(article.includes('Christian Craighead'));
 assert.ok(article.includes('Photograph by Drake Sweet/Bison films'));
+assert.ok(article.includes('initUnsteadyExperiment'));
+assert.ok(article.includes("new Worker('unsteady-worker.js')"));
+assert.ok(article.includes("fetch('assets/theodorsen-data.json')"));
+assert.ok(article.includes('data-unsteady-frame="wing"'));
+assert.ok(article.includes('data-unsteady-frame="fixed"'));
+assert.ok(article.includes('data-unsteady-stage="flat"'));
+assert.ok(article.includes('data-unsteady-stage="te"'));
+assert.ok(article.includes('data-unsteady-stage="free"'));
+assert.ok(article.includes('Lift deficiency and phase lag'));
+assert.ok(article.includes('pressure-derived lift'));
+assert.ok(!article.includes('function J0('));
+assert.ok(!article.includes('function ck('));
 assert.deepEqual([...operatorPhoto.subarray(0, 3)], [0xff, 0xd8, 0xff]);
 
 for (const match of article.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)) {
