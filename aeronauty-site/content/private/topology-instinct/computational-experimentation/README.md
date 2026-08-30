@@ -57,6 +57,18 @@ This is deliberate: the demonstration and the automated check are two views of t
 
 The 3D readers also share `interaction-core.js` with `test-interaction-core.mjs`. Those checks cover the orthographic camera basis, projection round-trips, pointer-plane dragging, rigid filament translation, pan direction, cursor-anchored zoom, and recoverable camera limits.
 
+Cases 04 and 05 are two views of one staged unsteady experiment. `unsteady-core.js` contains the time-marching discrete-vortex model used by the worker and `test-unsteady-core.mjs`. The experiment uses pure heave with body-frame normal velocity `wN = -hDot`, quarter-panel bound vortices, three-quarter-panel collocation, an implicitly solved newest wake vortex, and Kelvin circulation closure.
+
+The three wake stages deliberately separate assumptions:
+
+1. **Fixed (flat)** means a fixed wake shape on the linearized mean plane; wake elements still convect downstream and influence the wing. This is the linearized validation case, and its displacement is suppressed in both input views.
+2. **TE-following** keeps the trailing-edge height at which each element was shed, but prescribes downstream convection without wake-on-wake motion.
+3. **Self-influencing** convects the free wake under freestream, bound-vortex, and regularized mutual wake induction.
+
+The numerical comparison is based on pressure-derived circulatory lift, not bound circulation alone. The discrete pressure load is reconstructed first, the pure-heave apparent-mass term is removed, and the fundamental harmonic is normalised as `H1 = CL,circ / (2π wN/U∞)`. The reader then compares `|H1|`, `1 - |H1|`, and `-arg(H1)` with Theodorsen's `C(k)`.
+
+The canonical reference is the checked-in `assets/theodorsen-data.json` table generated from the Hankel-function definition of `C(k)`. The model formulation and placement conventions follow Katz & Plotkin, *Low-Speed Aerodynamics*, second edition, Chapter 13; the canonical result is Theodorsen, NACA Report 496. Only the linearized flat stage is expected to match the reference. The TE-history and free-wake stages use `h0/c = 0.06` to make finite-amplitude wake-geometry departures visible, and remain comparisons outside Theodorsen's flat-wake assumptions.
+
 ## Reader routes
 
 The published reader is available at:

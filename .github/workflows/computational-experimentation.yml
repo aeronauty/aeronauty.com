@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
+      - 'aeronauty-site/app/writing/topology-instinct/assets/**'
       - 'aeronauty-site/lib/private-articles.ts'
       - 'aeronauty-site/package.json'
       - '.github/workflows/computational-experimentation.yml'
@@ -11,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'aeronauty-site/content/private/topology-instinct/computational-experimentation/**'
+      - 'aeronauty-site/app/writing/topology-instinct/assets/**'
       - 'aeronauty-site/lib/private-articles.ts'
       - 'aeronauty-site/package.json'
       - '.github/workflows/computational-experimentation.yml'
@@ -26,6 +28,8 @@ jobs:
       - name: Check scripts
         run: |
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/interaction-core.js
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/unsteady-core.js
+          node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/unsteady-worker.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/vortex-core.js
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs
           node --check aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
@@ -33,6 +37,7 @@ jobs:
         run: |
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-vortex-core.mjs
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-interaction-core.mjs
+          node aeronauty-site/content/private/topology-instinct/computational-experimentation/test-unsteady-core.mjs
           node aeronauty-site/content/private/topology-instinct/computational-experimentation/validate-article.mjs
       - name: Prepare local preview bundle
         shell: bash
@@ -44,8 +49,12 @@ jobs:
           cp "$SOURCE/article.html" "$BUNDLE/index.html"
           cp "$SOURCE/article-source.md" "$BUNDLE/article-source.md"
           cp "$SOURCE/interaction-core.js" "$BUNDLE/interaction-core.js"
+          cp "$SOURCE/unsteady-core.js" "$BUNDLE/unsteady-core.js"
+          cp "$SOURCE/unsteady-worker.js" "$BUNDLE/unsteady-worker.js"
           cp "$SOURCE/vortex-core.js" "$BUNDLE/vortex-core.js"
           cp "$SOURCE/obi-wan-nairobi.jpg" "$BUNDLE/obi-wan-nairobi.jpg"
+          mkdir -p "$BUNDLE/assets"
+          cp "$SOURCE/assets/theodorsen-data.json" "$BUNDLE/assets/theodorsen-data.json"
           cat > "$BUNDLE/serve.py" <<'PY'
           #!/usr/bin/env python3
           from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
@@ -76,7 +85,8 @@ jobs:
           COMPUTATIONAL EXPERIMENTATION — LOCAL PREVIEW
 
           This bundle contains the same article HTML, Google Doc prose snapshot,
-          operator portrait, and vortex-panel numerical kernel used by Aeronauty.
+          operator portrait, vortex-panel kernel, staged unsteady-wake solver,
+          and Theodorsen reference used by Aeronauty.
 
           macOS / Linux:
             Double-click preview.command, or run: python3 serve.py

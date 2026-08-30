@@ -11,7 +11,7 @@
     "test:e2e:tiles": "playwright test tests/tile-tally-tiles.spec.ts",
     "sync:computational-experimentation": "node content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs",
     "build:computational-experimentation": "node content/private/topology-instinct/computational-experimentation/validate-article.mjs",
-    "test:computational-experimentation": "node content/private/topology-instinct/computational-experimentation/test-vortex-core.mjs && node content/private/topology-instinct/computational-experimentation/test-interaction-core.mjs && node content/private/topology-instinct/computational-experimentation/validate-article.mjs",
+    "test:computational-experimentation": "node content/private/topology-instinct/computational-experimentation/test-vortex-core.mjs && node content/private/topology-instinct/computational-experimentation/test-interaction-core.mjs && node content/private/topology-instinct/computational-experimentation/test-unsteady-core.mjs && node content/private/topology-instinct/computational-experimentation/validate-article.mjs",
     "sync-lift-explainer": "rm -rf public/lift-explainer && cp -r submodules/LiftExplainer public/lift-explainer",
     "sync-wind-turbine": "mkdir -p public/wind-turbine && cp submodules/WindTurbineExplainer/turbine_3d_interactive.html public/wind-turbine/ && cp submodules/WindTurbineExplainer/blade_harmonics.html public/wind-turbine/ && cp -r submodules/WindTurbineExplainer/blade-harmonics-app/whythreeblades public/wind-turbine/blade-harmonics"
   },

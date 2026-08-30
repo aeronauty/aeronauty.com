@@ -6,7 +6,10 @@ const COMPUTATIONAL_EXPERIMENTATION_RUNTIME_ASSETS = new Set([
   "computational-experimentation/article-source.md",
   "computational-experimentation/interaction-core.js",
   "computational-experimentation/obi-wan-nairobi.jpg",
+  "computational-experimentation/unsteady-core.js",
+  "computational-experimentation/unsteady-worker.js",
   "computational-experimentation/vortex-core.js",
+  "computational-experimentation/assets/theodorsen-data.json",
 ]);
 
 export async function GET(
