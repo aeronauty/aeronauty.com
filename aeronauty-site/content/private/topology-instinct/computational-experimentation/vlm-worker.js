@@ -4,7 +4,7 @@
 importScripts('vlm-core.js');
 
 const VLM = globalThis.ComputationalExperimentVLM;
-const PROTOCOL_VERSION = 1;
+const PROTOCOL_VERSION = 2;
 
 function clampInteger(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, Math.round(Number(value))));
@@ -34,12 +34,141 @@ function compactWake(wake) {
   };
 }
 
+function compactHarmonicStage(result, includeSnapshots = false) {
+  const compact = {
+    stage: result.stage,
+    response: result.response,
+    periodicity: result.periodicity,
+    diagnostics: result.diagnostics,
+    steadyLiftSlope: result.steadyLiftSlope,
+    addedMassPotentialGain: result.addedMassPotentialGain,
+    config: result.config,
+    trace: result.trace.map((sample) => ({
+      time: sample.time,
+      phaseDegrees: sample.phaseDegrees,
+      h: sample.h,
+      normalVelocityRatio: sample.normalVelocityRatio,
+      circulatoryCL: sample.circulatoryCL,
+      accelerationCL: sample.accelerationCL,
+      totalCL: sample.totalCL,
+      apparentMassCL: sample.apparentMassCL,
+      pressureCirculatoryCL: sample.pressureCirculatoryCL,
+    })),
+  };
+  if (includeSnapshots) {
+    compact.snapshots = result.snapshots.map((snapshot) => ({
+      time: snapshot.time,
+      phaseDegrees: snapshot.phaseDegrees,
+      h: snapshot.h,
+      normalVelocityRatio: snapshot.normalVelocityRatio,
+      circulatoryCL: snapshot.circulatoryCL,
+      accelerationCL: snapshot.accelerationCL,
+      totalCL: snapshot.totalCL,
+      apparentMassCL: snapshot.apparentMassCL,
+      pressureCirculatoryCL: snapshot.pressureCirculatoryCL,
+      spanwiseCirculation: snapshot.spanwiseCirculation,
+      wake: {
+        ...snapshot.wake,
+        totalRows: snapshot.wake.nodeRows.length,
+        nodeRows: snapshot.wake.nodeRows.slice(0, 48),
+        strengthRows: snapshot.wake.strengthRows.slice(0, 48),
+      },
+    }));
+  }
+  return compact;
+}
+
+function geometryFrom(lattice) {
+  return {
+    chord: lattice.chord,
+    span: lattice.span,
+    xRows: lattice.xRows,
+    yEdges: lattice.yEdges,
+    collocations: lattice.panels.map((panel) => [
+      panel.collocation.x,
+      panel.collocation.y,
+      panel.collocation.z,
+    ]),
+  };
+}
+
+function solveHarmonic(message, config) {
+  const reducedFrequency = Math.max(0.15, Math.min(0.9, finite(message.reducedFrequency, 0.35)));
+  const amplitude = Math.max(0.005, Math.min(0.06, finite(message.amplitude, 0.03)));
+  const harmonicConfig = {
+    aspectRatio: config.aspectRatio,
+    reducedFrequency,
+    amplitude,
+    spanPanels: Math.min(config.spanPanels, 10),
+    chordPanels: 2,
+    stepsPerCycle: 24,
+    cycles: 4,
+    measureCycles: 2,
+    activeWakeRows: 12,
+    snapshotCount: 12,
+    coreRadius: 0.03,
+    shedFraction: 0.25,
+  };
+  const stages = {};
+  let harmonicLattice = null;
+  for (const [index, stage] of ['flat', 'te', 'free'].entries()) {
+    const result = VLM.runHarmonicUvlm({
+      ...harmonicConfig,
+      stage,
+      snapshotCount: stage === 'free' ? harmonicConfig.snapshotCount : 0,
+      periodicityMagnitudeTolerance: stage === 'free' ? 0.05 : 0.03,
+      periodicityPhaseTolerance: stage === 'free' ? 3 : 2,
+      fitResidualTolerance: stage === 'free' ? 0.05 : 0.02,
+    });
+    stages[stage] = compactHarmonicStage(result, stage === 'free');
+    if (stage === 'free') harmonicLattice = result.lattice;
+    postMessage({
+      type: 'progress',
+      protocolVersion: PROTOCOL_VERSION,
+      requestId: message.requestId,
+      key: message.key,
+      completed: index + 1,
+      total: 3,
+      stage,
+    });
+  }
+  const free = stages.free;
+  const latestSnapshot = free.snapshots.at(-1);
+  const lattice = harmonicLattice;
+  return {
+    type: 'result',
+    protocolVersion: PROTOCOL_VERSION,
+    requestId: message.requestId,
+    key: message.key,
+    wakeMode: 'harmonic',
+    config: {
+      ...harmonicConfig,
+      unknowns: harmonicConfig.chordPanels * harmonicConfig.spanPanels,
+    },
+    geometry: geometryFrom(lattice),
+    stages,
+    snapshots: free.snapshots,
+    trace: free.trace,
+    spanwise: {
+      y: lattice.yEdges.slice(0, -1).map((left, index) => (
+        0.5 * (left + lattice.yEdges[index + 1])
+      )),
+      circulation: latestSnapshot?.spanwiseCirculation ?? [],
+    },
+  };
+}
+
 function solve(message) {
   const aspectRatio = Math.max(4, Math.min(12, finite(message.aspectRatio, 8)));
   const alphaDeg = Math.max(1, Math.min(10, finite(message.alphaDeg, 6)));
-  const spanPanels = clampInteger(message.spanPanels, 8, 16);
-  const wakeMode = message.wakeMode === 'free' ? 'free' : 'straight';
+  const wakeMode = message.wakeMode === 'harmonic' ? 'harmonic' : 'straight';
+  const spanPanels = wakeMode === 'harmonic'
+    ? clampInteger(message.spanPanels, 6, 10)
+    : clampInteger(message.spanPanels, 6, 16);
   const chordPanels = 1;
+  if (wakeMode === 'harmonic') {
+    return solveHarmonic(message, { aspectRatio, alphaDeg, spanPanels });
+  }
   const lattice = VLM.createRectangularWingLattice({
     chord: 1,
     span: aspectRatio,
@@ -61,36 +190,6 @@ function solve(message) {
       alphaDeg,
       wakeLength: 100 * aspectRatio,
     });
-  } else {
-    const dt = 0.12;
-    const steps = 16;
-    const coreRadius = 0.05;
-    let state = VLM.createWakeState(lattice);
-    for (let step = 0; step < steps; step += 1) {
-      result = VLM.stepUnsteadyVlm({
-        lattice,
-        wake: state,
-        alphaDeg,
-        dt,
-        mode: 'free',
-        coreRadius,
-        integrator: 'heun',
-        shedFraction: 0.25,
-        maxWakeRows: steps,
-      });
-      state = result.wake;
-      if (step === 3 || step === 7 || step === 11) {
-        postMessage({
-          type: 'progress',
-          protocolVersion: PROTOCOL_VERSION,
-          requestId: message.requestId,
-          key: message.key,
-          completed: step + 1,
-          total: steps,
-        });
-      }
-    }
-    wake = compactWake(state);
   }
 
   const spanwise = result.loads.spanwiseCirculation;

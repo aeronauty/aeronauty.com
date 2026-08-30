@@ -57,6 +57,7 @@ jobs:
           cp "$SOURCE/unsteady-worker.js" "$BUNDLE/unsteady-worker.js"
           cp "$SOURCE/vlm-core.js" "$BUNDLE/vlm-core.js"
           cp "$SOURCE/vlm-worker.js" "$BUNDLE/vlm-worker.js"
+          cp "$SOURCE/UVLM-NUMERICAL-NOTE.md" "$BUNDLE/UVLM-NUMERICAL-NOTE.md"
           cp "$SOURCE/vortex-core.js" "$BUNDLE/vortex-core.js"
           cp "$SOURCE/obi-wan-nairobi.jpg" "$BUNDLE/obi-wan-nairobi.jpg"
           mkdir -p "$BUNDLE/assets"
@@ -92,8 +93,8 @@ jobs:
 
           This bundle contains the same article HTML, Google Doc prose snapshot,
           operator portrait, vortex-panel kernel, finite-wing VLM and coupled
-          wake worker, staged unsteady-wake solver, and Theodorsen reference
-          used by Aeronauty.
+          harmonic UVLM wake worker, numerical note, staged two-dimensional
+          unsteady-wake solver, and Theodorsen reference used by Aeronauty.
 
           macOS / Linux:
             Double-click preview.command, or run: python3 serve.py
