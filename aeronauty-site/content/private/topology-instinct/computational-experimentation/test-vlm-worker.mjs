@@ -23,7 +23,7 @@ function createWorkerHarness() {
     },
     importScripts(...names) {
       names.forEach((name) => {
-        assert.equal(name, 'vlm-core.js');
+        assert.equal(name.split('?')[0], 'vlm-core.js');
         vm.runInContext(coreSource, context, { filename: name });
       });
     },
@@ -159,12 +159,13 @@ test('harmonic worker reports settled staged responses and retained wake history
   assert.equal(result.config.stepsPerCycle, 24);
   assert.equal(result.config.cycles, 4);
   assert.equal(result.config.activeWakeRows, 12);
-  assert.equal(result.snapshots.length, 12);
+  assert.equal(result.snapshots.length, 24);
   assert.equal(result.trace.length, 24);
   assert.deepEqual(Object.keys(result.stages), ['flat', 'te', 'free']);
   close(result.stages.flat.response.circulatory.magnitude, 0.8392133863665207, 1e-11);
   close(result.stages.free.response.circulatory.phaseDegrees, -9.92263385600078, 1e-11);
   for (const stage of Object.values(result.stages)) {
+    assert.equal(stage.snapshots.length, 24);
     assert.equal(stage.periodicity.converged, true);
     assert.equal(stage.periodicity.residualGate.passed, true);
     assert.ok(stage.periodicity.magnitudeRelative < 0.001);
@@ -180,14 +181,31 @@ test('harmonic worker reports settled staged responses and retained wake history
       assert.ok(Number.isFinite(sample.pressureCirculatoryCL));
       assert.ok(Number.isFinite(sample.apparentMassCL));
     });
+    stage.snapshots.forEach((snapshot) => {
+      assert.ok(Number.isFinite(snapshot.h));
+      assert.ok(Number.isFinite(snapshot.pressureCirculatoryCL));
+      assert.equal(snapshot.wake.nodeRows.length, snapshot.wake.sourceIndices.length);
+      assert.equal(snapshot.wake.strengthRows.length, snapshot.wake.sourceIndices.length);
+      assert.equal(snapshot.wake.sourceIndices[0], 0);
+      assert.equal(snapshot.wake.sourceIndices.at(-1), snapshot.wake.totalRows - 1);
+    });
   }
   assert.ok(result.stages.free.diagnostics.maximumInducedSpeed > 0);
   result.snapshots.forEach((snapshot, index) => {
-    assert.ok(snapshot.wake.totalRows >= 73 && snapshot.wake.totalRows <= 95);
+    assert.ok(snapshot.wake.totalRows >= 72 && snapshot.wake.totalRows <= 95);
     if (index) assert.ok(snapshot.wake.totalRows > result.snapshots[index - 1].wake.totalRows);
     assert.equal(snapshot.wake.nodeRows.length, 48);
     assert.equal(snapshot.wake.strengthRows.length, 48);
+    assert.equal(snapshot.wake.sourceIndices.length, 48);
+    assert.deepEqual(snapshot.wake.sourceIndices.slice(0, 13), Array.from({ length: 13 }, (_, row) => row));
+    assert.equal(snapshot.wake.sourceIndices[0], 0);
+    assert.equal(snapshot.wake.sourceIndices.at(-1), snapshot.wake.totalRows - 1);
+    assert.ok(snapshot.wake.sourceIndices.every((row, rowIndex) => rowIndex === 0 || row > snapshot.wake.sourceIndices[rowIndex - 1]));
     assert.equal(snapshot.wake.pendingAttachmentRow.points.length, 7);
+    assert.ok(snapshot.inducedDisplacement.maximum > 1e-3);
+    assert.ok(snapshot.inducedDisplacement.rms > 0);
+    assert.equal(snapshot.phaseDegrees, result.stages.te.snapshots[index].phaseDegrees);
+    assert.equal(snapshot.h, result.stages.te.snapshots[index].h);
   });
   assert.equal(result.snapshots.at(-1).wake.totalRows, 95);
 });

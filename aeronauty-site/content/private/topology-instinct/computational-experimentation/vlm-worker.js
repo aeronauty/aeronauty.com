@@ -1,7 +1,7 @@
 /* global importScripts, postMessage */
 'use strict';
 
-importScripts('vlm-core.js');
+importScripts('vlm-core.js?v=3');
 
 const VLM = globalThis.ComputationalExperimentVLM;
 const PROTOCOL_VERSION = 2;
@@ -34,7 +34,54 @@ function compactWake(wake) {
   };
 }
 
-function compactHarmonicStage(result, includeSnapshots = false) {
+function displayWake(wake, limit = 48, activeWakeRows = 12) {
+  const totalRows = wake.nodeRows.length;
+  const nearCount = Math.min(totalRows, activeWakeRows + 1, limit);
+  const indices = Array.from({ length: nearCount }, (_, index) => index);
+  const remainingSlots = limit - indices.length;
+  if (remainingSlots > 0 && totalRows > nearCount) {
+    const start = nearCount;
+    const end = totalRows - 1;
+    for (let slot = 1; slot <= remainingSlots; slot += 1) {
+      indices.push(Math.round(start + (end - start) * slot / remainingSlots));
+    }
+  }
+  const uniqueIndices = [...new Set(indices)].sort((a, b) => a - b);
+  if (totalRows && uniqueIndices.at(-1) !== totalRows - 1) uniqueIndices.push(totalRows - 1);
+  return {
+    ...wake,
+    totalRows,
+    sourceIndices: uniqueIndices,
+    nodeRows: uniqueIndices.map((index) => wake.nodeRows[index]),
+    strengthRows: uniqueIndices.map((index) => wake.strengthRows[index]),
+  };
+}
+
+function wakeDifference(first, second) {
+  let maximum = 0;
+  let sumSquared = 0;
+  let count = 0;
+  const rowCount = Math.min(first.nodeRows.length, second.nodeRows.length);
+  for (let row = 0; row < rowCount; row += 1) {
+    const pointCount = Math.min(first.nodeRows[row].length, second.nodeRows[row].length);
+    for (let column = 0; column < pointCount; column += 1) {
+      const a = first.nodeRows[row][column];
+      const b = second.nodeRows[row][column];
+      const distance = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+      maximum = Math.max(maximum, distance);
+      sumSquared += distance ** 2;
+      count += 1;
+    }
+  }
+  return {
+    maximum,
+    rms: count ? Math.sqrt(sumSquared / count) : 0,
+    samples: count,
+  };
+}
+
+function compactHarmonicStage(result, options = {}) {
+  const includeSnapshots = options.includeSnapshots ?? false;
   const compact = {
     stage: result.stage,
     response: result.response,
@@ -56,7 +103,7 @@ function compactHarmonicStage(result, includeSnapshots = false) {
     })),
   };
   if (includeSnapshots) {
-    compact.snapshots = result.snapshots.map((snapshot) => ({
+    compact.snapshots = result.snapshots.map((snapshot, index) => ({
       time: snapshot.time,
       phaseDegrees: snapshot.phaseDegrees,
       h: snapshot.h,
@@ -67,12 +114,10 @@ function compactHarmonicStage(result, includeSnapshots = false) {
       apparentMassCL: snapshot.apparentMassCL,
       pressureCirculatoryCL: snapshot.pressureCirculatoryCL,
       spanwiseCirculation: snapshot.spanwiseCirculation,
-      wake: {
-        ...snapshot.wake,
-        totalRows: snapshot.wake.nodeRows.length,
-        nodeRows: snapshot.wake.nodeRows.slice(0, 48),
-        strengthRows: snapshot.wake.strengthRows.slice(0, 48),
-      },
+      inducedDisplacement: options.referenceSnapshots
+        ? wakeDifference(snapshot.wake, options.referenceSnapshots[index].wake)
+        : null,
+      wake: displayWake(snapshot.wake, options.displayRowLimit, options.activeWakeRows),
     }));
   }
   return compact;
@@ -105,22 +150,22 @@ function solveHarmonic(message, config) {
     cycles: 4,
     measureCycles: 2,
     activeWakeRows: 12,
-    snapshotCount: 12,
+    snapshotCount: 24,
     coreRadius: 0.03,
     shedFraction: 0.25,
   };
-  const stages = {};
+  const rawStages = {};
   let harmonicLattice = null;
   for (const [index, stage] of ['flat', 'te', 'free'].entries()) {
     const result = VLM.runHarmonicUvlm({
       ...harmonicConfig,
       stage,
-      snapshotCount: stage === 'free' ? harmonicConfig.snapshotCount : 0,
+      snapshotCount: harmonicConfig.snapshotCount,
       periodicityMagnitudeTolerance: stage === 'free' ? 0.05 : 0.03,
       periodicityPhaseTolerance: stage === 'free' ? 3 : 2,
       fitResidualTolerance: stage === 'free' ? 0.05 : 0.02,
     });
-    stages[stage] = compactHarmonicStage(result, stage === 'free');
+    rawStages[stage] = result;
     if (stage === 'free') harmonicLattice = result.lattice;
     postMessage({
       type: 'progress',
@@ -132,6 +177,21 @@ function solveHarmonic(message, config) {
       stage,
     });
   }
+  const stages = {
+    flat: compactHarmonicStage(rawStages.flat, {
+      includeSnapshots: true,
+      activeWakeRows: harmonicConfig.activeWakeRows,
+    }),
+    te: compactHarmonicStage(rawStages.te, {
+      includeSnapshots: true,
+      activeWakeRows: harmonicConfig.activeWakeRows,
+    }),
+    free: compactHarmonicStage(rawStages.free, {
+      includeSnapshots: true,
+      referenceSnapshots: rawStages.te.snapshots,
+      activeWakeRows: harmonicConfig.activeWakeRows,
+    }),
+  };
   const free = stages.free;
   const latestSnapshot = free.snapshots.at(-1);
   const lattice = harmonicLattice;

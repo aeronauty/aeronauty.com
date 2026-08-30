@@ -48,7 +48,18 @@ Once shed, a ring strength is never changed or deleted. This is the three-dimens
 - **TE history:** the birth line uses the trailing-edge height at shedding and every row receives the exact body-frame translation over the next step. Wake-on-wake motion is disabled.
 - **Free roll-up:** the exact body-frame translation is combined with a Heun correction from bound- and wake-induced velocity. Incident filaments are excluded at their own nodes and a Rosenhead-Moore core of `0.03 c` regularises the convection calculation.
 
-A full all-node/all-filament multi-cycle roll-up grows too quickly for a responsive browser. The public preset therefore uses a disclosed near-wake approximation: all shed rows remain in the topology and induce velocity on the wing and on the active near wake, but induced-motion corrections are applied only to the newest 12 rows. Older rows continue with exact body-frame convection. Transverse displacement is multiplied by five in the drawing only.
+A full all-node/all-filament multi-cycle roll-up grows too quickly for a responsive browser. The public preset therefore uses a disclosed near-wake approximation: all shed rows remain in the topology and induce velocity on the wing and on the active near wake, but induced-motion corrections are applied only to the newest 12 rows. Older rows continue with exact body-frame convection. Display-only geometry transforms are documented below.
+
+## Applet views and numerical identity
+
+The worker records 24 equally spaced snapshots from the last cycle for each wake treatment. The stage switch is therefore a replay control, not a request for a fresh or differently configured solve. The view-frame switch is likewise presentation-only:
+
+- **Body-fixed solver:** the wing remains at `z = 0` and the wake uses its solved body-frame coordinates.
+- **Wing oscillating:** the wing is drawn at `z = h(t)`; the TE-history and self-induced wake coordinates receive the same inertial-frame translation. The flat wake remains on the mean plane because that displacement is deliberately suppressed by its linearisation.
+
+The canvas keeps the newest 13 row indices contiguous, samples the remaining far wake uniformly, and always includes the oldest retained row. Up to 48 rows therefore span the full wake age without pretending that skipped far rows are additional solver panels. The applet reports both the displayed and retained row counts. In the whole-wake preset, streamwise display scale may be reduced so the wing and oldest wake row remain visible; the applied factor is shown on the canvas. Transverse displacement is enlarged by 12 in the drawing. Both operations are render transforms only.
+
+For the self-induced stage, the same-phase TE-history wake is drawn as a dashed reference. The reported `Delta max / c` and RMS displacement are evaluated from matching solver rows before either display transform. The lift arrow and large numerical readout use `pressureCirculatoryCL`, the same instantaneous pressure-derived circulatory quantity used by the plotted time trace.
 
 ## Pressure loading and harmonic response
 
@@ -95,5 +106,6 @@ The cycle, fit and normalised residual checks form one publication gate. If any 
 - no-penetration, shedding and filament-continuity residuals;
 - timestep, core, active-row and grid sensitivity; and
 - worker protocol, input clamping, progress, stale-result correlation and compact snapshot output.
+- all-stage phase snapshots, indexed full-wake coverage, and non-zero self-induced displacement relative to the prescribed TE-history wake.
 
 The formulation follows Katz and Plotkin, *Low-Speed Aerodynamics*, second edition, Chapter 13: trailing-edge placement and circulation conservation in Sections 13.8.2 and 13.12; the unsteady boundary system in Eqs. 13.142-13.147; pressure loading in Eqs. 13.148-13.151; and wake convection in Eqs. 13.153-13.154.
