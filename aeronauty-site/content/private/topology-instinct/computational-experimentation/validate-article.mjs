@@ -16,6 +16,7 @@ const [
   vlmCore,
   vlmWorker,
   publicAssetRoute,
+  publicAssetManifest,
   acceptanceWorkflow,
 ] = await Promise.all([
   readFile(join(ROOT, 'article-source.md'), 'utf8'),
@@ -27,6 +28,7 @@ const [
   readFile(join(ROOT, 'vlm-core.js'), 'utf8'),
   readFile(join(ROOT, 'vlm-worker.js'), 'utf8'),
   readFile(join(ROOT, '..', '..', '..', '..', 'app', 'writing', 'topology-instinct', 'assets', '[...path]', 'route.ts'), 'utf8'),
+  readFile(join(ROOT, '..', '..', '..', '..', 'lib', 'topology-public-assets.ts'), 'utf8'),
   readFile(join(ROOT, '..', '..', '..', '..', '..', '.github', 'workflows', 'computational-experimentation.yml'), 'utf8'),
 ]);
 const metadata = JSON.parse(metadataText);
@@ -140,8 +142,9 @@ assert.ok(vlmWorker.includes("mode: 'free'"));
 assert.ok(vlmWorker.includes('pressureCirculatoryCL'));
 assert.ok(vlmWorker.includes('accelerationCL'));
 assert.ok(vlmWorker.includes('totalPressureCL'));
+assert.ok(publicAssetRoute.includes('publicTopologyRuntimeAssetSet'));
 for (const runtimeAsset of ['vlm-core.js', 'vlm-worker.js']) {
-  assert.ok(publicAssetRoute.includes(`computational-experimentation/${runtimeAsset}`));
+  assert.ok(publicAssetManifest.includes(`computational-experimentation/${runtimeAsset}`));
   assert.ok(acceptanceWorkflow.includes(`$SOURCE/${runtimeAsset}`));
 }
 

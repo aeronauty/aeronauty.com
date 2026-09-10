@@ -3,6 +3,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      "/*": ["./content/private/topology-instinct/data/README.md"],
+    },
+  },
   async rewrites() {
     return [
       // Serve the self-contained Subsidy Clock exhibit (public/slop/subsidy-clock.html)
@@ -15,5 +20,4 @@ const nextConfig = {
 };
 
 export default nextConfig;
-
 

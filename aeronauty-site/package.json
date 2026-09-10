@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:e2e": "playwright test",
+    "test:e2e:writing": "playwright test tests/writing-articles.spec.ts",
     "test:e2e:tiles": "playwright test tests/tile-tally-tiles.spec.ts",
     "sync:computational-experimentation": "node content/private/topology-instinct/computational-experimentation/sync-google-doc.mjs",
     "build:computational-experimentation": "node content/private/topology-instinct/computational-experimentation/validate-article.mjs",
