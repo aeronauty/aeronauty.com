@@ -3101,11 +3101,38 @@
 <script>
 (function () {
   // Articles are served inside the public/lab Next.js wrapper iframe.
-  // Internal article links must navigate the top window; otherwise /writing/...
-  // loads the whole wrapper inside this iframe and duplicates the wrapper banner.
+  // Site links must escape the frame, while external links should never replace
+  // the article inside it.
   if (window.self === window.top) return;
 
-  const escapePrefixes = ['/writing/', '/lab/articles/'];
+  const aeronautyHosts = new Set(['aeronauty.com', 'www.aeronauty.com']);
+  const isAeronautyLink = url =>
+    url.origin === window.location.origin || aeronautyHosts.has(url.hostname);
+
+  document.querySelectorAll('a[href]').forEach(link => {
+    const rawHref = link.getAttribute('href') || '';
+    if (!rawHref || rawHref.startsWith('#')) return;
+
+    let url;
+    try {
+      url = new URL(rawHref, window.location.href);
+    } catch (error) {
+      return;
+    }
+
+    if (isAeronautyLink(url)) {
+      link.setAttribute('target', '_top');
+      return;
+    }
+
+    if (!link.hasAttribute('target')) {
+      link.setAttribute('target', '_blank');
+    }
+
+    const rel = new Set((link.getAttribute('rel') || '').split(/\s+/).filter(Boolean));
+    rel.add('noopener');
+    link.setAttribute('rel', Array.from(rel).join(' '));
+  });
 
   document.addEventListener('click', event => {
     const link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
@@ -3122,11 +3149,10 @@
       return;
     }
 
-    if (url.origin !== window.location.origin) return;
-    if (!escapePrefixes.some(prefix => url.pathname.startsWith(prefix))) return;
+    if (!isAeronautyLink(url)) return;
 
     event.preventDefault();
-    window.top.location.href = url.pathname + url.search + url.hash;
+    window.top.location.href = url.href;
   });
 })();
 </script>

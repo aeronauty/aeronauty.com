@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTopologyArticle, topologyArticles } from "@/lib/topology-articles";
+import { PublicArticleFrame } from "./public-article-frame";
 
 export function generateStaticParams() {
   return topologyArticles.map((article) => ({ slug: article.slug }));
@@ -47,12 +48,7 @@ export default function PublicWritingArticlePage({ params }: { params: { slug: s
         </div>
       </header>
 
-      <iframe
-        src={src}
-        title={article.title}
-        className="block h-full w-full flex-1 border-0"
-        style={{ minHeight: "calc(100vh - 49px)" }}
-      />
+      <PublicArticleFrame src={src} title={article.title} />
     </main>
   );
 }

@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serveTopologyAsset } from "@/lib/topology-assets";
-
-const COMPUTATIONAL_EXPERIMENTATION_RUNTIME_ASSETS = new Set([
-  "computational-experimentation/article.html",
-  "computational-experimentation/article-source.md",
-  "computational-experimentation/interaction-core.js",
-  "computational-experimentation/obi-wan-nairobi.jpg",
-  "computational-experimentation/unsteady-core.js",
-  "computational-experimentation/unsteady-worker.js",
-  "computational-experimentation/vlm-core.js",
-  "computational-experimentation/vlm-worker.js",
-  "computational-experimentation/vortex-core.js",
-  "computational-experimentation/assets/theodorsen-data.json",
-]);
+import { publicTopologyRuntimeAssetSet } from "@/lib/topology-public-assets";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
   const assetPath = params.path.join("/");
-  if (
-    params.path[0] === "computational-experimentation" &&
-    !COMPUTATIONAL_EXPERIMENTATION_RUNTIME_ASSETS.has(assetPath)
-  ) {
+  if (!publicTopologyRuntimeAssetSet.has(assetPath)) {
     return new NextResponse("Not Found", { status: 404 });
   }
 
