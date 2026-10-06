@@ -72,7 +72,7 @@ export default function WritingPage() {
                   </h2>
                   <p className="mt-4 leading-7 text-stone-600">{piece.description}</p>
                 </div>
-                <Link href={piece.link} className="button-secondary shrink-0">
+                <Link href={piece.link} prefetch={piece.link === "/writing/momentum" ? false : undefined} className="button-secondary shrink-0">
                   Read
                 </Link>
               </div>

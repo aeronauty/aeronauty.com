@@ -119,7 +119,7 @@ export default function ProjectsPage() {
               </div>
               <div className="flex items-start md:justify-end">
                 {project.link !== "#" ? (
-                  <Link href={project.link} className="button-secondary">
+                  <Link href={project.link} prefetch={project.link === "/apps/circulation" ? false : undefined} className="button-secondary">
                     Open
                   </Link>
                 ) : (
